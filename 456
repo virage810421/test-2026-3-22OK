@@ -89,65 +89,96 @@ macd_bot = find_divergence(df['Low'].values, df['MACD_Hist'].values, is_top=Fals
                            distance=7, prominence_pc=0.005, threshold=0)
 
 # -------------------------------
-# 3. 繪製圖表
+# 3. 繪製圖表 (UI 優化版)
 # -------------------------------
-fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.02, 
-                    row_heights=[0.5, 0.25, 0.25])
+fig = make_subplots(
+    rows=3, cols=1, 
+    shared_xaxes=True, 
+    vertical_spacing=0.03, 
+    row_heights=[0.5, 0.25, 0.25],
+    subplot_titles=("價格走勢與背離訊號", "RSI 強弱指標", "MACD 柱狀圖")
+)
 
-# 主圖：K線
-fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], 
-                             low=df['Low'], close=df['Close'], name='股價'), row=1, col=1)
+# A. 主圖：K線
+fig.add_trace(go.Candlestick(
+    x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], 
+    name='股價', opacity=0.8
+), row=1, col=1)
 
-# RSI 子圖
-fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], line=dict(color='#9c27b0', width=2), name='RSI'), row=2, col=1)
+# B. RSI 子圖
+fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], line=dict(color='#BA68C8', width=2), name='RSI'), row=2, col=1)
 fig.add_hrect(y0=70, y1=100, fillcolor="red", opacity=0.1, line_width=0, row=2, col=1)
 fig.add_hrect(y0=0, y1=30, fillcolor="green", opacity=0.1, line_width=0, row=2, col=1)
 
-# MACD 子圖
-colors = ['#ef5350' if x > 0 else '#26a69a' for x in df['MACD_Hist']]
-fig.add_trace(go.Bar(x=df.index, y=df['MACD_Hist'], marker_color=colors, name='MACD 柱狀圖'), row=3, col=1)
+# C. MACD 子圖
+colors = ['#FF5252' if x > 0 else '#00E676' for x in df['MACD_Hist']]
+fig.add_trace(go.Bar(x=df.index, y=df['MACD_Hist'], marker_color=colors, name='MACD Hist'), row=3, col=1)
 
-# 繪製背離連線
-def plot_div(div_list, p_data, i_data, color, name, i_row):
+# D. 強化背離繪圖函數 (加入自動標註)
+def plot_div_pro(div_list, p_data, i_data, color, name, i_row):
     for p1, p2 in div_list:
-        # 主圖連線 (Dash 虛線)
-        fig.add_trace(go.Scatter(x=[df.index[p1], df.index[p2]], y=[p_data[p1], p_data[p2]], 
-                                 line=dict(color=color, width=2, dash='dash'), 
-                                 mode='lines+markers', showlegend=False, hoverinfo='skip'), row=1, col=1)
-        # 指標圖連線 (實線)
-        fig.add_trace(go.Scatter(x=[df.index[p1], df.index[p2]], y=[i_data[p1], i_data[p2]], 
-                                 line=dict(color=color, width=2), 
-                                 mode='lines+markers', name=name), row=i_row, col=1)
+        # 在主圖畫虛線與大點點
+        fig.add_trace(go.Scatter(
+            x=[df.index[p1], df.index[p2]], y=[p_data[p1], p_data[p2]], 
+            line=dict(color=color, width=3, dash='dot'),
+            marker=dict(size=10, symbol='circle-open', line=dict(width=2)),
+            mode='lines+markers', showlegend=False
+        ), row=1, col=1)
+        
+        # 在指標圖畫實線
+        fig.add_trace(go.Scatter(
+            x=[df.index[p1], df.index[p2]], y=[i_data[p1], i_data[p2]], 
+            line=dict(color=color, width=3),
+            mode='lines+markers', name=name
+        ), row=i_row, col=1)
+        
+        # 【關鍵】加入文字標籤與箭頭
+        fig.add_annotation(
+            x=df.index[p2], y=p_data[p2],
+            text=name, showarrow=True, arrowhead=2,
+            arrowcolor=color, bgcolor=color, font=dict(color="white"),
+            ax=0, ay=-40, row=1, col=1
+        )
 
-plot_div(rsi_top, df['High'].values, df['RSI'].values, '#ff5252', 'RSI 頂背離', 2)
-plot_div(rsi_bot, df['Low'].values, df['RSI'].values, '#00e676', 'RSI 底背離', 2)
-plot_div(macd_top, df['High'].values, df['MACD_Hist'].values, '#ffa726', 'MACD 頂背離', 3)
-plot_div(macd_bot, df['Low'].values, df['MACD_Hist'].values, '#29b6f6', 'MACD 底背離', 3)
+# 執行繪圖
+plot_div_pro(rsi_top, df['High'].values, df['RSI'].values, '#FF5252', 'RSI 頂背', 2)
+plot_div_pro(rsi_bot, df['Low'].values, df['RSI'].values, '#00E676', 'RSI 底背', 2)
+plot_div_pro(macd_top, df['High'].values, df['MACD_Hist'].values, '#FFB74D', 'MACD 頂背', 3)
+plot_div_pro(macd_bot, df['Low'].values, df['MACD_Hist'].values, '#4FC3F7', 'MACD 底背', 3)
 
 # -------------------------------
-# 4. 佈局與時間選擇器
+# 4. 佈局細節調整 (完美復刻圖片感)
 # -------------------------------
 fig.update_xaxes(
     rangebreaks=[dict(bounds=["sat", "mon"])],
     rangeselector=dict(
         buttons=list([
-            dict(count=1, label="1月", step="month", stepmode="backward"),
-            dict(count=3, label="3月", step="month", stepmode="backward"),
-            dict(count=6, label="6月", step="month", stepmode="backward"),
-            dict(count=1, label="今年", step="year", stepmode="todate"),
-            dict(step="all", label="全部")
+            dict(count=1, label="1M", step="month", stepmode="backward"),
+            dict(count=3, label="3M", step="month", stepmode="backward"),
+            dict(count=6, label="6M", step="month", stepmode="backward"),
+            dict(step="all", label="All")
         ]),
-        x=0, y=1.05
-    )
+        bgcolor="#222", activecolor="gold", font=dict(color="white"),
+        x=0, y=1.12
+    ),
+    rangeslider=dict(visible=True, thickness=0.05), # 開啟下方的範圍滑桿
+    gridcolor='#333'
 )
 
+fig.update_yaxes(gridcolor='#333', fixedrange=False)
+
 fig.update_layout(
-    height=900,
+    height=1000,
     template='plotly_dark',
-    title_text=f"{ticker} 參數化背離偵測系統",
-    xaxis_rangeslider_visible=False,
+    paper_bgcolor='#111', # 深黑色背景
+    plot_bgcolor='#111',
+    title=dict(
+        text=f"<b>{ticker} 互動式背離分析儀表板</b>",
+        x=0.5, font=dict(size=24, color='gold')
+    ),
     hovermode='x unified',
-    margin=dict(t=130)
+    margin=dict(t=150, b=50, l=50, r=50),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 )
 
 fig.show()
