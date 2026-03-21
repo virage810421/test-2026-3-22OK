@@ -1,20 +1,13 @@
 import yfinance as yf
+import pandas_ta as ta
 import numpy as np
 from scipy.signal import find_peaks
-
-def calculate_rsi(prices, period=14):
-    delta = prices.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
 
 # 1. 獲取數據
 df = yf.download("2330.TW", start="2025-01-01") # 以台積電為例
 
 # 2. 計算 RSI
-df['RSI'] = calculate_rsi(df['Close'], length=14)
+df['RSI'] = ta.rsi(df['Close'], length=14)
 df.dropna(inplace=True)
 
 # 3. 尋找股價與 RSI 的局部低點 (Valleys)
