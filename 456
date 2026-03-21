@@ -9,7 +9,7 @@ from plotly.subplots import make_subplots
 # 1. 數據獲取與指標計算
 # -------------------------------
 ticker = "2330.TW"
-data = yf.download(ticker, start="2023-01-01")
+data = yf.download(ticker, start="2023-01-01") 
 df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
 
 # RSI 計算
@@ -23,97 +23,101 @@ df['RSI'] = 100 - (100 / (1 + avg_gain / avg_loss))
 # MACD 計算
 df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
 df['EMA26'] = df['Close'].ewm(span=26, adjust=False).mean()
-df['MACD'] = df['EMA12'] - df['EMA26']
-df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
-df['MACD_Hist'] = df['MACD'] - df['Signal']
+df['MACD_Hist'] = (df['EMA12'] - df['EMA26']) - (df['EMA12'] - df['EMA26']).ewm(span=9, adjust=False).mean()
 df.dropna(inplace=True)
 
 # -------------------------------
-# 2. 背離偵測
+# 2. 強化版背離偵測函數 (支援個別參數)
 # -------------------------------
-def find_divergence(price_series, indicator_series, is_top=True):
+def find_divergence(price_series, indicator_series, is_top=True, 
+                     distance=7, prominence_pc=0.01, threshold=None):
+    """
+    price_series: 價格序列 (High 或 Low)
+    indicator_series: 指標序列 (RSI 或 MACD)
+    is_top: True 為頂背離, False 為底背離
+    distance: 兩個波峰間的最小距離
+    prominence_pc: 波峰顯著性比例 (基於價格均值)
+    threshold: 指標必須超過/低於此值才算有效背離 (RSI可用50, MACD可用0)
+    """
+    # 尋找價格波峰/波谷
+    prominence_val = prominence_pc * np.mean(price_series)
     if is_top:
-        peaks, _ = find_peaks(price_series, distance=7, prominence=0.01 * np.mean(price_series))
+        peaks, _ = find_peaks(price_series, distance=distance, prominence=prominence_val)
     else:
-        peaks, _ = find_peaks(-price_series, distance=7, prominence=0.01 * np.mean(price_series))
+        peaks, _ = find_peaks(-price_series, distance=distance, prominence=prominence_val)
     
     div_signals = []
     for i in range(1, len(peaks)):
         p1, p2 = peaks[i-1], peaks[i]
+        
         if is_top:
-            if price_series[p2] > price_series[p1] and indicator_series[p2] < indicator_series[p1]:
+            # 頂背離：價格創新高 (p2>p1) 但指標降低 (p2<p1)
+            cond_price = price_series[p2] > price_series[p1]
+            cond_indicator = indicator_series[p2] < indicator_series[p1]
+            # 門檻檢查 (例如指標必須在高檔)
+            cond_thresh = True if threshold is None else indicator_series[p2] > threshold
+            
+            if cond_price and cond_indicator and cond_thresh:
                 div_signals.append((p1, p2))
         else:
-            if price_series[p2] < price_series[p1] and indicator_series[p2] > indicator_series[p1]:
+            # 底背離：價格創新低 (p2<p1) 但指標提高 (p2>p1)
+            cond_price = price_series[p2] < price_series[p1]
+            cond_indicator = indicator_series[p2] > indicator_series[p1]
+            # 門檻檢查 (例如指標必須在低檔)
+            cond_thresh = True if threshold is None else indicator_series[p2] < threshold
+            
+            if cond_price and cond_indicator and cond_thresh:
                 div_signals.append((p1, p2))
+                
     return div_signals
 
-rsi_top = find_divergence(df['High'].values, df['RSI'].values, True)
-rsi_bot = find_divergence(df['Low'].values, df['RSI'].values, False)
-macd_top = find_divergence(df['High'].values, df['MACD_Hist'].values, True)
-macd_bot = find_divergence(df['Low'].values, df['MACD_Hist'].values, False)
+# --- 在這裡設定每個指標的個別參數 ---
+# RSI 頂背離: 要求指標要在 55 以上
+rsi_top = find_divergence(df['High'].values, df['RSI'].values, is_top=True, 
+                          distance=10, prominence_pc=0.01, threshold=55)
+
+# RSI 底背離: 要求指標要在 45 以下
+rsi_bot = find_divergence(df['Low'].values, df['RSI'].values, is_top=False, 
+                          distance=10, prominence_pc=0.01, threshold=45)
+
+# MACD 頂背離: 要求指標要在 0 以上 (修正了原本 >55 的 BUG)
+macd_top = find_divergence(df['High'].values, df['MACD_Hist'].values, is_top=True, 
+                           distance=7, prominence_pc=0.005, threshold=0)
+
+# MACD 底背離: 要求指標要在 0 以下
+macd_bot = find_divergence(df['Low'].values, df['MACD_Hist'].values, is_top=False, 
+                           distance=7, prominence_pc=0.005, threshold=0)
 
 # -------------------------------
-# 3. 畫圖（三層）
+# 3. 繪製圖表
 # -------------------------------
-fig = make_subplots(
-    rows=3, cols=1,
-    shared_xaxes=True,
-    vertical_spacing=0.03,
-    row_heights=[0.6, 0.2, 0.2]
-)
+fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.02, 
+                    row_heights=[0.5, 0.25, 0.25])
 
-# K線
-fig.add_trace(go.Candlestick(
-    x=df.index, open=df['Open'], high=df['High'],
-    low=df['Low'], close=df['Close'], name='股價'
-), row=1, col=1)
+# 主圖：K線
+fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], 
+                             low=df['Low'], close=df['Close'], name='股價'), row=1, col=1)
 
-# RSI
-fig.add_trace(go.Scatter(
-    x=df.index, y=df['RSI'],
-    line=dict(color='#9c27b0', width=2),
-    name='RSI'
-), row=2, col=1)
-
+# RSI 子圖
+fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], line=dict(color='#9c27b0', width=2), name='RSI'), row=2, col=1)
 fig.add_hrect(y0=70, y1=100, fillcolor="red", opacity=0.1, line_width=0, row=2, col=1)
 fig.add_hrect(y0=0, y1=30, fillcolor="green", opacity=0.1, line_width=0, row=2, col=1)
 
-# MACD
+# MACD 子圖
 colors = ['#ef5350' if x > 0 else '#26a69a' for x in df['MACD_Hist']]
-fig.add_trace(go.Bar(
-    x=df.index, y=df['MACD_Hist'],
-    marker_color=colors, name='MACD'
-), row=3, col=1)
+fig.add_trace(go.Bar(x=df.index, y=df['MACD_Hist'], marker_color=colors, name='MACD 柱狀圖'), row=3, col=1)
 
-# ⭐⭐⭐ 重點：讓 MACD「往下壓」
-fig.update_yaxes(range=[-25, 5], row=3, col=1)
-
-# 加 0 軸（更清楚）
-fig.add_hline(y=0, line_dash="dot", line_color="white", row=3, col=1)
-
-# -------------------------------
-# 4. 背離畫線
-# -------------------------------
-def plot_div(div_list, p_data, i_data, color, name, row_num):
+# 繪製背離連線
+def plot_div(div_list, p_data, i_data, color, name, i_row):
     for p1, p2 in div_list:
-        # 價格
-        fig.add_trace(go.Scatter(
-            x=[df.index[p1], df.index[p2]],
-            y=[p_data[p1], p_data[p2]],
-            line=dict(color=color, width=3),
-            mode='lines+markers',
-            showlegend=False
-        ), row=1, col=1)
-
-        # 指標
-        fig.add_trace(go.Scatter(
-            x=[df.index[p1], df.index[p2]],
-            y=[i_data[p1], i_data[p2]],
-            line=dict(color=color, width=3),
-            mode='lines+markers',
-            name=name
-        ), row=row_num, col=1)
+        # 主圖連線 (Dash 虛線)
+        fig.add_trace(go.Scatter(x=[df.index[p1], df.index[p2]], y=[p_data[p1], p_data[p2]], 
+                                 line=dict(color=color, width=2, dash='dash'), 
+                                 mode='lines+markers', showlegend=False, hoverinfo='skip'), row=1, col=1)
+        # 指標圖連線 (實線)
+        fig.add_trace(go.Scatter(x=[df.index[p1], df.index[p2]], y=[i_data[p1], i_data[p2]], 
+                                 line=dict(color=color, width=2), 
+                                 mode='lines+markers', name=name), row=i_row, col=1)
 
 plot_div(rsi_top, df['High'].values, df['RSI'].values, '#ff5252', 'RSI 頂背離', 2)
 plot_div(rsi_bot, df['Low'].values, df['RSI'].values, '#00e676', 'RSI 底背離', 2)
@@ -121,7 +125,7 @@ plot_div(macd_top, df['High'].values, df['MACD_Hist'].values, '#ffa726', 'MACD �
 plot_div(macd_bot, df['Low'].values, df['MACD_Hist'].values, '#29b6f6', 'MACD 底背離', 3)
 
 # -------------------------------
-# 5. UI 設定
+# 4. 佈局與時間選擇器
 # -------------------------------
 fig.update_xaxes(
     rangebreaks=[dict(bounds=["sat", "mon"])],
@@ -133,19 +137,17 @@ fig.update_xaxes(
             dict(count=1, label="今年", step="year", stepmode="todate"),
             dict(step="all", label="全部")
         ]),
-        bgcolor="rgba(150,150,150,0.1)",
-        activecolor="gold",
         x=0, y=1.05
-    ),
-    type="date"
+    )
 )
 
 fig.update_layout(
     height=900,
     template='plotly_dark',
-    title_text=f"{ticker} 背離分析",
+    title_text=f"{ticker} 參數化背離偵測系統",
+    xaxis_rangeslider_visible=False,
     hovermode='x unified',
-    margin=dict(t=120)
+    margin=dict(t=130)
 )
 
 fig.show()
