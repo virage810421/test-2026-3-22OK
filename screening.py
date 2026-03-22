@@ -108,7 +108,10 @@ if __name__ == "__main__":
         result = inspect_stock(stock)
         if result:
             report_cards.append(result)
-           
+            # 【測試修改】：強制指定只要掃描到台積電，就無視燈號直接彈出圖表！
+            if stock == "2454.TW":  
+                    print(f"🔧 執行強制通電測試：啟動 {stock} 精密儀表板...")
+                    draw_chart(stock)
     # 將收集到的結果，轉換成整齊的 Pandas 報表並印出
     if report_cards:
         final_report = pd.DataFrame(report_cards)
