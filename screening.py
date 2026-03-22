@@ -41,6 +41,7 @@ def inspect_stock(ticker):
 
         # 3. 基礎指標計算 (BBands 與 成交量均線)
         df['MA20'] = df['Close'].rolling(window=20).mean()
+        df['MA60'] = df['Close'].rolling(window=60).mean()
         df['BB_std'] = df['Close'].rolling(window=20).std()
         df['BB_Upper'] = df['MA20'] + (df['BB_std'] * 2)
         df['BB_Lower'] = df['MA20'] - (df['BB_std'] * 2)

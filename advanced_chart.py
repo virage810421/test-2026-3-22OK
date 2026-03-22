@@ -72,6 +72,7 @@ def draw_chart(ticker):
 
    # C. 布林通道與成交量計算
     df['MA20'] = df['Close'].rolling(window=20).mean()
+    df['MA60'] = df['Close'].rolling(window=60).mean()
     df['BB_std'] = df['Close'].rolling(window=20).std()
     df['BB_Upper'] = df['MA20'] + (df['BB_std'] * 2)
     df['BB_Lower'] = df['MA20'] - (df['BB_std'] * 2)
@@ -106,44 +107,107 @@ def draw_chart(ticker):
     df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
     df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
     
-    # 【新增】⚙️ 策略回測引擎 (State Machine)
-    position = 0 
+    # # 【新增】⚙️ 策略回測引擎 (State Machine)
+    # position = 0 
+    # entry_price = 0
+    # trades = [] 
+
+    # for index, row in df.iterrows():
+    #     if position == 0 and not pd.isna(row['Buy_Signal']):
+    #         position = 1
+    #         entry_price = row['Close'] 
+    #         entry_date = index
+    #     elif position == 1 and not pd.isna(row['Sell_Signal']):
+    #         exit_price = row['Close']
+    #         profit_pct = (exit_price - entry_price) / entry_price * 100 
+    #         trades.append({
+    #             '進場日': entry_date, '出場日': index,
+    #             '進場價': entry_price, '出場價': exit_price,
+    #             '報酬率(%)': profit_pct
+    #         })
+    #         position = 0 
+
+    # if len(trades) > 0:
+    #     trades_df = pd.DataFrame(trades)
+    #     total_trades = len(trades_df)
+    #     winning_trades = len(trades_df[trades_df['報酬率(%)'] > 0])
+    #     win_rate = winning_trades / total_trades * 100
+    #     total_profit = trades_df['報酬率(%)'].sum() 
+    #     backtest_text = (
+    #         f"<b>⚙️ 策略回測報告 (BBands+RSI)</b><br>"
+    #         f"• 總交易趟數：{total_trades} 次<br>"
+    #         f"• 系統勝率：<span style='color:gold'>{win_rate:.1f}%</span><br>"
+    #         f"• 累計報酬率：<span style='color:{color_up if total_profit > 0 else color_down}'>{total_profit:.2f}%</span><br>"
+    #     )
+
+    # ==========================================
+    # 【升級】⚙️ 策略回測引擎 (雙向作動：做多 + 放空)
+    # ==========================================
+    position = 0  # 狀態變數：0 代表空手，1 代表持有多單，-1 代表持有空單
     entry_price = 0
     trades = [] 
 
     for index, row in df.iterrows():
+        # 狀況 A：【空手】狀態下，偵測到【買入訊號】 -> 打入前進檔，進場做多
         if position == 0 and not pd.isna(row['Buy_Signal']):
             position = 1
             entry_price = row['Close'] 
             entry_date = index
+            trade_type = "做多(Long)"
+            
+        # 狀況 B：【空手】狀態下，偵測到【賣出訊號】 -> 打入倒車檔，進場放空 (融券)
+        elif position == 0 and not pd.isna(row['Sell_Signal']):
+            position = -1
+            entry_price = row['Close'] 
+            entry_date = index
+            trade_type = "放空(Short)"
+
+        # 狀況 C：持有【多單】時，偵測到【賣出訊號】 -> 多單平倉 (獲利了結或停損)
         elif position == 1 and not pd.isna(row['Sell_Signal']):
             exit_price = row['Close']
+            # 做多利潤算法
             profit_pct = (exit_price - entry_price) / entry_price * 100 
             trades.append({
-                '進場日': entry_date, '出場日': index,
-                '進場價': entry_price, '出場價': exit_price,
-                '報酬率(%)': profit_pct
+                '方向': trade_type, '進場日': entry_date, '出場日': index,
+                '進場價': entry_price, '出場價': exit_price, '報酬率(%)': profit_pct
             })
-            position = 0 
+            position = 0 # 恢復空手
 
+        # 狀況 D：持有【空單】時，偵測到【買入訊號】 -> 空單回補 (獲利了結或停損)
+        elif position == -1 and not pd.isna(row['Buy_Signal']):
+            exit_price = row['Close']
+            # 做空利潤算法 (進場價減去出場價)
+            profit_pct = (entry_price - exit_price) / entry_price * 100 
+            trades.append({
+                '方向': trade_type, '進場日': entry_date, '出場日': index,
+                '進場價': entry_price, '出場價': exit_price, '報酬率(%)': profit_pct
+            })
+
+            position = 0 # 恢復空手
+            
+    # 結算總成績單
     if len(trades) > 0:
         trades_df = pd.DataFrame(trades)
         total_trades = len(trades_df)
         winning_trades = len(trades_df[trades_df['報酬率(%)'] > 0])
         win_rate = winning_trades / total_trades * 100
         total_profit = trades_df['報酬率(%)'].sum() 
+        
+        # 區分做多和做空的次數，讓報表更細緻
+        long_trades = len(trades_df[trades_df['方向'] == '做多(Long)'])
+        short_trades = len(trades_df[trades_df['方向'] == '放空(Short)'])
+        
         backtest_text = (
-            f"<b>⚙️ 策略回測報告 (BBands+RSI)</b><br>"
-            f"• 總交易趟數：{total_trades} 次<br>"
+            f"<b>⚙️ 雙向策略回測報告 (多/空)</b><br>"
+            f"• 總交易：{total_trades} 次 (多:{long_trades} / 空:{short_trades})<br>"
             f"• 系統勝率：<span style='color:gold'>{win_rate:.1f}%</span><br>"
             f"• 累計報酬率：<span style='color:{color_up if total_profit > 0 else color_down}'>{total_profit:.2f}%</span><br>"
         )
-        
-        # ✨ 【新增區塊】：加裝明細印表機，把 Pandas 資料表整理後印在終端機
+
+        # 列印終端機交易明細
         print(f"\n========================================================")
         print(f"📊 {ticker} 歷史模擬交易明細 (共 {total_trades} 趟):")
         
-        # 為了讓畫面整潔，我們把日期格式化，並將數值四捨五入到小數點後兩位
         log_df = trades_df.copy()
         log_df['進場日'] = log_df['進場日'].dt.strftime('%Y-%m-%d')
         log_df['出場日'] = log_df['出場日'].dt.strftime('%Y-%m-%d')
@@ -151,12 +215,11 @@ def draw_chart(ticker):
         log_df['出場價'] = log_df['出場價'].round(2)
         log_df['報酬率(%)'] = log_df['報酬率(%)'].round(2)
         
-        # 使用 Pandas 的 to_string 印出整齊的表格
         print(log_df.to_string(index=False))
         print(f"========================================================\n")
 
     else:
-        backtest_text = "<b>⚙️ 策略回測報告</b><br>• 在此區間內無完整交易觸發"
+        backtest_text = "<b>⚙️ 雙向策略回測報告</b><br>• 在此區間內無完整交易觸發"
 
     # -------------------------------
     # 2. 強化版背離偵測函數 (導入 ATR 動態公差)
@@ -201,7 +264,8 @@ def draw_chart(ticker):
 
     fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], 
         increasing_line_color=color_up, decreasing_line_color=color_down, name='股價', opacity=0.8, showlegend=False), row=1, col=1)
-
+    # 【新增】將 60 日季線畫在主圖上，作為多空分界線
+    fig.add_trace(go.Scatter(x=df.index, y=df['MA60'], line=dict(color='#2196F3', width=2), name='季線 (MA60)'), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['BB_Upper'], line=dict(color='#555', width=1, dash='dot'), name='BB 上軌', showlegend=False), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['BB_Lower'], line=dict(color='#555', width=1, dash='dot'), name='BB 下軌', showlegend=False), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index.tolist() + df.index.tolist()[::-1], y=df['BB_Upper'].tolist() + df['BB_Lower'].tolist()[::-1],
