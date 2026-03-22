@@ -183,8 +183,9 @@ def draw_chart(ticker):
                 '進場價': entry_price, '出場價': exit_price, '報酬率(%)': profit_pct
             })
 
-            position = 0 # 恢復空手
             
+            position = 0 # 恢復空手
+
     # 結算總成績單
     if len(trades) > 0:
         trades_df = pd.DataFrame(trades)
