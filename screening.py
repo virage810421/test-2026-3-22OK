@@ -32,14 +32,16 @@ def inspect_stock(ticker):
         df['BB_std'] = df['Close'].rolling(window=20).std()
         df['BB_Upper'] = df['MA20'] + (df['BB_std'] * 2)
         df['BB_Lower'] = df['MA20'] - (df['BB_std'] * 2)
+        df['Vol_MA20'] = df['Volume'].rolling(window=20).mean()
+
 
         # 清除初期空值 (維持正確的運作順序)
         df.dropna(inplace=True)
 
         # 3. 邏輯閘設定 (買賣條件)
-        buy_condition = (df['Low'] <= df['BB_Lower']) & (df['RSI'] < 35)
-        sell_condition = (df['High'] >= df['BB_Upper']) & (df['RSI'] > 65)
-
+        buy_condition = (df['Low'] <= df['BB_Lower']) & (df['RSI'] < 35) & (df['Volume'] > df['Vol_MA20'] * 1.5)
+        sell_condition = (df['High'] >= df['BB_Upper']) & (df['RSI'] > 65) & (df['Volume'] > df['Vol_MA20'] * 1.5)
+        
         df['Buy_Signal'] = np.where(buy_condition, True, False)
         df['Sell_Signal'] = np.where(sell_condition, True, False)
 
@@ -109,7 +111,7 @@ if __name__ == "__main__":
         if result:
             report_cards.append(result)
             # 【測試修改】：強制指定只要掃描到台積電，就無視燈號直接彈出圖表！
-            if stock == "2454.TW":  
+            if stock == "2330.TW":  
                     print(f"🔧 執行強制通電測試：啟動 {stock} 精密儀表板...")
                     draw_chart(stock)
     # 將收集到的結果，轉換成整齊的 Pandas 報表並印出

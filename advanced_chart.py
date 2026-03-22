@@ -86,9 +86,10 @@ def draw_chart(ticker):
     df.drop(['Prev_Close', 'TR'], axis=1, inplace=True)
     df.dropna(inplace=True)
 
+    df['Vol_MA20'] = df['Volume'].rolling(window=20).mean()
     # D. 【新增】買賣訊號邏輯 (複合條件連動)
-    buy_condition = (df['Low'] <= df['BB_Lower']) & (df['RSI'] < 35)
-    sell_condition = (df['High'] >= df['BB_Upper']) & (df['RSI'] > 65)
+    buy_condition = (df['Low'] <= df['BB_Lower']) & (df['RSI'] < 35) & (df['Volume'] > df['Vol_MA20'] * 1.5)
+    sell_condition = (df['High'] >= df['BB_Upper']) & (df['RSI'] > 65) & (df['Volume'] > df['Vol_MA20'] * 1.5)
 
     df['Buy_Signal'] = np.where(buy_condition, df['Low'] * 0.98, np.nan)
     df['Sell_Signal'] = np.where(sell_condition, df['High'] * 1.02, np.nan)
