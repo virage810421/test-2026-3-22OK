@@ -14,7 +14,7 @@ def inspect_stock(ticker):
     """
     try:
         # 1. 獲取資料 (縮短區間以提升海選掃描速度，改為抓取近一年半)
-        data = yf.download(ticker, start="2023-01-01", progress=False) 
+        data = yf.download(ticker, period="2y", progress=False) 
         if data.empty:
             return None
             

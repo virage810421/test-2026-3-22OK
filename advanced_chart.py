@@ -40,7 +40,7 @@ def draw_chart(ticker):
 
 
     # 抓取較長時間範圍，以便於縮放選擇
-    data = yf.download(ticker, start="2023-01-01", progress=False) 
+    data = yf.download(ticker, period="2y", progress=False) 
     if data.empty:
         print(f"無法獲取 {ticker} 的歷史資料。")
         return
@@ -138,6 +138,23 @@ def draw_chart(ticker):
             f"• 系統勝率：<span style='color:gold'>{win_rate:.1f}%</span><br>"
             f"• 累計報酬率：<span style='color:{color_up if total_profit > 0 else color_down}'>{total_profit:.2f}%</span><br>"
         )
+        
+        # ✨ 【新增區塊】：加裝明細印表機，把 Pandas 資料表整理後印在終端機
+        print(f"\n========================================================")
+        print(f"📊 {ticker} 歷史模擬交易明細 (共 {total_trades} 趟):")
+        
+        # 為了讓畫面整潔，我們把日期格式化，並將數值四捨五入到小數點後兩位
+        log_df = trades_df.copy()
+        log_df['進場日'] = log_df['進場日'].dt.strftime('%Y-%m-%d')
+        log_df['出場日'] = log_df['出場日'].dt.strftime('%Y-%m-%d')
+        log_df['進場價'] = log_df['進場價'].round(2)
+        log_df['出場價'] = log_df['出場價'].round(2)
+        log_df['報酬率(%)'] = log_df['報酬率(%)'].round(2)
+        
+        # 使用 Pandas 的 to_string 印出整齊的表格
+        print(log_df.to_string(index=False))
+        print(f"========================================================\n")
+
     else:
         backtest_text = "<b>⚙️ 策略回測報告</b><br>• 在此區間內無完整交易觸發"
 
