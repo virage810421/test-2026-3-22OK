@@ -89,9 +89,59 @@ df.dropna(inplace=True)
 buy_condition = (df['Low'] <= df['BB_Lower']) & (df['RSI'] < 35)
 sell_condition = (df['High'] >= df['BB_Upper']) & (df['RSI'] > 65)
 
+
 # 為了讓 UI 繪圖時能準確標示位置，我們將買點放在當天最低價再往下偏移 2% 的位置，賣點放在最高價往上 2%
 df['Buy_Signal'] = np.where(buy_condition, df['Low'] * 0.98, np.nan)
 df['Sell_Signal'] = np.where(sell_condition, df['High'] * 1.02, np.nan)
+
+# ==========================================
+# (接在你原本的買賣訊號邏輯 D 區塊之後)
+# df['Buy_Signal'] = ...
+# df['Sell_Signal'] = ...
+
+# 【新增】⚙️ 策略回測引擎 (State Machine)
+position = 0  # 狀態變數：0 代表空手，1 代表持有
+entry_price = 0
+trades = []   # 用來存放每一筆交易紀錄的清單
+
+# 讓歷史資料像輸送帶一樣，逐日通過夾爪檢測
+for index, row in df.iterrows():
+    # 狀況 A：空手，且偵測到買入訊號 -> 啟動夾爪買進
+    if position == 0 and not pd.isna(row['Buy_Signal']):
+        position = 1
+        entry_price = row['Close'] # 實務上以當天收盤價為進場成本
+        entry_date = index
+        
+    # 狀況 B：持有股票，且偵測到賣出訊號 -> 鬆開夾爪結算利潤
+    elif position == 1 and not pd.isna(row['Sell_Signal']):
+        exit_price = row['Close']
+        profit_pct = (exit_price - entry_price) / entry_price * 100 # 計算單趟利潤百分比
+        
+        # 將這趟交易的數據存入紀錄本
+        trades.append({
+            '進場日': entry_date, '出場日': index,
+            '進場價': entry_price, '出場價': exit_price,
+            '報酬率(%)': profit_pct
+        })
+        position = 0  # 賣出後恢復空手狀態，等待下一次買點
+
+# 結算總成績單，並生成儀表板文字
+if len(trades) > 0:
+    trades_df = pd.DataFrame(trades)
+    total_trades = len(trades_df)
+    winning_trades = len(trades_df[trades_df['報酬率(%)'] > 0])
+    win_rate = winning_trades / total_trades * 100
+    total_profit = trades_df['報酬率(%)'].sum() # 簡單累加總報酬
+    
+    backtest_text = (
+        f"<b>⚙️ 策略回測報告 (BBands+RSI)</b><br>"
+        f"• 總交易趟數：{total_trades} 次<br>"
+        f"• 系統勝率：<span style='color:gold'>{win_rate:.1f}%</span><br>"
+        f"• 累計報酬率：<span style='color:{color_up if total_profit > 0 else color_down}'>{total_profit:.2f}%</span><br>"
+    )
+else:
+    backtest_text = "<b>⚙️ 策略回測報告</b><br>• 在此區間內無完整交易觸發"
+# ==========================================
 
 # # -------------------------------
 # # 2. 強化版背離偵測函數 (保持個別參數邏輯)
@@ -360,6 +410,17 @@ fig.add_annotation(
     bgcolor='rgba(30, 30, 30, 0.7)', # 半透明深色壓克力背板
     bordercolor='gold', borderwidth=1, borderpad=8,
     font=dict(size=11, color='#E0E0E0')
+)
+
+# 【新增】將回測績效面板鎖在主圖表右側 (不干涉 K 線)
+fig.add_annotation(
+    text=backtest_text,
+    align='left', showarrow=False,
+    xref='paper', yref='paper', 
+    x=0.99, y=0.60, # 鎖定在畫布右側，高度與新聞面板一致
+    bgcolor='rgba(10, 40, 20, 0.8)', # 帶點深綠色的壓克力背板，象徵獲利
+    bordercolor='#00E676', borderwidth=1.5, borderpad=12,
+    font=dict(size=13, color='#F5F5F5')
 )
 
 fig.show()
