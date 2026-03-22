@@ -103,13 +103,13 @@ def draw_chart(ticker):
     # D. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
     buy_c1 = df['Low'] <= df['BB_Lower']
     buy_c2 = df['RSI'] < 35
-    buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
+    buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
     buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
     df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int)
 
     sell_c1 = df['High'] >= df['BB_Upper']
     sell_c2 = df['RSI'] > 65
-    sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
+    sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
     sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
     df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int)
 
@@ -124,6 +124,9 @@ def draw_chart(ticker):
     slippage = 0.001  # 單趟滑價 (0.1%)
     # 先算好「來回一趟」的總耗損(%)，讓迴圈內的運算更快速
     round_trip_cost_pct = (fee + slippage) * 100 * 2 
+
+    stop_loss = 0.05     # 🛑 停損設定：-5% (虧損 5% 強制斷電)
+    take_profit = 0.15   # 🎯 停利設定：+15% (獲利 15% 提早收割)
 
     position = 0  # 狀態變數：0 代表空手，1 代表持有多單，-1 代表持有空單
     entry_price = 0
