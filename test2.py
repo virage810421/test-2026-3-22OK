@@ -54,7 +54,7 @@ fig = make_subplots(
     rows=3, cols=1, 
     shared_xaxes=True, 
     vertical_spacing=0.03, # 增加間距讓畫面不擁擠
-    row_heights=[0.70, 0.10, 0.10] 
+    row_heights=[0.80, 0.10, 0.10] 
 )
 
 # [其餘繪圖邏輯保持不變...]
