@@ -70,30 +70,42 @@ def draw_chart(ticker):
     df['MACD_Signal'] = df['DIF'].ewm(span=9, adjust=False).mean()
     df['MACD_Hist'] = (df['DIF'] - df['MACD_Signal']) * 2
 
-    # C. 【新增】布林通道計算 (20日均線, 2倍標準差)
+   # C. 布林通道與成交量計算
     df['MA20'] = df['Close'].rolling(window=20).mean()
     df['BB_std'] = df['Close'].rolling(window=20).std()
     df['BB_Upper'] = df['MA20'] + (df['BB_std'] * 2)
     df['BB_Lower'] = df['MA20'] - (df['BB_std'] * 2)
+    df['Vol_MA20'] = df['Volume'].rolling(window=20).mean()
 
-    # 【新增】動態公差感測器：ATR (真實波動幅度) 計算
+    # 動態公差感測器：ATR (真實波動幅度) 計算
     df['Prev_Close'] = df['Close'].shift(1)
     df['TR'] = df[['High', 'Low', 'Prev_Close']].apply(
         lambda x: max(x['High'] - x['Low'], abs(x['High'] - x['Prev_Close']), abs(x['Low'] - x['Prev_Close'])), 
         axis=1
     )
-    df['ATR'] = df['TR'].rolling(window=14).mean() # 採用14日平滑處理
+    df['ATR'] = df['TR'].rolling(window=14).mean() 
     df.drop(['Prev_Close', 'TR'], axis=1, inplace=True)
+    
+    # 清理運算初期的空值
     df.dropna(inplace=True)
 
-    df['Vol_MA20'] = df['Volume'].rolling(window=20).mean()
-    # D. 【新增】買賣訊號邏輯 (複合條件連動)
-    buy_condition = (df['Low'] <= df['BB_Lower']) & (df['RSI'] < 35) & (df['Volume'] > df['Vol_MA20'] * 1.5)
-    sell_condition = (df['High'] >= df['BB_Upper']) & (df['RSI'] > 65) & (df['Volume'] > df['Vol_MA20'] * 1.5)
+    # D. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
+    buy_c1 = df['Low'] <= df['BB_Lower']
+    buy_c2 = df['RSI'] < 35
+    buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
+    buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
+    df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int)
 
-    df['Buy_Signal'] = np.where(buy_condition, df['Low'] * 0.98, np.nan)
-    df['Sell_Signal'] = np.where(sell_condition, df['High'] * 1.02, np.nan)
+    sell_c1 = df['High'] >= df['BB_Upper']
+    sell_c2 = df['RSI'] > 65
+    sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
+    sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
+    df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int)
 
+    # 圖表專屬輸出：輸出「價格座標」，讓 Plotly 知道要在哪裡畫出三角形箭頭
+    df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
+    df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
+    
     # 【新增】⚙️ 策略回測引擎 (State Machine)
     position = 0 
     entry_price = 0
