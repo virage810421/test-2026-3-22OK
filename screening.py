@@ -30,7 +30,8 @@ def inspect_stock(ticker):
         loss = -delta.where(delta < 0, 0)
         avg_gain = gain.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
         avg_loss = loss.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-        df['RSI'] = 100 - (100 / (1 + avg_gain / avg_loss))
+        rs = avg_gain / avg_loss.replace(0, np.nan)
+        df['RSI'] = 100 - (100 / (1 + rs))
 
         # 2. 基礎指標計算 (MACD，海選原本沒有，現在補上作為計分條件)
         df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()

@@ -61,7 +61,8 @@ def draw_chart(ticker):
     loss = -delta.where(delta < 0, 0)
     avg_gain = gain.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
     avg_loss = loss.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-    df['RSI'] = 100 - (100 / (1 + avg_gain / avg_loss))
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    df['RSI'] = 100 - (100 / (1 + rs))
 
     # B. MACD 計算
     df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
@@ -78,16 +79,25 @@ def draw_chart(ticker):
     df['BB_Lower'] = df['MA20'] - (df['BB_std'] * 2)
     df['Vol_MA20'] = df['Volume'].rolling(window=20).mean()
 
-    # 動態公差感測器：ATR (真實波動幅度) 計算
+    # ==========================================
+# ⚙️ 動態公差感測器：優化版 ATR 計算 (插入此處)
+# ==========================================
+# 1. 向量化計算前一收盤價
     df['Prev_Close'] = df['Close'].shift(1)
-    df['TR'] = df[['High', 'Low', 'Prev_Close']].apply(
-        lambda x: max(x['High'] - x['Low'], abs(x['High'] - x['Prev_Close']), abs(x['Low'] - x['Prev_Close'])), 
-        axis=1
-    )
-    df['ATR'] = df['TR'].rolling(window=14).mean() 
-    df.drop(['Prev_Close', 'TR'], axis=1, inplace=True)
-    
-    # 清理運算初期的空值
+
+# 2. 你的向量化優化邏輯：計算 TR (真實波幅)
+    df['真實波幅 (TR)'] = np.maximum.reduce([
+    df['High'] - df['Low'],
+    (df['High'] - df['Prev_Close']).abs(),
+    (df['Low'] - df['Prev_Close']).abs()
+    ])
+
+# 3. 計算 ATR (改用 .ewm 威爾德平滑法，比 .rolling 更精準)
+    window_atr = 14
+    df['ATR'] = df['真實波幅 (TR)'].ewm(alpha=1/window_atr, adjust=False).mean()
+
+# 4. 清理暫存欄位，並移除初始 NaN (確保後續邏輯不報錯)
+    df.drop(['Prev_Close'], axis=1, inplace=True) # 暫時保留 TR 給背離偵測，或之後一起刪
     df.dropna(inplace=True)
 
     # D. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
@@ -107,58 +117,36 @@ def draw_chart(ticker):
     df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
     df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
     
-    # # 【新增】⚙️ 策略回測引擎 (State Machine)
-    # position = 0 
-    # entry_price = 0
-    # trades = [] 
 
-    # for index, row in df.iterrows():
-    #     if position == 0 and not pd.isna(row['Buy_Signal']):
-    #         position = 1
-    #         entry_price = row['Close'] 
-    #         entry_date = index
-    #     elif position == 1 and not pd.isna(row['Sell_Signal']):
-    #         exit_price = row['Close']
-    #         profit_pct = (exit_price - entry_price) / entry_price * 100 
-    #         trades.append({
-    #             '進場日': entry_date, '出場日': index,
-    #             '進場價': entry_price, '出場價': exit_price,
-    #             '報酬率(%)': profit_pct
-    #         })
-    #         position = 0 
-
-    # if len(trades) > 0:
-    #     trades_df = pd.DataFrame(trades)
-    #     total_trades = len(trades_df)
-    #     winning_trades = len(trades_df[trades_df['報酬率(%)'] > 0])
-    #     win_rate = winning_trades / total_trades * 100
-    #     total_profit = trades_df['報酬率(%)'].sum() 
-    #     backtest_text = (
-    #         f"<b>⚙️ 策略回測報告 (BBands+RSI)</b><br>"
-    #         f"• 總交易趟數：{total_trades} 次<br>"
-    #         f"• 系統勝率：<span style='color:gold'>{win_rate:.1f}%</span><br>"
-    #         f"• 累計報酬率：<span style='color:{color_up if total_profit > 0 else color_down}'>{total_profit:.2f}%</span><br>"
-    #     )
-
-    # ==========================================
     # 【升級】⚙️ 策略回測引擎 (雙向作動：做多 + 放空)
-    # ==========================================
+   # 💡 【新增區塊】：設定機台摩擦係數 (交易成本)
+    fee = 0.0015      # 單趟手續費 (0.15%)
+    slippage = 0.001  # 單趟滑價 (0.1%)
+    # 先算好「來回一趟」的總耗損(%)，讓迴圈內的運算更快速
+    round_trip_cost_pct = (fee + slippage) * 100 * 2 
+
     position = 0  # 狀態變數：0 代表空手，1 代表持有多單，-1 代表持有空單
     entry_price = 0
-    trades = [] 
+    trades = []
 
     for index, row in df.iterrows():
         # 狀況 A：【空手】狀態下，偵測到【買入訊號】 -> 打入前進檔，進場做多
-        if position == 0 and not pd.isna(row['Buy_Signal']):
-            position = 1
-            entry_price = row['Close'] 
-            entry_date = index
-            trade_type = "做多(Long)"
-            
-        # 狀況 B：【空手】狀態下，偵測到【賣出訊號】 -> 打入倒車檔，進場放空 (融券)
-        elif position == 0 and not pd.isna(row['Sell_Signal']):
+        if position == 0:
+    # 🔥 決策核心：比較權重並確認訊號存在
+            buy_val = row['Buy_Score']
+            sell_val = row['Sell_Score']
+
+    # 狀況 A：買方力道強於賣方，且達到進場門檻
+        if buy_val > sell_val and not pd.isna(row['Buy_Signal']):
+             position = 1
+             entry_price = row['Close']
+             entry_date = index
+             trade_type = "做多(Long)"
+
+    # 狀況 B：賣方力道強於買方，且達到進場門檻
+        elif sell_val > buy_val and not pd.isna(row['Sell_Signal']):
             position = -1
-            entry_price = row['Close'] 
+            entry_price = row['Close']
             entry_date = index
             trade_type = "放空(Short)"
 
