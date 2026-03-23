@@ -51,36 +51,56 @@ def inspect_stock(ticker):
         # 清理運算初期的空值
         df.dropna(inplace=True)
 
-       # 4. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
-        
-        # 🛡️ 【新增】大趨勢濾網 (Trend Filter)
-        # 條件：今天的 MA60 必須大於昨天的 MA60 (代表季線上揚，大趨勢偏多)
-        # 如果你想更嚴格，可以改成 (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
-        trend_filter = df['MA60'] > df['MA60'].shift(1)
+       # ==========================================
+    # D. ⚙️ 計分型邏輯閘 (滿分 3 分 + 大趨勢保護傘)
+    # ==========================================
+    
+    # 🛡️ 【大趨勢保護傘 (買方主開關)】 
+    # 條件 1：股價必須站上 60 日季線 (長線保護短線)
+    # 條件 2：60 日季線本身必須是「向上彎的」(確保不是在下坡路段)
+        trend_protect_buy = (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
 
-        # 基礎抄底買進條件 (滿分 4 分)
+    # --- 【買方邏輯 (微觀打分)】 ---
         buy_c1 = df['Low'] <= df['BB_Lower']
         buy_c2 = df['RSI'] < 35
-        buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
+        buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-        
-        # 先計算原始的抄底分數
-        raw_buy_score = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int)
-        
-        # ⚡ 濾網發威：將原始分數乘上濾網狀態 (True 會變成 1，False 會變成 0)
-        # 如果季線下彎，trend_filter 會是 0，分數不管多高都會瞬間歸零！
-        df['Buy_Score'] = raw_buy_score * trend_filter.astype(int)
+    
+    # 動能模組：RSI 與 MACD 只要有一個發動就拿 1 分
+        buy_momentum = buy_c2 | buy_c4 
 
-        # 賣出條件維持原樣 (滿分 4 分)
+    # 總分加總 (布林 + 動能模組 + 爆量 = 最高 3 分)
+        df['Buy_Score'] = buy_c1.astype(int) + buy_momentum.astype(int) + buy_c3.astype(int)
+
+
+    # 🛡️ 【大趨勢保護傘 (賣方/放空主開關)】 
+    # 條件 1：股價跌破 60 日季線
+    # 條件 2：60 日季線本身是「向下彎的」
+        trend_protect_sell = (df['Close'] < df['MA60']) & (df['MA60'] < df['MA60'].shift(1))
+
+    # --- 【賣方邏輯 (微觀打分)】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
-        sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
+        sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-        df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int)
+    
+    # 動能模組：RSI 與 MACD 只要有一個發動就拿 1 分
+        sell_momentum = sell_c2 | sell_c4
 
-        # 海選專屬輸出：輸出 True 或 False 給系統判定燈號
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, True, False)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, True, False)
+    # 總分加總 (布林 + 動能模組 + 爆量 = 最高 3 分)
+        df['Sell_Score'] = sell_c1.astype(int) + sell_momentum.astype(int) + sell_c3.astype(int)
+
+
+    # ==========================================
+    # ⚡️ 終極發射台：結合微觀分數與宏觀保護傘
+    # ==========================================
+    # 買進條件：微觀拿到滿分 3 分 AND 保護傘開啟
+        df['Buy_Signal'] = np.where((df['Buy_Score'] >= 3) & trend_protect_buy, df['Low'] * 0.98, np.nan)
+    
+    # 賣出條件：微觀拿到滿分 3 分 AND 保護傘開啟
+    # (註：如果你賣出只是為了「多單獲利了結」，其實不需要綁 trend_protect_sell。
+    #  但因為你的機台有支援「放空」，所以綁上去可以確保你不會在大多頭中被軋空)
+        df['Sell_Signal'] = np.where((df['Sell_Score'] >= 3) & trend_protect_sell, df['High'] * 1.02, np.nan)
       
         # 4. 啟動回測引擎 (計算這套參數在該股票的良率)
         position = 0
