@@ -102,38 +102,41 @@ def draw_chart(ticker):
     df.drop(['Prev_Close'], axis=1, inplace=True) # 暫時保留 TR 給背離偵測，或之後一起刪
     df.dropna(inplace=True)
 
-    # ==========================================
-    # D. ⚙️ 計分型邏輯閘 (動能綁定版：滿分變 3 分)
+   # ==========================================
+    # D. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
     # ==========================================
     # --- 【買方邏輯】 ---
-    buy_c1 = df['Low'] <= df['BB_Lower']
-    buy_c2 = df['RSI'] < 35
-    buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
-    buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
+    buy_c1 = df['Low'] <= df['BB_Lower']                            # 條件1: 破布林下軌
+    buy_c2 = df['RSI'] < 35                                         # 條件2: RSI 超賣
+    buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)                  # 條件3: 爆量
+    buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0) # 條件4: MACD 轉強
     
-    # ⚡️ 將 RSI 與 MACD 綁定成「動能模組」
-    # (個別觸發算 1 分，同時觸發也是 1 分)
+    # 條件5: 即時底背離感測 (安全無作弊版)
+    buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
+
+    # ⚡️ 核心整併：RSI 與 MACD 只要有一個發動就拿 1 分，同時發動也只給 1 分
     buy_momentum = buy_c2 | buy_c4 
 
-    # 總分加總：c1(布林) + momentum(動能) + c3(成交量) = 最高 3 分
-    df['Buy_Score'] = buy_c1.astype(int) + buy_momentum.astype(int) + buy_c3.astype(int)
+    # 總分加總 (布林 + 動能群組 + 爆量 + 背離 = 滿分 4 分)
+    df['Buy_Score'] = buy_c1.astype(int) + buy_momentum.astype(int) + buy_c3.astype(int) + buy_c5.astype(int)
 
 
     # --- 【賣方邏輯】 ---
-    sell_c1 = df['High'] >= df['BB_Upper']
-    sell_c2 = df['RSI'] > 65
-    sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
-    sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
+    sell_c1 = df['High'] >= df['BB_Upper']                          # 條件1: 頂布林上軌
+    sell_c2 = df['RSI'] > 65                                        # 條件2: RSI 超買
+    sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)                 # 條件3: 爆量
+    sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0) # 條件4: MACD 轉弱
     
-    # ⚡️ 將 RSI 與 MACD 綁定成「動能模組」
+    # 條件5: 即時頂背離感測 (安全無作弊版)
+    sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
+
+    # ⚡️ 核心整併：RSI 與 MACD 只要有一個發動就拿 1 分，同時發動也只給 1 分
     sell_momentum = sell_c2 | sell_c4
 
-    # 總分加總：c1(布林) + momentum(動能) + c3(成交量) = 最高 3 分
-    df['Sell_Score'] = sell_c1.astype(int) + sell_momentum.astype(int) + sell_c3.astype(int)
+    # 總分加總 (布林 + 動能群組 + 爆量 + 背離 = 滿分 4 分)
+    df['Sell_Score'] = sell_c1.astype(int) + sell_momentum.astype(int) + sell_c3.astype(int) + sell_c5.astype(int)
 
-
-    # 圖表專屬輸出：輸出「價格座標」
-    # ⚠️ 注意：目前維持 >= 3，代表上述三大模組必須「全部發動」才會亮燈
+    # 圖表專屬輸出：輸出「價格座標」，維持 3 分觸發門檻
     df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
     df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
     
