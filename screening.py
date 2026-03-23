@@ -46,56 +46,35 @@ def inspect_stock(ticker, preloaded_df=None):
 
         # 清理運算初期的空值
         df.dropna(inplace=True)
-
        # ==========================================
-    # D. ⚙️ 計分型邏輯閘 (滿分 3 分 + 大趨勢保護傘)
-    # ==========================================
-    
-    # 🛡️ 【大趨勢保護傘 (買方主開關)】 
-    # 條件 1：股價必須站上 60 日季線 (長線保護短線)
-    # 條件 2：60 日季線本身必須是「向上彎的」(確保不是在下坡路段)
+        # D. ⚙️ 計分型邏輯閘 (滿分 5 分，得 3 分觸發 + 大趨勢保護傘)
+        # ==========================================
+        # 🛡️ 總電源：大趨勢保護傘
         trend_protect_buy = (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
+        trend_protect_sell = (df['Close'] < df['MA60']) & (df['MA60'] < df['MA60'].shift(1))
 
-    # --- 【買方邏輯 (微觀打分)】 ---
+        # --- 【買方邏輯 (滿分 5 分)】 ---
         buy_c1 = df['Low'] <= df['BB_Lower']
         buy_c2 = df['RSI'] < 35
         buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-    
-    # 動能模組：RSI 與 MACD 只要有一個發動就拿 1 分
-        buy_momentum = buy_c2 | buy_c4 
+        # ⚡️ 新增：即時底背離感測 (第 5 分)
+        buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
+        
+        df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int)
 
-    # 總分加總 (布林 + 動能模組 + 爆量 = 最高 3 分)
-        df['Buy_Score'] = buy_c1.astype(int) + buy_momentum.astype(int) + buy_c3.astype(int)
-
-
-    # 🛡️ 【大趨勢保護傘 (賣方/放空主開關)】 
-    # 條件 1：股價跌破 60 日季線
-    # 條件 2：60 日季線本身是「向下彎的」
-        trend_protect_sell = (df['Close'] < df['MA60']) & (df['MA60'] < df['MA60'].shift(1))
-
-    # --- 【賣方邏輯 (微觀打分)】 ---
+        # --- 【賣方邏輯 (滿分 5 分)】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
         sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-    
-    # 動能模組：RSI 與 MACD 只要有一個發動就拿 1 分
-        sell_momentum = sell_c2 | sell_c4
+        # ⚡️ 新增：即時頂背離感測 (第 5 分)
+        sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
+        
+        df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int)
 
-    # 總分加總 (布林 + 動能模組 + 爆量 = 最高 3 分)
-        df['Sell_Score'] = sell_c1.astype(int) + sell_momentum.astype(int) + sell_c3.astype(int)
-
-
-    # ==========================================
-    # ⚡️ 終極發射台：結合微觀分數與宏觀保護傘
-    # ==========================================
-    # 買進條件：微觀拿到滿分 3 分 AND 保護傘開啟
+        # 終極發射台 (綁定保護傘，維持 >= 3 分觸發)
         df['Buy_Signal'] = np.where((df['Buy_Score'] >= 3) & trend_protect_buy, df['Low'] * 0.98, np.nan)
-    
-    # 賣出條件：微觀拿到滿分 3 分 AND 保護傘開啟
-    # (註：如果你賣出只是為了「多單獲利了結」，其實不需要綁 trend_protect_sell。
-    #  但因為你的機台有支援「放空」，所以綁上去可以確保你不會在大多頭中被軋空)
         df['Sell_Signal'] = np.where((df['Sell_Score'] >= 3) & trend_protect_sell, df['High'] * 1.02, np.nan)
       
         # 4. 啟動回測引擎 (計算這套參數在該股票的良率)
@@ -121,27 +100,30 @@ def inspect_stock(ticker, preloaded_df=None):
             win_rate = 0.0
             total_profit = 0.0
 
-        # 5. 提取「最後一天」的最新狀態，判斷今天是否觸發訊號
+       # ==========================================
+        # 5. 提取「最後一天」狀態 (⚡️ 已通電：加上保護傘檢查)
+        # ==========================================
         latest_row = df.iloc[-1]
         current_price = latest_row['Close']
-        
-       # 讀取機器在「今天」算出來的總分
         buy_score = int(latest_row['Buy_Score'])
         sell_score = int(latest_row['Sell_Score'])
         
-        # 🎯 彈性權重燈號判定邏輯
-        if buy_score >= 3:
-            status = f"🔴 強買訊 ({buy_score}/4)"
-        elif buy_score == 2:
-            status = f"🟡 弱買訊 (2/4)"
-        elif sell_score >= 3:
-            status = f"🟢 強賣訊 ({sell_score}/4)"
-        elif sell_score == 2:
-            status = f"🟡 弱賣訊 (2/4)"
+        # 讀取最後一天的保護傘開關
+        is_buy_protected = trend_protect_buy.iloc[-1]
+        is_sell_protected = trend_protect_sell.iloc[-1]
+        
+        # 🎯 面板更新為滿分 5 分，3 分即可觸發強訊號
+        if buy_score >= 3 and is_buy_protected:
+            status = f"🔴 強買訊 ({buy_score}/5)"
+        elif buy_score == 2 and is_buy_protected:
+            status = f"🟡 弱買訊 ({buy_score}/5)"
+        elif sell_score >= 3 and is_sell_protected:
+            status = f"🟢 強賣訊 ({sell_score}/5)"
+        elif sell_score == 2 and is_sell_protected:
+            status = f"🟡 弱賣訊 ({sell_score}/5)"
         else:
-            # 都不到 2 分，顯示觀望，並附上目前拿到的最高分供參考
             max_score = max(buy_score, sell_score)
-            status = f"⚪ 觀望中 ({max_score}/4)"
+            status = f"⚪ 觀望中 ({max_score}/5)"
         
         # 輸出檢測報告
         return {
