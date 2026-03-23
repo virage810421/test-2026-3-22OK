@@ -102,20 +102,36 @@ def draw_chart(ticker):
     df.drop(['Prev_Close'], axis=1, inplace=True) # 暫時保留 TR 給背離偵測，或之後一起刪
     df.dropna(inplace=True)
 
-    # D. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
+    # ==========================================
+    # D. ⚙️ 計分型邏輯閘 (升級為滿分 5 分，得 3 分觸發)
+    # ==========================================
+    # --- 【買方邏輯】 ---
     buy_c1 = df['Low'] <= df['BB_Lower']
     buy_c2 = df['RSI'] < 35
     buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
     buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-    df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int)
+    
+    # 🚀 新增第 5 條件：即時底背離感測 (安全無作弊版)
+    # 邏輯：今天的低點比 10 天前低，但 RSI 或 MACD(DIF) 卻比 10 天前高 (價格破底，但動能未破底)
+    buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
 
+    # 加總得分 (滿分 5 分)
+    df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int)
+
+    # --- 【賣方邏輯】 ---
     sell_c1 = df['High'] >= df['BB_Upper']
     sell_c2 = df['RSI'] > 65
     sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
     sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-    df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int)
+    
+    # 🚀 新增第 5 條件：即時頂背離感測 (安全無作弊版)
+    # 邏輯：今天的高點比 10 天前高，但 RSI 或 MACD(DIF) 卻比 10 天前低 (價格創新高，但動能跟不上)
+    sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
 
-    # 圖表專屬輸出：輸出「價格座標」，讓 Plotly 知道要在哪裡畫出三角形箭頭
+    # 加總得分 (滿分 5 分)
+    df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int)
+
+    # 圖表專屬輸出：輸出「價格座標」，門檻維持 3 分觸發
     df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
     df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
     
