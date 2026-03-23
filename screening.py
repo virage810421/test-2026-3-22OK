@@ -51,13 +51,27 @@ def inspect_stock(ticker):
         # 清理運算初期的空值
         df.dropna(inplace=True)
 
-        # 4. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
+       # 4. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
+        
+        # 🛡️ 【新增】大趨勢濾網 (Trend Filter)
+        # 條件：今天的 MA60 必須大於昨天的 MA60 (代表季線上揚，大趨勢偏多)
+        # 如果你想更嚴格，可以改成 (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
+        trend_filter = df['MA60'] > df['MA60'].shift(1)
+
+        # 基礎抄底買進條件 (滿分 4 分)
         buy_c1 = df['Low'] <= df['BB_Lower']
         buy_c2 = df['RSI'] < 35
         buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-        df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int)
+        
+        # 先計算原始的抄底分數
+        raw_buy_score = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int)
+        
+        # ⚡ 濾網發威：將原始分數乘上濾網狀態 (True 會變成 1，False 會變成 0)
+        # 如果季線下彎，trend_filter 會是 0，分數不管多高都會瞬間歸零！
+        df['Buy_Score'] = raw_buy_score * trend_filter.astype(int)
 
+        # 賣出條件維持原樣 (滿分 4 分)
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
         sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.5)
@@ -131,8 +145,19 @@ def inspect_stock(ticker):
 # 2. 啟動自動化海選流水線
 # ==========================================
 if __name__ == "__main__":
-    # 設定你要監控的股票清單 (例如：台積電、鴻海、聯發科、富邦金、長榮)
-    watch_list = ["2330.TW", "2317.TW", "2454.TW", "2881.TW", "2603.TW"]
+    # 設定你要監控的股票清單 (擴充版：台股精選 20 大戰情名單)
+    watch_list = [
+        # 👑 半導體與權值王者
+        "2330.TW", "2454.TW", "2303.TW", "2337.TW", 
+        # 🚀 AI 伺服器與代工巨頭
+        "2317.TW", "2382.TW", "3231.TW", "2356.TW", "2376.TW", 
+        # 🚢 航運三雄 (波動大，最容易觸發布林通道與背離)
+        "2603.TW", "2609.TW", "2615.TW", 
+        # 🏦 穩健金控
+        "2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW",
+        # ⚡ 重電與綠能
+        "1503.TW", "1519.TW", "1513.TW"
+    ]
     
     print("啟動自動化海選雷達，正在掃描股票清單...\n")
     

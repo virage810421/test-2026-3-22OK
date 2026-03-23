@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from scipy.signal import find_peaks
 import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.default = "browser"
 from plotly.subplots import make_subplots
 
 # ==========================================
