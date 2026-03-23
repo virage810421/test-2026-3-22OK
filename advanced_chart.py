@@ -127,8 +127,8 @@ def draw_chart(ticker):
     # 先算好「來回一趟」的總耗損(%)，讓迴圈內的運算更快速
     round_trip_cost_pct = (fee + slippage) * 100 * 2 
 
-    stop_loss = 0.05     # 🛑 停損設定：-5% (虧損 5% 強制斷電)
-    take_profit = 0.15   # 🎯 停利設定：+15% (獲利 15% 提早收割)
+    #stop_loss = 0.05     # 🛑 停損設定：-5% (虧損 5% 強制斷電)
+    #take_profit = 0.15   # 🎯 停利設定：+15% (獲利 15% 提早收割)
 
     position = 0  # 狀態變數：0 代表空手，1 代表持有多單，-1 代表持有空單
     entry_price = 0
@@ -155,28 +155,26 @@ def draw_chart(ticker):
             entry_date = index
             trade_type = "放空(Short)"
 
-        # 狀況 C：持有【多單】時，偵測到【賣出訊號】 -> 多單平倉 (獲利了結或停損)
+        # 狀況 C：持有【多單】時，偵測到【賣出訊號】 -> 多單平倉
         elif position == 1 and not pd.isna(row['Sell_Signal']):
             exit_price = row['Close']
-            # 做多利潤算法
-            profit_pct = (exit_price - entry_price) / entry_price * 100 
+            # ⚡️ 通電：做多利潤算法 (原始利潤 - 來回摩擦成本)
+            profit_pct = ((exit_price - entry_price) / entry_price * 100) - round_trip_cost_pct 
             trades.append({
                 '方向': trade_type, '進場日': entry_date, '出場日': index,
                 '進場價': entry_price, '出場價': exit_price, '報酬率(%)': profit_pct
             })
             position = 0 # 恢復空手
 
-        # 狀況 D：持有【空單】時，偵測到【買入訊號】 -> 空單回補 (獲利了結或停損)
+        # 狀況 D：持有【空單】時，偵測到【買入訊號】 -> 空單回補
         elif position == -1 and not pd.isna(row['Buy_Signal']):
             exit_price = row['Close']
-            # 做空利潤算法 (進場價減去出場價)
-            profit_pct = (entry_price - exit_price) / entry_price * 100 
+            # ⚡️ 通電：做空利潤算法 (原始利潤 - 來回摩擦成本)
+            profit_pct = ((entry_price - exit_price) / entry_price * 100) - round_trip_cost_pct 
             trades.append({
                 '方向': trade_type, '進場日': entry_date, '出場日': index,
                 '進場價': entry_price, '出場價': exit_price, '報酬率(%)': profit_pct
             })
-
-            
             position = 0 # 恢復空手
 
     # 結算總成績單
@@ -327,7 +325,9 @@ def draw_chart(ticker):
 # 🚀 手動單機測試開關
 # ==========================================
 if __name__ == "__main__":
-    # 當你沒有啟動海選，只是單獨執行這支程式時，會自動跑這裡
-    test_target = "2330.TW"
-    print(f"啟動手動測試模式，正在渲染 {test_target} 的精密圖紙...")
-    draw_chart(test_target)
+
+    test_targets =  ["2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW"]
+    
+    print("啟動手動測試模式，開始批次分析...\n")
+    for ticker in test_targets:
+        draw_chart(ticker)    
