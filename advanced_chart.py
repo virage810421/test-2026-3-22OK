@@ -10,27 +10,20 @@ from plotly.subplots import make_subplots
 # ==========================================
 # ⚙️ 核心封裝：精密儀表板模組
 # ==========================================
-def draw_chart(ticker):
-    # 【新增這顆指示燈】
+def draw_chart(ticker, preloaded_df=None):
     print(f"\n[系統提示] 收到海選雷達傳來的訊號！正在啟動 {ticker} 的精密繪圖引擎...")
-    """
-    這是一個可以被外部呼叫的繪圖模組。
-    傳入股票代號 (ticker)，就會自動生成該股票的 4 層精密儀表板。
-    """
-    # -------------------------------
-    # 1. 數據獲取與指標計算 (新增 BBands)
-    # -------------------------------
     
-    # 【新增】啟動外部新聞雷達 (攔截最新 3 則情報)
+    # -------------------------------
+    # 📡 外部新聞雷達 (攔截最新 3 則情報)
+    # -------------------------------
     try:
         ticker_obj = yf.Ticker(ticker)
         news_data = ticker_obj.news
         news_text = "<b>📡 最新外部情報雷達：</b><br>"
         
         if news_data:
-            for n in news_data[:3]: # 只取前 3 筆，避免面板太大擋住視線
+            for n in news_data[:3]: 
                 title = n.get('title', '無標題')
-                # 如果標題太長，稍微截斷以保持面板整潔
                 if len(title) > 35:
                     title = title[:35] + "..."
                 publisher = n.get('publisher', '未知來源')
@@ -40,14 +33,20 @@ def draw_chart(ticker):
     except Exception as e:
         news_text = "<b>📡 外部情報雷達連線失敗</b>"
 
-
-    # 抓取較長時間範圍，以便於縮放選擇
-    data = yf.download(ticker, period="2y", progress=False) 
-    if data.empty:
-        print(f"無法獲取 {ticker} 的歷史資料。")
-        return
-        
-    df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
+    # -------------------------------
+    # ⚡️ 批次下載切換邏輯 (資料來源分流)
+    # -------------------------------
+    if preloaded_df is not None:
+        df = preloaded_df.copy()
+        if df.empty:
+            print(f"⚠️ {ticker} 的預載資料為空，跳過繪圖。")
+            return
+    else:
+        data = yf.download(ticker, period="2y", progress=False) 
+        if data.empty:
+            print(f"⚠️ 無法獲取 {ticker} 的歷史資料。")
+            return
+        df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
 
     # 根據市場設定漲跌顏色 (台股: 漲紅跌綠, 美股: 漲綠跌紅)
     is_taiwan_market = True 

@@ -3,27 +3,23 @@ import pandas as pd
 import numpy as np
 from advanced_chart import draw_chart
 
-# ==========================================
-# 1. 核心檢測模組封裝 (打包運算齒輪)
-# ==========================================
-def inspect_stock(ticker):
+# 1. 核心檢測模組封裝 (靜默運算齒輪)
+
+def inspect_stock(ticker, preloaded_df=None):
     """
-    這是一個獨立的檢測模組。
-    輸入：股票代號 (ticker)
-    輸出：包含該檔股票「最新狀態」與「歷史回測良率」的字典資料
+    這是一台靜默掃描機。它不畫圖，只負責快速計算指標、打分數，然後吐出檢測報告。
     """
     try:
-        # 1. 獲取資料 (縮短區間以提升海選掃描速度，改為抓取近一年半)
-        data = yf.download(ticker, period="2y", progress=False) 
-        if data.empty:
-            return None
+        # ⚡️ 批次下載切換邏輯
+        if preloaded_df is not None:
+            df = preloaded_df.copy()
+        else:
+            data = yf.download(ticker, period="2y", progress=False) 
+            if data.empty: return None
+            df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
             
-        df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
-
-        # 2. 安裝指標感測器 (RSI, BBands)
-        # ==========================================
-        # 【替換區塊開始】安裝計分型主機板 (screening.py 專用)
-        # ==========================================
+        if df.empty: return None
+        
         # 1. 基礎指標計算 (RSI)
         delta = df['Close'].diff()
         gain = delta.where(delta > 0, 0)
@@ -162,48 +158,43 @@ def inspect_stock(ticker):
         return None
 
 # ==========================================
-# 2. 啟動自動化海選流水線
+# 🚀 批次海選發動機 (網路優化版)
 # ==========================================
 if __name__ == "__main__":
-    # 設定你要監控的股票清單 (擴充版：台股精選 20 大戰情名單)
-    watch_list = [
-        # 👑 半導體與權值王者
-        "2330.TW", "2454.TW", "2303.TW", "2337.TW", 
-        # 🚀 AI 伺服器與代工巨頭
-        "2317.TW", "2382.TW", "3231.TW", "2356.TW", "2376.TW", 
-        # 🚢 航運三雄 (波動大，最容易觸發布林通道與背離)
-        "2603.TW", "2609.TW", "2615.TW", 
-        # 🏦 穩健金控
-        "2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW",
-        # ⚡ 重電與綠能
-        "1503.TW", "1519.TW", "1513.TW"
-    ]
+
+    test_targets = ["2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW"]
     
-    print("啟動自動化海選雷達，正在掃描股票清單...\n")
+    print(f"\n啟動批次分析模式，正在一次性下載 {len(test_targets)} 檔股票資料，請稍候...")
+    batch_data = yf.download(test_targets, period="2y", progress=True)
+    print("\n✅ 資料下載完成！啟動自動化海選雷達，正在靜默掃描股票清單...\n")
     
-    # 用來收集所有股票檢測結果的空箱子
     report_cards = []
 
-    # 讓股票依序通過檢測模組
-    for stock in watch_list:
-        result = inspect_stock(stock)
+    for ticker in test_targets:
+        if len(test_targets) > 1:
+            ticker_df = batch_data.xs(ticker, axis=1, level=1).copy()
+        else:
+            ticker_df = batch_data.copy()
+            
+        ticker_df.dropna(how='all', inplace=True)
+        
+        # ⚡️ 步驟 1：先讓「靜默掃描機 (inspect_stock)」檢查有沒有訊號
+        result = inspect_stock(ticker, preloaded_df=ticker_df)
+        
         if result:
             report_cards.append(result)
             
-            # ⚙️ 正式上線版繼電器：只要不是「觀望中」，就自動通電彈出圖表！
+            # ⚡️ 步驟 2：繼電器開關！檢查燈號，如果不是「觀望中」，才通電呼叫畫圖機台
             if "觀望中" not in result["今日系統燈號"]:
-                print(f"\n⚠️ 系統警報：偵測到 {stock} 產生【{result['今日系統燈號']}】！")
-                print(f"自動切換至 {stock} 精密儀表板進行深度檢驗...")
-                draw_chart(stock)
-    
-    # 將收集到的結果，轉換成整齊的 Pandas 報表並印出
+                print(f"⚠️ 系統警報：偵測到 {ticker} 產生【{result['今日系統燈號']}】！")
+                print(f"自動切換至 {ticker} 精密儀表板進行深度檢驗...")
+                draw_chart(ticker, preloaded_df=ticker_df)
+
+    # ⚡️ 步驟 3：所有股票掃描完畢，印出最終總表
     if report_cards:
         final_report = pd.DataFrame(report_cards)
-        
-        # 為了讓終端機顯示得更漂亮，稍微設定一下 Pandas 的對齊
         pd.set_option('display.unicode.east_asian_width', True) 
-        
-        print("===================== 今日海選總表 =====================")
+        print("\n===================== 今日海選總表 =====================")
         print(final_report.to_string(index=False))
         print("========================================================")
     else:
