@@ -92,6 +92,20 @@ def inspect_stock(ticker, preloaded_df=None):
         if df.empty: return None 
         
         # ==========================================
+        # 🛡️ 基礎防護網 (過濾流動性與水餃股)
+        # ==========================================
+        latest_check = df.iloc[-1]
+        
+        # 條件 A：剔除冷門股 (20日均量 < 1000張，yfinance 單位是股，所以是 1,000,000)
+        if latest_check['Vol_MA20'] < 1000000:
+            return None # 直接捨棄，不回傳任何報表
+            
+        # 條件 B：剔除水餃地雷股 (股價 < 10元)
+        if latest_check['Close'] < 10.0:
+            return None # 直接捨棄，不回傳任何報表
+
+
+        # ==========================================
         # D. ⚙️ 計分型邏輯閘 (滿分 8 分！)
         # ==========================================
         buy_trend = (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
@@ -100,7 +114,7 @@ def inspect_stock(ticker, preloaded_df=None):
         # --- 【買方邏輯 (滿分 8 分)】 ---
         buy_c1 = df['Low'] <= df['BB_Lower']
         buy_c2 = df['RSI'] < 35
-        buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.25)
+        buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.25)) & (df['Close'] > df['Open'])
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
         buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
         buy_c6 = (df['MA20'] > df['MA60']) & (df['MA20'].shift(1) <= df['MA60'].shift(1))
@@ -112,7 +126,7 @@ def inspect_stock(ticker, preloaded_df=None):
         # --- 【賣方邏輯 (滿分 8 分)】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
-        sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.25)
+        sell_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.25)) & (df['Close'] < df['Open'])
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
         sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
         sell_c6 = (df['MA20'] < df['MA60']) & (df['MA20'].shift(1) >= df['MA60'].shift(1))
