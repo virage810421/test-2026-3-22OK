@@ -39,7 +39,11 @@ def add_chip_data(df, ticker):
         
         df['Foreign_Net'] = foreign
         df['Trust_Net'] = trust
+        # 🛡️ 破解時間差陷阱：如果今天的籌碼還是 NaN(還沒公佈)，就先借用昨天的資料 (limit=1 代表最多只借1天)
+        df['Foreign_Net'] = df['Foreign_Net'].ffill(limit=1)
+        df['Trust_Net'] = df['Trust_Net'].ffill(limit=1)
         
+        # 剩下的真實空值 (例如很久以前剛上市沒資料的日子) 才補 0
         df['Foreign_Net'] = df['Foreign_Net'].fillna(0)
         df['Trust_Net'] = df['Trust_Net'].fillna(0)
         
