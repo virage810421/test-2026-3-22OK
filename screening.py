@@ -55,7 +55,7 @@ def add_chip_data(df, ticker):
     return df
 
 # ==========================================
-# 1. 核心檢測模組封裝 (靜默運算齒輪)
+# 1. 核心檢測模組封裝 (升級 BBI & DMI + 有效交易次數過濾)
 # ==========================================
 def inspect_stock(ticker, preloaded_df=None):
     try:
@@ -86,61 +86,81 @@ def inspect_stock(ticker, preloaded_df=None):
 
         # 3. 基礎指標計算 (BBands 與 成交量均線)
         df['MA20'] = df['Close'].rolling(window=20).mean()
-        df['MA60'] = df['Close'].rolling(window=60).mean()
         df['BB_std'] = df['Close'].rolling(window=20).std()
         df['BB_Upper'] = df['MA20'] + (df['BB_std'] * 2)
         df['BB_Lower'] = df['MA20'] - (df['BB_std'] * 2)
         df['Vol_MA20'] = df['Volume'].rolling(window=20).mean()
 
+        # 4. 新增：BBI (多空指標) 與 乖離
+        df['MA3'] = df['Close'].rolling(window=3).mean()
+        df['MA6'] = df['Close'].rolling(window=6).mean()
+        df['MA12'] = df['Close'].rolling(window=12).mean()
+        df['MA24'] = df['Close'].rolling(window=24).mean()
+        df['BBI'] = (df['MA3'] + df['MA6'] + df['MA12'] + df['MA24']) / 4
+        df['BBI_BIAS'] = (df['Close'] - df['BBI']) / df['BBI'] * 100
+
+        # 5. 新增：DMI (動向指標)
+        high_diff = df['High'].diff()
+        low_diff = df['Low'].diff()
+        df['+DM'] = np.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0)
+        df['-DM'] = np.where((low_diff > high_diff) & (low_diff > 0), low_diff, 0)
+        
+        tr1 = df['High'] - df['Low']
+        tr2 = abs(df['High'] - df['Close'].shift(1))
+        tr3 = abs(df['Low'] - df['Close'].shift(1))
+        df['TR'] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        
+        df['+DI14'] = 100 * (df['+DM'].rolling(14).sum() / df['TR'].rolling(14).sum())
+        df['-DI14'] = 100 * (df['-DM'].rolling(14).sum() / df['TR'].rolling(14).sum())
+        df['DX'] = 100 * abs(df['+DI14'] - df['-DI14']) / (df['+DI14'] + df['-DI14'])
+        df['ADX14'] = df['DX'].rolling(14).mean()
+
         df.dropna(inplace=True)
         if df.empty: return None 
         
         # ==========================================
-        # 🛡️ 基礎防護網 (過濾流動性與水餃股)
+        # 🛡️ 基礎防護網
         # ==========================================
         latest_check = df.iloc[-1]
         
-        # 條件 A：剔除冷門股 (20日均量 < 1000張，yfinance 單位是股，所以是 1,000,000)
         if latest_check['Vol_MA20'] < 1000000:
-            return None # 直接捨棄，不回傳任何報表
+            return None 
             
-        # 條件 B：剔除水餃地雷股 (股價 < 10元)
         if latest_check['Close'] < 10.0:
-            return None # 直接捨棄，不回傳任何報表
-
+            return None 
 
         # ==========================================
-        # D. ⚙️ 計分型邏輯閘 (滿分 8 分！)
+        # D. ⚙️ 計分型邏輯閘 
         # ==========================================
-        buy_trend = (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
-        sell_trend = (df['Close'] < df['MA60']) & (df['MA60'] < df['MA60'].shift(1))
+        buy_trend = (df['Close'] > df['BBI']) & (df['BBI'] > df['BBI'].shift(1))
+        sell_trend = (df['Close'] < df['BBI']) & (df['BBI'] < df['BBI'].shift(1))
 
-        # --- 【買方邏輯 (滿分 8 分)】 ---
+        # --- 【買方邏輯】 ---
         buy_c1 = df['Low'] <= df['BB_Lower']
         buy_c2 = df['RSI'] < 35
         buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.25)) & (df['Close'] > df['Open'])
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
         buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
-        buy_c6 = (df['MA20'] > df['MA60']) & (df['MA20'].shift(1) <= df['MA60'].shift(1))
-        # ⚡️ 使用 .get() 防呆
+        buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
         buy_c7 = (df.get('Foreign_Net', 0) > 0) & (df.get('Trust_Net', 0) > 0)
+        buy_c8 = (df['+DI14'] > df['-DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
         
-        df['Buy_Score'] = buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + buy_c7.astype(int)
+        df['Buy_Score'] = buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + buy_c7.astype(int) + buy_c8.astype(int)
 
-        # --- 【賣方邏輯 (滿分 8 分)】 ---
+        # --- 【賣方邏輯】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
         sell_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.25)) & (df['Close'] < df['Open'])
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
         sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
-        sell_c6 = (df['MA20'] < df['MA60']) & (df['MA20'].shift(1) >= df['MA60'].shift(1))
-        # ⚡️ 使用 .get() 防呆
+        sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
         sell_c7 = (df.get('Foreign_Net', 0) < 0) & (df.get('Trust_Net', 0) < 0)
+        sell_c8 = (df['-DI14'] > df['+DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
         
-        df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + sell_c7.astype(int)
+        df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int)
 
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 4, df['Low'] * 0.98, np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 4, df['High'] * 1.02, np.nan)
       
         # ==========================================
         # 4. 啟動回測引擎 
@@ -167,49 +187,57 @@ def inspect_stock(ticker, preloaded_df=None):
             total_profit = 0.0
 
         # ==========================================
-        # 5. 提取「最後一天」狀態 
+        # 5. 提取「最後一天」狀態 (🚀 精準追蹤有效交易助攻次數)
         # ==========================================
         latest_row = df.iloc[-1]
         current_price = latest_row['Close']
         buy_score = int(latest_row['Buy_Score'])
         sell_score = int(latest_row['Sell_Score'])
         
-        buy_details = []
-        if buy_trend.iloc[-1]: buy_details.append("多頭趨勢")
-        if buy_c1.iloc[-1]: buy_details.append("破下軌")
-        if buy_c2.iloc[-1]: buy_details.append("RSI超賣")
-        if buy_c3.iloc[-1]: buy_details.append("爆量")
-        if buy_c4.iloc[-1]: buy_details.append("MACD轉強")
-        if buy_c5.iloc[-1]: buy_details.append("底背離")
-        if buy_c6.iloc[-1]: buy_details.append("🌟黃金交叉") 
-        if buy_c7.iloc[-1]: buy_details.append("🔥法人同步買超") 
+        # 建立真實發動訊號的過濾遮罩
+        actual_buy_signals = df['Buy_Score'] >= 4
+        actual_sell_signals = df['Sell_Score'] >= 4
         
+        # 買方條件附帶有效助攻次數
+        buy_details = []
+        if buy_trend.iloc[-1]: buy_details.append(f"BBI多頭趨勢(歷{int((buy_trend & actual_buy_signals).sum())}次)")
+        if buy_c1.iloc[-1]: buy_details.append(f"破下軌(歷{int((buy_c1 & actual_buy_signals).sum())}次)")
+        if buy_c2.iloc[-1]: buy_details.append(f"RSI超賣(歷{int((buy_c2 & actual_buy_signals).sum())}次)")
+        if buy_c3.iloc[-1]: buy_details.append(f"爆量(歷{int((buy_c3 & actual_buy_signals).sum())}次)")
+        if buy_c4.iloc[-1]: buy_details.append(f"MACD轉強(歷{int((buy_c4 & actual_buy_signals).sum())}次)")
+        if buy_c5.iloc[-1]: buy_details.append(f"底背離(歷{int((buy_c5 & actual_buy_signals).sum())}次)")
+        if buy_c6.iloc[-1]: buy_details.append(f"🌟突破BBI(歷{int((buy_c6 & actual_buy_signals).sum())}次)") 
+        if buy_c7.iloc[-1]: buy_details.append(f"🔥法人同買(歷{int((buy_c7 & actual_buy_signals).sum())}次)") 
+        if buy_c8.iloc[-1]: buy_details.append(f"📈DMI趨勢成型(歷{int((buy_c8 & actual_buy_signals).sum())}次)")
+        
+        # 賣方條件附帶有效助攻次數
         sell_details = []
-        if sell_trend.iloc[-1]: sell_details.append("空頭趨勢")
-        if sell_c1.iloc[-1]: sell_details.append("頂上軌")
-        if sell_c2.iloc[-1]: sell_details.append("RSI超買")
-        if sell_c3.iloc[-1]: sell_details.append("爆量")
-        if sell_c4.iloc[-1]: sell_details.append("MACD轉弱")
-        if sell_c5.iloc[-1]: sell_details.append("頂背離")
-        if sell_c6.iloc[-1]: sell_details.append("💀死亡交叉") 
-        if sell_c7.iloc[-1]: sell_details.append("🧊法人同步賣超") 
+        if sell_trend.iloc[-1]: sell_details.append(f"BBI空頭趨勢(歷{int((sell_trend & actual_sell_signals).sum())}次)")
+        if sell_c1.iloc[-1]: sell_details.append(f"頂上軌(歷{int((sell_c1 & actual_sell_signals).sum())}次)")
+        if sell_c2.iloc[-1]: sell_details.append(f"RSI超買(歷{int((sell_c2 & actual_sell_signals).sum())}次)")
+        if sell_c3.iloc[-1]: sell_details.append(f"爆量(歷{int((sell_c3 & actual_sell_signals).sum())}次)")
+        if sell_c4.iloc[-1]: sell_details.append(f"MACD轉弱(歷{int((sell_c4 & actual_sell_signals).sum())}次)")
+        if sell_c5.iloc[-1]: sell_details.append(f"頂背離(歷{int((sell_c5 & actual_sell_signals).sum())}次)")
+        if sell_c6.iloc[-1]: sell_details.append(f"💀跌破BBI(歷{int((sell_c6 & actual_sell_signals).sum())}次)") 
+        if sell_c7.iloc[-1]: sell_details.append(f"🧊法人同賣(歷{int((sell_c7 & actual_sell_signals).sum())}次)") 
+        if sell_c8.iloc[-1]: sell_details.append(f"📉DMI空頭成型(歷{int((sell_c8 & actual_sell_signals).sum())}次)")
         
         trigger_str = "-"
-        if buy_score >= 3:
-            status = f"🔴 強買訊 ({buy_score}/8)"
+        if buy_score >= 4:
+            status = f"🔴 強買訊 ({buy_score}/9)"
             trigger_str = " + ".join(buy_details)
-        elif sell_score >= 3:   
-            status = f"🟢 強賣訊 ({sell_score}/8)"
+        elif sell_score >= 4:   
+            status = f"🟢 強賣訊 ({sell_score}/9)"
             trigger_str = " + ".join(sell_details)
-        elif buy_score == 2:    
-            status = f"🟡 弱買訊 ({buy_score}/8)"
+        elif buy_score == 3:    
+            status = f"🟡 弱買訊 ({buy_score}/9)"
             trigger_str = " + ".join(buy_details)
-        elif sell_score == 2:
-            status = f"🟡 弱賣訊 ({sell_score}/8)"
+        elif sell_score == 3:
+            status = f"🟡 弱賣訊 ({sell_score}/9)"
             trigger_str = " + ".join(sell_details)
         else:
             max_score = max(buy_score, sell_score)
-            status = f"⚪ 觀望中 ({max_score}/8)"
+            status = f"⚪ 觀望中 ({max_score}/9)"
             if buy_score >= sell_score and buy_score > 0:
                 trigger_str = "已亮燈: " + " + ".join(buy_details)
             elif sell_score > buy_score and sell_score > 0:
@@ -217,14 +245,17 @@ def inspect_stock(ticker, preloaded_df=None):
             else:
                 trigger_str = "無"
 
+        if latest_row['ADX14'] < 20:
+            trigger_str += " (⚠️ 盤整中，訊號效力減弱)"
+
         return {
-            "股票代號": ticker,
+            "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),
             "今日系統燈號": status,
             "觸發條件明細": trigger_str,
             "歷史交易次數": total_trades,
-            "系統勝率(%)": round(win_rate, 1),
-            "累計報酬率(%)": round(total_profit, 2)
+            "系統勝率(%)": f"{win_rate:.3f}",
+            "累計報酬率(%)": f"{total_profit:.3f}"
         }
 
     except Exception as e:
