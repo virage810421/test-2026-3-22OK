@@ -7,7 +7,7 @@ import plotly.io as pio
 pio.renderers.default = "browser"
 from plotly.subplots import make_subplots
 
-# ==========================================
+# =========================================
 # ⚙️ 核心封裝：精密儀表板模組
 # ==========================================
 def draw_chart(ticker, preloaded_df=None):
@@ -101,9 +101,9 @@ def draw_chart(ticker, preloaded_df=None):
     df.drop(['Prev_Close'], axis=1, inplace=True) # 暫時保留 TR 給背離偵測，或之後一起刪
     df.dropna(inplace=True)
 
-   # ==========================================
+   # =========================================
     # D. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
-    # ==========================================
+    # =========================================
     # --- 【買方邏輯】 ---
     buy_c1 = df['Low'] <= df['BB_Lower']                            # 條件1: 破布林下軌
     buy_c2 = df['RSI'] < 35                                         # 條件2: RSI 超賣
