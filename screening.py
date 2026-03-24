@@ -248,15 +248,19 @@ def inspect_stock(ticker, preloaded_df=None):
         if latest_row['ADX14'] < 20:
             trigger_str += " (⚠️ 盤整中，訊號效力減弱)"
 
+        strength_diff = buy_score - sell_score
+        structure_status = "多頭佔優" if strength_diff > 2 else "空頭佔優" if strength_diff < -2 else "結構盤整"
+
         return {
             "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),
+            "結構強度": f"{strength_diff:+d}",  # 顯示如 +4 或 -2
             "今日系統燈號": status,
+            "結構診斷": structure_status,
             "觸發條件明細": trigger_str,
-            "歷史交易次數": total_trades,
-            "系統勝率(%)": f"{win_rate:.3f}",
-            "累計報酬率(%)": f"{total_profit:.3f}"
-        }
+            "系統勝率(%)": f"{win_rate:.2f}",
+            "累計報酬率(%)": f"{total_profit:.2f}"
+            }
 
     except Exception as e:
         print(f"檢測 {ticker} 時發生錯誤: {e}")
