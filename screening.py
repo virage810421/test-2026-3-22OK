@@ -2,6 +2,58 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from advanced_chart import draw_chart
+from FinMind.data import DataLoader
+
+# ⚡️ 2. 初始化 DataLoader (放在最外層，不用每次迴圈都重開)
+dl = DataLoader()
+
+# ==========================================
+# 🔌 新增：籌碼資料外掛模組 (資料合併處理廠)
+# ==========================================
+def add_chip_data(df, ticker):
+    """
+    負責把 yfinance 的價格表，貼上 FinMind 的外資/投信買賣超資料
+    """
+    # 把 "2330.TW" 變成 "2330"，因為 FinMind 只吃純數字
+    pure_ticker = ticker.split('.')[0]
+    
+    # 為了運算速度，我們只抓最近 120 天的籌碼來算近期狀態
+    start_dt = (pd.Timestamp.today() - pd.Timedelta(days=120)).strftime("%Y-%m-%d")
+    
+    try:
+        # 呼叫 FinMind 抓三大法人
+        chip_df = dl.taiwan_stock_institutional_investors(stock_id=pure_ticker, start_date=start_dt)
+        
+        if chip_df.empty:
+            df['Foreign_Net'] = 0
+            df['Trust_Net'] = 0
+            return df
+            
+        # 計算淨買賣超 (buy - sell)
+        chip_df['Net'] = chip_df['buy'] - chip_df['sell']
+        
+        # 分離外資與投信的資料 (找出 name 欄位有包含該字眼的)
+        foreign = chip_df[chip_df['name'].str.contains('外資')].groupby('date')['Net'].sum()
+        trust = chip_df[chip_df['name'].str.contains('投信')].groupby('date')['Net'].sum()
+        
+        # 轉換日期格式，讓它可以跟 yfinance 的 Date index 對接
+        foreign.index = pd.to_datetime(foreign.index)
+        trust.index = pd.to_datetime(trust.index)
+        
+        # ⚡️ 合體！把籌碼欄位塞進原本的 df 裡面
+        df['Foreign_Net'] = foreign
+        df['Trust_Net'] = trust
+        
+        # 把沒交易的日子(空值)補 0
+        df['Foreign_Net'] = df['Foreign_Net'].fillna(0)
+        df['Trust_Net'] = df['Trust_Net'].fillna(0)
+        
+    except Exception as e:
+        print(f"⚠️ {ticker} 籌碼抓取失敗: {e}")
+        df['Foreign_Net'] = 0
+        df['Trust_Net'] = 0
+        
+    return df
 
 # 1. 核心檢測模組封裝 (靜默運算齒輪)
 
@@ -46,8 +98,9 @@ def inspect_stock(ticker, preloaded_df=None):
 
         # 清理運算初期的空值
         df.dropna(inplace=True)
+        if df.empty: return None  # ⚡️ 新增這行：確保過濾後還有資料
        # ==========================================
-        # D. ⚙️ 計分型邏輯閘 (滿分 7 分，得 3 分觸發)
+        # D. ⚙️ 計分型邏輯閘 (⚡️ 滿分升級為 8 分！)
         # ==========================================
         # 🛡️ 趨勢加分項
         buy_trend = (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
@@ -59,25 +112,21 @@ def inspect_stock(ticker, preloaded_df=None):
         buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.25)
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
         buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
-        
-        # ⚡️ 新增：黃金交叉 (MA20 向上穿越 MA60)
         buy_c6 = (df['MA20'] > df['MA60']) & (df['MA20'].shift(1) <= df['MA60'].shift(1))
-        
-        # 總共 7 個條件
-        df['Buy_Score'] = buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int)
-
+        # ⚡️ [新增籌碼條件]：土洋合作 (外資與投信同步買超) 或 外資大買
+        buy_c7 = (df['Foreign_Net'] > 0) & (df['Trust_Net'] > 0)
+        # 總共 8 個條件
+        df['Buy_Score'] = buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + buy_c7.astype(int)
         # --- 【賣方邏輯 (滿分 7 分)】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
         sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.25)
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
         sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
-        
-        # ⚡️ 新增：死亡交叉 (MA20 向下穿破 MA60)
         sell_c6 = (df['MA20'] < df['MA60']) & (df['MA20'].shift(1) >= df['MA60'].shift(1))
-        
-        # 總共 7 個條件
-        df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int)
+        sell_c7 = (df['Foreign_Net'] < 0) & (df['Trust_Net'] < 0)
+        # 總共 8 個條件
+        df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + sell_c7.astype(int)
 
         # 終極發射台：總分 >= 3 就觸發！
         df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
@@ -111,7 +160,7 @@ def inspect_stock(ticker, preloaded_df=None):
             total_profit = 0.0
 
        # ==========================================
-        # 5. 提取「最後一天」狀態 (⚡️ 新增交叉顯示，滿分改為 7)
+        # 5. 提取「最後一天」狀態 (⚡️ 新增交叉顯示，滿分改為 8)
         # ==========================================
         latest_row = df.iloc[-1]
         current_price = latest_row['Close']
@@ -127,7 +176,8 @@ def inspect_stock(ticker, preloaded_df=None):
         if buy_c4.iloc[-1]: buy_details.append("MACD轉強")
         if buy_c5.iloc[-1]: buy_details.append("底背離")
         if buy_c6.iloc[-1]: buy_details.append("🌟黃金交叉") # ⚡️ 新增這行
-
+        if buy_c7.iloc[-1]: buy_details.append("🔥法人同步買超") # ⚡️ 加入籌碼翻譯
+        
         # 🎯 翻譯賣方項目 (加入死亡交叉)
         sell_details = []
         if sell_trend.iloc[-1]: sell_details.append("空頭趨勢")
@@ -137,24 +187,25 @@ def inspect_stock(ticker, preloaded_df=None):
         if sell_c4.iloc[-1]: sell_details.append("MACD轉弱")
         if sell_c5.iloc[-1]: sell_details.append("頂背離")
         if sell_c6.iloc[-1]: sell_details.append("💀死亡交叉") # ⚡️ 新增這行
+        if sell_c7.iloc[-1]: sell_details.append("🧊法人同步賣超") # ⚡️ 加入籌碼翻譯
         
-        # 判斷要顯示哪一邊的明細 (滿分改為 /7)
+        # 判斷要顯示哪一邊的明細 (滿分改為 /8)
         trigger_str = "-"
         if buy_score >= 3:
-            status = f"🔴 強買訊 ({buy_score}/7)"
+            status = f"🔴 強買訊 ({buy_score}/8)"
             trigger_str = " + ".join(buy_details)
-        elif buy_score == 2:
-            status = f"🟡 弱買訊 ({buy_score}/7)"
-            trigger_str = " + ".join(buy_details)
-        elif sell_score >= 3:
-            status = f"🟢 強賣訊 ({sell_score}/7)"
+        elif sell_score >= 3:   # ⚡️ 強賣訊移到這裡
+            status = f"🟢 強賣訊 ({sell_score}/8)"
             trigger_str = " + ".join(sell_details)
+        elif buy_score == 2:    # 接著才判斷弱訊號
+            status = f"🟡 弱買訊 ({buy_score}/8)"
+            trigger_str = " + ".join(buy_details)
         elif sell_score == 2:
-            status = f"🟡 弱賣訊 ({sell_score}/7)"
+            status = f"🟡 弱賣訊 ({sell_score}/8)"
             trigger_str = " + ".join(sell_details)
         else:
             max_score = max(buy_score, sell_score)
-            status = f"⚪ 觀望中 ({max_score}/7)"
+            status = f"⚪ 觀望中 ({max_score}/8)"
             if buy_score >= sell_score and buy_score > 0:
                 trigger_str = "已亮燈: " + " + ".join(buy_details)
             elif sell_score > buy_score and sell_score > 0:
@@ -197,13 +248,13 @@ if __name__ == "__main__":
     report_cards = []
 
     for ticker in test_targets:
-        if len(test_targets) > 1:
+        if isinstance(batch_data.columns, pd.MultiIndex):
             ticker_df = batch_data.xs(ticker, axis=1, level=1).copy()
         else:
             ticker_df = batch_data.copy()
             
         ticker_df.dropna(how='all', inplace=True)
-        
+        ticker_df = add_chip_data(ticker_df, ticker)
         # ⚡️ 步驟 1：先讓「靜默掃描機 (inspect_stock)」檢查有沒有訊號
         result = inspect_stock(ticker, preloaded_df=ticker_df)
         
