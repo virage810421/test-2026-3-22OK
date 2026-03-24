@@ -47,46 +47,56 @@ def inspect_stock(ticker, preloaded_df=None):
         # 清理運算初期的空值
         df.dropna(inplace=True)
        # ==========================================
-        # D. ⚙️ 計分型邏輯閘 (滿分 5 分，得 3 分觸發 + 大趨勢保護傘)
+        # D. ⚙️ 計分型邏輯閘 (滿分 7 分，得 3 分觸發)
         # ==========================================
-        # 🛡️ 總電源：大趨勢保護傘
-        trend_protect_buy = (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
-        trend_protect_sell = (df['Close'] < df['MA60']) & (df['MA60'] < df['MA60'].shift(1))
+        # 🛡️ 趨勢加分項
+        buy_trend = (df['Close'] > df['MA60']) & (df['MA60'] > df['MA60'].shift(1))
+        sell_trend = (df['Close'] < df['MA60']) & (df['MA60'] < df['MA60'].shift(1))
 
-        # --- 【買方邏輯 (滿分 5 分)】 ---
+        # --- 【買方邏輯 (滿分 7 分)】 ---
         buy_c1 = df['Low'] <= df['BB_Lower']
         buy_c2 = df['RSI'] < 35
-        buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
+        buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.25)
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-        # ⚡️ 新增：即時底背離感測 (第 5 分)
         buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
         
-        df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int)
+        # ⚡️ 新增：黃金交叉 (MA20 向上穿越 MA60)
+        buy_c6 = (df['MA20'] > df['MA60']) & (df['MA20'].shift(1) <= df['MA60'].shift(1))
+        
+        # 總共 7 個條件
+        df['Buy_Score'] = buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int)
 
-        # --- 【賣方邏輯 (滿分 5 分)】 ---
+        # --- 【賣方邏輯 (滿分 7 分)】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
-        sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
+        sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.25)
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-        # ⚡️ 新增：即時頂背離感測 (第 5 分)
         sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
         
-        df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int)
+        # ⚡️ 新增：死亡交叉 (MA20 向下穿破 MA60)
+        sell_c6 = (df['MA20'] < df['MA60']) & (df['MA20'].shift(1) >= df['MA60'].shift(1))
+        
+        # 總共 7 個條件
+        df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int)
 
-        # 終極發射台 (綁定保護傘，維持 >= 3 分觸發)
-        df['Buy_Signal'] = np.where((df['Buy_Score'] >= 3) & trend_protect_buy, df['Low'] * 0.98, np.nan)
-        df['Sell_Signal'] = np.where((df['Sell_Score'] >= 3) & trend_protect_sell, df['High'] * 1.02, np.nan)
+        # 終極發射台：總分 >= 3 就觸發！
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
       
-        # 4. 啟動回測引擎 (計算這套參數在該股票的良率)
+       # 4. 啟動回測引擎 (修復 NaN 無腦空轉 Bug)
+        # ==========================================
         position = 0
         entry_price = 0
         trades = []
         
         for index, row in df.iterrows():
-            if position == 0 and row['Buy_Signal']:
+            # ⚡️ 正確寫法：明確要求 Buy_Signal 「不能是空值」(not pd.isna)
+            if position == 0 and not pd.isna(row['Buy_Signal']):
                 position = 1
                 entry_price = row['Close']
-            elif position == 1 and row['Sell_Signal']:
+                
+            # ⚡️ 正確寫法：明確要求 Sell_Signal 「不能是空值」
+            elif position == 1 and not pd.isna(row['Sell_Signal']):
                 profit_pct = (row['Close'] - entry_price) / entry_price * 100
                 trades.append(profit_pct)
                 position = 0
@@ -101,35 +111,63 @@ def inspect_stock(ticker, preloaded_df=None):
             total_profit = 0.0
 
        # ==========================================
-        # 5. 提取「最後一天」狀態 (⚡️ 已通電：加上保護傘檢查)
+        # 5. 提取「最後一天」狀態 (⚡️ 新增交叉顯示，滿分改為 7)
         # ==========================================
         latest_row = df.iloc[-1]
         current_price = latest_row['Close']
         buy_score = int(latest_row['Buy_Score'])
         sell_score = int(latest_row['Sell_Score'])
         
-        # 讀取最後一天的保護傘開關
-        is_buy_protected = trend_protect_buy.iloc[-1]
-        is_sell_protected = trend_protect_sell.iloc[-1]
+        # 🎯 翻譯買方項目 (加入黃金交叉)
+        buy_details = []
+        if buy_trend.iloc[-1]: buy_details.append("多頭趨勢")
+        if buy_c1.iloc[-1]: buy_details.append("破下軌")
+        if buy_c2.iloc[-1]: buy_details.append("RSI超賣")
+        if buy_c3.iloc[-1]: buy_details.append("爆量")
+        if buy_c4.iloc[-1]: buy_details.append("MACD轉強")
+        if buy_c5.iloc[-1]: buy_details.append("底背離")
+        if buy_c6.iloc[-1]: buy_details.append("🌟黃金交叉") # ⚡️ 新增這行
+
+        # 🎯 翻譯賣方項目 (加入死亡交叉)
+        sell_details = []
+        if sell_trend.iloc[-1]: sell_details.append("空頭趨勢")
+        if sell_c1.iloc[-1]: sell_details.append("頂上軌")
+        if sell_c2.iloc[-1]: sell_details.append("RSI超買")
+        if sell_c3.iloc[-1]: sell_details.append("爆量")
+        if sell_c4.iloc[-1]: sell_details.append("MACD轉弱")
+        if sell_c5.iloc[-1]: sell_details.append("頂背離")
+        if sell_c6.iloc[-1]: sell_details.append("💀死亡交叉") # ⚡️ 新增這行
         
-        # 🎯 面板更新為滿分 5 分，3 分即可觸發強訊號
-        if buy_score >= 3 and is_buy_protected:
-            status = f"🔴 強買訊 ({buy_score}/5)"
-        elif buy_score == 2 and is_buy_protected:
-            status = f"🟡 弱買訊 ({buy_score}/5)"
-        elif sell_score >= 3 and is_sell_protected:
-            status = f"🟢 強賣訊 ({sell_score}/5)"
-        elif sell_score == 2 and is_sell_protected:
-            status = f"🟡 弱賣訊 ({sell_score}/5)"
+        # 判斷要顯示哪一邊的明細 (滿分改為 /7)
+        trigger_str = "-"
+        if buy_score >= 3:
+            status = f"🔴 強買訊 ({buy_score}/7)"
+            trigger_str = " + ".join(buy_details)
+        elif buy_score == 2:
+            status = f"🟡 弱買訊 ({buy_score}/7)"
+            trigger_str = " + ".join(buy_details)
+        elif sell_score >= 3:
+            status = f"🟢 強賣訊 ({sell_score}/7)"
+            trigger_str = " + ".join(sell_details)
+        elif sell_score == 2:
+            status = f"🟡 弱賣訊 ({sell_score}/7)"
+            trigger_str = " + ".join(sell_details)
         else:
             max_score = max(buy_score, sell_score)
-            status = f"⚪ 觀望中 ({max_score}/5)"
-        
-        # 輸出檢測報告
+            status = f"⚪ 觀望中 ({max_score}/7)"
+            if buy_score >= sell_score and buy_score > 0:
+                trigger_str = "已亮燈: " + " + ".join(buy_details)
+            elif sell_score > buy_score and sell_score > 0:
+                trigger_str = "已亮燈: " + " + ".join(sell_details)
+            else:
+                trigger_str = "無"
+
+        # 輸出檢測報告 (⚡️ 新增 "觸發條件明細" 欄位)
         return {
             "股票代號": ticker,
             "最新收盤價": round(current_price, 2),
             "今日系統燈號": status,
+            "觸發條件明細": trigger_str,
             "歷史交易次數": total_trades,
             "系統勝率(%)": round(win_rate, 1),
             "累計報酬率(%)": round(total_profit, 2)
@@ -144,7 +182,13 @@ def inspect_stock(ticker, preloaded_df=None):
 # ==========================================
 if __name__ == "__main__":
 
-    test_targets = ["2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW"]
+    test_targets = [
+        "2330.TW", "2454.TW", "2303.TW", "2337.TW", 
+        "2317.TW", "2382.TW", "3231.TW", "2356.TW", "2376.TW", 
+        "2603.TW", "2609.TW", "2615.TW", 
+        "2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW",
+        "1503.TW", "1519.TW", "1513.TW"
+    ]
     
     print(f"\n啟動批次分析模式，正在一次性下載 {len(test_targets)} 檔股票資料，請稍候...")
     batch_data = yf.download(test_targets, period="2y", progress=True)

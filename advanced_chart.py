@@ -346,7 +346,13 @@ def draw_chart(ticker, preloaded_df=None):
 # ==========================================
 if __name__ == "__main__":
 
-    test_targets =  ["2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW"]
+    test_targets =  [
+        "2330.TW", "2454.TW", "2303.TW", "2337.TW", 
+        "2317.TW", "2382.TW", "3231.TW", "2356.TW", "2376.TW", 
+        "2603.TW", "2609.TW", "2615.TW", 
+        "2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW",
+        "1503.TW", "1519.TW", "1513.TW"
+    ]
     
     print("啟動手動測試模式，開始批次分析...\n")
     for ticker in test_targets:
