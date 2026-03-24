@@ -145,8 +145,14 @@ def inspect_stock(ticker, preloaded_df=None):
         buy_c7 = (df.get('Foreign_Net', 0) > 0) & (df.get('Trust_Net', 0) > 0)
         buy_c8 = (df['+DI14'] > df['-DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
         
-        df['Buy_Score'] = buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + buy_c7.astype(int) + buy_c8.astype(int)
-
+        df['Total_Net'] = df.get('Foreign_Net', 0) + df.get('Trust_Net', 0)
+        window = 20
+        price_new_low = df['Low'] <= df['Low'].rolling(window=window).min()
+        chip_new_high = df['Total_Net'] >= df['Total_Net'].rolling(window=window).max()
+        buy_c9 = price_new_low & chip_new_high & (df['Total_Net'] > 0)
+        
+        df['Buy_Score'] = buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int)
+        
         # --- 【賣方邏輯】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
@@ -157,7 +163,10 @@ def inspect_stock(ticker, preloaded_df=None):
         sell_c7 = (df.get('Foreign_Net', 0) < 0) & (df.get('Trust_Net', 0) < 0)
         sell_c8 = (df['-DI14'] > df['+DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
         
-        df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int)
+        price_new_high = df['High'] >= df['High'].rolling(window=window).max()
+        chip_new_low = df['Total_Net'] <= df['Total_Net'].rolling(window=window).min() # 數值創最低，代表賣超創最大量
+        sell_c9 = price_new_high & chip_new_low & (df['Total_Net'] < 0)
+        df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int)
 
         df['Buy_Signal'] = np.where(df['Buy_Score'] >= 4, df['Low'] * 0.98, np.nan)
         df['Sell_Signal'] = np.where(df['Sell_Score'] >= 4, df['High'] * 1.02, np.nan)
@@ -209,7 +218,7 @@ def inspect_stock(ticker, preloaded_df=None):
         if buy_c6.iloc[-1]: buy_details.append(f"🌟突破BBI(歷{int((buy_c6 & actual_buy_signals).sum())}次)") 
         if buy_c7.iloc[-1]: buy_details.append(f"🔥法人同買(歷{int((buy_c7 & actual_buy_signals).sum())}次)") 
         if buy_c8.iloc[-1]: buy_details.append(f"📈DMI趨勢成型(歷{int((buy_c8 & actual_buy_signals).sum())}次)")
-        
+        if buy_c9.iloc[-1]: buy_details.append(f"💎結構底背離(歷{int((buy_c9 & actual_buy_signals).sum())}次)")
         # 賣方條件附帶有效助攻次數
         sell_details = []
         if sell_trend.iloc[-1]: sell_details.append(f"BBI空頭趨勢(歷{int((sell_trend & actual_sell_signals).sum())}次)")
@@ -221,23 +230,23 @@ def inspect_stock(ticker, preloaded_df=None):
         if sell_c6.iloc[-1]: sell_details.append(f"💀跌破BBI(歷{int((sell_c6 & actual_sell_signals).sum())}次)") 
         if sell_c7.iloc[-1]: sell_details.append(f"🧊法人同賣(歷{int((sell_c7 & actual_sell_signals).sum())}次)") 
         if sell_c8.iloc[-1]: sell_details.append(f"📉DMI空頭成型(歷{int((sell_c8 & actual_sell_signals).sum())}次)")
-        
+        if sell_c9.iloc[-1]: sell_details.append(f"💣結構頂背離(歷{int((sell_c9 & actual_sell_signals).sum())}次)")
         trigger_str = "-"
         if buy_score >= 4:
-            status = f"🔴 強買訊 ({buy_score}/9)"
+            status = f"🔴 強買訊 ({buy_score}/10)"
             trigger_str = " + ".join(buy_details)
         elif sell_score >= 4:   
-            status = f"🟢 強賣訊 ({sell_score}/9)"
+            status = f"🟢 強賣訊 ({sell_score}/10)"
             trigger_str = " + ".join(sell_details)
         elif buy_score == 3:    
-            status = f"🟡 弱買訊 ({buy_score}/9)"
+            status = f"🟡 弱買訊 ({buy_score}/10)"
             trigger_str = " + ".join(buy_details)
         elif sell_score == 3:
-            status = f"🟡 弱賣訊 ({sell_score}/9)"
+            status = f"🟡 弱賣訊 ({sell_score}/10)"
             trigger_str = " + ".join(sell_details)
         else:
             max_score = max(buy_score, sell_score)
-            status = f"⚪ 觀望中 ({max_score}/9)"
+            status = f"⚪ 觀望中 ({max_score}/10)"
             if buy_score >= sell_score and buy_score > 0:
                 trigger_str = "已亮燈: " + " + ".join(buy_details)
             elif sell_score > buy_score and sell_score > 0:

@@ -7,28 +7,23 @@ import plotly.io as pio
 pio.renderers.default = "browser"
 from plotly.subplots import make_subplots
 
-# ==========================================
+# =========================================
 # ⚙️ 核心封裝：精密儀表板模組
 # ==========================================
 def draw_chart(ticker, preloaded_df=None):
     print(f"\n[系統提示] 收到海選雷達傳來的訊號！正在啟動 {ticker} 的精密繪圖引擎...")
     
-    
     # -------------------------------
-    # 1. 數據獲取與指標計算 (新增 BBands)
+    # 📡 外部新聞雷達 (攔截最新 3 則情報)
     # -------------------------------
-    if preloaded_df is not None:
-        df = preloaded_df.copy()
-    # 【新增】啟動外部新聞雷達 (攔截最新 3 則情報)
     try:
         ticker_obj = yf.Ticker(ticker)
         news_data = ticker_obj.news
         news_text = "<b>📡 最新外部情報雷達：</b><br>"
         
         if news_data:
-            for n in news_data[:3]: # 只取前 3 筆，避免面板太大擋住視線
+            for n in news_data[:3]: 
                 title = n.get('title', '無標題')
-                # 如果標題太長，稍微截斷以保持面板整潔
                 if len(title) > 35:
                     title = title[:35] + "..."
                 publisher = n.get('publisher', '未知來源')
@@ -37,7 +32,6 @@ def draw_chart(ticker, preloaded_df=None):
             news_text += "目前無最新情報"
     except Exception as e:
         news_text = "<b>📡 外部情報雷達連線失敗</b>"
-
 
     # -------------------------------
     # ⚡️ 批次下載切換邏輯 (資料來源分流)
@@ -107,20 +101,41 @@ def draw_chart(ticker, preloaded_df=None):
     df.drop(['Prev_Close'], axis=1, inplace=True) # 暫時保留 TR 給背離偵測，或之後一起刪
     df.dropna(inplace=True)
 
+   # =========================================
     # D. ⚙️ 計分型邏輯閘 (滿分 4 分，得 3 分觸發)
-    buy_c1 = df['Low'] <= df['BB_Lower']
-    buy_c2 = df['RSI'] < 35
-    buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
-    buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-    df['Buy_Score'] = buy_c1.astype(int) + buy_c2.astype(int) + buy_c3.astype(int) + buy_c4.astype(int)
+    # =========================================
+    # --- 【買方邏輯】 ---
+    buy_c1 = df['Low'] <= df['BB_Lower']                            # 條件1: 破布林下軌
+    buy_c2 = df['RSI'] < 35                                         # 條件2: RSI 超賣
+    buy_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)                  # 條件3: 爆量
+    buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0) # 條件4: MACD 轉強
+    
+    # 條件5: 即時底背離感測 (安全無作弊版)
+    buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
 
-    sell_c1 = df['High'] >= df['BB_Upper']
-    sell_c2 = df['RSI'] > 65
-    sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)
-    sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-    df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int)
+    # ⚡️ 核心整併：RSI 與 MACD 只要有一個發動就拿 1 分，同時發動也只給 1 分
+    buy_momentum = buy_c2 | buy_c4 
 
-    # 圖表專屬輸出：輸出「價格座標」，讓 Plotly 知道要在哪裡畫出三角形箭頭
+    # 總分加總 (布林 + 動能群組 + 爆量 + 背離 = 滿分 4 分)
+    df['Buy_Score'] = buy_c1.astype(int) + buy_momentum.astype(int) + buy_c3.astype(int) + buy_c5.astype(int)
+
+
+    # --- 【賣方邏輯】 ---
+    sell_c1 = df['High'] >= df['BB_Upper']                          # 條件1: 頂布林上軌
+    sell_c2 = df['RSI'] > 65                                        # 條件2: RSI 超買
+    sell_c3 = df['Volume'] > (df['Vol_MA20'] * 1.1)                 # 條件3: 爆量
+    sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0) # 條件4: MACD 轉弱
+    
+    # 條件5: 即時頂背離感測 (安全無作弊版)
+    sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
+
+    # ⚡️ 核心整併：RSI 與 MACD 只要有一個發動就拿 1 分，同時發動也只給 1 分
+    sell_momentum = sell_c2 | sell_c4
+
+    # 總分加總 (布林 + 動能群組 + 爆量 + 背離 = 滿分 4 分)
+    df['Sell_Score'] = sell_c1.astype(int) + sell_momentum.astype(int) + sell_c3.astype(int) + sell_c5.astype(int)
+
+    # 圖表專屬輸出：輸出「價格座標」，維持 3 分觸發門檻
     df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
     df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
     
@@ -338,6 +353,7 @@ if __name__ == "__main__":
         "2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW",
         "1503.TW", "1519.TW", "1513.TW"
     ]
+    
     print("啟動手動測試模式，開始批次分析...\n")
     for ticker in test_targets:
         draw_chart(ticker)    
