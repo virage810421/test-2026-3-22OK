@@ -211,8 +211,8 @@ def inspect_stock(ticker, preloaded_df=None):
         # 2. 賣出平滑：空頭時直接賣(1.00)，多頭時等溢價才賣(1.03)
         sell_adjust = np.where(sell_trend, 1.00, 1.03)
 
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 5, df['Low'] * buy_adjust, np.nan)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 5, df['High'] * sell_adjust, np.nan)
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * buy_adjust, np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * sell_adjust, np.nan)
       
         # ==========================================
         # 4. 啟動回測引擎 (滿配版：融合波動率、ADX與信心度)
@@ -330,16 +330,16 @@ def inspect_stock(ticker, preloaded_df=None):
         if sell_c8.iloc[-1]: sell_details.append(f"📉DMI空頭成型(歷{int((sell_c8 & actual_sell_signals).sum())}次)")
         if sell_c9.iloc[-1]: sell_details.append(f"💣結構頂背離(歷{int((sell_c9 & actual_sell_signals).sum())}次)")
         trigger_str = "-"
-        if buy_score >= 4:
+        if buy_score >= 3:
             status = f"🔴 強買訊 ({buy_score}/10)"
             trigger_str = " + ".join(buy_details)
-        elif sell_score >= 4:   
+        elif sell_score >= 3:   
             status = f"🟢 強賣訊 ({sell_score}/10)"
             trigger_str = " + ".join(sell_details)
-        elif buy_score == 3:    
+        elif buy_score == 2:    
             status = f"🟡 弱買訊 ({buy_score}/10)"
             trigger_str = " + ".join(buy_details)
-        elif sell_score == 3:
+        elif sell_score == 2:
             status = f"🟡 弱賣訊 ({sell_score}/10)"
             trigger_str = " + ".join(sell_details)
         else:
@@ -371,7 +371,18 @@ def inspect_stock(ticker, preloaded_df=None):
             "🌟突破BBI": [int(buy_c6.sum()), int((buy_c6 & actual_buy_signals).sum())],
             "🔥法人同買": [int(buy_c7.sum()), int((buy_c7 & actual_buy_signals).sum())],
             "📈DMI趨勢成型": [int(buy_c8.sum()), int((buy_c8 & actual_buy_signals).sum())],
-            "💎結構底背離": [int(buy_c9.sum()), int((buy_c9 & actual_buy_signals).sum())]
+            "💎結構底背離": [int(buy_c9.sum()), int((buy_c9 & actual_buy_signals).sum())],
+            
+            "BBI空頭趨勢": [int(sell_trend.sum()), int((sell_trend & actual_sell_signals).sum())],
+            "頂上軌":[int(sell_c1.sum()),int((sell_c1 & actual_sell_signals).sum())],
+            "RSI超買":[int(sell_c2.sum()),int((sell_c2 & actual_sell_signals).sum())],
+            "爆量":[int(sell_c3.sum()),int((sell_c3 & actual_sell_signals).sum())],
+            "MACD轉弱":[int(sell_c4.sum()),int((sell_c4 & actual_sell_signals).sum())],
+            "頂背離":[int(sell_c5.sum()),int((sell_c5 & actual_sell_signals).sum())],
+            "💀跌破BBI":[int(sell_c6.sum()),int((sell_c6 & actual_sell_signals).sum())],
+            "🧊法人同賣":[int(sell_c7.sum()),int((sell_c7 & actual_sell_signals).sum())],
+            "📉DMI空頭成型":[int(sell_c8.sum()),int((sell_c8 & actual_sell_signals).sum())],
+            "💣結構頂背離":[int(sell_c9.sum()),int((sell_c9 & actual_sell_signals).sum())]
         }
 
         return {
@@ -444,7 +455,8 @@ if __name__ == "__main__":
         # 🔌 [高階診斷器]：三段式邏輯過濾
         all_condition_keys = [
             "BBI多頭趨勢", "破下軌", "RSI超賣", "爆量", "MACD轉強", 
-            "底背離", "🌟突破BBI", "🔥法人同買", "📈DMI趨勢成型", "💎結構底背離"
+            "底背離", "🌟突破BBI", "🔥法人同買", "📈DMI趨勢成型", "💎結構底背離","BBI空頭趨勢",
+            "頂上軌","RSI超買","爆量","MACD轉弱","頂背離","💀跌破BBI","🧊法人同賣","📉DMI空頭成型","💣結構頂背離"
         ]
         
         # 1. 計算全域歷史統計
