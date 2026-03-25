@@ -138,7 +138,7 @@ def inspect_stock(ticker, preloaded_df=None):
         # --- 【買方邏輯】 ---
         buy_c1 = df['Low'] <= df['BB_Lower']
         buy_c2 = df['RSI'] < 35
-        buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.25)) & (df['Close'] > df['Open'])
+        buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] > df['Open'])
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
         buy_c5 = (df['Low'] < df['Low'].shift(10)) & ((df['RSI'] > df['RSI'].shift(10)) | (df['DIF'] > df['DIF'].shift(10)))
         buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
@@ -156,7 +156,7 @@ def inspect_stock(ticker, preloaded_df=None):
         # --- 【賣方邏輯】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
         sell_c2 = df['RSI'] > 65
-        sell_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.25)) & (df['Close'] < df['Open'])
+        sell_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] < df['Open'])
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
         sell_c5 = (df['High'] > df['High'].shift(10)) & ((df['RSI'] < df['RSI'].shift(10)) | (df['DIF'] < df['DIF'].shift(10)))
         sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
@@ -263,13 +263,13 @@ def inspect_stock(ticker, preloaded_df=None):
         return {
             "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),
-            "結構強度": f"{strength_diff:+d}",  # 顯示如 +4 或 -2
+            "結構強度": f"{strength_diff:+d}", 
             "今日系統燈號": status,
             "結構診斷": structure_status,
             "觸發條件明細": trigger_str,
-            "系統勝率(%)": f"{win_rate:.2f}",
-            "累計報酬率(%)": f"{total_profit:.2f}"
-            }
+            "系統勝率(%)": f"{win_rate:.3f}",       # 確保為 3 位小數
+            "累計報酬率(%)": f"{total_profit:.3f}"  # 確保為 3 位小數
+        }
 
     except Exception as e:
         print(f"檢測 {ticker} 時發生錯誤: {e}")
