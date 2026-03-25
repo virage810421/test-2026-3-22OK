@@ -6,9 +6,8 @@ from FinMind.data import DataLoader
 
 # ⚡️ 初始化 DataLoader 
 dl = DataLoader()
-
 # ==========================================
-# 🔌 新增：籌碼資料外掛模組 (資料合併處理廠)
+# 🔌 籌碼資料外掛模組 (資料合併處理廠)
 # ==========================================
 def add_chip_data(df, ticker):
     """
@@ -39,11 +38,11 @@ def add_chip_data(df, ticker):
         
         df['Foreign_Net'] = foreign
         df['Trust_Net'] = trust
-        # 🛡️ 破解時間差陷阱：如果今天的籌碼還是 NaN(還沒公佈)，就先借用昨天的資料 (limit=1 代表最多只借1天)
+        # 🛡️ 破解時間差陷阱：如果今天的籌碼還是 NaN(還沒公佈)，就先借用昨天的資料
         df['Foreign_Net'] = df['Foreign_Net'].ffill(limit=1)
         df['Trust_Net'] = df['Trust_Net'].ffill(limit=1)
         
-        # 剩下的真實空值 (例如很久以前剛上市沒資料的日子) 才補 0
+        # 剩下的真實空值才補 0
         df['Foreign_Net'] = df['Foreign_Net'].fillna(0)
         df['Trust_Net'] = df['Trust_Net'].fillna(0)
         
@@ -53,6 +52,37 @@ def add_chip_data(df, ticker):
         df['Trust_Net'] = 0
         
     return df
+
+
+# ==========================================
+# 📊 新增：基本面數據採集器 (FinMind 版)
+# ==========================================
+def add_fundamental_filter(ticker):
+    """抓取營收與獲利能力，判斷基本面體質"""
+    pure_ticker = ticker.split('.')[0]
+    try:
+        # 1. 抓取月營收 (判斷成長性)
+        rev_df = dl.taiwan_stock_month_revenue(stock_id=pure_ticker)
+        rev_yoy = rev_df.iloc[-1]['revenue_year_growth'] if not rev_df.empty else 0.0
+
+        # 2. 抓取損益表 (判斷獲利能力)
+        st_df = dl.taiwan_stock_financial_statement(stock_id=pure_ticker)
+        if not st_df.empty:
+            op_margin_row = st_df[st_df['type'] == 'OperatingProfitMargin']
+            op_margin = op_margin_row.iloc[-1]['value'] if not op_margin_row.empty else 0.0
+        else:
+            op_margin = 0.0
+
+        # 3. 定性評分邏輯
+        f_score = 0
+        if rev_yoy > 0: f_score += 1
+        if rev_yoy > 20: f_score += 1 
+        if op_margin > 0: f_score += 1 
+        if op_margin < 0: f_score -= 2 # 本業虧損大扣分
+
+        return {"營收年增率(%)": rev_yoy, "營業利益率(%)": op_margin, "基本面總分": f_score}
+    except:
+        return {"營收年增率(%)": 0.000, "營業利益率(%)": 0.000, "基本面總分": 0}
 
 # ==========================================
 # 1. 核心檢測模組封裝 (升級 BBI & DMI + 有效交易次數過濾)
@@ -210,7 +240,8 @@ def inspect_stock(ticker, preloaded_df=None):
         
         # 2. 賣出平滑：空頭時直接賣(1.00)，多頭時等溢價才賣(1.03)
         sell_adjust = np.where(sell_trend, 1.00, 1.03)
-
+        
+        #觸發買賣機制條件
         df['Buy_Signal'] = np.where(df['Buy_Score'] >= 4, df['Low'] * buy_adjust, np.nan)
         df['Sell_Signal'] = np.where(df['Sell_Score'] >= 4, df['High'] * sell_adjust, np.nan)
       
@@ -404,6 +435,10 @@ def inspect_stock(ticker, preloaded_df=None):
             "💣結構頂背離":[int(sell_c9.sum()),int((sell_c9 & actual_sell_signals).sum())]
         }
 
+        # 🔌 在這裡呼叫基本面函數，取得財報資料
+        f_data = add_fundamental_filter(ticker)
+
+        # 👇 將技術面、籌碼面、基本面資料統一打包回傳
         return {
             "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),
@@ -411,9 +446,12 @@ def inspect_stock(ticker, preloaded_df=None):
             "今日系統燈號": status,
             "結構診斷": structure_status,
             "觸發條件明細": trigger_str,
+            "基本面總分": f_data["基本面總分"],
+            "營收年增率(%)": f"{f_data['營收年增率(%)']:.3f}",
+            "營業利益率(%)": f"{f_data['營業利益率(%)']:.3f}",
             "系統勝率(%)": f"{win_rate:.3f}",       
             "累計報酬率(%)": f"{total_profit:.3f}", 
-            "診斷數據": diagnostic_data  # 📦 隱藏包裹：把原始數據往外傳，供主程式計算
+            "診斷數據": diagnostic_data 
         }
 
     except Exception as e:
@@ -454,20 +492,125 @@ if __name__ == "__main__":
                 print(f"自動切換至 {ticker} 精密儀表板進行深度檢驗...")
                 draw_chart(ticker, preloaded_df=ticker_df)
 
+    if report_cards:
+        # 1. 🏆 全域市場氣候檢測 (方向性 vs. 盤整)
+        total_count = len(report_cards)
+        bull_count = len([r for r in report_cards if int(r["結構強度"]) > 2])
+        bear_count = len([r for r in report_cards if int(r["結構強度"]) < -2])
+        
+        # 計算「趨勢強度」：如果市場有一邊倒的現象，代表趨勢明顯
+        trend_intensity = max(bull_count, bear_count) / total_count
+        
+        # 2. 💰 資金分配參數
+        TOTAL_BUDGET = 1000000    # 總預算
+        MAX_POSITIONS = 5         # 同時持有上限
+        base_allocation = TOTAL_BUDGET / MAX_POSITIONS
+
+        # 3. 📉 雙向降載邏輯 (煞車系統)
+        # 如果多空比例差不多 (例如各佔 30%)，代表市場在洗盤，這時應降載避免被雙巴
+        if trend_intensity >= 0.600:
+            risk_factor = 1.000
+            market_msg = "🔥 趨勢極度明顯，全速執行單邊或對鎖策略。"
+        elif trend_intensity >= 0.400:
+            risk_factor = 0.600
+            market_msg = "🌤️ 趨勢尚可，部位維持 60% 運行。"
+        else:
+            risk_factor = 0.300
+            market_msg = "🌪️ 多空勢均力敵（盤整），自動降載至 30% 嚴防雙巴。"
+
+        # 4. 🎯 雙向篩選：分別挑出「最強買訊」與「最強賣訊」
+        long_candidates = [r for r in report_cards if "買訊" in r["今日系統燈號"]]
+        short_candidates = [r for r in report_cards if "賣訊" in r["今日系統燈號"]]
+
+        # 計算期望值評分並排序
+        for r in (long_candidates + short_candidates):
+            win_rate = float(r["系統勝率(%)"]) / 100
+            total_ret = abs(float(r["累計報酬率(%)"])) # 放空報酬也是報酬，取絕對值
+            r["期望值評分"] = round(total_ret * win_rate, 3)
+
+        top_longs = sorted(long_candidates, key=lambda x: x.get("期望值評分", 0), reverse=True)
+        top_shorts = sorted(short_candidates, key=lambda x: x.get("期望值評分", 0), reverse=True)
+
+        # --- 顯示雙向資金分配報告 ---
+        print("\n" + "═"*30 + " ⚔️ 雙向戰略配置報告 " + "═"*30)
+        print(f"📈 多頭比例：{bull_count/total_count:.1%} | 📉 空頭比例：{bear_count/total_count:.1%}")
+        print(f"🛡️ 風險狀態：{market_msg}")
+        print(f"💵 建議單筆限額：${(base_allocation * risk_factor):,.0f}")
+        print("-" * 83)
+        
+        # 顯示多空兩端的首選標的
+        if top_longs:
+            print(f"🚩 【作多首選】: {top_longs[0]['Ticker SYMBOL']} (評分: {top_longs[0]['期望值評分']:.3f})")
+        if top_shorts:
+            print(f"🏳️ 【放空首選】: {top_shorts[0]['Ticker SYMBOL']} (評分: {top_shorts[0]['期望值評分']:.3f})")
+            
+        print("-" * 83)
+        if not top_longs and not top_shorts:
+            print("📭 市場方向不明且無強烈訊號，建議空手觀望。")
+        else:
+            print(f"🎯 綜合排序前 {MAX_POSITIONS} 名進場建議：")
+            all_ranked = sorted(top_longs + top_shorts, key=lambda x: x['期望值評分'], reverse=True)
+            for i, stock in enumerate(all_ranked[:MAX_POSITIONS]):
+                direction = "🔴 做多" if "買訊" in stock["今日系統燈號"] else "🟢 放空"
+                print(f"  {i+1}. {stock['Ticker SYMBOL']} | {direction} | 期望評分: {stock['期望值評分']:.3f} | 建議配置: ${base_allocation * risk_factor:,.0f}")
+        print("═"*83)
+
+
+   
     # ==========================================
-    # 👇 從這裡開始替換，直到腳本最底端 👇
+    # 👇 最終報表輸出與高階診斷 (雙向資金控管 + 三段式濾網) 👇
     # ==========================================
     if report_cards:
+        # ---------------------------------------------------
+        # 第一部：⚔️ 雙向戰略與基本面權重配置 (資金分配器)
+        # ---------------------------------------------------
+        total_st = len(report_cards)
+        bull_st = len([r for r in report_cards if int(r.get("結構強度", 0)) > 2])
+        bear_st = len([r for r in report_cards if int(r.get("結構強度", 0)) < -2])
+        trend_intensity = max(bull_st, bear_st) / total_st if total_st > 0 else 0
+        
+        TOTAL_BUDGET, MAX_POS = 1000000, 5
+        risk_factor = 1.0 if trend_intensity >= 0.6 else 0.6 if trend_intensity >= 0.4 else 0.3
+        
+        for r in report_cards:
+            win_rate = float(r["系統勝率(%)"]) / 100
+            total_ret = abs(float(r["累計報酬率(%)"]))
+            f_weight = int(r["基本面總分"]) * 2
+            
+            bonus = f_weight if "買訊" in r["今日系統燈號"] else -f_weight if "賣訊" in r["今日系統燈號"] else 0
+            r["期望值評分"] = round((total_ret * win_rate) + bonus, 3)
+
+        all_ranked = sorted([r for r in report_cards if "觀望" not in r["今日系統燈號"]], 
+                            key=lambda x: x.get('期望值評分', 0), reverse=True)
+
+        print("\n" + "═"*30 + " ⚔️ 雙向戰略配置報告 " + "═"*30)
+        print(f"📊 趨勢強度：{trend_intensity:.3f} | 🛡️ 部位係數：{risk_factor:.3f}")
+        print("-" * 83)
+        for i, stock in enumerate(all_ranked[:MAX_POS]):
+            direction = "🔴 做多" if "買訊" in stock["今日系統燈號"] else "🟢 放空"
+            print(f"  {i+1}. {stock['Ticker SYMBOL']} | {direction} | 評分: {stock['期望值評分']:.3f} | 建議配置: ${(TOTAL_BUDGET/MAX_POS)*risk_factor:,.0f}")
+        print("═"*83)
+
+        # ---------------------------------------------------
+        # 第二部：📊 今日海選總表
+        # ---------------------------------------------------
         final_report = pd.DataFrame(report_cards)
         pd.set_option('display.unicode.east_asian_width', True) 
         
-        # 依照你的習慣，將百分比顯示到小數後 3 位
         print("\n" + "="*25 + " 今日海選總表 " + "="*25)
-        # 移除診斷數據欄位再印出表格
-        print(final_report.drop(columns=['診斷數據']).to_string(index=False))
-        print("="*75)
+        display_cols = [
+            "Ticker SYMBOL", "最新收盤價", "結構強度", "今日系統燈號", 
+            "結構診斷", "基本面總分", "營收年增率(%)", "營業利益率(%)", 
+            "系統勝率(%)", "累計報酬率(%)", "觸發條件明細"
+        ]
         
-        # 🔌 [高階診斷器]：三段式邏輯過濾
+        actual_cols = [col for col in display_cols if col in final_report.columns]
+        print(final_report[actual_cols].to_string(index=False))
+        print("="*75)
+
+        # ---------------------------------------------------
+        # 第三部：🔌 [高階診斷器]：三段式邏輯過濾 (完整保留)
+        # ---------------------------------------------------
         all_condition_keys = [
             "BBI多頭趨勢", "破下軌", "RSI超賣", "爆量", "MACD轉強", 
             "底背離", "🌟突破BBI", "🔥法人同買", "📈DMI趨勢成型", "💎結構底背離","BBI空頭趨勢",
@@ -491,16 +634,12 @@ if __name__ == "__main__":
                     today_active_set.add(key)
 
         # 3. 三分類邏輯拆解
-        # 第一類：有歷史貢獻 且 今日正被觸發
         top_tier = {k: global_stats[k] for k in all_condition_keys if global_stats[k] > 0 and k in today_active_set}
-        # 第二類：有歷史貢獻 但 今日休息
         mid_tier = {k: global_stats[k] for k in all_condition_keys if global_stats[k] > 0 and k not in today_active_set}
-        # 第三類：從未達成媒合 (歷史累計 0)
         bottom_tier = [k for k in all_condition_keys if global_stats[k] == 0]
 
         print("\n🔍 [深度分析] 指標戰力分佈報告：")
         
-        # 第一部分：今日黃金組合
         print("\n🔥 【已媒合條件：今日實質發動中】(系統目前的獲利箭頭)")
         if top_tier:
             for name, count in sorted(top_tier.items(), key=lambda x: x[1], reverse=True):
@@ -508,7 +647,6 @@ if __name__ == "__main__":
         else:
             print("  (今日暫無指標產生共振訊號)")
 
-        # 第二部分：強大板凳球員
         print("\n✅ 【已媒合條件：歷史有效但今日未觸發】(潛伏中的主力)")
         if mid_tier:
             for name, count in sorted(mid_tier.items(), key=lambda x: x[1], reverse=True):
@@ -516,7 +654,6 @@ if __name__ == "__main__":
         else:
             print("  (所有曾有過貢獻的指標今日全數發動中！)")
 
-        # 第三部分：偵測無效條件
         print("\n❌ 【未媒合條件：歷史累計 0 次】(系統冗餘或參數過嚴)")
         if bottom_tier:
             for name in bottom_tier:
