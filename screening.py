@@ -211,78 +211,97 @@ def inspect_stock(ticker, preloaded_df=None):
         # 2. 賣出平滑：空頭時直接賣(1.00)，多頭時等溢價才賣(1.03)
         sell_adjust = np.where(sell_trend, 1.00, 1.03)
 
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * buy_adjust, np.nan)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * sell_adjust, np.nan)
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 4, df['Low'] * buy_adjust, np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 4, df['High'] * sell_adjust, np.nan)
       
         # ==========================================
-        # 4. 啟動回測引擎 (滿配版：融合波動率、ADX與信心度)
+        # 4. 啟動回測引擎 (滿配版：融合交易成本、波動率、ADX與信心度)
         # ==========================================
         position = 0
-        entry_price = 0
+        entry_price = 0          # 原始買進價
+        actual_entry_cost = 0    # 包含手續費的真實總成本
         entry_trend_is_bull = False 
-        entry_score = 0  # 🌟 新增：紀錄進場當下的「信心分數」
+        entry_score = 0  
         trades = []
         
+        # 💰 交易成本參數設定 (符合台灣市場真實狀況)
+        FEE_RATE = 0.001425  # 券商公定手續費率 0.143%
+        FEE_DISCOUNT = 0.6   # 假設一般券商給予 6 折優惠
+        TAX_RATE = 0.003     # 台灣一般股票證交稅率 0.300%
+
+        # 預先算好乘數，加速迴圈運算
+        BUY_COST_MULTIPLIER = 1 + (FEE_RATE * FEE_DISCOUNT)
+        SELL_NET_MULTIPLIER = 1 - (FEE_RATE * FEE_DISCOUNT) - TAX_RATE
+
         for index, row in df.iterrows():
             # 【空手時】尋找進場點
             if position == 0 and not pd.isna(row['Buy_Signal']):
                 if row['Buy_Signal'] >= row['Low']:
                     position = 1
-                    entry_price = min(row['Buy_Signal'], row['Open']) 
+                    # 抓取原始買入價
+                    raw_entry = min(row['Buy_Signal'], row['Open']) 
+                    
+                    # 🛡️ 真實成本墊高：買進時須支付手續費
+                    actual_entry_cost = raw_entry * BUY_COST_MULTIPLIER
+                    entry_price = raw_entry # 保留原始價格供參考
+                    
                     entry_trend_is_bull = buy_trend.loc[index]
-                    entry_score = row['Buy_Score']  # 📝 買進時，把當天的總分記錄下來
+                    entry_score = row['Buy_Score'] 
             
             # 【持有單子時】尋找防線哪一個先被觸發
             elif position == 1:
-                max_profit_pct = (row['High'] - entry_price) / entry_price
-                max_loss_pct = (row['Low'] - entry_price) / entry_price
+                # 🛡️ 嚴格計算：使用「含成本的真實買價」來算損益百分比
+                max_profit_pct = (row['High'] - actual_entry_cost) / actual_entry_cost
+                max_loss_pct = (row['Low'] - actual_entry_cost) / actual_entry_cost
                 
                 # ---------------------------------------------------
                 # 🛡️ 動態防線 2.0 系統啟動
                 # ---------------------------------------------------
-                
-                # 1. 【波動率維度 (BB_std) -> 決定停損】
-                # 計算當下的 1.5 倍標準差佔股價的 % 數。
-                # 防呆：確保停損至少給 3% 空間以免被隨機雜訊洗掉，最多不超過 10% 避免重傷。
                 volatility_pct = (row['BB_std'] * 1.5) / row['Close']
-                DYNAMIC_SL = max(0.03, min(volatility_pct, 0.10)) 
+                DYNAMIC_SL = max(0.030, min(volatility_pct, 0.100)) 
                 
-                # 2. 【趨勢 (ADX) & 信心度 (Score) -> 決定停利】
                 if entry_trend_is_bull and row['ADX14'] > 25:
-                    # 情況 A：大趨勢成型 (ADX>25)，將停利拉開到 25%
-                    DYNAMIC_TP = 0.25 
-                    
-                    # 🌟 4. 【信心度維度解鎖】：如果進場時是 8 分以上的「鑽石級訊號」
+                    DYNAMIC_TP = 0.250 
                     if entry_score >= 8:
-                        # 放棄固定停利，設為 999% (Let profits run)，讓單子只靠「系統賣訊」或「停損」出場！
-                        DYNAMIC_TP = 9.99 
+                        DYNAMIC_TP = 9.990 
                 else:
-                    # 情況 B：盤整中或非多頭，見好就收，標準停利 10%
-                    DYNAMIC_TP = 0.10
+                    DYNAMIC_TP = 0.100
                 
-                # ---------------------------------------------------
-                
+                # 💰 內部結算函數：負責扣除賣出手續費與證交稅
+                def calculate_net_profit(raw_exit_price):
+                    actual_exit_amount = raw_exit_price * SELL_NET_MULTIPLIER
+                    # 真實淨利 = (真實賣出回收金額 - 真實買進總成本) / 真實買進總成本
+                    return ((actual_exit_amount - actual_entry_cost) / actual_entry_cost) * 100
+
                 # 防線 1：盤中觸發【動態停損防線】
                 if max_loss_pct <= -DYNAMIC_SL:
-                    trades.append(-DYNAMIC_SL * 100)
+                    # 找出觸發停損的理論價格
+                    sl_price = actual_entry_cost * (1 - DYNAMIC_SL)
+                    # 跌破保護：如果開盤就跳空跌破，只能用較差的開盤價停損
+                    actual_sl_price = min(sl_price, row['Open'])
+                    trades.append(calculate_net_profit(actual_sl_price))
                     position = 0
                     
                 # 防線 2：盤中觸發【動態停利防線】
                 elif max_profit_pct >= DYNAMIC_TP:
-                    trades.append(DYNAMIC_TP * 100)
+                    # 找出觸發停利的理論價格
+                    tp_price = actual_entry_cost * (1 + DYNAMIC_TP)
+                    # 跳空保護：如果開盤就跳空越過，以較優的開盤價停利
+                    actual_tp_price = max(tp_price, row['Open'])
+                    trades.append(calculate_net_profit(actual_tp_price))
                     position = 0
                     
                 # 防線 3：收盤時確認觸發【系統指標賣出訊號】
                 elif not pd.isna(row['Sell_Signal']):
                     actual_sell_price = min(row['Sell_Signal'], row['High'])
-                    signal_profit_pct = (actual_sell_price - entry_price) / entry_price
-                    trades.append(signal_profit_pct * 100)
+                    trades.append(calculate_net_profit(actual_sell_price))
                     position = 0
 
-        # 🚨 關鍵除錯機制：期末強制平倉 (把隱藏的套牢單逼出來算總帳)
+        # 🚨 關鍵除錯機制：期末強制平倉 (計算總帳也要扣除成本)
         if position == 1:
-            final_price = df.iloc[-1]['Close']
-            final_profit_pct = (final_price - entry_price) / entry_price * 100
+            final_raw_price = df.iloc[-1]['Close']
+            final_exit_amount = final_raw_price * SELL_NET_MULTIPLIER
+            final_profit_pct = ((final_exit_amount - actual_entry_cost) / actual_entry_cost) * 100
             trades.append(final_profit_pct)
 
         total_trades = len(trades)
@@ -290,8 +309,8 @@ def inspect_stock(ticker, preloaded_df=None):
             win_rate = len([p for p in trades if p > 0]) / total_trades * 100
             total_profit = sum(trades)
         else:
-            win_rate = 0.0
-            total_profit = 0.0
+            win_rate = 0.000
+            total_profit = 0.000
 
         # ==========================================
         # 5. 提取「最後一天」狀態 (🚀 精準追蹤有效交易助攻次數)
@@ -407,11 +426,7 @@ def inspect_stock(ticker, preloaded_df=None):
 if __name__ == "__main__":
 
     test_targets = [
-        "2330.TW", "2454.TW", "2303.TW", "2337.TW", 
-        "2317.TW", "2382.TW", "3231.TW", "2356.TW", "2376.TW", 
-        "2603.TW", "2609.TW", "2615.TW", 
-        "2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW",
-        "1503.TW", "1519.TW", "1513.TW"
+        "2330.TW"
     ]
     
     print(f"\n啟動批次分析模式，正在一次性下載 {len(test_targets)} 檔股票資料，請稍候...")
