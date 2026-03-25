@@ -126,61 +126,105 @@ def draw_chart(ticker, preloaded_df=None):
     
 
     # 【升級】⚙️ 策略回測引擎 (雙向作動：做多 + 放空)
-   # 💡 【新增區塊】：設定機台摩擦係數 (交易成本)
+    # 💡 【新增區塊】：設定機台摩擦係數 (交易成本)
     fee = 0.0015      # 單趟手續費 (0.15%)
     slippage = 0.001  # 單趟滑價 (0.1%)
     # 先算好「來回一趟」的總耗損(%)，讓迴圈內的運算更快速
     round_trip_cost_pct = (fee + slippage) * 100 * 2 
 
-    #stop_loss = 0.05     # 🛑 停損設定：-5% (虧損 5% 強制斷電)
-    #take_profit = 0.15   # 🎯 停利設定：+15% (獲利 15% 提早收割)
+    stop_loss = 0.05     # 🛑 停損設定：-5% (虧損 5% 強制斷電)
+    take_profit = 0.15   # 🎯 停利設定：+15% (獲利 15% 提早收割)
 
     position = 0  # 狀態變數：0 代表空手，1 代表持有多單，-1 代表持有空單
     entry_price = 0
     trades = []
 
     for index, row in df.iterrows():
-        # 狀況 A：【空手】狀態下，偵測到【買入訊號】 -> 打入前進檔，進場做多
+        # 狀況 A：【空手】狀態下，尋找進場點
         if position == 0:
-    # 🔥 決策核心：比較權重並確認訊號存在
             buy_val = row['Buy_Score']
             sell_val = row['Sell_Score']
 
-    # 狀況 A：買方力道強於賣方，且達到進場門檻
-        if buy_val > sell_val and not pd.isna(row['Buy_Signal']):
-             position = 1
-             entry_price = row['Close']
-             entry_date = index
-             trade_type = "做多(Long)"
+            # 買方力道強於賣方，且達到進場門檻
+            if buy_val > sell_val and not pd.isna(row['Buy_Signal']):
+                position = 1
+                entry_price = row['Close']
+                entry_date = index
+                trade_type = "做多(Long)"
 
-    # 狀況 B：賣方力道強於買方，且達到進場門檻
-        elif sell_val > buy_val and not pd.isna(row['Sell_Signal']):
-            position = -1
-            entry_price = row['Close']
-            entry_date = index
-            trade_type = "放空(Short)"
+            # 賣方力道強於買方，且達到進場門檻
+            elif sell_val > buy_val and not pd.isna(row['Sell_Signal']):
+                position = -1
+                entry_price = row['Close']
+                entry_date = index
+                trade_type = "放空(Short)"
 
-        # 狀況 C：持有【多單】時，偵測到【賣出訊號】 -> 多單平倉
-        elif position == 1 and not pd.isna(row['Sell_Signal']):
-            exit_price = row['Close']
-            # ⚡️ 通電：做多利潤算法 (原始利潤 - 來回摩擦成本)
-            profit_pct = ((exit_price - entry_price) / entry_price * 100) - round_trip_cost_pct 
-            trades.append({
-                '方向': trade_type, '進場日': entry_date, '出場日': index,
-                '進場價': entry_price, '出場價': exit_price, '報酬率(%)': profit_pct
-            })
-            position = 0 # 恢復空手
+        # 狀況 B：持有【多單】時，偵測三道防線
+        elif position == 1:
+            # 即時計算當下報酬率 (%)
+            current_profit_pct = ((row['Close'] - entry_price) / entry_price * 100) - round_trip_cost_pct
+            
+            exit_triggered = False
+            exit_reason = ""
+            
+            if current_profit_pct <= -(stop_loss * 100):
+                exit_triggered = True
+                exit_reason = "🛑停損斷電"
+            elif current_profit_pct >= (take_profit * 100):
+                exit_triggered = True
+                exit_reason = "🎯停利收割"
+            elif not pd.isna(row['Sell_Signal']):
+                exit_triggered = True
+                exit_reason = "🔄訊號平倉"
+                
+            if exit_triggered:
+                trades.append({
+                    '方向': trade_type, '進場日': entry_date, '出場日': index,
+                    '進場價': entry_price, '出場價': row['Close'], 
+                    '報酬率(%)': current_profit_pct, '出場原因': exit_reason
+                })
+                position = 0 # 恢復空手
 
-        # 狀況 D：持有【空單】時，偵測到【買入訊號】 -> 空單回補
-        elif position == -1 and not pd.isna(row['Buy_Signal']):
-            exit_price = row['Close']
-            # ⚡️ 通電：做空利潤算法 (原始利潤 - 來回摩擦成本)
-            profit_pct = ((entry_price - exit_price) / entry_price * 100) - round_trip_cost_pct 
-            trades.append({
-                '方向': trade_type, '進場日': entry_date, '出場日': index,
-                '進場價': entry_price, '出場價': exit_price, '報酬率(%)': profit_pct
-            })
-            position = 0 # 恢復空手
+        # 狀況 C：持有【空單】時，偵測三道防線
+        elif position == -1:
+            # 即時計算當下報酬率 (%) (放空是越跌越賺)
+            current_profit_pct = ((entry_price - row['Close']) / entry_price * 100) - round_trip_cost_pct
+            
+            exit_triggered = False
+            exit_reason = ""
+            
+            if current_profit_pct <= -(stop_loss * 100):
+                exit_triggered = True
+                exit_reason = "🛑停損斷電"
+            elif current_profit_pct >= (take_profit * 100):
+                exit_triggered = True
+                exit_reason = "🎯停利收割"
+            elif not pd.isna(row['Buy_Signal']):
+                exit_triggered = True
+                exit_reason = "🔄訊號回補"
+                
+            if exit_triggered:
+                trades.append({
+                    '方向': trade_type, '進場日': entry_date, '出場日': index,
+                    '進場價': entry_price, '出場價': row['Close'], 
+                    '報酬率(%)': current_profit_pct, '出場原因': exit_reason
+                })
+                position = 0 # 恢復空手
+
+    # 🚨 關鍵除錯機制：期末強制平倉 (把隱藏的套牢單逼出來算總帳)
+    if position != 0:
+        last_date = df.index[-1]
+        last_price = df.iloc[-1]['Close']
+        if position == 1:
+            final_profit_pct = ((last_price - entry_price) / entry_price * 100) - round_trip_cost_pct
+        else:
+            final_profit_pct = ((entry_price - last_price) / entry_price * 100) - round_trip_cost_pct
+            
+        trades.append({
+            '方向': trade_type, '進場日': entry_date, '出場日': last_date,
+            '進場價': entry_price, '出場價': last_price, 
+            '報酬率(%)': final_profit_pct, '出場原因': "⚠️期末強制結算"
+        })
 
     # 結算總成績單
     if len(trades) > 0:
@@ -197,8 +241,8 @@ def draw_chart(ticker, preloaded_df=None):
         backtest_text = (
             f"<b>⚙️ 雙向策略回測報告 (多/空)</b><br>"
             f"• 總交易：{total_trades} 次 (多:{long_trades} / 空:{short_trades})<br>"
-            f"• 系統勝率：<span style='color:gold'>{win_rate:.1f}%</span><br>"
-            f"• 累計報酬率：<span style='color:{color_up if total_profit > 0 else color_down}'>{total_profit:.2f}%</span><br>"
+            f"• 系統勝率：<span style='color:gold'>{win_rate:.3f}%</span><br>"
+            f"• 累計報酬率：<span style='color:{color_up if total_profit > 0 else color_down}'>{total_profit:.3f}%</span><br>"
         )
 
         # 列印終端機交易明細
@@ -210,7 +254,7 @@ def draw_chart(ticker, preloaded_df=None):
         log_df['出場日'] = log_df['出場日'].dt.strftime('%Y-%m-%d')
         log_df['進場價'] = log_df['進場價'].round(2)
         log_df['出場價'] = log_df['出場價'].round(2)
-        log_df['報酬率(%)'] = log_df['報酬率(%)'].round(2)
+        log_df['報酬率(%)'] = log_df['報酬率(%)'].round(3) # 百分比控制 3 位小數
         
         print(log_df.to_string(index=False))
         print(f"========================================================\n")
