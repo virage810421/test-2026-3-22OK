@@ -4,6 +4,12 @@ import numpy as np
 from advanced_chart import draw_chart
 from FinMind.data import DataLoader
 
+# ==========================================
+# ⚡️ 初始化 DataLoader (已綁定專屬 API Token，提升請求上限)
+# ==========================================
+API_TOKEN = "FinMind:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNiAwMDo0ODo0NiIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.CLZzVy6OK617rjvOZ7RG-Yc4pU-EBzPMqpL1CXUz6js"
+dl = DataLoader(token=API_TOKEN)
+
 # ⚡️ 初始化 DataLoader 
 dl = DataLoader()
 # ==========================================
