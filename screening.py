@@ -3,62 +3,15 @@ import pandas as pd
 import numpy as np
 from advanced_chart import draw_chart
 from FinMind.data import DataLoader
-import pyodbc
 from scipy.signal import find_peaks
 from config import PARAMS
 
-def create_tsql_database():
-    # ==========================================
-    # 🔌 設定 SQL Server 連線字串
-    # ==========================================
-    # 請根據你的實際環境修改 SERVER 與 DATABASE 名稱
-    # 這裡假設使用 Windows 驗證 (Trusted_Connection=yes)
-    conn_str = (
-        r'DRIVER={ODBC Driver 17 for SQL Server};'
-        r'SERVER=localhost;'  # 例如: localhost 或 LAPTOP-XYZ\SQLEXPRESS
-        r'DATABASE=股票online;'          # 例如: TradingBotDB
-        r'Trusted_Connection=yes;'
-    )
-
-    try:
-        # 建立連線
-        conn = pyodbc.connect(conn_str)
-        cursor = conn.cursor()
-
-        
-
-        conn.commit()
-        print("✅ 交易資料庫與表單建立完成！(已成功連線至 SQL Server)")
-
-    except Exception as e:
-        print(f"❌ 連線或建立表單失敗: {e}")
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-if __name__ == "__main__":
-    create_tsql_database()
 # ==========================================
 # ⚡️ 初始化 DataLoader (已綁定專屬 API Token，提升請求上限)
 # ==========================================
 API_TOKEN = "FinMind:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNiAwMDo0ODo0NiIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.CLZzVy6OK617rjvOZ7RG-Yc4pU-EBzPMqpL1CXUz6js"
 dl = DataLoader(token=API_TOKEN)
 
-# ==========================================
-# 🎛️ 全域策略參數控制中心 (Strategy Parameters)
-# ==========================================
-PARAMS = {
-    "RSI_PERIOD": 14,          # RSI 天數 (預設14)
-    "MACD_FAST": 12,           # MACD 快線 (預設12)
-    "MACD_SLOW": 26,           # MACD 慢線 (預設26)
-    "MACD_SIGNAL": 9,          # MACD 訊號線 (預設9)
-    "BB_WINDOW": 20,           # 布林通道/均線 天數 (預設20)
-    "BB_STD": 2.0,             # 布林通道 標準差倍數 (預設2)
-    "VOL_WINDOW": 20,          # 成交量均線 天數 (預設20)
-    "MA_LONG": 60,             # 長期趨勢線/季線 (預設60)
-    "BBI_PERIODS": [3, 6, 12, 24], # BBI 多空指標天數組合
-    "TRIGGER_SCORE": 4         # 🌟 觸發買賣的門檻分數 (預設4分)
-}
 
 # ==========================================
 # 🔌 籌碼資料外掛模組 (資料合併處理廠)
@@ -431,8 +384,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_score = int(latest_row['Sell_Score'])
         
         # 建立真實發動訊號的過濾遮罩
-        actual_buy_signals = df['Buy_Score'] >= 4
-        actual_sell_signals = df['Sell_Score'] >= 4
+        actual_buy_signals = df['Buy_Score'] >= p['TRIGGER_SCORE']
+        actual_sell_signals = df['Sell_Score'] >= p['TRIGGER_SCORE']
         
         # 買方條件附帶有效助攻次數
         buy_details = []
