@@ -17,6 +17,7 @@ dl = DataLoader(token=API_TOKEN)
 # 🔌 籌碼資料外掛模組 (資料合併處理廠)
 # ==========================================
 def add_chip_data(df, ticker):
+    
     """
     負責把 yfinance 的價格表，貼上 FinMind 的外資/投信買賣超資料
     """
@@ -24,6 +25,11 @@ def add_chip_data(df, ticker):
     start_dt = (pd.Timestamp.today() - pd.Timedelta(days=120)).strftime("%Y-%m-%d")
     
     try:
+        df = df.join(foreign, how='left')
+        df = df.join(trust, how='left')
+        df['Foreign_Net'] = df['Foreign_Net'].fillna(0)
+        df['Trust_Net'] = df['Trust_Net'].fillna(0)
+
         chip_df = dl.taiwan_stock_institutional_investors(stock_id=pure_ticker, start_date=start_dt)
         
         if chip_df.empty:
@@ -146,7 +152,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['BBI_BIAS'] = (df['Close'] - df['BBI']) / df['BBI'] * 100
 
         # 5. 新增：DMI (動向指標)
-        high_diff = df['High'].diff()
+        high_diff = -df['High'].diff()
         low_diff = df['Low'].diff()
         df['+DM'] = np.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0)
         df['-DM'] = np.where((low_diff > high_diff) & (low_diff > 0), low_diff, 0)
@@ -483,8 +489,10 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             "營業利益率(%)": f"{f_data['營業利益率(%)']:.3f}",
             "系統勝率(%)": f"{win_rate:.3f}",       
             "累計報酬率(%)": f"{total_profit:.3f}", 
-            "診斷數據": diagnostic_data 
-        }
+            "診斷數據": diagnostic_data,  # 👈 這裡一定要有逗號
+            
+            "計算後資料": df             # 👈 確保這行有加進去，且字沒打錯
+        } #
 
     except Exception as e:
         print(f"檢測 {ticker} 時發生錯誤: {e}")

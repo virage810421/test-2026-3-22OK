@@ -12,9 +12,15 @@ from config import PARAMS
 # ⚙️ 核心封裝：精密儀表板模組 (純視覺展示 + 9分制訊號同步)
 # ==========================================
 # 👇 1. 這裡新增了 win_rate 和 total_profit 兩個接收參數
-def draw_chart(ticker, preloaded_df=None, win_rate=None, total_profit=None, p=PARAMS):
+def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=PARAMS):
     print(f"\n[系統提示] 啟動 {ticker} 的精密繪圖引擎...")
-    
+
+    # 1. 領取大腦傳過來的「講義」
+    if preloaded_df is not None:
+        df = preloaded_df.copy() 
+    else:
+        # 如果是手腳沒傳資料，才自己下載 (通常不會發生)
+        return
     # -------------------------------
     # 1. 啟動外部新聞雷達
     # -------------------------------
@@ -45,13 +51,10 @@ def draw_chart(ticker, preloaded_df=None, win_rate=None, total_profit=None, p=PA
         if data.empty: return
         df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
 
-    # 基礎指標 (BBands, Vol, 以及動態長天期均線)
-    df['MA20'] = df['Close'].rolling(window=p['BB_WINDOW']).mean()
-    df['MA_LONG'] = df['Close'].rolling(window=p['MA_LONG']).mean() # ⬅️ 這裡原本是寫死的 MA60
-    df['BB_std'] = df['Close'].rolling(window=p['BB_WINDOW']).std()
-    df['BB_Upper'] = df['MA20'] + (df['BB_std'] * p['BB_STD'])
-    df['BB_Lower'] = df['MA20'] - (df['BB_std'] * p['BB_STD'])
-    df['Vol_MA20'] = df['Volume'].rolling(window=p['VOL_WINDOW']).mean()
+# 🛡️ 終極防撞牆：一次檢查「有沒有料」、「夠不夠長」、「有沒有分數」
+    if df.empty or len(df) < 10 or 'Buy_Score' not in df.columns:
+        print(f"⚠️ {ticker} 繪圖引擎警告：資料不完整 (K線數: {len(df)})，已安全跳過。")
+        
 
     # RSI 與動態區間 (全面換成 p['RSI_PERIOD'])
     delta = df['Close'].diff()
@@ -82,8 +85,17 @@ def draw_chart(ticker, preloaded_df=None, win_rate=None, total_profit=None, p=PA
     # ATR 計算 (供畫背離線使用)
     df['TR'] = np.maximum.reduce([df['High'] - df['Low'], (df['High'] - df['Close'].shift(1)).abs(), (df['Low'] - df['Close'].shift(1)).abs()])
     df['ATR'] = df['TR'].ewm(alpha=1/14, adjust=False).mean()
-    df.dropna(inplace=True)
+    
 
+    # 🛡️ 保留防撞氣囊 (確保 Screening 沒給你壞講義)
+    if df.empty or len(df) < 10:
+        print(f"⚠️ {ticker} 資料量不足以顯示圖表。")
+        return
+
+    # 🛡️ 防撞護欄：改檢查是否有 Buy_Score 欄位
+    if 'Buy_Score' not in df.columns or df.empty:
+        print(f"⚠️ {ticker} 繪圖引擎警告：資料表不完整或為空，跳過繪圖。")
+        return
     # -------------------------------
     # 3. 雙向 9 分制邏輯閘 (產生圖表買賣三角形)
     # -------------------------------
@@ -208,7 +220,10 @@ def draw_chart(ticker, preloaded_df=None, win_rate=None, total_profit=None, p=PA
     fig.add_annotation(text=news_text, align='left', showarrow=False, xref='paper', yref='paper', x=0.01, y=0.98, bgcolor='rgba(30, 30, 30, 0.7)', bordercolor='gold', borderwidth=1, borderpad=8, font=dict(size=11, color='#E0E0E0'))
     
     # 【新增】顯示當前訊號狀態面板，取代舊版的回測文字
-    signal_text = f"<b>💡 訊號觀測站</b><br>多方動能得分: {int(df['Buy_Score'].iloc[-1])}/4<br>空方動能得分: {int(df['Sell_Score'].iloc[-1])}/4"
+    try:
+        signal_text = f"<b>💡 訊號觀測站</b><br>多方得分: {int(df['Buy_Score'].iloc[-1])}/4<br>空方得分: {int(df['Sell_Score'].iloc[-1])}/4"
+    except (IndexError, KeyError, ValueError):
+        signal_text = "<b>💡 訊號觀測站</b><br>得分: 計算中..."
     
     if win_rate is not None and total_profit is not None:
         color_prof = '#FF5252' if float(total_profit) > 0 else '#00E676' # 台股賺錢是紅色
@@ -216,8 +231,8 @@ def draw_chart(ticker, preloaded_df=None, win_rate=None, total_profit=None, p=PA
 
     fig.add_annotation(text=signal_text, align='left', showarrow=False, xref='paper', yref='paper', x=0.99, y=0.6, bgcolor='rgba(10, 40, 20, 0.8)', bordercolor='#00BFFF', borderwidth=1.5, borderpad=10, font=dict(size=13, color='#F5F5F5'))
 
-    fig.show()
-
+    print(f"✅ {ticker} 實戰儀表板(靜態圖片)生成中，請稍候彈出視窗...")
+    fig.show() # ✅ 彈出圖表
 # ==========================================
 # 🚀 手動單機測試開關
 # ==========================================

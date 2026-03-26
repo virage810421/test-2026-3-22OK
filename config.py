@@ -9,5 +9,5 @@ PARAMS = {
     "VOL_WINDOW": 20, 
     "MA_LONG": 60,
     "BBI_PERIODS": [3, 6, 12, 24], 
-    "TRIGGER_SCORE": 4
+    "TRIGGER_SCORE": 3
 }
