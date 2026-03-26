@@ -12,7 +12,7 @@ PARAMS = {
     "DMI_PERIOD": 14,           # 新增：DMI 與 ATR 天數
     
     # --- 2. 策略濾網與觸發閥值 ---
-    "TRIGGER_SCORE": 4,         # 訊號發動最低分數
+    "TRIGGER_SCORE": 5,         # 訊號發動最低分數
     "ADX_TREND_THRESHOLD": 20,  # 新增：ADX 趨勢發動閥值
     "MIN_PRICE": 10.0,          # 新增：最低股價濾網
     "MIN_VOL_MA20": 1000000,    # 新增：最低 20 日均量濾網
