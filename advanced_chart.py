@@ -11,7 +11,6 @@ from config import PARAMS
 # ==========================================
 # ⚙️ 核心封裝：精密儀表板模組 (純視覺展示 + 9分制訊號同步)
 # ==========================================
-# 👇 1. 這裡新增了 win_rate 和 total_profit 兩個接收參數
 def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=PARAMS):
     print(f"\n[系統提示] 啟動 {ticker} 的精密繪圖引擎...")
 
@@ -21,6 +20,7 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     else:
         # 如果是手腳沒傳資料，才自己下載 (通常不會發生)
         return
+        
     # -------------------------------
     # 1. 啟動外部新聞雷達
     # -------------------------------
@@ -51,12 +51,12 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
         if data.empty: return
         df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
 
-# 🛡️ 終極防撞牆：一次檢查「有沒有料」、「夠不夠長」、「有沒有分數」
+    # 🛡️ 終極防撞牆：一次檢查「有沒有料」、「夠不夠長」、「有沒有分數」
     if df.empty or len(df) < 10 or 'Buy_Score' not in df.columns:
         print(f"⚠️ {ticker} 繪圖引擎警告：資料不完整 (K線數: {len(df)})，已安全跳過。")
-        
+        return 
 
-    # RSI 與動態區間 (全面換成 p['RSI_PERIOD'])
+    # RSI 與動態區間
     delta = df['Close'].diff()
     gain = delta.where(delta > 0, 0)
     loss = -delta.where(delta < 0, 0)
@@ -67,14 +67,14 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     df['DZ_Upper'] = df['RSI'].rolling(p['RSI_PERIOD']).mean() + (df['RSI'].rolling(p['RSI_PERIOD']).std() * 1.5)
     df['DZ_Lower'] = df['RSI'].rolling(p['RSI_PERIOD']).mean() - (df['RSI'].rolling(p['RSI_PERIOD']).std() * 1.5)
 
-    # MACD (全面換成 p['MACD_FAST'], p['MACD_SLOW'], p['MACD_SIGNAL'])
+    # MACD
     df['EMA12'] = df['Close'].ewm(span=p['MACD_FAST'], adjust=False).mean()
     df['EMA26'] = df['Close'].ewm(span=p['MACD_SLOW'], adjust=False).mean()
     df['DIF'] = df['EMA12'] - df['EMA26']
     df['MACD_Signal'] = df['DIF'].ewm(span=p['MACD_SIGNAL'], adjust=False).mean()
     df['MACD_Hist'] = (df['DIF'] - df['MACD_Signal']) * 2
 
-    # BBI (利用迴圈自動讀取陣列參數)
+    # BBI 
     bbi_cols = []
     for days in p['BBI_PERIODS']:
         col_name = f'MA{days}'
@@ -82,24 +82,13 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
         bbi_cols.append(df[col_name])
     df['BBI'] = sum(bbi_cols) / len(p['BBI_PERIODS'])
     
-    # ATR 計算 (供畫背離線使用)
+    # ATR 計算 
     df['TR'] = np.maximum.reduce([df['High'] - df['Low'], (df['High'] - df['Close'].shift(1)).abs(), (df['Low'] - df['Close'].shift(1)).abs()])
     df['ATR'] = df['TR'].ewm(alpha=1/14, adjust=False).mean()
     
-
-    # 🛡️ 保留防撞氣囊 (確保 Screening 沒給你壞講義)
-    if df.empty or len(df) < 10:
-        print(f"⚠️ {ticker} 資料量不足以顯示圖表。")
-        return
-
-    # 🛡️ 防撞護欄：改檢查是否有 Buy_Score 欄位
-    if 'Buy_Score' not in df.columns or df.empty:
-        print(f"⚠️ {ticker} 繪圖引擎警告：資料表不完整或為空，跳過繪圖。")
-        return
     # -------------------------------
     # 3. 雙向 9 分制邏輯閘 (產生圖表買賣三角形)
     # -------------------------------
-    # 這裡我們用最簡化的方式算出 Buy_Score 和 Sell_Score 讓圖表能標示訊號
     buy_c1 = df['Low'] <= df['BB_Lower']
     buy_c2 = df['RSI'] < df['DZ_Lower']
     buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] > df['Open'])
@@ -112,7 +101,6 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
     sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
 
-    # 畫圖時只要達到 3 分 (弱訊號) 或 4 分 (強訊號) 就顯示標記
     df['Buy_Score'] = (buy_c1 | buy_c2).astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c6.astype(int)
     df['Sell_Score'] = (sell_c1 | sell_c2).astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c6.astype(int)
     
@@ -122,7 +110,7 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     # -------------------------------
     # 4. 繪製圖表 (UI 升級版: 4 子圖)
     # -------------------------------
-    color_up, color_down = '#FF5252', '#00E676' # 台股配色
+    color_up, color_down = '#FF5252', '#00E676' 
     vol_colors = [color_down if df['Close'].iloc[i] < df['Open'].iloc[i] else color_up for i in range(len(df))]
 
     fig = make_subplots(
@@ -138,7 +126,6 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     fig.add_trace(go.Scatter(x=df.index, y=df['BB_Upper'], line=dict(color='#555', width=1, dash='dot'), name='BB 上軌', showlegend=False), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['BB_Lower'], line=dict(color='#555', width=1, dash='dot'), name='BB 下軌', showlegend=False), row=1, col=1)
     
-
     # 買賣三角形標記
     fig.add_trace(go.Scatter(x=df.index, y=df['Buy_Signal'], mode='markers', marker=dict(symbol='triangle-up', size=12, color=color_up, line=dict(width=1, color='white')), name='買入訊號', hoverinfo='x+y'), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['Sell_Signal'], mode='markers', marker=dict(symbol='triangle-down', size=12, color=color_down, line=dict(width=1, color='white')), name='賣出訊號', hoverinfo='x+y'), row=1, col=1)
@@ -190,7 +177,7 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
         rangebreaks=[dict(bounds=["sat", "mon"])], 
         rangeslider=dict(visible=False), 
         gridcolor='#222',
-        fixedrange=False,  # 🔓 解鎖 X 軸滑鼠縮放限制
+        fixedrange=False, 
         rangeselector=dict(
             buttons=list([
                 dict(count=1, label="1個月", step="month", stepmode="backward"),
@@ -203,7 +190,6 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
         )
     )
     
-    # 🔓 解鎖 Y 軸滑鼠縮放限制，並隱藏第二個子圖 (成交量) 的 Y 軸刻度以保持乾淨
     fig.update_yaxes(gridcolor='#222', fixedrange=False)
     fig.update_yaxes(showticklabels=False, row=2, col=1)
     fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])], rangeslider=dict(visible=False), gridcolor='#222')
@@ -216,31 +202,37 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
 
-    # 貼上新聞面板
     fig.add_annotation(text=news_text, align='left', showarrow=False, xref='paper', yref='paper', x=0.01, y=0.98, bgcolor='rgba(30, 30, 30, 0.7)', bordercolor='gold', borderwidth=1, borderpad=8, font=dict(size=11, color='#E0E0E0'))
     
-    # 【新增】顯示當前訊號狀態面板，取代舊版的回測文字
     try:
         signal_text = f"<b>💡 訊號觀測站</b><br>多方得分: {int(df['Buy_Score'].iloc[-1])}/4<br>空方得分: {int(df['Sell_Score'].iloc[-1])}/4"
     except (IndexError, KeyError, ValueError):
         signal_text = "<b>💡 訊號觀測站</b><br>得分: 計算中..."
     
-    if win_rate is not None and total_profit is not None:
-        color_prof = '#FF5252' if float(total_profit) > 0 else '#00E676' # 台股賺錢是紅色
+    if win_rate is not None and total_profit is not None and win_rate != "N/A":
+        color_prof = '#FF5252' if float(total_profit) > 0 else '#00E676'
         signal_text += f"<br>──────────<br>系統勝率: {float(win_rate):.2f}%<br>累計報酬: <span style='color:{color_prof}'>{float(total_profit):.2f}%</span>"
 
     fig.add_annotation(text=signal_text, align='left', showarrow=False, xref='paper', yref='paper', x=0.99, y=0.6, bgcolor='rgba(10, 40, 20, 0.8)', bordercolor='#00BFFF', borderwidth=1.5, borderpad=10, font=dict(size=13, color='#F5F5F5'))
 
     print(f"✅ {ticker} 實戰儀表板(靜態圖片)生成中，請稍候彈出視窗...")
-    fig.show() # ✅ 彈出圖表
+    fig.show() 
+
 # ==========================================
 # 🚀 手動單機測試開關
 # ==========================================
 if __name__ == "__main__":
-
-    test_targets =  [
-        "2330.TW"
-    ]
+    # ✅ 修正二：單機測試需先透過 screening 模組計算大腦分數
+    from screening import inspect_stock 
+    
+    test_targets = ["2330.TW"]
     print("啟動手動測試模式，開始批次分析...\n")
     for ticker in test_targets:
-        draw_chart(ticker)    
+        result = inspect_stock(ticker)
+        if result and "計算後資料" in result:
+            draw_chart(
+                ticker, 
+                preloaded_df=result["計算後資料"], 
+                win_rate=result.get("系統勝率(%)", "N/A"), 
+                total_profit=result.get("累計報酬率(%)", "N/A")
+            )

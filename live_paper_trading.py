@@ -41,8 +41,8 @@ def run_live_simulation():
         print(f"\n[{current_time}] 📡 啟動定時海選雷達，掃描 {len(watch_list)} 檔標的...")
         
         try:
-            # 🛡️ 拉長期間至 1y，確保 MA60 算得出來且有足夠資料畫圖
-            batch_data = yf.download(watch_list, period="2y", progress=False) # 👈 改成 2 年
+            # 🛡️ 拉長期間至 2y，確保 MA60 算得出來且有足夠資料畫圖
+            batch_data = yf.download(watch_list, period="2y", progress=False)
         except Exception as e:
             print(f"⚠️ 網路連線失敗: {e}"); time.sleep(60); continue
 
@@ -58,30 +58,28 @@ def run_live_simulation():
             # 1. 呼叫大腦算分數
             result = inspect_stock(ticker, preloaded_df=ticker_df)
         
+            # ✅ 修正一：把判斷式往右縮排，確保包在 for 迴圈內
             # 🛡️ 第一層防護：確保大腦有回傳結果，且有帶「計算後資料」
             if result and "計算後資料" in result:
                 computed_df = result['計算後資料']
-            
-            # 🛡️ 第二層防護：立刻檢查講義是不是空的 (避免 MA60 過濾掉所有資料)
-            # 必須在執行任何動作前先 check，才不會引發 IndexError
-            if computed_df.empty or len(computed_df) < PARAMS['MA_LONG']: 
-                continue 
-            
-            # 提取回測數據與狀態
-            status = result['今日系統燈號']
-            current_price = result['最新收盤價']
-            
-            
-            # 2. 執行模擬交易決策 (傳入大腦算好的 computed_df)
-            # 💡 專業建議：把 draw_chart 放進 handle_paper_trade 函數裡面
-            # 這樣只有在「真的有買賣訊號」時才會彈出圖表，不會每 5 分鐘彈出一次
-            
-            handle_paper_trade(ticker, current_price, status, computed_df, result)
-        else:
-            # 如果大腦沒給資料 (可能價格太低或量太小)，就換下一檔
-            continue
-print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {SCAN_INTERVAL} 秒...")
-time.sleep(SCAN_INTERVAL)
+                
+                # 🛡️ 第二層防護：立刻檢查講義是不是空的 (避免 MA60 過濾掉所有資料)
+                if computed_df.empty or len(computed_df) < PARAMS['MA_LONG']: 
+                    continue 
+                
+                # 提取回測數據與狀態
+                status = result['今日系統燈號']
+                current_price = result['最新收盤價']
+                
+                # 2. 執行模擬交易決策 (傳入大腦算好的 computed_df)
+                handle_paper_trade(ticker, current_price, status, computed_df, result)
+            else:
+                # 如果大腦沒給資料 (可能價格太低或量太小)，就換下一檔
+                continue
+                
+        # 迴圈結束後進入冷卻
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {SCAN_INTERVAL} 秒...")
+        time.sleep(SCAN_INTERVAL)
 
 def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     """處理模擬買賣與同步大腦的動態停損/停利"""
@@ -110,7 +108,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         }
         print(f"⚡ [進場] {ticker} ({status}) | 佈局: ${invest_amount:,.0f} | 價格: {current_price}")
         
-        # ✅ 成功進場後，呼叫儀表板畫圖！(傳入算好的 DataFrame)
+        # ✅ 成功進場後，呼叫儀表板畫圖！
         draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof)
 
     # --- 狀況 B：部位控管 (停損/停利/反手) ---
