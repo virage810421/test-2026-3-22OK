@@ -157,7 +157,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         tr3 = abs(df['Low'] - df['Close'].shift(1))
         df['TR'] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         
-        df['+DI14'] = 100 * (df['+DM'].rolling(14).sum() / df['TR'].rolling(14).sum())
+        df['+DI14'] = 100 * (df['+DM'].rolling(p['DMI_PERIOD']).sum() / df['TR'].rolling(p['DMI_PERIOD']).sum())
         df['-DI14'] = 100 * (df['-DM'].rolling(14).sum() / df['TR'].rolling(14).sum())
         df['DX'] = 100 * abs(df['+DI14'] - df['-DI14']) / (df['+DI14'] + df['-DI14'])
         df['ADX14'] = df['DX'].rolling(14).mean()
@@ -165,7 +165,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         # ==========================================
         # 🌊 升級模組：ATR 動態公差與科學背離偵測
         # ==========================================
-        df['ATR'] = df['TR'].ewm(alpha=1/14, adjust=False).mean()
+        df['ATR'] = df['TR'].ewm(alpha=1/p['DMI_PERIOD'], adjust=False).mean()
         df['Total_Net'] = df.get('Foreign_Net', 0) + df.get('Trust_Net', 0)
 
         def detect_divergence(price_series, indicator_series, atr_series, is_top=True, distance=7, atr_mult=1.0, threshold=None):
@@ -283,10 +283,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 max_loss_pct = (row['Low'] - actual_entry_cost) / actual_entry_cost
                 
                 volatility_pct = (row['BB_std'] * 1.5) / row['Close']
-                DYNAMIC_SL = max(0.030, min(volatility_pct, 0.100)) 
-                
-                if entry_trend_is_bull and row['ADX14'] > 25:
-                    DYNAMIC_TP = 0.250 
+                DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT'])) 
+                if entry_trend_is_bull and row['ADX14'] > p['ADX_TREND_THRESHOLD']:
+                    DYNAMIC_TP = p['TP_TREND_PCT'] 
                     if entry_score >= 8:
                         DYNAMIC_TP = 9.990 
                 else:
