@@ -3,14 +3,14 @@ import pandas as pd
 from datetime import datetime
 import yfinance as yf
 
-# 假設你的第一支程式存為 advanced_chart.py，第二支存為 screening.py
+# 確保這兩個檔案跟這個腳本放在同一個資料夾
 from advanced_chart import draw_chart
 from screening import inspect_stock, add_chip_data
 
 # ==========================================
 # 💼 虛擬帳戶與機台設定
 # ==========================================
-portfolio = {}       # 紀錄持倉狀態，格式: {'Ticker SYMBOL': {'進場價': 100, '方向': '做多(Long)'}}
+portfolio = {}       # 紀錄持倉狀態，格式: {'Ticker SYMBOL': {'進場價': 100, '方向': '做多(Long)', '勝率': 0, '報酬': 0}}
 trade_history = []   # 歷史交易紀錄
 SCAN_INTERVAL = 300  # 盤中掃描間隔（秒），300秒 = 5分鐘
 FEE_SLIPPAGE = 0.0025 # 單趟手續費+滑價假設 (0.25%)
@@ -36,9 +36,9 @@ def run_live_simulation():
 
         print(f"\n[{current_time}] 📡 啟動定時海選雷達，掃描 {len(watch_list)} 檔標的...")
         
-        # 1. 批次下載最新即時/延遲報價
+        # 🛡️ 修正 BUG 1：拉長下載期間至半年，確保 MA60 算得出來
         try:
-            batch_data = yf.download(watch_list, period="1mo", progress=False)
+            batch_data = yf.download(watch_list, period="6mo", progress=False)
         except Exception as e:
             print(f"⚠️ 網路連線或下載失敗: {e}")
             time.sleep(60)
@@ -54,7 +54,7 @@ def run_live_simulation():
             if ticker_df.empty:
                 continue
                 
-            # 加入籌碼資料
+            # 加入籌碼資料 (注意：若 API 被鎖定，此處會回傳 0)
             ticker_df = add_chip_data(ticker_df, ticker)
             
             # 2. 進行策略檢驗
@@ -65,52 +65,77 @@ def run_live_simulation():
             status = result['今日系統燈號']
             current_price = result['最新收盤價']
             
-            # 3. 執行模擬交易決策
-            handle_paper_trade(ticker, current_price, status, ticker_df)
+            # 3. 執行模擬交易決策，並把 result 整包傳進去，方便取勝率
+            handle_paper_trade(ticker, current_price, status, ticker_df, result)
 
         print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {SCAN_INTERVAL} 秒...")
         time.sleep(SCAN_INTERVAL)
 
-def handle_paper_trade(ticker, current_price, status, ticker_df):
+def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     """處理單一檔股票的模擬買賣邏輯"""
     has_position = ticker in portfolio
+    win_rate = result_dict["系統勝率(%)"]
+    total_prof = result_dict["累計報酬率(%)"]
     
     # --- 狀況 A：偵測到買訊，且目前空手 ---
-    if "強買訊" in status and not has_position:
-        print(f"⚡ [進場觸發] {ticker} 產生 {status}！模擬買進價: {current_price}")
+    if "買訊" in status and not has_position:
+        print(f"⚡ [進場觸發] {ticker} 產生 {status}！模擬【做多】買進價: {current_price}")
         portfolio[ticker] = {
             '進場價': current_price,
             '進場時間': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            '方向': '做多(Long)'
+            '方向': '做多(Long)',
+            '勝率': win_rate,
+            '報酬': total_prof
         }
-        # 呼叫儀表板留下進場快照
-        draw_chart(ticker, preloaded_df=ticker_df)
+        # 🛡️ 修正 BUG 2：補上繪圖所需的參數
+        draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof)
 
-    # --- 狀況 B：偵測到賣訊，且目前持有多單 ---
-    elif "強賣訊" in status and has_position:
-        entry_data = portfolio.pop(ticker) # 取出並移除部位
-        entry_price = entry_data['進場價']
-        
-        # 計算報酬率 (含摩擦成本)
-        raw_profit_pct = (current_price - entry_price) / entry_price * 100
-        net_profit_pct = raw_profit_pct - (FEE_SLIPPAGE * 100 * 2)
-        
-        trade_record = {
-            'Ticker SYMBOL': ticker,
-            '方向': entry_data['方向'],
-            '進場時間': entry_data['進場時間'],
-            '出場時間': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            '進場價': entry_price,
-            '出場價': current_price,
-            '報酬率(%)': f"{net_profit_pct:.3f}"
+    # --- 狀況 B：偵測到賣訊，且目前空手 (執行放空) ---
+    elif "賣訊" in status and not has_position:
+        print(f"⚡ [進場觸發] {ticker} 產生 {status}！模擬【放空】賣出價: {current_price}")
+        portfolio[ticker] = {
+            '進場價': current_price,
+            '進場時間': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            '方向': '放空(Short)',
+            '勝率': win_rate,
+            '報酬': total_prof
         }
-        trade_history.append(trade_record)
+        draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof)
+
+    # --- 狀況 C：偵測到反向訊號，且目前持有部位 (執行平倉) ---
+    elif has_position:
+        entry_data = portfolio[ticker]
+        entry_price = entry_data['進場價']
+        is_long = entry_data['方向'] == '做多(Long)'
         
-        color = "🔴" if net_profit_pct > 0 else "🟢" # 台股紅漲綠跌
-        print(f"💸 [出場觸發] {ticker} 產生 {status}！模擬平倉價: {current_price}")
-        print(f"   {color} 單筆結算報酬率: {net_profit_pct:.3f}%")
-        
-        draw_chart(ticker, preloaded_df=ticker_df)
+        # 多單遇到賣訊，或空單遇到買訊，就平倉
+        if (is_long and "賣訊" in status) or (not is_long and "買訊" in status):
+            entry_data = portfolio.pop(ticker) # 取出並移除部位
+            
+            # 計算報酬率 (含摩擦成本)
+            if is_long:
+                raw_profit_pct = (current_price - entry_price) / entry_price * 100
+            else:
+                raw_profit_pct = (entry_price - current_price) / entry_price * 100
+                
+            net_profit_pct = raw_profit_pct - (FEE_SLIPPAGE * 100 * 2)
+            
+            trade_record = {
+                'Ticker SYMBOL': ticker,
+                '方向': entry_data['方向'],
+                '進場時間': entry_data['進場時間'],
+                '出場時間': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                '進場價': entry_price,
+                '出場價': current_price,
+                '報酬率(%)': f"{net_profit_pct:.3f}"
+            }
+            trade_history.append(trade_record)
+            
+            color = "🔴" if net_profit_pct > 0 else "🟢" 
+            print(f"💸 [出場觸發] {ticker} 產生反向 {status}！模擬平倉價: {current_price}")
+            print(f"   {color} 單筆結算報酬率: {net_profit_pct:.3f}%")
+            
+            draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof)
 
 # ==========================================
 # 啟動機台

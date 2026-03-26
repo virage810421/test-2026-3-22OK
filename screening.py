@@ -4,6 +4,8 @@ import numpy as np
 from advanced_chart import draw_chart
 from FinMind.data import DataLoader
 import pyodbc
+from scipy.signal import find_peaks
+from config import PARAMS
 
 def create_tsql_database():
     # ==========================================
@@ -42,8 +44,22 @@ if __name__ == "__main__":
 API_TOKEN = "FinMind:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNiAwMDo0ODo0NiIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.CLZzVy6OK617rjvOZ7RG-Yc4pU-EBzPMqpL1CXUz6js"
 dl = DataLoader(token=API_TOKEN)
 
-# ⚡️ 初始化 DataLoader 
-dl = DataLoader()
+# ==========================================
+# 🎛️ 全域策略參數控制中心 (Strategy Parameters)
+# ==========================================
+PARAMS = {
+    "RSI_PERIOD": 14,          # RSI 天數 (預設14)
+    "MACD_FAST": 12,           # MACD 快線 (預設12)
+    "MACD_SLOW": 26,           # MACD 慢線 (預設26)
+    "MACD_SIGNAL": 9,          # MACD 訊號線 (預設9)
+    "BB_WINDOW": 20,           # 布林通道/均線 天數 (預設20)
+    "BB_STD": 2.0,             # 布林通道 標準差倍數 (預設2)
+    "VOL_WINDOW": 20,          # 成交量均線 天數 (預設20)
+    "MA_LONG": 60,             # 長期趨勢線/季線 (預設60)
+    "BBI_PERIODS": [3, 6, 12, 24], # BBI 多空指標天數組合
+    "TRIGGER_SCORE": 4         # 🌟 觸發買賣的門檻分數 (預設4分)
+}
+
 # ==========================================
 # 🔌 籌碼資料外掛模組 (資料合併處理廠)
 # ==========================================
@@ -125,7 +141,8 @@ def add_fundamental_filter(ticker):
 # ==========================================
 # 1. 核心檢測模組封裝 (升級 BBI & DMI + 有效交易次數過濾)
 # ==========================================
-def inspect_stock(ticker, preloaded_df=None):
+# 👇 讓函數可以接收參數字典 (預設使用剛剛建立的 PARAMS)
+def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
     try:
         if preloaded_df is not None:
             df = preloaded_df.copy()
@@ -136,44 +153,43 @@ def inspect_stock(ticker, preloaded_df=None):
             
         if df.empty: return None
         
-        # 1. 基礎指標計算 (RSI)
+        # 1. 基礎指標計算 (RSI) - 使用 p['RSI_PERIOD']
         delta = df['Close'].diff()
         gain = delta.where(delta > 0, 0)
         loss = -delta.where(delta < 0, 0)
-        avg_gain = gain.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-        avg_loss = loss.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+        avg_gain = gain.ewm(alpha=1/p['RSI_PERIOD'], min_periods=p['RSI_PERIOD'], adjust=False).mean()
+        avg_loss = loss.ewm(alpha=1/p['RSI_PERIOD'], min_periods=p['RSI_PERIOD'], adjust=False).mean()
         rs = avg_gain / avg_loss.replace(0, np.nan)
         df['RSI'] = 100 - (100 / (1 + rs))
-        # ==========================================
-        # 🌊 新增：DZ RSI (動態區間 RSI) 計算
-        # ==========================================
-        # 計算 RSI 過去 14 天的移動平均與標準差
-        df['RSI_MA'] = df['RSI'].rolling(window=14).mean()
-        df['RSI_STD'] = df['RSI'].rolling(window=14).std()
         
-        # 設定動態超買/超賣線 (使用 1.5 倍標準差)
+        # DZ RSI (動態區間 RSI)
+        df['RSI_MA'] = df['RSI'].rolling(window=p['RSI_PERIOD']).mean()
+        df['RSI_STD'] = df['RSI'].rolling(window=p['RSI_PERIOD']).std()
         df['DZ_Upper'] = df['RSI_MA'] + (df['RSI_STD'] * 1.5)
         df['DZ_Lower'] = df['RSI_MA'] - (df['RSI_STD'] * 1.5)
-        # 2. 基礎指標計算 (MACD)
-        df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
-        df['EMA26'] = df['Close'].ewm(span=26, adjust=False).mean()
+
+        # 2. 基礎指標計算 (MACD) - 使用 p['MACD_...']
+        df['EMA12'] = df['Close'].ewm(span=p['MACD_FAST'], adjust=False).mean()
+        df['EMA26'] = df['Close'].ewm(span=p['MACD_SLOW'], adjust=False).mean()
         df['DIF'] = df['EMA12'] - df['EMA26']
-        df['MACD_Signal'] = df['DIF'].ewm(span=9, adjust=False).mean()
+        df['MACD_Signal'] = df['DIF'].ewm(span=p['MACD_SIGNAL'], adjust=False).mean()
         df['MACD_Hist'] = (df['DIF'] - df['MACD_Signal']) * 2
 
-        # 3. 基礎指標計算 (BBands 與 成交量均線)
-        df['MA20'] = df['Close'].rolling(window=20).mean()
-        df['BB_std'] = df['Close'].rolling(window=20).std()
-        df['BB_Upper'] = df['MA20'] + (df['BB_std'] * 2)
-        df['BB_Lower'] = df['MA20'] - (df['BB_std'] * 2)
-        df['Vol_MA20'] = df['Volume'].rolling(window=20).mean()
+        # 3. 基礎指標計算 (BBands 與 成交量均線) - 使用 p['BB_WINDOW'] 等
+        df['MA20'] = df['Close'].rolling(window=p['BB_WINDOW']).mean()
+        df['BB_std'] = df['Close'].rolling(window=p['BB_WINDOW']).std()
+        df['BB_Upper'] = df['MA20'] + (df['BB_std'] * p['BB_STD'])
+        df['BB_Lower'] = df['MA20'] - (df['BB_std'] * p['BB_STD'])
+        df['Vol_MA20'] = df['Volume'].rolling(window=p['VOL_WINDOW']).mean()
 
-        # 4. 新增：BBI (多空指標) 與 乖離
-        df['MA3'] = df['Close'].rolling(window=3).mean()
-        df['MA6'] = df['Close'].rolling(window=6).mean()
-        df['MA12'] = df['Close'].rolling(window=12).mean()
-        df['MA24'] = df['Close'].rolling(window=24).mean()
-        df['BBI'] = (df['MA3'] + df['MA6'] + df['MA12'] + df['MA24']) / 4
+        # 4. 新增：BBI (多空指標) - 動態解析陣列
+        bbi_cols = []
+        for days in p['BBI_PERIODS']:
+            col_name = f'MA{days}'
+            df[col_name] = df['Close'].rolling(window=days).mean()
+            bbi_cols.append(df[col_name])
+        
+        df['BBI'] = sum(bbi_cols) / len(p['BBI_PERIODS'])
         df['BBI_BIAS'] = (df['Close'] - df['BBI']) / df['BBI'] * 100
 
         # 5. 新增：DMI (動向指標)
@@ -191,6 +207,42 @@ def inspect_stock(ticker, preloaded_df=None):
         df['-DI14'] = 100 * (df['-DM'].rolling(14).sum() / df['TR'].rolling(14).sum())
         df['DX'] = 100 * abs(df['+DI14'] - df['-DI14']) / (df['+DI14'] + df['-DI14'])
         df['ADX14'] = df['DX'].rolling(14).mean()
+
+        # ==========================================
+        # 🌊 升級模組：ATR 動態公差與科學背離偵測
+        # ==========================================
+        # 1. 計算 ATR (利用前面已算出的 TR)
+        df['ATR'] = df['TR'].ewm(alpha=1/14, adjust=False).mean()
+        
+        # 2. 提前計算法人總買賣超 (供結構背離使用)
+        df['Total_Net'] = df.get('Foreign_Net', 0) + df.get('Trust_Net', 0)
+
+        # 3. 封裝 scipy 向量化背離偵測器 (直接回傳 True/False 的 Series)
+        def detect_divergence(price_series, indicator_series, atr_series, is_top=True, distance=7, atr_mult=1.0, threshold=None):
+            dynamic_prominence = atr_series * atr_mult
+            # 找出波峰或波谷
+            if is_top:
+                peaks, _ = find_peaks(price_series, distance=distance, prominence=dynamic_prominence)
+            else:
+                peaks, _ = find_peaks(-price_series, distance=distance, prominence=dynamic_prominence)
+            
+            div_signals = np.zeros(len(price_series), dtype=bool)
+            # 比對相鄰的兩個波峰/波谷
+            for i in range(1, len(peaks)):
+                p1, p2 = peaks[i-1], peaks[i]
+                if is_top:
+                    cond_price = price_series[p2] > price_series[p1] # 價格創新高
+                    cond_indicator = indicator_series[p2] < indicator_series[p1] # 指標未創新高
+                    cond_thresh = True if threshold is None else indicator_series[p2] > threshold
+                else:
+                    cond_price = price_series[p2] < price_series[p1] # 價格創新低
+                    cond_indicator = indicator_series[p2] > indicator_series[p1] # 指標未創新低
+                    cond_thresh = True if threshold is None else indicator_series[p2] < threshold
+                
+                if cond_price and cond_indicator and cond_thresh:
+                    div_signals[p2] = True # 在第二個轉折點確立背離
+                    
+            return pd.Series(div_signals, index=df.index)
 
         df.dropna(inplace=True)
         if df.empty: return None 
@@ -221,27 +273,20 @@ def inspect_stock(ticker, preloaded_df=None):
         buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] > df['Open'])
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
 
-        # 👻 幽靈 1 處理：區間底背離 (比較過去 10 天的低點，而不是單指 10 天前)
-        past_10_low = df['Low'].shift(1).rolling(10).min()
-        past_10_rsi_min = df['RSI'].shift(1).rolling(10).min()
-        buy_c5 = (df['Low'] < past_10_low) & (df['RSI'] > past_10_rsi_min)
+       # 👻 升級版幽靈 1：精準 RSI 底背離 (價格波谷降低，RSI波谷墊高，且RSI < 45)
+        buy_c5 = detect_divergence(df['Low'].values, df['RSI'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.8, threshold=45)
 
         buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
         buy_c7 = (df.get('Foreign_Net', 0) > 0) & (df.get('Trust_Net', 0) > 0)
         buy_c8 = (df['+DI14'] > df['-DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
 
-        df['Total_Net'] = df.get('Foreign_Net', 0) + df.get('Trust_Net', 0)
-        window = 20
-        price_new_low = df['Low'] <= df['Low'].rolling(window=window).min()
+        # 👻 升級版幽靈 2：籌碼結構底背離 (股價破底，但主力籌碼波谷卻在偷偷墊高)
+        buy_c9_base = detect_divergence(df['Low'].values, df['Total_Net'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.5)
+        buy_c9 = buy_c9_base & (df['Total_Net'] > 0) # 確保發動當下主力是買超
 
-        # 👻 幽靈 2 處理：籌碼容錯 (過去 3 天內，主力曾創 20 日買超新高)
-        chip_new_high_recent = (df['Total_Net'] >= df['Total_Net'].rolling(window=window).max()).rolling(window=3).max() > 0
-        buy_c9 = price_new_low & chip_new_high_recent & (df['Total_Net'] > 0)
-
-        # 🎯 這裡為您補齊斷尾的分數加總 (滿分改為 9 分)
         df['Buy_Score'] = (buy_trend.astype(int) + buy_c1_c2_score + buy_c3.astype(int) + 
-                   buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + 
-                   buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int))
+                           buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + 
+                           buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int))
         
         # --- 【賣方邏輯優化版】 ---
         sell_c1 = df['High'] >= df['BB_Upper']
@@ -252,24 +297,20 @@ def inspect_stock(ticker, preloaded_df=None):
         sell_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] < df['Open'])
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
 
-        # 👻 幽靈 1 處理：區間頂背離 (比較過去 10 天的高點與 RSI 高點)
-        past_10_high = df['High'].shift(1).rolling(10).max()
-        past_10_rsi_max = df['RSI'].shift(1).rolling(10).max()
-        sell_c5 = (df['High'] > past_10_high) & (df['RSI'] < past_10_rsi_max)
+        # 👻 升級版幽靈 1：精準 RSI 頂背離 (價格波峰過高，RSI波峰卻跟不上，且RSI > 55)
+        sell_c5 = detect_divergence(df['High'].values, df['RSI'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.8, threshold=55)
 
         sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
         sell_c7 = (df.get('Foreign_Net', 0) < 0) & (df.get('Trust_Net', 0) < 0)
         sell_c8 = (df['-DI14'] > df['+DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
 
-        # 👻 幽靈 2 處理：籌碼容錯 (過去 3 天內，主力曾創 20 日賣超新低/最大量)
-        price_new_high = df['High'] >= df['High'].rolling(window=window).max()
-        chip_new_low_recent = (df['Total_Net'] <= df['Total_Net'].rolling(window=window).min()).rolling(window=3).max() > 0
-        sell_c9 = price_new_high & chip_new_low_recent & (df['Total_Net'] < 0)
+        # 👻 升級版幽靈 2：籌碼結構頂背離 (股價創高，但主力籌碼波峰卻在衰退)
+        sell_c9_base = detect_divergence(df['High'].values, df['Total_Net'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.5)
+        sell_c9 = sell_c9_base & (df['Total_Net'] < 0) # 確保發動當下主力是賣超
 
-        # 重新計算總分 (與買方對稱，滿分改為 9 分)
         df['Sell_Score'] = (sell_trend.astype(int) + sell_c1_c2_score + sell_c3.astype(int) + 
-                    sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + 
-                    sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
+                            sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + 
+                            sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
 
        # ===== 👇 【請把下面這段全數替換為新程式碼】 👇 =====
         # 🌊 新增：條件平滑特性 (動態滑價與讓點機制)
@@ -279,9 +320,9 @@ def inspect_stock(ticker, preloaded_df=None):
         # 2. 賣出平滑：空頭時直接賣(1.00)，多頭時等溢價才賣(1.03)
         sell_adjust = np.where(sell_trend, 1.00, 1.03)
         
-        #觸發買賣機制條件
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 4, df['Low'] * buy_adjust, np.nan)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 4, df['High'] * sell_adjust, np.nan)
+        # 將原本的 >= 4 換成動態讀取參數
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= p['TRIGGER_SCORE'], df['Low'] * buy_adjust, np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['High'] * sell_adjust, np.nan)
       
         # ==========================================
         # 4. 啟動回測引擎 (滿配版：融合交易成本、波動率、ADX與信心度)
@@ -528,8 +569,12 @@ if __name__ == "__main__":
             if "觀望中" not in result["今日系統燈號"]:
                 print(f"⚠️ 系統警報：偵測到 {ticker} 產生【{result['今日系統燈號']}】！")
                 print(f"自動切換至 {ticker} 精密儀表板進行深度檢驗...")
-                draw_chart(ticker, preloaded_df=ticker_df)
-
+                draw_chart(
+                    ticker, 
+                    preloaded_df=ticker_df, 
+                    win_rate=result["系統勝率(%)"], 
+                    total_profit=result["累計報酬率(%)"]
+                )
     if report_cards:
         # 1. 🏆 全域市場氣候檢測 (方向性 vs. 盤整)
         total_count = len(report_cards)
