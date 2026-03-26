@@ -16,7 +16,6 @@ dl = DataLoader(token=API_TOKEN)
 # 🔌 籌碼資料外掛模組 (資料合併處理廠)
 # ==========================================
 def add_chip_data(df, ticker):
-    # ✅ 修正三：移除原先第一行錯誤的 df = df.join(foreign, how='left')
     """
     負責把 yfinance 的價格表，貼上 FinMind 的外資/投信買賣超資料
     """
@@ -36,7 +35,6 @@ def add_chip_data(df, ticker):
         foreign = chip_df[chip_df['name'].str.contains('外資')].groupby('date')['Net'].sum()
         trust = chip_df[chip_df['name'].str.contains('投信')].groupby('date')['Net'].sum()
         
-        # 確保有資料才轉換時間格式
         if not foreign.empty: foreign.index = pd.to_datetime(foreign.index)
         if not trust.empty: trust.index = pd.to_datetime(trust.index)
 
@@ -46,11 +44,9 @@ def add_chip_data(df, ticker):
         df = df.join(foreign.rename('Foreign_Net'), how='left')
         df = df.join(trust.rename('Trust_Net'), how='left')
 
-        # 🛡️ 破解時間差陷阱：如果今天的籌碼還是 NaN(還沒公佈)，就先借用昨天的資料
         df['Foreign_Net'] = df['Foreign_Net'].ffill(limit=1)
         df['Trust_Net'] = df['Trust_Net'].ffill(limit=1)
         
-        # 剩下的真實空值才補 0
         df['Foreign_Net'] = df['Foreign_Net'].fillna(0)
         df['Trust_Net'] = df['Trust_Net'].fillna(0)
         
@@ -68,11 +64,9 @@ def add_fundamental_filter(ticker):
     """抓取營收與獲利能力，判斷基本面體質"""
     pure_ticker = ticker.split('.')[0]
     try:
-        # 1. 抓取月營收 (判斷成長性)
         rev_df = dl.taiwan_stock_month_revenue(stock_id=pure_ticker)
         rev_yoy = rev_df.iloc[-1]['revenue_year_growth'] if not rev_df.empty else 0.0
 
-        # 2. 抓取損益表 (判斷獲利能力)
         st_df = dl.taiwan_stock_financial_statement(stock_id=pure_ticker)
         if not st_df.empty:
             op_margin_row = st_df[st_df['type'] == 'OperatingProfitMargin']
@@ -80,19 +74,18 @@ def add_fundamental_filter(ticker):
         else:
             op_margin = 0.0
 
-        # 3. 定性評分邏輯
         f_score = 0
         if rev_yoy > 0: f_score += 1
         if rev_yoy > 20: f_score += 1 
         if op_margin > 0: f_score += 1 
-        if op_margin < 0: f_score -= 2 # 本業虧損大扣分
+        if op_margin < 0: f_score -= 2 
 
         return {"營收年增率(%)": rev_yoy, "營業利益率(%)": op_margin, "基本面總分": f_score}
     except:
         return {"營收年增率(%)": 0.000, "營業利益率(%)": 0.000, "基本面總分": 0}
 
 # ==========================================
-# 1. 核心檢測模組封裝 
+# 1. 核心檢測模組封裝 (全面參數化)
 # ==========================================
 def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
     try:
@@ -133,7 +126,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['BB_Lower'] = df['MA20'] - (df['BB_std'] * p['BB_STD'])
         df['Vol_MA20'] = df['Volume'].rolling(window=p['VOL_WINDOW']).mean()
 
-        # 4. 新增：BBI
+        # 4. BBI
         bbi_cols = []
         for days in p['BBI_PERIODS']:
             col_name = f'MA{days}'
@@ -143,10 +136,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['BBI'] = sum(bbi_cols) / len(p['BBI_PERIODS'])
         df['BBI_BIAS'] = (df['Close'] - df['BBI']) / df['BBI'] * 100
 
-        # 5. 新增：DMI (動向指標)
+        # 5. DMI (動向指標) - 參數化
         high_diff = df['High'].diff()
-        
-        # ✅ 修正四：向下差額必須加上負號，才能正確取得往下的跌幅
         low_diff = -df['Low'].diff() 
         
         df['+DM'] = np.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0)
@@ -158,9 +149,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['TR'] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         
         df['+DI14'] = 100 * (df['+DM'].rolling(p['DMI_PERIOD']).sum() / df['TR'].rolling(p['DMI_PERIOD']).sum())
-        df['-DI14'] = 100 * (df['-DM'].rolling(14).sum() / df['TR'].rolling(14).sum())
+        df['-DI14'] = 100 * (df['-DM'].rolling(p['DMI_PERIOD']).sum() / df['TR'].rolling(p['DMI_PERIOD']).sum())
         df['DX'] = 100 * abs(df['+DI14'] - df['-DI14']) / (df['+DI14'] + df['-DI14'])
-        df['ADX14'] = df['DX'].rolling(14).mean()
+        df['ADX14'] = df['DX'].rolling(p['DMI_PERIOD']).mean()
 
         # ==========================================
         # 🌊 升級模組：ATR 動態公差與科學背離偵測
@@ -196,11 +187,11 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if df.empty: return None 
         
         # ==========================================
-        # 🛡️ 基礎防護網
+        # 🛡️ 基礎防護網 (參數化)
         # ==========================================
         latest_check = df.iloc[-1]
-        if latest_check['Vol_MA20'] < 1000000: return None 
-        if latest_check['Close'] < 10.0: return None 
+        if latest_check['Vol_MA20'] < p['MIN_VOL_MA20']: return None 
+        if latest_check['Close'] < p['MIN_PRICE']: return None 
 
         # ==========================================
         # D. ⚙️ 計分型邏輯閘 
@@ -212,12 +203,12 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         buy_c2 = df['RSI'] < df['DZ_Lower']
         buy_c1_c2_score = (buy_c1 | buy_c2).astype(int) 
 
-        buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] > df['Open'])
+        buy_c3 = (df['Volume'] > (df['Vol_MA20'] * p['VOL_BREAKOUT_MULTIPLIER'])) & (df['Close'] > df['Open'])
         buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
         buy_c5 = detect_divergence(df['Low'].values, df['RSI'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.8, threshold=45)
         buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
         buy_c7 = (df.get('Foreign_Net', 0) > 0) & (df.get('Trust_Net', 0) > 0)
-        buy_c8 = (df['+DI14'] > df['-DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
+        buy_c8 = (df['+DI14'] > df['-DI14']) & (df['ADX14'] >= p['ADX_TREND_THRESHOLD']) & (df['ADX14'] > df['ADX14'].shift(1))
 
         buy_c9_base = detect_divergence(df['Low'].values, df['Total_Net'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.5)
         buy_c9 = buy_c9_base & (df['Total_Net'] > 0) 
@@ -230,12 +221,12 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_c2 = df['RSI'] > df['DZ_Upper']
         sell_c1_c2_score = (sell_c1 | sell_c2).astype(int) 
 
-        sell_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] < df['Open'])
+        sell_c3 = (df['Volume'] > (df['Vol_MA20'] * p['VOL_BREAKOUT_MULTIPLIER'])) & (df['Close'] < df['Open'])
         sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
         sell_c5 = detect_divergence(df['High'].values, df['RSI'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.8, threshold=55)
         sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
         sell_c7 = (df.get('Foreign_Net', 0) < 0) & (df.get('Trust_Net', 0) < 0)
-        sell_c8 = (df['-DI14'] > df['+DI14']) & (df['ADX14'] >= 20) & (df['ADX14'] > df['ADX14'].shift(1))
+        sell_c8 = (df['-DI14'] > df['+DI14']) & (df['ADX14'] >= p['ADX_TREND_THRESHOLD']) & (df['ADX14'] > df['ADX14'].shift(1))
 
         sell_c9_base = detect_divergence(df['High'].values, df['Total_Net'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.5)
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
@@ -244,15 +235,15 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                             sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + 
                             sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
 
-        # 動態滑價
-        buy_adjust = np.where(buy_trend, 1.00, 0.97) 
-        sell_adjust = np.where(sell_trend, 1.00, 1.03)
+        # 動態滑價 (參數化)
+        buy_adjust = np.where(buy_trend, 1.00, p['BUY_PULLBACK_RATE']) 
+        sell_adjust = np.where(sell_trend, 1.00, p['SELL_PREMIUM_RATE'])
         
         df['Buy_Signal'] = np.where(df['Buy_Score'] >= p['TRIGGER_SCORE'], df['Low'] * buy_adjust, np.nan)
         df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['High'] * sell_adjust, np.nan)
       
         # ==========================================
-        # 4. 啟動回測引擎 
+        # 4. 啟動回測引擎 (成本與防線參數化)
         # ==========================================
         position = 0
         entry_price = 0          
@@ -260,13 +251,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         entry_trend_is_bull = False 
         entry_score = 0  
         trades = []
-        
-        FEE_RATE = 0.001425  
-        FEE_DISCOUNT = 0.6   
-        TAX_RATE = 0.003     
 
-        BUY_COST_MULTIPLIER = 1 + (FEE_RATE * FEE_DISCOUNT)
-        SELL_NET_MULTIPLIER = 1 - (FEE_RATE * FEE_DISCOUNT) - TAX_RATE
+        BUY_COST_MULTIPLIER = 1 + (p['FEE_RATE'] * p['FEE_DISCOUNT'])
+        SELL_NET_MULTIPLIER = 1 - (p['FEE_RATE'] * p['FEE_DISCOUNT']) - p['TAX_RATE']
 
         for index, row in df.iterrows():
             if position == 0 and not pd.isna(row['Buy_Signal']):
@@ -284,12 +271,13 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 
                 volatility_pct = (row['BB_std'] * 1.5) / row['Close']
                 DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT'])) 
+                
                 if entry_trend_is_bull and row['ADX14'] > p['ADX_TREND_THRESHOLD']:
                     DYNAMIC_TP = p['TP_TREND_PCT'] 
                     if entry_score >= 8:
                         DYNAMIC_TP = 9.990 
                 else:
-                    DYNAMIC_TP = 0.100
+                    DYNAMIC_TP = p['TP_BASE_PCT']
                 
                 def calculate_net_profit(raw_exit_price):
                     actual_exit_amount = raw_exit_price * SELL_NET_MULTIPLIER
@@ -384,7 +372,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             else:
                 trigger_str = "無"
 
-        if latest_row['ADX14'] < 20:
+        if latest_row['ADX14'] < p['ADX_TREND_THRESHOLD']:
             trigger_str += " (⚠️ 盤整中，訊號效力減弱)"
 
         strength_diff = buy_score - sell_score
@@ -445,7 +433,7 @@ if __name__ == "__main__":
         "2330.TW"
     ]
     
-    print(f"\n啟提批次分析模式，正在一次性下載 {len(test_targets)} 檔股票資料，請稍候...")
+    print(f"\n啟動批次分析模式，正在一次性下載 {len(test_targets)} 檔股票資料，請稍候...")
     batch_data = yf.download(test_targets, period="2y", progress=True)
     print("\n✅ 資料下載完成！啟動自動化海選雷達，正在靜默掃描股票清單...\n")
     
@@ -474,15 +462,21 @@ if __name__ == "__main__":
                     win_rate=result["系統勝率(%)"], 
                     total_profit=result["累計報酬率(%)"]
                 )
+
+    # ==========================================
+    # 👇 最終報表輸出與高階診斷 (終極二合一版) 👇
+    # ==========================================
     if report_cards:
+        # --- 1. 市場氣候與戰略資金配置 ---
         total_count = len(report_cards)
-        bull_count = len([r for r in report_cards if int(r["結構強度"]) > 2])
-        bear_count = len([r for r in report_cards if int(r["結構強度"]) < -2])
+        bull_count = len([r for r in report_cards if int(r.get("結構強度", 0)) > 2])
+        bear_count = len([r for r in report_cards if int(r.get("結構強度", 0)) < -2])
         
-        trend_intensity = max(bull_count, bear_count) / total_count
+        trend_intensity = max(bull_count, bear_count) / total_count if total_count > 0 else 0
         
-        TOTAL_BUDGET = 1000000    
-        MAX_POSITIONS = 5         
+        # 讀取參數表的預算設定
+        TOTAL_BUDGET = PARAMS.get("TOTAL_BUDGET", 1000000)    
+        MAX_POSITIONS = PARAMS.get("MAX_POSITIONS", 5)         
         base_allocation = TOTAL_BUDGET / MAX_POSITIONS
 
         if trend_intensity >= 0.600:
@@ -495,20 +489,27 @@ if __name__ == "__main__":
             risk_factor = 0.300
             market_msg = "🌪️ 多空勢均力敵（盤整），自動降載至 30% 嚴防雙巴。"
 
+        # --- 2. 綜合評分計算 (融合勝率、報酬率與基本面加權) ---
+        for r in report_cards:
+            win_rate = float(r["系統勝率(%)"]) / 100
+            total_ret = abs(float(r["累計報酬率(%)"])) 
+            f_weight = int(r["基本面總分"]) * 2
+            
+            # 給予基本面順風車獎勵
+            bonus = f_weight if "買訊" in r["今日系統燈號"] else -f_weight if "賣訊" in r["今日系統燈號"] else 0
+            r["期望值評分"] = round((total_ret * win_rate) + bonus, 3)
+
         long_candidates = [r for r in report_cards if "買訊" in r["今日系統燈號"]]
         short_candidates = [r for r in report_cards if "賣訊" in r["今日系統燈號"]]
 
-        for r in (long_candidates + short_candidates):
-            win_rate = float(r["系統勝率(%)"]) / 100
-            total_ret = abs(float(r["累計報酬率(%)"])) 
-            r["期望值評分"] = round(total_ret * win_rate, 3)
-
         top_longs = sorted(long_candidates, key=lambda x: x.get("期望值評分", 0), reverse=True)
         top_shorts = sorted(short_candidates, key=lambda x: x.get("期望值評分", 0), reverse=True)
+        all_ranked = sorted([r for r in report_cards if "觀望" not in r["今日系統燈號"]], key=lambda x: x.get('期望值評分', 0), reverse=True)
 
+        # --- 3. 印出雙向戰略配置報告 ---
         print("\n" + "═"*30 + " ⚔️ 雙向戰略配置報告 " + "═"*30)
         print(f"📈 多頭比例：{bull_count/total_count:.1%} | 📉 空頭比例：{bear_count/total_count:.1%}")
-        print(f"🛡️ 風險狀態：{market_msg}")
+        print(f"📊 趨勢強度：{trend_intensity:.3f} | 🛡️ 風險狀態：{market_msg}")
         print(f"💵 建議單筆限額：${(base_allocation * risk_factor):,.0f}")
         print("-" * 83)
         
@@ -518,44 +519,16 @@ if __name__ == "__main__":
             print(f"🏳️ 【放空首選】: {top_shorts[0]['Ticker SYMBOL']} (評分: {top_shorts[0]['期望值評分']:.3f})")
             
         print("-" * 83)
-        if not top_longs and not top_shorts:
+        if not all_ranked:
             print("📭 市場方向不明且無強烈訊號，建議空手觀望。")
         else:
             print(f"🎯 綜合排序前 {MAX_POSITIONS} 名進場建議：")
-            all_ranked = sorted(top_longs + top_shorts, key=lambda x: x['期望值評分'], reverse=True)
             for i, stock in enumerate(all_ranked[:MAX_POSITIONS]):
                 direction = "🔴 做多" if "買訊" in stock["今日系統燈號"] else "🟢 放空"
-                print(f"  {i+1}. {stock['Ticker SYMBOL']} | {direction} | 期望評分: {stock['期望值評分']:.3f} | 建議配置: ${base_allocation * risk_factor:,.0f}")
+                print(f"  {i+1}. {stock['Ticker SYMBOL']} | {direction} | 期望評分: {stock['期望值評分']:.3f} | 建議配置: ${(base_allocation * risk_factor):,.0f}")
         print("═"*83)
 
-    if report_cards:
-        total_st = len(report_cards)
-        bull_st = len([r for r in report_cards if int(r.get("結構強度", 0)) > 2])
-        bear_st = len([r for r in report_cards if int(r.get("結構強度", 0)) < -2])
-        trend_intensity = max(bull_st, bear_st) / total_st if total_st > 0 else 0
-        
-        TOTAL_BUDGET, MAX_POS = 1000000, 5
-        risk_factor = 1.0 if trend_intensity >= 0.6 else 0.6 if trend_intensity >= 0.4 else 0.3
-        
-        for r in report_cards:
-            win_rate = float(r["系統勝率(%)"]) / 100
-            total_ret = abs(float(r["累計報酬率(%)"]))
-            f_weight = int(r["基本面總分"]) * 2
-            
-            bonus = f_weight if "買訊" in r["今日系統燈號"] else -f_weight if "賣訊" in r["今日系統燈號"] else 0
-            r["期望值評分"] = round((total_ret * win_rate) + bonus, 3)
-
-        all_ranked = sorted([r for r in report_cards if "觀望" not in r["今日系統燈號"]], 
-                            key=lambda x: x.get('期望值評分', 0), reverse=True)
-
-        print("\n" + "═"*30 + " ⚔️ 雙向戰略配置報告 " + "═"*30)
-        print(f"📊 趨勢強度：{trend_intensity:.3f} | 🛡️ 部位係數：{risk_factor:.3f}")
-        print("-" * 83)
-        for i, stock in enumerate(all_ranked[:MAX_POS]):
-            direction = "🔴 做多" if "買訊" in stock["今日系統燈號"] else "🟢 放空"
-            print(f"  {i+1}. {stock['Ticker SYMBOL']} | {direction} | 評分: {stock['期望值評分']:.3f} | 建議配置: ${(TOTAL_BUDGET/MAX_POS)*risk_factor:,.0f}")
-        print("═"*83)
-
+        # --- 4. 印出今日海選總表 ---
         final_report = pd.DataFrame(report_cards)
         pd.set_option('display.unicode.east_asian_width', True) 
         
@@ -563,17 +536,19 @@ if __name__ == "__main__":
         display_cols = [
             "Ticker SYMBOL", "最新收盤價", "結構強度", "今日系統燈號", 
             "結構診斷", "基本面總分", "營收年增率(%)", "營業利益率(%)", 
-            "系統勝率(%)", "累計報酬率(%)", "觸發條件明細"
+            "系統勝率(%)", "累計報酬率(%)", "期望值評分", "觸發條件明細"
         ]
         
         actual_cols = [col for col in display_cols if col in final_report.columns]
         print(final_report[actual_cols].to_string(index=False))
         print("="*75)
 
+        # --- 5. 印出指標戰力分佈報告 ---
         all_condition_keys = [
             "BBI多頭趨勢", "破下軌", "RSI超賣", "爆量", "MACD轉強", 
-            "底背離", "🌟突破BBI", "🔥法人同買", "📈DMI趨勢成型", "💎結構底背離","BBI空頭趨勢",
-            "頂上軌","RSI超買","爆量","MACD轉弱","頂背離","💀跌破BBI","🧊法人同賣","📉DMI空頭成型","💣結構頂背離"
+            "底背離", "🌟突破BBI", "🔥法人同買", "📈DMI趨勢成型", "💎結構底背離",
+            "BBI空頭趨勢", "頂上軌", "RSI超買", "爆量", "MACD轉弱", 
+            "頂背離", "💀跌破BBI", "🧊法人同賣", "📉DMI空頭成型", "💣結構頂背離"
         ]
         
         global_stats = {key: 0 for key in all_condition_keys}
