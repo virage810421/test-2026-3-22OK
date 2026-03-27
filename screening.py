@@ -9,7 +9,7 @@ from config import PARAMS
 # ==========================================
 # ⚡️ 初始化 DataLoader 
 # ==========================================
-API_TOKEN = "FinMind:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNiAwMDo0ODo0NiIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.CLZzVy6OK617rjvOZ7RG-Yc4pU-EBzPMqpL1CXUz6js"
+API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNyAyMjowNTowMCIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.JmayRjSVQqs6SdyCdLn1Z8uWyuYgvHHjOE32UxWI-_8"
 dl = DataLoader(token=API_TOKEN)
 
 # ==========================================
@@ -17,7 +17,8 @@ dl = DataLoader(token=API_TOKEN)
 # ==========================================
 def add_chip_data(df, ticker):
     """
-    負責把 yfinance 的價格表，貼上 FinMind 的外資/投信買賣超資料
+    負責把 yfinance 的價格表，貼上 FinMind 的三大法人買賣超資料
+    (修正版：對齊 API 回傳的英文名稱，並新增自營商)
     """
     pure_ticker = ticker.split('.')[0]
     start_dt = (pd.Timestamp.today() - pd.Timedelta(days=120)).strftime("%Y-%m-%d")
@@ -25,35 +26,46 @@ def add_chip_data(df, ticker):
     try:
         chip_df = dl.taiwan_stock_institutional_investors(stock_id=pure_ticker, start_date=start_dt)
         
-        if chip_df.empty:
-            df['Foreign_Net'] = 0
-            df['Trust_Net'] = 0
+        # 如果沒抓到資料，提早結束並給 0
+        if chip_df is None or (isinstance(chip_df, pd.DataFrame) and chip_df.empty):
+            df['Foreign_Net'], df['Trust_Net'], df['Dealers_Net'] = 0, 0, 0
             return df
             
         chip_df['Net'] = chip_df['buy'] - chip_df['sell']
         
-        foreign = chip_df[chip_df['name'].str.contains('外資')].groupby('date')['Net'].sum()
-        trust = chip_df[chip_df['name'].str.contains('投信')].groupby('date')['Net'].sum()
+        # 🌟 1. 改用英文名稱搜尋三大法人
+        foreign = chip_df[chip_df['name'].str.contains('Foreign_Investor')].groupby('date')['Net'].sum()
+        trust = chip_df[chip_df['name'].str.contains('Investment_Trust')].groupby('date')['Net'].sum()
+        dealers = chip_df[chip_df['name'].str.contains('Dealer')].groupby('date')['Net'].sum()
         
-        if not foreign.empty: foreign.index = pd.to_datetime(foreign.index)
-        if not trust.empty: trust.index = pd.to_datetime(trust.index)
-
+        # 🌟 絕對強制的日期對齊術 (解決合併變 0 的問題)
         if df.index.tz is not None:
             df.index = df.index.tz_localize(None)
-        
+        df.index = pd.to_datetime(df.index).normalize() # 強制移除 yfinance 的隱藏時間
+
+        if not foreign.empty: 
+            foreign.index = pd.to_datetime(foreign.index).normalize()
+        if not trust.empty: 
+            trust.index = pd.to_datetime(trust.index).normalize()
+        if not dealers.empty: 
+            dealers.index = pd.to_datetime(dealers.index).normalize()
+
+        # 🌟 2. 將三大法人併入你的 df
         df = df.join(foreign.rename('Foreign_Net'), how='left')
         df = df.join(trust.rename('Trust_Net'), how='left')
+        df = df.join(dealers.rename('Dealers_Net'), how='left')
 
-        df['Foreign_Net'] = df['Foreign_Net'].ffill(limit=1)
-        df['Trust_Net'] = df['Trust_Net'].ffill(limit=1)
+        # 空白的日子填補 0
+        df['Foreign_Net'] = df['Foreign_Net'].ffill().fillna(0)
+        df['Trust_Net'] = df['Trust_Net'].ffill().fillna(0)
+        df['Dealers_Net'] = df['Dealers_Net'].ffill().fillna(0)
         
-        df['Foreign_Net'] = df['Foreign_Net'].fillna(0)
-        df['Trust_Net'] = df['Trust_Net'].fillna(0)
-        
+    except KeyError as e:
+        print(f"❌ {ticker} API 結構錯誤: {e}")
+        df['Foreign_Net'], df['Trust_Net'], df['Dealers_Net'] = 0, 0, 0
     except Exception as e:
-        print(f"⚠️ {ticker} 籌碼抓取失敗: {e}")
-        df['Foreign_Net'] = 0
-        df['Trust_Net'] = 0
+        print(f"⚠️ {ticker} 籌碼處理發生錯誤: {e}")
+        df['Foreign_Net'], df['Trust_Net'], df['Dealers_Net'] = 0, 0, 0
         
     return df
 
@@ -430,8 +442,18 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
 if __name__ == "__main__":
 
     test_targets = [
-        "2330.TW"
-    ]
+    # 權值與趨勢
+    "2330.TW", "2454.TW", "2317.TW", "2303.TW", "2308.TW",
+    # AI 伺服器
+    "2382.TW", "3231.TW", "6669.TW", "2357.TW", "3034.TW",
+    # 航運
+    "2603.TW", "2609.TW", "2615.TW",
+    # 金融
+    "2881.TW", "2882.TW", "2891.TW",
+    # 重電與傳產
+    "1519.TW", "1513.TW", "2618.TW", "2002.TW"
+]
+
     
     print(f"\n啟動批次分析模式，正在一次性下載 {len(test_targets)} 檔股票資料，請稍候...")
     batch_data = yf.download(test_targets, period="2y", progress=True)

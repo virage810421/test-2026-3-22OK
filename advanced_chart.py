@@ -9,7 +9,7 @@ from plotly.subplots import make_subplots
 from config import PARAMS
 
 # ==========================================
-# ⚙️ 核心封裝：精密儀表板模組 (純視覺展示 + 9分制訊號同步)
+# ⚙️ 核心封裝：精密儀表板模組 (純視覺展示 + 10分制訊號同步)
 # ==========================================
 def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=PARAMS):
     print(f"\n[系統提示] 啟動 {ticker} 的精密繪圖引擎...")
@@ -18,9 +18,11 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     if preloaded_df is not None:
         df = preloaded_df.copy() 
     else:
-        # 如果是手腳沒傳資料，才自己下載 (通常不會發生)
-        return
-        
+        # 單機沒傳資料時的備案
+        data = yf.download(ticker, period="2y", progress=False) 
+        if data.empty: return
+        df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
+
     # -------------------------------
     # 1. 啟動外部新聞雷達
     # -------------------------------
@@ -40,23 +42,15 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     except Exception:
         news_text = "<b>📡 外部情報雷達連線失敗</b>"
 
-    # -------------------------------
-    # 2. 數據獲取與全套指標計算 (全面改用 PARAMS 參數字典)
-    # -------------------------------
-    if preloaded_df is not None:
-        df = preloaded_df.copy()
-        if df.empty: return
-    else:
-        data = yf.download(ticker, period="2y", progress=False) 
-        if data.empty: return
-        df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
-
-    # 🛡️ 終極防撞牆：一次檢查「有沒有料」、「夠不夠長」、「有沒有分數」
-    if df.empty or len(df) < 10 or 'Buy_Score' not in df.columns:
-        print(f"⚠️ {ticker} 繪圖引擎警告：資料不完整 (K線數: {len(df)})，已安全跳過。")
+    # 🛡️ 終極防撞牆
+    if df.empty or len(df) < 10:
+        print(f"⚠️ {ticker} 繪圖引擎警告：資料不完整，已安全跳過。")
         return 
 
-    # RSI 與動態區間
+    # -------------------------------
+    # 2. 數據獲取與全套指標計算 
+    # -------------------------------
+    # RSI 
     delta = df['Close'].diff()
     gain = delta.where(delta > 0, 0)
     loss = -delta.where(delta < 0, 0)
@@ -64,8 +58,10 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     avg_loss = loss.ewm(alpha=1/p['RSI_PERIOD'], min_periods=p['RSI_PERIOD'], adjust=False).mean()
     rs = avg_gain / avg_loss.replace(0, np.nan)
     df['RSI'] = 100 - (100 / (1 + rs))
-    df['DZ_Upper'] = df['RSI'].rolling(p['RSI_PERIOD']).mean() + (df['RSI'].rolling(p['RSI_PERIOD']).std() * 1.5)
-    df['DZ_Lower'] = df['RSI'].rolling(p['RSI_PERIOD']).mean() - (df['RSI'].rolling(p['RSI_PERIOD']).std() * 1.5)
+    df['RSI_MA'] = df['RSI'].rolling(window=p['RSI_PERIOD']).mean()
+    df['RSI_STD'] = df['RSI'].rolling(window=p['RSI_PERIOD']).std()
+    df['DZ_Upper'] = df['RSI_MA'] + (df['RSI_STD'] * 1.5)
+    df['DZ_Lower'] = df['RSI_MA'] - (df['RSI_STD'] * 1.5)
 
     # MACD
     df['EMA12'] = df['Close'].ewm(span=p['MACD_FAST'], adjust=False).mean()
@@ -82,64 +78,93 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
         bbi_cols.append(df[col_name])
     df['BBI'] = sum(bbi_cols) / len(p['BBI_PERIODS'])
     
-    # ATR 計算 
+    # ATR 
     df['TR'] = np.maximum.reduce([df['High'] - df['Low'], (df['High'] - df['Close'].shift(1)).abs(), (df['Low'] - df['Close'].shift(1)).abs()])
     df['ATR'] = df['TR'].ewm(alpha=1/14, adjust=False).mean()
-    
+    df['MA20'] = df['Close'].rolling(window=p['BB_WINDOW']).mean()
+    df['BB_std'] = df['Close'].rolling(window=p['BB_WINDOW']).std()
+    df['BB_Upper'] = df['MA20'] + (df['BB_std'] * p['BB_STD'])
+    df['BB_Lower'] = df['MA20'] - (df['BB_std'] * p['BB_STD'])
     # -------------------------------
-    # 3. 雙向 9 分制邏輯閘 (產生圖表買賣三角形)
+    # 3. 雙向 9 分制邏輯閘 (聰明過濾版)
     # -------------------------------
-    buy_c1 = df['Low'] <= df['BB_Lower']
-    buy_c2 = df['RSI'] < df['DZ_Lower']
-    buy_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] > df['Open'])
-    buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-    buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
-    
-    sell_c1 = df['High'] >= df['BB_Upper']
-    sell_c2 = df['RSI'] > df['DZ_Upper']
-    sell_c3 = (df['Volume'] > (df['Vol_MA20'] * 1.1)) & (df['Close'] < df['Open'])
-    sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-    sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
+    if 'Buy_Score' not in df.columns:   
+        print("ℹ️ 繪圖引擎：無預算分數，啟動基礎 4 分制計算...")
+        
+        buy_c1 = df['Low'] <= df['BB_Lower']
+        buy_c2 = df['RSI'] < df['DZ_Lower']
+        buy_c3 = (df['Volume'] > (df['Volume'].rolling(p['VOL_WINDOW']).mean() * 1.1)) & (df['Close'] > df['Open'])
+        buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
+        buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
+        
+        sell_c1 = df['High'] >= df['BB_Upper']
+        sell_c2 = df['RSI'] > df['DZ_Upper']
+        sell_c3 = (df['Volume'] > (df['Volume'].rolling(p['VOL_WINDOW']).mean() * 1.1)) & (df['Close'] < df['Open'])
+        sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
+        sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
 
-    df['Buy_Score'] = (buy_c1 | buy_c2).astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c6.astype(int)
-    df['Sell_Score'] = (sell_c1 | sell_c2).astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c6.astype(int)
-    
+        df['Buy_Score'] = (buy_c1 | buy_c2).astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c6.astype(int)
+        df['Sell_Score'] = (sell_c1 | sell_c2).astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c6.astype(int)
+    else:
+        print("✅ 繪圖引擎：成功接收大腦 10 分制數據，同步畫圖。")
+
     df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
     df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
 
     # -------------------------------
-    # 4. 繪製圖表 (UI 升級版: 4 子圖)
+    # 4. 繪製圖表 (UI 升級版: 5 子圖)
     # -------------------------------
     color_up, color_down = '#FF5252', '#00E676' 
     vol_colors = [color_down if df['Close'].iloc[i] < df['Open'].iloc[i] else color_up for i in range(len(df))]
 
     fig = make_subplots(
-        rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.025, 
-        row_heights=[0.45, 0.15, 0.2, 0.2], 
-        subplot_titles=("價格走勢、布林通道與季線", "成交量 (Volume)", "RSI 強弱指標", "MACD 柱狀圖")
+        rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.02, 
+        row_heights=[0.35, 0.15, 0.20, 0.15, 0.15], 
+        subplot_titles=("價格走勢與布林通道線", "成交量", "三大法人買賣超 (外資/投信/自營)", "RSI 強弱指標", "MACD 柱狀圖")
     )
 
-    # K線與指標
+    # (Row 1) K線與指標
     fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], increasing_line_color=color_up, decreasing_line_color=color_down, name='股價', opacity=0.8, showlegend=False), row=1, col=1)
     df['MA_LONG'] = df['Close'].rolling(window=p['MA_LONG']).mean()
-    fig.add_trace(go.Scatter(x=df.index, y=df['MA_LONG'], line=dict(color='#2196F3', width=2), name=f"長天期均線 (MA{p['MA_LONG']})"), row=1, col=1)
-    fig.add_trace(go.Scatter(x=df.index, y=df['BB_Upper'], line=dict(color='#555', width=1, dash='dot'), name='BB 上軌', showlegend=False), row=1, col=1)
-    fig.add_trace(go.Scatter(x=df.index, y=df['BB_Lower'], line=dict(color='#555', width=1, dash='dot'), name='BB 下軌', showlegend=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=df.index, y=df['MA_LONG'], line=dict(color='#2196F3', width=2), name=f"MA{p['MA_LONG']}"), row=1, col=1)
+    
+    # 布林通道上下軌
+   
+    fig.add_trace(go.Scatter(x=df.index, y=df['BB_Upper'], line=dict(color='#555', width=1, dash='dot'), showlegend=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=df.index, y=df['BB_Lower'], line=dict(color='#555', width=1, dash='dot'), showlegend=False), row=1, col=1)
     
     # 買賣三角形標記
     fig.add_trace(go.Scatter(x=df.index, y=df['Buy_Signal'], mode='markers', marker=dict(symbol='triangle-up', size=12, color=color_up, line=dict(width=1, color='white')), name='買入訊號', hoverinfo='x+y'), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['Sell_Signal'], mode='markers', marker=dict(symbol='triangle-down', size=12, color=color_down, line=dict(width=1, color='white')), name='賣出訊號', hoverinfo='x+y'), row=1, col=1)
 
-    # 副圖
+    # (Row 2) 成交量
     fig.add_trace(go.Bar(x=df.index, y=df['Volume'], marker_color=vol_colors, name='成交量', opacity=0.6), row=2, col=1)
-    fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], line=dict(color='#BA68C8', width=2), name='RSI'), row=3, col=1)
-    fig.add_hrect(y0=70, y1=100, fillcolor="red", opacity=0.08, line_width=0, row=3, col=1)
-    fig.add_hrect(y0=0, y1=30, fillcolor="green", opacity=0.08, line_width=0, row=3, col=1)
     
+    # (Row 3) 🌟 三大法人籌碼副圖
+    has_chip_data = False
+    if 'Foreign_Net' in df.columns:
+        fig.add_trace(go.Bar(x=df.index, y=df['Foreign_Net'], name='外資', marker_color='#00BCD4', opacity=0.8), row=3, col=1)
+        has_chip_data = True
+    if 'Trust_Net' in df.columns:
+        fig.add_trace(go.Bar(x=df.index, y=df['Trust_Net'], name='投信', marker_color='#FF9800', opacity=0.8), row=3, col=1)
+        has_chip_data = True
+    if 'Dealers_Net' in df.columns:
+        fig.add_trace(go.Bar(x=df.index, y=df['Dealers_Net'], name='自營商', marker_color='#9C27B0', opacity=0.8), row=3, col=1)
+        has_chip_data = True
+        
+    if not has_chip_data:
+         fig.add_annotation(text="(⚠️ 籌碼無資料)", xref="paper", yref="paper", x=0.5, y=0.5, row=3, col=1, showarrow=False, font=dict(color='white', size=14))
+
+    # (Row 4) RSI
+    fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], line=dict(color='#BA68C8', width=2), name='RSI'), row=4, col=1)
+    fig.add_hrect(y0=70, y1=100, fillcolor="red", opacity=0.08, line_width=0, row=4, col=1)
+    fig.add_hrect(y0=0, y1=30, fillcolor="green", opacity=0.08, line_width=0, row=4, col=1)
+    
+    # (Row 5) MACD
     macd_colors = [color_up if x > 0 else color_down for x in df['MACD_Hist']]
-    fig.add_trace(go.Bar(x=df.index, y=df['MACD_Hist'], marker_color=macd_colors, name='MACD 柱狀圖'), row=4, col=1)
-    fig.add_trace(go.Scatter(x=df.index, y=df['DIF'], line=dict(color='gold', width=1.5), name='DIF (快線)'), row=4, col=1)
-    fig.add_trace(go.Scatter(x=df.index, y=df['MACD_Signal'], line=dict(color='#00BFFF', width=1.5), name='Signal (慢線)'), row=4, col=1)
+    fig.add_trace(go.Bar(x=df.index, y=df['MACD_Hist'], marker_color=macd_colors, name='MACD 柱狀圖'), row=5, col=1)
+    fig.add_trace(go.Scatter(x=df.index, y=df['DIF'], line=dict(color='gold', width=1.5), name='DIF'), row=5, col=1)
+    fig.add_trace(go.Scatter(x=df.index, y=df['MACD_Signal'], line=dict(color='#00BFFF', width=1.5), name='Signal'), row=5, col=1)
 
     # -------------------------------
     # 5. scipy 科學背離畫線邏輯
@@ -165,10 +190,10 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
             fig.add_trace(go.Scatter(x=[df.index[p1], df.index[p2]], y=[i_data[p1], i_data[p2]], line=dict(color=color, width=2), mode='lines', showlegend=False), row=row_num, col=1)
             fig.add_annotation(x=df.index[p2], y=p_data[p2], text=name, showarrow=True, arrowhead=2, arrowcolor=color, bgcolor=color, font=dict(color="#111", size=10), ax=0, ay=ay_offset, row=1, col=1)
 
-    plot_div_pro(True, 'High', 'RSI', '#FF5252', 'RSI 頂背', 3, threshold=55)
-    plot_div_pro(False, 'Low', 'RSI', '#00E676', 'RSI 底背', 3, threshold=45)
-    plot_div_pro(True, 'High', 'DIF', '#FFB74D', 'MACD 頂背', 4)
-    plot_div_pro(False, 'Low', 'DIF', '#4FC3F7', 'MACD 底背', 4)
+    plot_div_pro(True, 'High', 'RSI', '#FF5252', 'RSI 頂背', 4, threshold=55) 
+    plot_div_pro(False, 'Low', 'RSI', '#00E676', 'RSI 底背', 4, threshold=45) 
+    plot_div_pro(True, 'High', 'DIF', '#FFB74D', 'MACD 頂背', 5) 
+    plot_div_pro(False, 'Low', 'DIF', '#4FC3F7', 'MACD 底背', 5) 
 
     # -------------------------------
     # 6. 佈局調整與顯示
@@ -193,11 +218,12 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     fig.update_yaxes(gridcolor='#222', fixedrange=False)
     fig.update_yaxes(showticklabels=False, row=2, col=1)
     fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])], rangeslider=dict(visible=False), gridcolor='#222')
-    fig.update_yaxes(gridcolor='#222')
 
     fig.update_layout(
-        height=900, template='plotly_dark', paper_bgcolor='#0a0a0a', plot_bgcolor='#0a0a0a',
-        title=dict(text=f"<b>{ticker} 結構化分析儀表板</b>", x=0.5, font=dict(size=22, color='gold'), y=0.98),
+        height=950, 
+        barmode='group',
+        template='plotly_dark', paper_bgcolor='#0a0a0a', plot_bgcolor='#0a0a0a',
+        title=dict(text=f"<b>{ticker} 精密戰略分析儀表板</b>", x=0.5, font=dict(size=22, color='gold'), y=0.98),
         hovermode='x unified', margin=dict(t=100, b=30, l=50, r=50),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
@@ -205,7 +231,9 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     fig.add_annotation(text=news_text, align='left', showarrow=False, xref='paper', yref='paper', x=0.01, y=0.98, bgcolor='rgba(30, 30, 30, 0.7)', bordercolor='gold', borderwidth=1, borderpad=8, font=dict(size=11, color='#E0E0E0'))
     
     try:
-        signal_text = f"<b>💡 訊號觀測站</b><br>多方得分: {int(df['Buy_Score'].iloc[-1])}/4<br>空方得分: {int(df['Sell_Score'].iloc[-1])}/4"
+        # 動態顯示滿分 (如果是大腦傳來的，最高是 10 分)
+        max_score = 10 if 'Buy_Score' in df.columns else 4
+        signal_text = f"<b>💡 訊號觀測站</b><br>多方得分: {int(df['Buy_Score'].iloc[-1])}/{max_score}<br>空方得分: {int(df['Sell_Score'].iloc[-1])}/{max_score}"
     except (IndexError, KeyError, ValueError):
         signal_text = "<b>💡 訊號觀測站</b><br>得分: 計算中..."
     
@@ -215,20 +243,26 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
 
     fig.add_annotation(text=signal_text, align='left', showarrow=False, xref='paper', yref='paper', x=0.99, y=0.6, bgcolor='rgba(10, 40, 20, 0.8)', bordercolor='#00BFFF', borderwidth=1.5, borderpad=10, font=dict(size=13, color='#F5F5F5'))
 
-    print(f"✅ {ticker} 實戰儀表板(靜態圖片)生成中，請稍候彈出視窗...")
-    fig.show() 
+    print(f"✅ {ticker} 實戰儀表板彈出中，請注意網頁視窗...")
+    fig.show()
 
-# ==========================================
-# 🚀 手動單機測試開關
-# ==========================================
 if __name__ == "__main__":
-    # ✅ 修正二：單機測試需先透過 screening 模組計算大腦分數
+    import yfinance as yf
     from screening import inspect_stock 
     
     test_targets = ["2330.TW"]
-    print("啟動手動測試模式，開始批次分析...\n")
+    print("啟動手動單機測試模式...\n")
     for ticker in test_targets:
-        result = inspect_stock(ticker)
+        # 1. 先自己下載乾淨的價格
+        df = yf.download(ticker, period="1y", progress=False)
+        df = df.xs(ticker, axis=1, level=1).copy() if isinstance(df.columns, pd.MultiIndex) else df.copy()
+        
+        # 2. 🌟 呼叫外掛，把籌碼貼上去 (就是這步之前漏掉了！)
+        df = add_chip_data(df, ticker)
+        
+        # 3. 再丟給大腦去算分數與背離
+        result = inspect_stock(ticker, preloaded_df=df)
+       
         if result and "計算後資料" in result:
             draw_chart(
                 ticker, 

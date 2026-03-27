@@ -1,83 +1,49 @@
 import pyodbc
 
-def create_tsql_database():
-    print("🔧 準備連線至 SQL Server...")
+def update_tsql_database():
+    print("🔧 準備連線至 SQL Server 進行資料表升級...")
     
-    # ==========================================
-    # 🔌 第一階段：連線至 master 建立空地 (Database)
-    # ==========================================
-    master_conn_str = (
+    conn_str = (
         r'DRIVER={ODBC Driver 17 for SQL Server};'
         r'SERVER=localhost;'  
-        r'DATABASE=master;'  # 👈 關鍵 1：先連線到系統預設空地
+        r'DATABASE=股票online;' 
         r'Trusted_Connection=yes;'
     )
 
-    conn = None
     try:
-        # 👈 關鍵 2：建立 DB 必須開啟 autocommit=True
-        conn = pyodbc.connect(master_conn_str, autocommit=True)
+        conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
 
-        # 檢查並建立資料庫
-        cursor.execute('''
-            IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '股票online')
-            BEGIN
-                CREATE DATABASE 股票online;
-            END
-        ''')
-        print("✅ 資料庫 [股票online] 確認/建立完成！")
-        
-        # 斷開 master，準備切換
-        conn.close()
-
-        # ==========================================
-        # 🔌 第二階段：切換至專屬資料庫蓋房子 (Tables)
-        # ==========================================
-        target_conn_str = master_conn_str.replace('DATABASE=master;', 'DATABASE=股票online;')
-        conn = pyodbc.connect(target_conn_str)
-        cursor = conn.cursor()
-
-        # 建立：歷史交易總帳 (trade_history)
-        cursor.execute('''
-            IF OBJECT_ID('trade_history', 'U') IS NULL
-            BEGIN
-                CREATE TABLE trade_history (
-                    [Ticker SYMBOL] VARCHAR(20),
-                    [方向] NVARCHAR(10),
-                    [進場時間] DATETIME,
-                    [出場時間] DATETIME,
-                    [進場價] FLOAT,
-                    [出場價] FLOAT,
-                    [報酬率(%)] DECIMAL(10,3) -- 👈 關鍵 3：在底層嚴格鎖死 3 位小數
-                )
-            END
-        ''')
-        
-        # 建立：目前持倉工作區 (active_positions)
-        cursor.execute('''
-            IF OBJECT_ID('active_positions', 'U') IS NULL
-            BEGIN
-                CREATE TABLE active_positions (
-                    [Ticker SYMBOL] VARCHAR(20) PRIMARY KEY,
-                    [方向] NVARCHAR(10),
-                    [進場時間] DATETIME,
-                    [進場價] FLOAT
-                )
-            END
-        ''')
-
+        print("🗑️ 步驟 1: 刪除舊的 active_positions 表單...")
+        # 刪除舊的表單 (警告：這會清空你目前的未平倉紀錄！)
+        cursor.execute("IF OBJECT_ID('active_positions', 'U') IS NOT NULL DROP TABLE active_positions;")
         conn.commit()
-        print("✅ 交易資料庫與表單 (trade_history, active_positions) 建立完成！")
 
-    except pyodbc.Error as e:
-        print(f"❌ SQL Server 執行失敗: {e}")
+        print("🏗️ 步驟 2: 建立支援「分批進場」的新 active_positions 表單...")
+        # 建立新的表單
+        cursor.execute('''
+            CREATE TABLE active_positions (
+                -- 🌟 關鍵修改 1：新增 Trade_ID 作為自動遞增的流水號主鍵
+                [Trade_ID] INT IDENTITY(1,1) PRIMARY KEY, 
+                
+                -- Ticker 不再是 Primary Key，允許重複！
+                [Ticker SYMBOL] VARCHAR(20), 
+                [方向] NVARCHAR(10),
+                [進場時間] DATETIME,
+                [進場價] FLOAT,
+                
+                -- 🌟 關鍵修改 2：新增資金欄位，方便未來計算平均成本與加碼
+                [投入資金] FLOAT 
+            )
+        ''')
+        conn.commit()
+        print("✅ 升級完成！資料庫現在允許同一檔股票多次進場了！")
+
     except Exception as e:
-        print(f"❌ 發生未知的錯誤: {e}")
+        print(f"❌ 發生錯誤: {e}")
     finally:
-        # 確保無論如何都會安全關閉連線
-        if conn:
+        if 'conn' in locals() and conn:
             conn.close()
 
 if __name__ == "__main__":
-    create_tsql_database()
+    update_tsql_database()

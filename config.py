@@ -12,7 +12,7 @@ PARAMS = {
     "DMI_PERIOD": 14,           # 新增：DMI 與 ATR 天數
     
     # --- 2. 策略濾網與觸發閥值 ---
-    "TRIGGER_SCORE": 4,         # 訊號發動最低分數
+    "TRIGGER_SCORE": 3,         # 訊號發動最低分數
     "ADX_TREND_THRESHOLD": 20,  # 新增：ADX 趨勢發動閥值
     "MIN_PRICE": 10.0,          # 新增：最低股價濾網
     "MIN_VOL_MA20": 1000000,    # 新增：最低 20 日均量濾網
@@ -34,6 +34,6 @@ PARAMS = {
     "TP_TREND_PCT": 0.250,      # 新增：趨勢加成停利 % 數
     
     # --- 6. 資金控管 ---
-    "TOTAL_BUDGET": 1000000,    # 新增：總預算
-    "MAX_POSITIONS": 5          # 新增：最大持倉檔數
+    "TOTAL_BUDGET": 10000000,    # 新增：總預算
+    "MAX_POSITIONS": 20         # 新增：最大持倉檔數
 }
