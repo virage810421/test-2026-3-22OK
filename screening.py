@@ -369,21 +369,32 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         # 結算最後一筆未平倉部位
         if position == 1:
             final_raw_price = df.iloc[-1]['Close']
-            final_exit_amount = final_raw_price * SELL_NET_MULTIPLIER
-            final_profit_pct = ((final_exit_amount - actual_entry_cost) / actual_entry_cost) * 100
+            
+            # 🌟 1. 修正：用真實股數計算總金額，與上方邏輯統一
+            total_entry_cost = entry_price * TRADE_SHARES * BUY_COST_MULTIPLIER
+            total_exit_proceeds = final_raw_price * TRADE_SHARES * SELL_NET_MULTIPLIER
+            
+            # 🌟 2. 修正：算出真實淨損益金額
+            final_net_cash = total_exit_proceeds - total_entry_cost
+            final_profit_pct = (final_net_cash / total_entry_cost) * 100
             trades.append(final_profit_pct)
             
             if db_cursor:
                 try:
-                    final_net_cash = SIMULATION_CAPITAL * (final_profit_pct / 100)
+                    # 🌟 3. 修正：更新結餘本金
+                    sim_balance += final_net_cash 
+                    
+                    # 🌟 4. 修正：補上 [結餘本金] 欄位，共 9 個問號
                     db_cursor.execute('''
                         INSERT INTO backtest_history 
-                        ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額])
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (ticker, "做多(Long)", entry_date, df.index[-1], entry_price, final_raw_price, round(final_profit_pct, 3), round(final_net_cash, 0)))
+                        ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (ticker, "做多(Long)", entry_date, df.index[-1], entry_price, 
+                          final_raw_price, round(final_profit_pct, 3), round(final_net_cash, 0), round(sim_balance, 0)))
                     db_conn.commit()
-                except Exception:
-                    pass
+                except Exception as e:
+                    # 🌟 5. 修正：不要再用 pass 了！把錯誤印出來
+                    print(f"⚠️ 最後結算寫入 SQL 失敗 ({ticker}): {e}")
         
         if db_conn:
             db_conn.close()

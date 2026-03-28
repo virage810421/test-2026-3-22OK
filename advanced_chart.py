@@ -258,7 +258,7 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", ex
 
 if __name__ == "__main__":
     import yfinance as yf
-    from screening import inspect_stock 
+    from screening import inspect_stock, add_chip_data
     
     test_targets = ["2330.TW"]
     print("啟動手動單機測試模式...\n")
