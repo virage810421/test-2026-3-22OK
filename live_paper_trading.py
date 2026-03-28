@@ -74,13 +74,16 @@ def sync_portfolio_from_db():
                 if ticker not in portfolio:
                     portfolio[ticker] = []
                 
+                # 🌟 更新：同步讀取真實的股數與停利階段
                 portfolio[ticker].append({
                     '進場價': float(row['進場價']),
                     '方向': row['方向'],
                     '進場時間': row['進場時間'].strftime("%Y-%m-%d %H:%M:%S") if pd.notnull(row['進場時間']) else "未知",
-                    # 🌟 移除 100000 預設值，直接讀取資料庫數值
                     '投入資金': float(row['投入資金']) if '投入資金' in row else 0.0,
-                    '進場股數': 2000, # 假設你固定買 2 張，或從資料庫讀取
+                    
+                    '停利階段': int(row.get('停利階段', 0)) if pd.notnull(row.get('停利階段', 0)) else 0,
+                    '進場股數': int(row.get('進場股數', 2000)) if pd.notnull(row.get('進場股數', 2000)) else 2000,
+                    
                     '進場分數': 3,
                     '進場趨勢多頭': True
                 })
@@ -183,26 +186,39 @@ def run_live_simulation():
 # ==========================================
 
 def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
-    global portfolio, CURRENT_EQUITY # 🌟 確保能更新全域總資產變數
+    global portfolio, CURRENT_EQUITY 
     if ticker not in portfolio:
         portfolio[ticker] = []
         
     positions = portfolio[ticker]
     has_position = len(positions) > 0
     
-    win_rate = result_dict["系統勝率(%)"]
-    total_prof = result_dict["累計報酬率(%)"]
+    win_rate = result_dict.get("系統勝率(%)", 0)
+    total_prof = result_dict.get("累計報酬率(%)", 0)
     latest_row = ticker_df.iloc[-1] 
     
     MAX_BATCHES = 3 
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    bought_today = any(p.get('進場時間', '').startswith(today_str) for p in positions)
     
+    # ==========================================
     # --- 狀況 A：進場 / 分批加碼 ---
+    # ==========================================
     if ("買訊" in status or "賣訊" in status):
         trade_dir = '做多(Long)' if "買" in status else '放空(Short)'
         is_reverse_signal = has_position and positions[0]['方向'] != trade_dir
         
-        if not is_reverse_signal and len(positions) < MAX_BATCHES:
-            TRADE_SHARES = 2000 
+        # 加上冷卻機制：今天沒買過才能買
+        if not is_reverse_signal and len(positions) < MAX_BATCHES and not bought_today:
+            
+            # 🌟 [功能 1] 動態試單：2分買1000，3分買2000
+            if "弱" in status:
+                TRADE_SHARES = 1000  
+                print(f"👀 偵測到弱訊號，啟動試單模式 ({TRADE_SHARES} 股)")
+            else:
+                TRADE_SHARES = 2000  
+                print(f"🔥 偵測到強訊號，標準部位進場 ({TRADE_SHARES} 股)")
+
             fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
             total_buy_cost = current_price * TRADE_SHARES * fee_mult
             
@@ -212,19 +228,22 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                 try:
                     with pyodbc.connect(DB_CONN_STR) as conn:
                         cursor = conn.cursor()
+                        # 🌟 寫入 [停利階段] 與 [進場股數]
                         cursor.execute('''
-                            INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金])
-                            VALUES (?, ?, ?, ?, ?)
-                        ''', (ticker, trade_dir, entry_time, round(current_price, 2), round(total_buy_cost, 0)))
+                            INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [停利階段], [進場股數])
+                            VALUES (?, ?, ?, ?, ?, 0, ?)
+                        ''', (ticker, trade_dir, entry_time, round(current_price, 2), round(total_buy_cost, 0), TRADE_SHARES))
                         conn.commit()
-                    
+                        
                     update_account_cash(-total_buy_cost)
                     
                     positions.append({
                         '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
-                        '進場時間': entry_time, '進場股數': TRADE_SHARES,
-                        '進場分數': int(latest_row['Buy_Score'] if "買" in status else latest_row['Sell_Score']),
-                        '進場趨勢多頭': (latest_row['Close'] > latest_row['BBI'])
+                        '進場時間': entry_time, 
+                        '進場股數': TRADE_SHARES, 
+                        '停利階段': 0,
+                        '進場分數': int(latest_row.get('Buy_Score', 0) if "買" in status else latest_row.get('Sell_Score', 0)),
+                        '進場趨勢多頭': (latest_row['Close'] > latest_row.get('BBI', 0))
                     })
                     print(f"⚡ [扣款成功] {ticker} 買入 {TRADE_SHARES} 股 | 支出: ${total_buy_cost:,.0f}")
                 except Exception as e:
@@ -232,7 +251,9 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
             else:
                 print(f"❌ [餘額不足] {ticker} 無法進場")
 
-    # --- 狀況 B：部位控管與平倉 ---
+    # ==========================================
+    # --- 狀況 B：部位控管與平倉 (含分批停利) ---
+    # ==========================================
     if len(positions) > 0:
         is_long = positions[0]['方向'] == '做多(Long)'
         total_invested = sum(p['投入資金'] for p in positions)
@@ -246,62 +267,94 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         tp_line = (PARAMS['TP_TREND_PCT']*100) if (positions[0]['進場趨勢多頭'] and latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']) else (PARAMS['TP_BASE_PCT']*100)
         if positions[0]['進場分數'] >= 8: tp_line = 999.0
             
+        # 🌟 [功能 2] 定義第一階段停利線 (原目標的一半)
+        tp_stage_1 = tp_line * 0.5 
+        current_tp_stage = positions[0].get('停利階段', 0)
+
         exit_msg = ""
-        if net_p <= -sl_line: exit_msg = f"🛑 停損 (-{sl_line:.1f}%)"
-        elif net_p >= tp_line: exit_msg = f"🎯 停利 (+{tp_line:.1f}%)"
-        elif (is_long and "賣訊" in status) or (not is_long and "買訊" in status): exit_msg = f"🔄 反轉 ({status})"
+        is_partial = False
+
+        # ==========================================
+        # 🌟 升級版：細膩化反轉出場邏輯
+        # ==========================================
+        if net_p <= -sl_line: 
+            exit_msg = f"🛑 停損 (-{sl_line:.1f}%)"
+        elif net_p >= tp_line: 
+            exit_msg = f"🎯 最終停利 (+{tp_line:.1f}%)"
+        # 原本的分批停利邏輯 (達標一半獲利)
+        elif net_p >= tp_stage_1 and current_tp_stage == 0:
+            exit_msg = f"💰 達標第一階段 (+{tp_stage_1:.1f}%) ➔ 減碼 50% 入袋為安"
+            is_partial = True
+            
+        # 👇 [重點修改] 反轉訊號的差異化處理
+        elif (is_long and "賣訊" in status) or (not is_long and "買訊" in status):
+            if "弱" in status and current_tp_stage == 0:
+                # 🟡 弱反轉 (2分)：如果你還沒減碼過，就先賣一半避險
+                exit_msg = f"🔄 弱勢反轉 ({status}) ➔ 先減碼 50% 觀察"
+                is_partial = True
+            else:
+                # 🟢🔴 強反轉 (3分以上) 或 已經減碼過了：直接全數清空結案
+                exit_msg = f"🔄 強勢反轉 ({status}) ➔ 全數結案撤退"
+                is_partial = False
             
         if exit_msg:
             exit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             try:
                 with pyodbc.connect(DB_CONN_STR) as conn:
                     cursor = conn.cursor()
-                    
-                    # 🌟 獲取當前銀行餘額準備累加
                     current_bank_cash = get_available_cash()
                     total_cash_back = 0
                     
                     for batch in positions:
-                        shares = batch.get('進場股數', 2000)
-                        sell_net_mult = 1 - (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']) - PARAMS['TAX_RATE']
-                        total_exit_proceeds = current_price * shares * sell_net_mult
+                        # 讀取當初買了多少股
+                        shares_to_sell = batch.get('進場股數', 2000)
+                        invested_portion = batch['投入資金']
                         
-                        net_profit_cash = total_exit_proceeds - batch['投入資金']
-                        profit_pct = (net_profit_cash / batch['投入資金']) * 100
+                        # 如果是部分停利，數量與成本減半
+                        if is_partial:
+                            shares_to_sell = int(shares_to_sell / 2)
+                            invested_portion = invested_portion / 2
+
+                        sell_net_mult = 1 - (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']) - PARAMS['TAX_RATE']
+                        total_exit_proceeds = current_price * shares_to_sell * sell_net_mult
+                        
+                        net_profit_cash = total_exit_proceeds - invested_portion
+                        profit_pct = (net_profit_cash / invested_portion) * 100
                         
                         total_cash_back += total_exit_proceeds
-                        current_bank_cash += total_exit_proceeds # 🌟 同步更新本金紀錄
+                        current_bank_cash += total_exit_proceeds 
                         
-                        # 🌟 修正：加入 [結餘本金] 寫入
                         cursor.execute('''
                             INSERT INTO trade_history 
                             ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (ticker, batch['方向'], batch['進場時間'], exit_time, 
-                                round(batch['進場價'], 2), # 🌟 進場價兩位
-                                round(current_price, 2),     # 🌟 出場價兩位
-                                round(profit_pct, 3), 
-                                round(net_profit_cash, 0), 
-                                round(current_bank_cash, 0)))
+                              round(batch['進場價'], 2), round(current_price, 2), 
+                              round(profit_pct, 3), round(net_profit_cash, 0), round(current_bank_cash, 0)))
+
+                        if is_partial:
+                            batch['進場股數'] -= shares_to_sell
+                            batch['投入資金'] -= invested_portion
+                            batch['停利階段'] = 1
 
                     update_account_cash(total_cash_back)
-                    cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ?', (ticker,))
-                    conn.commit()
-                    
-                    # 🌟 更新全域資產變數
                     CURRENT_EQUITY = current_bank_cash
-                    print(f"💰 {ticker} 結案！領回: ${total_cash_back:,.0f} | 餘額: ${CURRENT_EQUITY:,.0f}")
-                
-                portfolio[ticker] = [] 
-                # 🌟 加入 expected_value 參數，這裡大腦傳過來的字典叫 result_dict
-                draw_chart(
-                    ticker, 
-                    preloaded_df=ticker_df, 
-                    win_rate=win_rate, 
-                    total_profit=total_prof, 
-                    expected_value=result_dict.get("期望值", 0) 
-                )
-                
+
+                    if is_partial:
+                        cursor.execute('''
+                            UPDATE active_positions 
+                            SET [投入資金] = [投入資金] / 2, [進場股數] = [進場股數] / 2, [停利階段] = 1 
+                            WHERE [Ticker SYMBOL] = ?
+                        ''', (ticker,))
+                        print(f"[{exit_time}] {exit_msg} | {ticker} 領回: ${total_cash_back:,.0f} | 剩餘部位留倉")
+                    else:
+                        cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ?', (ticker,))
+                        portfolio[ticker] = [] 
+                        print(f"[{exit_time}] {exit_msg} | {ticker} 全數結案！領回: ${total_cash_back:,.0f} | 餘額: ${CURRENT_EQUITY:,.0f}")
+                        
+                        draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof, expected_value=result_dict.get("期望值", 0))
+
+                    conn.commit()
             except Exception as e:
                 print(f"⚠️ 出場結算失敗: {e}")
 
