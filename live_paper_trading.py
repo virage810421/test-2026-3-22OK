@@ -150,6 +150,7 @@ def run_live_simulation():
 # ==========================================
 # 🎯 交易模組：支援分批加碼與平均成本計算
 # ==========================================
+
 def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     global portfolio
     if ticker not in portfolio:
@@ -162,14 +163,14 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     total_prof = result_dict["累計報酬率(%)"]
     latest_row = ticker_df.iloc[-1] 
     
-    BASE_CAPITAL = 100000 
+    BASE_CAPITAL = 20000000
     MAX_BATCHES = 3  # 🌟 最大持倉限制：同一檔股票最多加碼到 3 批
     
     # --- 狀況 A：進場 / 分批加碼觸發 ---
     if ("買訊" in status or "賣訊" in status):
         trade_dir = '做多(Long)' if "買" in status else '放空(Short)'
         
-        # 檢查是否反向訊號（如果你滿手多單卻出現賣訊，那是出場，不是加碼空單）
+        # 檢查是否反向訊號
         is_reverse_signal = has_position and positions[0]['方向'] != trade_dir
         
         # 🌟 加碼條件：不是反向訊號，且批次還沒滿
@@ -233,17 +234,22 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                 with pyodbc.connect(DB_CONN_STR) as conn:
                     cursor = conn.cursor()
                     
+                    total_profit_cash = 0 # 準備一個撲滿，把這檔股票每一批賺的錢加起來
+                    
                     # 1. 逐批結算，寫入歷史總帳
                     for batch in positions:
-                        # 計算單批的真實損益
                         batch_raw_p = (current_price - batch['進場價']) / batch['進場價'] if is_long else (batch['進場價'] - current_price) / batch['進場價']
                         batch_net_p = (batch_raw_p * 100) - (FEE_SLIPPAGE * 100 * 2)
-                        batch_net_amt = batch['投入資金'] * (batch_net_p / 100)
+                        batch_net_amt = batch['投入資金'] * (batch_net_p / 100) # 真實賺賠金額
                         
+                        total_profit_cash += batch_net_amt # 投進撲滿
+                        
+                        # 🌟 修正：正確寫入 [淨損益金額]
                         cursor.execute('''
-                            INSERT INTO trade_history ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)])
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                        ''', (ticker, batch['方向'], batch['進場時間'], exit_time, batch['進場價'], current_price, round(batch_net_p, 3)))
+                            INSERT INTO trade_history 
+                            ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額])
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (ticker, batch['方向'], batch['進場時間'], exit_time, batch['進場價'], current_price, round(batch_net_p, 3), round(batch_net_amt, 0)))
                         
                         trade_history.append({
                             'Ticker SYMBOL': ticker, '方向': batch['方向'], '淨損益': round(batch_net_amt, 0), '報酬率(%)': f"{batch_net_p:.3f}", '原因': exit_msg
@@ -252,7 +258,10 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                     # 2. 刪除資料庫中該檔股票的所有持倉紀錄
                     cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ?', (ticker,))
                     conn.commit()
-                
+                    
+                    # 🌟 修正：印出這檔股票「總共」幫你賺/賠了多少錢
+                    print(f"💰 {ticker} 結算：總淨損益金額 ${total_profit_cash:,.0f} 元")
+                    
                 # 3. 清空記憶體
                 portfolio[ticker] = []
                 print(f"✅ {ticker} 全部批次結算移轉完成！")

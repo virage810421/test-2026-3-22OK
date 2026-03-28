@@ -1,16 +1,25 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import pyodbc 
 from advanced_chart import draw_chart
 from FinMind.data import DataLoader
 from scipy.signal import find_peaks
 from config import PARAMS
+from datetime import datetime
 
 # ==========================================
-# ⚡️ 初始化 DataLoader 
+# ⚡️ 初始化 DataLoader 與資料庫連線設定
 # ==========================================
 API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNyAyMjowNTowMCIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.JmayRjSVQqs6SdyCdLn1Z8uWyuYgvHHjOE32UxWI-_8"
 dl = DataLoader(token=API_TOKEN)
+
+DB_CONN_STR = (
+    r'DRIVER={ODBC Driver 17 for SQL Server};'
+    r'SERVER=localhost;'  
+    r'DATABASE=股票online;'
+    r'Trusted_Connection=yes;'
+)
 
 # ==========================================
 # 🔌 籌碼資料外掛模組 (資料合併處理廠)
@@ -244,8 +253,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
 
         df['Sell_Score'] = (sell_trend.astype(int) + sell_c1_c2_score + sell_c3.astype(int) + 
-                            sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + 
-                            sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
+                             sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + 
+                             sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
 
         # 動態滑價 (參數化)
         buy_adjust = np.where(buy_trend, 1.00, p['BUY_PULLBACK_RATE']) 
@@ -255,17 +264,30 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['High'] * sell_adjust, np.nan)
       
         # ==========================================
-        # 4. 啟動回測引擎 (成本與防線參數化)
+        # 4. 啟動回測引擎 (成本與防線參數化) ➕ 寫入 SQL 歷史明細
         # ==========================================
         position = 0
         entry_price = 0          
         actual_entry_cost = 0    
         entry_trend_is_bull = False 
         entry_score = 0  
+        entry_date = None # 新增紀錄進場時間
         trades = []
+        
+        # 假設每筆回測投入固定資金，方便計算 [淨損益金額]
+        SIMULATION_CAPITAL = 100000 
 
         BUY_COST_MULTIPLIER = 1 + (p['FEE_RATE'] * p['FEE_DISCOUNT'])
         SELL_NET_MULTIPLIER = 1 - (p['FEE_RATE'] * p['FEE_DISCOUNT']) - p['TAX_RATE']
+        
+        # 建立資料庫連線，準備寫入回測明細
+        db_conn = None
+        db_cursor = None
+        try:
+            db_conn = pyodbc.connect(DB_CONN_STR)
+            db_cursor = db_conn.cursor()
+        except Exception as e:
+            print(f"⚠️ 無法連線至 SQL 寫入歷史明細: {e}")
 
         for index, row in df.iterrows():
             if position == 0 and not pd.isna(row['Buy_Signal']):
@@ -276,6 +298,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                     entry_price = raw_entry 
                     entry_trend_is_bull = buy_trend.loc[index]
                     entry_score = row['Buy_Score'] 
+                    entry_date = index # 紀錄進場時間
             
             elif position == 1:
                 max_profit_pct = (row['High'] - actual_entry_cost) / actual_entry_cost
@@ -291,32 +314,62 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 else:
                     DYNAMIC_TP = p['TP_BASE_PCT']
                 
-                def calculate_net_profit(raw_exit_price):
+                def calculate_and_log_trade(raw_exit_price, exit_date):
                     actual_exit_amount = raw_exit_price * SELL_NET_MULTIPLIER
-                    return ((actual_exit_amount - actual_entry_cost) / actual_entry_cost) * 100
+                    profit_pct = ((actual_exit_amount - actual_entry_cost) / actual_entry_cost) * 100
+                    net_profit_cash = SIMULATION_CAPITAL * (profit_pct / 100)
+                    
+                    # 🌟 將這筆歷史明細寫入 SQL [backtest_history]
+                    if db_cursor:
+                        try:
+                            db_cursor.execute('''
+                                INSERT INTO backtest_history 
+                                ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額])
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (ticker, "做多(Long)", entry_date, exit_date, entry_price, raw_exit_price, round(profit_pct, 3), round(net_profit_cash, 0)))
+                            db_conn.commit()
+                        except Exception as e:
+                            pass # 忽略單筆寫入錯誤，避免中斷回測
+                    return profit_pct
 
                 if max_loss_pct <= -DYNAMIC_SL:
                     sl_price = actual_entry_cost * (1 - DYNAMIC_SL)
                     actual_sl_price = min(sl_price, row['Open'])
-                    trades.append(calculate_net_profit(actual_sl_price))
+                    trades.append(calculate_and_log_trade(actual_sl_price, index))
                     position = 0
                     
                 elif max_profit_pct >= DYNAMIC_TP:
                     tp_price = actual_entry_cost * (1 + DYNAMIC_TP)
                     actual_tp_price = max(tp_price, row['Open'])
-                    trades.append(calculate_net_profit(actual_tp_price))
+                    trades.append(calculate_and_log_trade(actual_tp_price, index))
                     position = 0
                     
                 elif not pd.isna(row['Sell_Signal']):
                     actual_sell_price = min(row['Sell_Signal'], row['High'])
-                    trades.append(calculate_net_profit(actual_sell_price))
+                    trades.append(calculate_and_log_trade(actual_sell_price, index))
                     position = 0
 
+        # 結算最後一筆未平倉部位
         if position == 1:
             final_raw_price = df.iloc[-1]['Close']
             final_exit_amount = final_raw_price * SELL_NET_MULTIPLIER
             final_profit_pct = ((final_exit_amount - actual_entry_cost) / actual_entry_cost) * 100
             trades.append(final_profit_pct)
+            
+            if db_cursor:
+                try:
+                    final_net_cash = SIMULATION_CAPITAL * (final_profit_pct / 100)
+                    db_cursor.execute('''
+                        INSERT INTO backtest_history 
+                        ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額])
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (ticker, "做多(Long)", entry_date, df.index[-1], entry_price, final_raw_price, round(final_profit_pct, 3), round(final_net_cash, 0)))
+                    db_conn.commit()
+                except Exception:
+                    pass
+        
+        if db_conn:
+            db_conn.close()
 
         total_trades = len(trades)
         if total_trades > 0:
