@@ -11,7 +11,7 @@ from config import PARAMS
 # ==========================================
 # ⚙️ 核心封裝：精密儀表板模組 (純視覺展示 + 10分制訊號同步)
 # ==========================================
-def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=PARAMS):
+def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", expected_value="N/A", p=PARAMS):
     print(f"\n[系統提示] 啟動 {ticker} 的精密繪圖引擎...")
 
     # 1. 領取大腦傳過來的「講義」
@@ -239,7 +239,17 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", p=
     
     if win_rate is not None and total_profit is not None and win_rate != "N/A":
         color_prof = '#FF5252' if float(total_profit) > 0 else '#00E676'
-        signal_text += f"<br>──────────<br>系統勝率: {float(win_rate):.2f}%<br>累計報酬: <span style='color:{color_prof}'>{float(total_profit):.2f}%</span>"
+        
+        # 🌟 處理期望值的數字與顏色
+        ev_val = float(expected_value) if expected_value != "N/A" else 0.0
+        color_ev = '#FF5252' if ev_val > 0 else '#00E676'
+        
+        signal_text += (
+            f"<br>──────────<br>"
+            f"系統勝率: {float(win_rate):.2f}%<br>"
+            f"累計報酬: <span style='color:{color_prof}'>{float(total_profit):.2f}%</span><br>"
+            f"期望值: <span style='color:{color_ev}'><b>{ev_val:.3f}%</b></span>" # 🌟 多加這一行顯示
+        )
 
     fig.add_annotation(text=signal_text, align='left', showarrow=False, xref='paper', yref='paper', x=0.99, y=0.6, bgcolor='rgba(10, 40, 20, 0.8)', bordercolor='#00BFFF', borderwidth=1.5, borderpad=10, font=dict(size=13, color='#F5F5F5'))
 
@@ -268,5 +278,6 @@ if __name__ == "__main__":
                 ticker, 
                 preloaded_df=result["計算後資料"], 
                 win_rate=result.get("系統勝率(%)", "N/A"), 
-                total_profit=result.get("累計報酬率(%)", "N/A")
+                total_profit=result.get("累計報酬率(%)", "N/A"),
+                expected_value=result.get("期望值", "N/A") # 🌟 把測試區的球也補上
             )

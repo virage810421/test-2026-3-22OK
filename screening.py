@@ -388,13 +388,30 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if db_conn:
             db_conn.close()
 
+        # ==========================================
+        # 原本只有算勝率跟總報酬，現在加入期望值運算
+        # ==========================================
         total_trades = len(trades)
         if total_trades > 0:
-            win_rate = len([p for p in trades if p > 0]) / total_trades * 100
+            # 1. 區分賺錢與賠錢的單子
+            win_trades = [p for p in trades if p > 0]
+            loss_trades = [p for p in trades if p <= 0]
+            
+            # 2. 計算勝率 (小數點格式，用於公式計算)
+            win_rate_decimal = len(win_trades) / total_trades
+            win_rate = win_rate_decimal * 100  # 這是顯示用的百分比 (例如 60.0)
+            
+            # 3. 計算平均賺與平均賠
+            avg_win = sum(win_trades) / len(win_trades) if win_trades else 0
+            avg_loss = sum(loss_trades) / len(loss_trades) if loss_trades else 0
+            
+            # 🌟 4. 計算期望值
+            expected_value = (win_rate_decimal * avg_win) + ((1 - win_rate_decimal) * avg_loss)
             total_profit = sum(trades)
         else:
             win_rate = 0.000
             total_profit = 0.000
+            expected_value = 0.000 # 沒交易紀錄就是 0
 
         # ==========================================
         # 5. 提取狀態
@@ -485,7 +502,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         }
 
         f_data = add_fundamental_filter(ticker)
-
+        
         return {
             "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),
@@ -498,6 +515,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             "營業利益率(%)": f"{f_data['營業利益率(%)']:.3f}",
             "系統勝率(%)": f"{win_rate:.3f}",       
             "累計報酬率(%)": f"{total_profit:.3f}", 
+            "期望值": round(expected_value, 3),
             "診斷數據": diagnostic_data,  
             "計算後資料": df             
         }
@@ -552,7 +570,8 @@ if __name__ == "__main__":
                     ticker, 
                     preloaded_df=ticker_df, 
                     win_rate=result["系統勝率(%)"], 
-                    total_profit=result["累計報酬率(%)"]
+                    total_profit=result["累計報酬率(%)"],
+                    expected_value=result["期望值"] # 🌟 把這顆球丟過去！
                 )
 
     # ==========================================

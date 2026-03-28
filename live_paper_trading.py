@@ -146,24 +146,24 @@ def run_live_simulation():
             result = inspect_stock(ticker, preloaded_df=ticker_df)
         
             if result and "計算後資料" in result:
-                # 🌟 [新增]：將策略成績單存入 SQL Server
+                # 🌟 1. 從字典中提取資料 (包含剛算好的期望值)
+                win_rate = float(result.get("系統勝率(%)", 0))
+                total_prof = float(result.get("累計報酬率(%)", 0))
+                ev_score = float(result.get("期望值", 0)) # 🌟 [新增] 提取期望值
+                status_tag = result.get("今日系統燈號", "無訊號")
+                log_time = datetime.now()
+
                 try:
                     with pyodbc.connect(DB_CONN_STR) as conn:
                         cursor = conn.cursor()
-                        # 準備要存入的資料
-                        log_time = datetime.now()
-                        win_rate = float(result.get("系統勝率(%)", 0))
-                        total_prof = float(result.get("累計報酬率(%)", 0))
-                        status_tag = result.get("今日系統燈號", "無訊號")
-                        
+                        # 🌟 2. 修正 INSERT 指令，加入 [期望值] 欄位與對應的問號
                         cursor.execute('''
                             INSERT INTO strategy_performance 
-                            ([紀錄時間], [Ticker SYMBOL], [系統勝率(%)], [累計報酬率(%)], [今日燈號])
-                            VALUES (?, ?, ?, ?, ?)
-                        ''', (log_time, ticker, win_rate, total_prof, status_tag))
+                            ([Ticker SYMBOL], [紀錄時間], [系統勝率(%)], [累計報酬率(%)], [今日燈號], [期望值])
+                            VALUES (?, ?, ?, ?, ?, ?)
+                        ''', (ticker, log_time, round(win_rate, 3), round(total_prof, 3), status_tag, round(ev_score, 3)))
                         conn.commit()
                 except Exception as e:
-                    # 這裡用 pass 是為了不讓資料庫寫入的小錯誤中斷了寶貴的盤中掃描程序
                     print(f"⚠️ 績效成績單寫入失敗 ({ticker}): {e}")
 
                 computed_df = result['計算後資料']
@@ -215,7 +215,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                         cursor.execute('''
                             INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金])
                             VALUES (?, ?, ?, ?, ?)
-                        ''', (ticker, trade_dir, entry_time, current_price, total_buy_cost))
+                        ''', (ticker, trade_dir, entry_time, round(current_price, 2), round(total_buy_cost, 0)))
                         conn.commit()
                     
                     update_account_cash(-total_buy_cost)
@@ -277,8 +277,12 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                             INSERT INTO trade_history 
                             ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', (ticker, batch['方向'], batch['進場時間'], exit_time, batch['進場價'], 
-                              current_price, round(profit_pct, 3), round(net_profit_cash, 0), round(current_bank_cash, 0)))
+                        ''', (ticker, batch['方向'], batch['進場時間'], exit_time, 
+                                round(batch['進場價'], 2), # 🌟 進場價兩位
+                                round(current_price, 2),     # 🌟 出場價兩位
+                                round(profit_pct, 3), 
+                                round(net_profit_cash, 0), 
+                                round(current_bank_cash, 0)))
 
                     update_account_cash(total_cash_back)
                     cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ?', (ticker,))
@@ -289,7 +293,14 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                     print(f"💰 {ticker} 結案！領回: ${total_cash_back:,.0f} | 餘額: ${CURRENT_EQUITY:,.0f}")
                 
                 portfolio[ticker] = [] 
-                draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof)
+                # 🌟 加入 expected_value 參數，這裡大腦傳過來的字典叫 result_dict
+                draw_chart(
+                    ticker, 
+                    preloaded_df=ticker_df, 
+                    win_rate=win_rate, 
+                    total_profit=total_prof, 
+                    expected_value=result_dict.get("期望值", 0) 
+                )
                 
             except Exception as e:
                 print(f"⚠️ 出場結算失敗: {e}")
