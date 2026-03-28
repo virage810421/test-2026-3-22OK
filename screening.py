@@ -264,86 +264,103 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['High'] * sell_adjust, np.nan)
       
         # ==========================================
-        # 4. 啟動回測引擎 (成本與防線參數化) ➕ 寫入 SQL 歷史明細
+        # 4. 啟動回測引擎 (以「股數」為基準的真實損益計算)
         # ==========================================
         position = 0
         entry_price = 0          
         actual_entry_cost = 0    
         entry_trend_is_bull = False 
         entry_score = 0  
-        entry_date = None # 新增紀錄進場時間
+        entry_date = None 
         trades = []
         
-        # 假設每筆回測投入固定資金，方便計算 [淨損益金額]
-        SIMULATION_CAPITAL = 100000 
+        # 🌟 資金與股數設定
+        sim_balance = 10000000      # 初始本金：一千萬
+        TRADE_SHARES = 2000         # 🌟 設定每次交易的股數 (例如：2000股 = 2張)
 
+        # 成本乘數計算 (含折讓與稅金)
         BUY_COST_MULTIPLIER = 1 + (p['FEE_RATE'] * p['FEE_DISCOUNT'])
         SELL_NET_MULTIPLIER = 1 - (p['FEE_RATE'] * p['FEE_DISCOUNT']) - p['TAX_RATE']
         
-        # 建立資料庫連線，準備寫入回測明細
         db_conn = None
         db_cursor = None
         try:
             db_conn = pyodbc.connect(DB_CONN_STR)
             db_cursor = db_conn.cursor()
+            
         except Exception as e:
-            print(f"⚠️ 無法連線至 SQL 寫入歷史明細: {e}")
+            print(f"⚠️ 資料庫連線失敗: {e}")
 
         for index, row in df.iterrows():
+            # --- 狀況 1：準備進場 ---
             if position == 0 and not pd.isna(row['Buy_Signal']):
                 if row['Buy_Signal'] >= row['Low']:
                     position = 1
                     raw_entry = min(row['Buy_Signal'], row['Open']) 
+                    
+                    # 🌟 計算這筆單「實際花掉」的總成本 (含手續費)
+                    # 公式：股價 * 股數 * 成本乘數
+                    actual_entry_total = raw_entry * TRADE_SHARES * BUY_COST_MULTIPLIER
+                    
                     actual_entry_cost = raw_entry * BUY_COST_MULTIPLIER
                     entry_price = raw_entry 
                     entry_trend_is_bull = buy_trend.loc[index]
                     entry_score = row['Buy_Score'] 
-                    entry_date = index # 紀錄進場時間
+                    entry_date = index 
             
+            # --- 狀況 2：持倉中，判斷出場 ---
             elif position == 1:
+                def calculate_and_log_trade(raw_exit_price, exit_date):
+                    nonlocal sim_balance 
+                    
+                    # 🌟 計算進場總額與出場總額
+                    total_entry_cost = entry_price * TRADE_SHARES * BUY_COST_MULTIPLIER
+                    total_exit_proceeds = raw_exit_price * TRADE_SHARES * SELL_NET_MULTIPLIER
+                    
+                    # 🌟 真實淨利金額 = 出場拿回來的錢 - 進場付出的錢
+                    net_profit_cash = total_exit_proceeds - total_entry_cost
+                    
+                    # 報酬率 (仍以單價計算，結果是一樣的)
+                    profit_pct = ((total_exit_proceeds - total_entry_cost) / total_entry_cost) * 100
+                    
+                    # 🌟 更新本金餘額
+                    sim_balance += net_profit_cash 
+
+                    if db_cursor:
+                        try:
+                            db_cursor.execute('''
+                                INSERT INTO backtest_history 
+                                ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (ticker, "做多(Long)", entry_date, exit_date, entry_price, 
+                                  raw_exit_price, round(profit_pct, 3), round(net_profit_cash, 0), round(sim_balance, 0)))
+                            db_conn.commit()
+                        except Exception:
+                            pass 
+                    return profit_pct
+
+                # --- 出場觸發邏輯 (保持不變) ---
                 max_profit_pct = (row['High'] - actual_entry_cost) / actual_entry_cost
                 max_loss_pct = (row['Low'] - actual_entry_cost) / actual_entry_cost
-                
                 volatility_pct = (row['BB_std'] * 1.5) / row['Close']
                 DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT'])) 
                 
                 if entry_trend_is_bull and row['ADX14'] > p['ADX_TREND_THRESHOLD']:
                     DYNAMIC_TP = p['TP_TREND_PCT'] 
-                    if entry_score >= 8:
-                        DYNAMIC_TP = 9.990 
+                    if entry_score >= 8: DYNAMIC_TP = 9.99
                 else:
                     DYNAMIC_TP = p['TP_BASE_PCT']
-                
-                def calculate_and_log_trade(raw_exit_price, exit_date):
-                    actual_exit_amount = raw_exit_price * SELL_NET_MULTIPLIER
-                    profit_pct = ((actual_exit_amount - actual_entry_cost) / actual_entry_cost) * 100
-                    net_profit_cash = SIMULATION_CAPITAL * (profit_pct / 100)
-                    
-                    # 🌟 將這筆歷史明細寫入 SQL [backtest_history]
-                    if db_cursor:
-                        try:
-                            db_cursor.execute('''
-                                INSERT INTO backtest_history 
-                                ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額])
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                            ''', (ticker, "做多(Long)", entry_date, exit_date, entry_price, raw_exit_price, round(profit_pct, 3), round(net_profit_cash, 0)))
-                            db_conn.commit()
-                        except Exception as e:
-                            pass # 忽略單筆寫入錯誤，避免中斷回測
-                    return profit_pct
 
                 if max_loss_pct <= -DYNAMIC_SL:
                     sl_price = actual_entry_cost * (1 - DYNAMIC_SL)
                     actual_sl_price = min(sl_price, row['Open'])
                     trades.append(calculate_and_log_trade(actual_sl_price, index))
                     position = 0
-                    
                 elif max_profit_pct >= DYNAMIC_TP:
                     tp_price = actual_entry_cost * (1 + DYNAMIC_TP)
                     actual_tp_price = max(tp_price, row['Open'])
                     trades.append(calculate_and_log_trade(actual_tp_price, index))
                     position = 0
-                    
                 elif not pd.isna(row['Sell_Signal']):
                     actual_sell_price = min(row['Sell_Signal'], row['High'])
                     trades.append(calculate_and_log_trade(actual_sell_price, index))

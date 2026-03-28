@@ -7,6 +7,7 @@ from advanced_chart import draw_chart
 from screening import inspect_stock, add_chip_data
 from config import PARAMS
 
+
 # ==========================================
 # 💼 虛擬帳戶、機台與資料庫設定
 # ==========================================
@@ -31,6 +32,32 @@ watch_list = [
 ]
 
 chip_cache = {}
+CURRENT_EQUITY = 0.0
+# ==========================================
+# 💰 共享錢包管理模組 (負責扣款與領錢)
+# ==========================================
+def get_available_cash():
+    """從 SQL 讀取目前剩餘多少現金"""
+    try:
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT [可用現金] FROM account_info WHERE [帳戶名稱] = '我的實戰帳戶'")
+            row = cursor.fetchone()
+            return float(row[0]) if row else 0.0
+    except Exception as e:
+        print(f"⚠️ 讀取現金失敗: {e}")
+        return 0.0
+
+def update_account_cash(change_amount):
+    """更新 SQL 中的現金餘額 (正數為領錢, 負數為扣款)"""
+    try:
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE account_info SET [可用現金] = [可用現金] + ?, [最後更新時間] = ? WHERE [帳戶名稱] = '我的實戰帳戶'", 
+                           (change_amount, datetime.now()))
+            conn.commit()
+    except Exception as e:
+        print(f"⚠️ 更新帳戶現金失敗: {e}")
 
 # ==========================================
 # 🔄 新增：與 SQL Server 進行開機同步
@@ -38,7 +65,7 @@ chip_cache = {}
 def sync_portfolio_from_db():
     print("🔄 正在與 SQL Server 同步持倉狀態...")
     global portfolio
-    portfolio = {ticker: [] for ticker in watch_list} # 初始化清單
+    portfolio = {ticker: [] for ticker in watch_list} 
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
             df = pd.read_sql("SELECT * FROM active_positions", conn)
@@ -47,18 +74,17 @@ def sync_portfolio_from_db():
                 if ticker not in portfolio:
                     portfolio[ticker] = []
                 
-                # 將資料庫中的每一筆(批)單子加進來
                 portfolio[ticker].append({
                     '進場價': float(row['進場價']),
                     '方向': row['方向'],
                     '進場時間': row['進場時間'].strftime("%Y-%m-%d %H:%M:%S") if pd.notnull(row['進場時間']) else "未知",
-                    '投入資金': float(row['投入資金']) if '投入資金' in row and pd.notnull(row['投入資金']) else 100000,
-                    '進場分數': 5,      # 預設，因為資料庫目前沒存分數
-                    '進場趨勢多頭': True  # 預設
+                    # 🌟 移除 100000 預設值，直接讀取資料庫數值
+                    '投入資金': float(row['投入資金']) if '投入資金' in row else 0.0,
+                    '進場股數': 2000, # 假設你固定買 2 張，或從資料庫讀取
+                    '進場分數': 3,
+                    '進場趨勢多頭': True
                 })
-            
-            total_batches = sum(len(batches) for batches in portfolio.values())
-            print(f"✅ 同步完成！目前庫存共有 {total_batches} 批持倉。")
+            print(f"✅ 同步完成！")
     except Exception as e:
         print(f"⚠️ 同步庫存失敗: {e}")
 
@@ -66,11 +92,16 @@ def sync_portfolio_from_db():
 # 🚀 盤中實戰模擬引擎
 # ==========================================
 def run_live_simulation():
+    global CURRENT_EQUITY
     print(f"[{datetime.now().strftime('%H:%M:%S')}] 🟢 啟動盤中實戰模擬引擎 (已掛載 SQL Server)...")
     
-    # 🌟 啟動前先同步大腦與資料庫
+   # 1. 先從資料庫同步持倉
     sync_portfolio_from_db()
-    
+    # 2. 🌟 就在這裡！讓 Python 變數與 SQL 銀行餘額同步
+    CURRENT_EQUITY = get_available_cash()
+    print(f"💰 帳戶開機完成：目前可用現金 ${CURRENT_EQUITY:,.0f}")
+    print("-" * 50)
+
     while True:
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
@@ -152,7 +183,7 @@ def run_live_simulation():
 # ==========================================
 
 def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
-    global portfolio
+    global portfolio, CURRENT_EQUITY # 🌟 確保能更新全域總資產變數
     if ticker not in portfolio:
         portfolio[ticker] = []
         
@@ -163,58 +194,53 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     total_prof = result_dict["累計報酬率(%)"]
     latest_row = ticker_df.iloc[-1] 
     
-    BASE_CAPITAL = 20000000
-    MAX_BATCHES = 3  # 🌟 最大持倉限制：同一檔股票最多加碼到 3 批
+    MAX_BATCHES = 3 
     
-    # --- 狀況 A：進場 / 分批加碼觸發 ---
+    # --- 狀況 A：進場 / 分批加碼 ---
     if ("買訊" in status or "賣訊" in status):
         trade_dir = '做多(Long)' if "買" in status else '放空(Short)'
-        
-        # 檢查是否反向訊號
         is_reverse_signal = has_position and positions[0]['方向'] != trade_dir
         
-        # 🌟 加碼條件：不是反向訊號，且批次還沒滿
         if not is_reverse_signal and len(positions) < MAX_BATCHES:
-            invest_amount = BASE_CAPITAL * (1.0 if "強" in status else 0.5)
-            trend_is_bull = (latest_row['Close'] > latest_row['BBI']) and (latest_row['BBI'] > ticker_df.iloc[-2]['BBI'])
-            entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            TRADE_SHARES = 2000 
+            fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
+            total_buy_cost = current_price * TRADE_SHARES * fee_mult
             
-            # 1. 寫入 SQL Server 
-            try:
-                with pyodbc.connect(DB_CONN_STR) as conn:
-                    cursor = conn.cursor()
-                    cursor.execute('''
-                        INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金])
-                        VALUES (?, ?, ?, ?, ?)
-                    ''', (ticker, trade_dir, entry_time, current_price, invest_amount))
-                    conn.commit()
-                
-                # 2. SQL 寫入成功後，更新本機記憶體
-                positions.append({
-                    '進場價': current_price, '方向': trade_dir, '投入資金': invest_amount,
-                    '進場時間': entry_time,
-                    '進場分數': int(latest_row['Buy_Score'] if "買" in status else latest_row['Sell_Score']),
-                    '進場趨勢多頭': trend_is_bull
-                })
-                print(f"⚡ [進場] {ticker} 第 {len(positions)} 批 ({status}) | 佈局: ${invest_amount:,.0f} | 價格: {current_price}")
-                draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof)
-            
-            except Exception as e:
-                print(f"⚠️ 資料庫寫入失敗 (進場): {e}")
+            available_cash = get_available_cash()
+            if available_cash >= total_buy_cost:
+                entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                try:
+                    with pyodbc.connect(DB_CONN_STR) as conn:
+                        cursor = conn.cursor()
+                        cursor.execute('''
+                            INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金])
+                            VALUES (?, ?, ?, ?, ?)
+                        ''', (ticker, trade_dir, entry_time, current_price, total_buy_cost))
+                        conn.commit()
+                    
+                    update_account_cash(-total_buy_cost)
+                    
+                    positions.append({
+                        '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
+                        '進場時間': entry_time, '進場股數': TRADE_SHARES,
+                        '進場分數': int(latest_row['Buy_Score'] if "買" in status else latest_row['Sell_Score']),
+                        '進場趨勢多頭': (latest_row['Close'] > latest_row['BBI'])
+                    })
+                    print(f"⚡ [扣款成功] {ticker} 買入 {TRADE_SHARES} 股 | 支出: ${total_buy_cost:,.0f}")
+                except Exception as e:
+                    print(f"⚠️ 進場失敗: {e}")
+            else:
+                print(f"❌ [餘額不足] {ticker} 無法進場")
 
-    # --- 狀況 B：部位控管 (計算平均成本、全部平倉) ---
+    # --- 狀況 B：部位控管與平倉 ---
     if len(positions) > 0:
         is_long = positions[0]['方向'] == '做多(Long)'
-        
-        # 🌟 自動算平均成本
         total_invested = sum(p['投入資金'] for p in positions)
         avg_cost = sum(p['進場價'] * p['投入資金'] for p in positions) / total_invested
         
-        # 用平均成本來計算現在的總損益
         raw_p = (current_price - avg_cost) / avg_cost if is_long else (avg_cost - current_price) / avg_cost
         net_p = (raw_p * 100) - (FEE_SLIPPAGE * 100 * 2)
         
-        # 防線計算
         vol = (latest_row['BB_std'] * 1.5) / latest_row['Close']
         sl_line = max(PARAMS['SL_MIN_PCT'], min(vol, PARAMS['SL_MAX_PCT'])) * 100
         tp_line = (PARAMS['TP_TREND_PCT']*100) if (positions[0]['進場趨勢多頭'] and latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']) else (PARAMS['TP_BASE_PCT']*100)
@@ -225,50 +251,48 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         elif net_p >= tp_line: exit_msg = f"🎯 停利 (+{tp_line:.1f}%)"
         elif (is_long and "賣訊" in status) or (not is_long and "買訊" in status): exit_msg = f"🔄 反轉 ({status})"
             
-        # 🌟 觸發出場：將所有批次一次全平倉
         if exit_msg:
-            print(f"💸 [準備出場] {ticker} {exit_msg} | 平均成本: {avg_cost:.2f} | 總損益: {net_p:.3f}%")
             exit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
             try:
                 with pyodbc.connect(DB_CONN_STR) as conn:
                     cursor = conn.cursor()
                     
-                    total_profit_cash = 0 # 準備一個撲滿，把這檔股票每一批賺的錢加起來
+                    # 🌟 獲取當前銀行餘額準備累加
+                    current_bank_cash = get_available_cash()
+                    total_cash_back = 0
                     
-                    # 1. 逐批結算，寫入歷史總帳
                     for batch in positions:
-                        batch_raw_p = (current_price - batch['進場價']) / batch['進場價'] if is_long else (batch['進場價'] - current_price) / batch['進場價']
-                        batch_net_p = (batch_raw_p * 100) - (FEE_SLIPPAGE * 100 * 2)
-                        batch_net_amt = batch['投入資金'] * (batch_net_p / 100) # 真實賺賠金額
+                        shares = batch.get('進場股數', 2000)
+                        sell_net_mult = 1 - (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']) - PARAMS['TAX_RATE']
+                        total_exit_proceeds = current_price * shares * sell_net_mult
                         
-                        total_profit_cash += batch_net_amt # 投進撲滿
+                        net_profit_cash = total_exit_proceeds - batch['投入資金']
+                        profit_pct = (net_profit_cash / batch['投入資金']) * 100
                         
-                        # 🌟 修正：正確寫入 [淨損益金額]
+                        total_cash_back += total_exit_proceeds
+                        current_bank_cash += total_exit_proceeds # 🌟 同步更新本金紀錄
+                        
+                        # 🌟 修正：加入 [結餘本金] 寫入
                         cursor.execute('''
                             INSERT INTO trade_history 
-                            ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額])
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', (ticker, batch['方向'], batch['進場時間'], exit_time, batch['進場價'], current_price, round(batch_net_p, 3), round(batch_net_amt, 0)))
-                        
-                        trade_history.append({
-                            'Ticker SYMBOL': ticker, '方向': batch['方向'], '淨損益': round(batch_net_amt, 0), '報酬率(%)': f"{batch_net_p:.3f}", '原因': exit_msg
-                        })
-                    
-                    # 2. 刪除資料庫中該檔股票的所有持倉紀錄
+                            ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (ticker, batch['方向'], batch['進場時間'], exit_time, batch['進場價'], 
+                              current_price, round(profit_pct, 3), round(net_profit_cash, 0), round(current_bank_cash, 0)))
+
+                    update_account_cash(total_cash_back)
                     cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ?', (ticker,))
                     conn.commit()
                     
-                    # 🌟 修正：印出這檔股票「總共」幫你賺/賠了多少錢
-                    print(f"💰 {ticker} 結算：總淨損益金額 ${total_profit_cash:,.0f} 元")
-                    
-                # 3. 清空記憶體
-                portfolio[ticker] = []
-                print(f"✅ {ticker} 全部批次結算移轉完成！")
+                    # 🌟 更新全域資產變數
+                    CURRENT_EQUITY = current_bank_cash
+                    print(f"💰 {ticker} 結案！領回: ${total_cash_back:,.0f} | 餘額: ${CURRENT_EQUITY:,.0f}")
+                
+                portfolio[ticker] = [] 
                 draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof)
                 
-            except pyodbc.Error as e:
-                print(f"⚠️ 資料庫結帳失敗: {e}")
+            except Exception as e:
+                print(f"⚠️ 出場結算失敗: {e}")
 
 if __name__ == "__main__":
     try:
