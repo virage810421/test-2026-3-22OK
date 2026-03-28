@@ -115,6 +115,26 @@ def run_live_simulation():
             result = inspect_stock(ticker, preloaded_df=ticker_df)
         
             if result and "計算後資料" in result:
+                # 🌟 [新增]：將策略成績單存入 SQL Server
+                try:
+                    with pyodbc.connect(DB_CONN_STR) as conn:
+                        cursor = conn.cursor()
+                        # 準備要存入的資料
+                        log_time = datetime.now()
+                        win_rate = float(result.get("系統勝率(%)", 0))
+                        total_prof = float(result.get("累計報酬率(%)", 0))
+                        status_tag = result.get("今日系統燈號", "無訊號")
+                        
+                        cursor.execute('''
+                            INSERT INTO strategy_performance 
+                            ([紀錄時間], [Ticker SYMBOL], [系統勝率(%)], [累計報酬率(%)], [今日燈號])
+                            VALUES (?, ?, ?, ?, ?)
+                        ''', (log_time, ticker, win_rate, total_prof, status_tag))
+                        conn.commit()
+                except Exception as e:
+                    # 這裡用 pass 是為了不讓資料庫寫入的小錯誤中斷了寶貴的盤中掃描程序
+                    print(f"⚠️ 績效成績單寫入失敗 ({ticker}): {e}")
+
                 computed_df = result['計算後資料']
                 if computed_df.empty or len(computed_df) < PARAMS['MA_LONG']: 
                     continue 

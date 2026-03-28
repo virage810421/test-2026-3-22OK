@@ -5,6 +5,11 @@ from FinMind.data import DataLoader
 import time
 
 def update_daily_chips():
+    # 🌟 新增：假日自動檢查鎖
+    now = datetime.now()
+    if now.weekday() >= 5: # 5 是週六, 6 是週日
+        print(f"[{now.strftime('%H:%M:%S')}] ☕ 今天是週末（非交易日），自動收集車休息中...")
+        return # 直接結束程式，不浪費 API 額度
     print(f"[{datetime.now().strftime('%H:%M:%S')}] 🚚 啟動每日法人籌碼資料收集車...")
     
     # 你的觀察清單
