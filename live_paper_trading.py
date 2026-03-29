@@ -33,6 +33,9 @@ watch_list = [
 
 chip_cache = {}
 CURRENT_EQUITY = 0.0
+PEAK_EQUITY = 0.0      # 🌟 紀錄歷史最高淨值
+IS_FROZEN = False      # 🌟 系統是否進入熔斷休眠
+CURRENT_MDD_TIER = 1.0 # 🌟 新增：資金降載乘數 (1.0 = 滿血, 0.5 = 預算砍半)
 # ==========================================
 # 💰 共享錢包管理模組 (負責扣款與領錢)
 # ==========================================
@@ -108,9 +111,48 @@ def run_live_simulation():
     while True:
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-
-        print(f"\n[{current_time}] 📡 啟動定時海選雷達，掃描 {len(watch_list)} 檔標的...")
+       # ==========================================
+        # 🌟 [優先級 3：分級風控 MDD 熔斷監控機制]
+        # ==========================================
+        global PEAK_EQUITY, IS_FROZEN, CURRENT_MDD_TIER
         
+        current_cash = get_available_cash()
+        total_invested = sum(sum(p['投入資金'] for p in pos_list) for pos_list in portfolio.values())
+        total_equity = current_cash + total_invested
+        
+        if total_equity > PEAK_EQUITY:
+            PEAK_EQUITY = total_equity
+            
+        mdd = (PEAK_EQUITY - total_equity) / PEAK_EQUITY if PEAK_EQUITY > 0 else 0
+        
+        # 🛡️ 啟動三級防護網
+        if mdd >= 0.20:
+            if not IS_FROZEN:
+                print(f"\n🚨🚨 [系統熔斷警報] 總資金回撤達 {mdd*100:.1f}%！超過極限 20%！🚨🚨")
+                print(f"🛑 系統已強制切換為【只出不進】的絕對保護模式！")
+                IS_FROZEN = True
+            CURRENT_MDD_TIER = 0.0
+            
+        elif mdd >= 0.15:
+            IS_FROZEN = False
+            if CURRENT_MDD_TIER != 0.2:
+                print(f"\n⚠️ [二級防護] 資金回撤達 {mdd*100:.1f}% ➔ 啟動重度防禦，新進部位強制縮水 80%！")
+                CURRENT_MDD_TIER = 0.2
+                
+        elif mdd >= 0.10:
+            IS_FROZEN = False
+            if CURRENT_MDD_TIER != 0.5:
+                print(f"\n🛡️ [一級防護] 資金回撤達 {mdd*100:.1f}% ➔ 啟動輕度防禦，新進部位強制砍半 (50%)！")
+                CURRENT_MDD_TIER = 0.5
+                
+        else:
+            if IS_FROZEN or CURRENT_MDD_TIER < 1.0:
+                print(f"\n🟢 [警報解除] 資金回升，回撤縮小至 {mdd*100:.1f}%，恢復 100% 滿血資金動能。")
+                IS_FROZEN = False
+            CURRENT_MDD_TIER = 1.0
+        
+        print(f"\n[{current_time}] 📡 啟動定時海選雷達，掃描 {len(watch_list)} 檔標的...")
+
         try:
             batch_data = yf.download(watch_list, period="2y", progress=False)
         except Exception as e:
@@ -186,7 +228,7 @@ def run_live_simulation():
 # ==========================================
 
 def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
-    global portfolio, CURRENT_EQUITY 
+    global portfolio, CURRENT_EQUITY, IS_FROZEN, CURRENT_MDD_TIER  # 🌟 補上 CURRENT_MDD_TIER 
     if ticker not in portfolio:
         portfolio[ticker] = []
         
@@ -205,68 +247,88 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     # --- 狀況 A：進場 / 分批加碼 (選項一：市價追擊模式) ---
     # ==========================================
     if ("買訊" in status or "賣訊" in status):
-        trade_dir = '做多(Long)' if "買" in status else '放空(Short)'
-        is_reverse_signal = has_position and positions[0]['方向'] != trade_dir
+        
+        # 🌟 攔截機制：如果系統熔斷，無情拒絕任何新資金進場！
+        if IS_FROZEN:
+            print(f"❄️ {ticker} 出現 {status}，但系統熔斷保護中，拒絕進場！")
+        else:
+            trade_dir = '做多(Long)' if "買" in status else '放空(Short)'
+            is_reverse_signal = has_position and positions[0]['方向'] != trade_dir
         
         # 加上冷卻機制：今天沒買過才能買
         if not is_reverse_signal and len(positions) < MAX_BATCHES and not bought_today:
             
             # ==========================================
-            # 🌟 [優先級 2：法人動態資金分配 (Position Sizing)]
+            # 🌟 [優先級 2：EV 期望值動態資金分配 (Position Sizing)]
             # ==========================================
-            # 1. 計算單筆交易標準預算 (利用 config.py 中的設定)
-            # 例如：總預算 1000萬 / 允許同時持倉 20檔 = 每檔標準配額 50 萬
-            base_budget = PARAMS['TOTAL_BUDGET'] / PARAMS['MAX_POSITIONS']
+            ev_score = float(result_dict.get("期望值", 0))
             
-            # 2. 依據訊號強弱調整實際預算
-            if "弱" in status:
-                target_budget = base_budget * 0.5  # 弱訊號試單：只押 50% 預算
-                print(f"👀 {ticker} 弱訊號試單 ➔ 啟動半碼預算 (${target_budget:,.0f})")
-            else:
-                target_budget = base_budget        # 強訊號標準：押滿 100% 預算
-                print(f"🔥 {ticker} 強訊號進場 ➔ 啟動標準預算 (${target_budget:,.0f})")
-
-            # 3. 計算能買多少股 (需預留手續費空間)
-            fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
-            raw_shares = int(target_budget / (current_price * fee_mult))
+            # 如果期望值為負，代表雖然有技術面訊號，但長期統計會賠錢，直接拒絕！
+            if ev_score <= 0:
+                print(f"❄️ {ticker} 期望值為負 (EV: {ev_score:.3f}%) ➔ 長期勝算過低，系統放棄進場！")
             
-            # 4. 台股優化邏輯：買得起整張就買整張，買不起就買零股
-            if raw_shares >= 1000:
-                TRADE_SHARES = int(raw_shares / 1000) * 1000 # 捨去零頭，買 1000 的倍數
             else:
-                TRADE_SHARES = max(1, raw_shares) # 高價股買零股，最少買 1 股
+                # 1. 計算單筆交易標準預算 (利用 config.py 中的設定)
+                base_budget = PARAMS['TOTAL_BUDGET'] / PARAMS['MAX_POSITIONS']
                 
-            total_buy_cost = current_price * TRADE_SHARES * fee_mult
-            print(f"⚙️ 系統精算：市價 {current_price} 元 ➔ 分配購買 {TRADE_SHARES} 股")
-            
-            available_cash = get_available_cash()
-            if available_cash >= total_buy_cost:
-                entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                try:
-                    with pyodbc.connect(DB_CONN_STR) as conn:
-                        cursor = conn.cursor()
-                        # 寫入 [停利階段] 與 [進場股數]
-                        cursor.execute('''
-                            INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [停利階段], [進場股數])
-                            VALUES (?, ?, ?, ?, ?, 0, ?)
-                        ''', (ticker, trade_dir, entry_time, round(current_price, 2), round(total_buy_cost, 0), TRADE_SHARES))
-                        conn.commit()
-                        
-                    update_account_cash(-total_buy_cost)
+                # 2. 依據期望值 (EV) 決定投資權重
+                if ev_score >= 2.0:
+                    target_budget = base_budget * 1.5  # 極高勝算：動用 1.5 倍資金重壓
+                    print(f"🚀 {ticker} 極高勝算 (EV: {ev_score:.2f}%) ➔ 啟動 1.5 倍資金重壓 (${target_budget:,.0f})")
+                elif ev_score >= 1.0:
+                    target_budget = base_budget * 1.0  # 標準勝算：動用標準資金
+                    print(f"🔥 {ticker} 標準勝算 (EV: {ev_score:.2f}%) ➔ 啟動標準資金 (${target_budget:,.0f})")
+                else:
+                    target_budget = base_budget * 0.5  # 邊緣勝算：只動用 50% 資金試單
+                    print(f"👀 {ticker} 邊緣勝算 (EV: {ev_score:.2f}%) ➔ 啟動半碼資金試單 (${target_budget:,.0f})")
+
+                # 🌟 [重點新增] 套用大盤 MDD 防護網降載乘數
+                if CURRENT_MDD_TIER < 1.0:
+                    target_budget = target_budget * CURRENT_MDD_TIER
+                    print(f"🛡️ [風控降載] 系統防禦狀態啟動，預算縮減為原計畫的 {CURRENT_MDD_TIER*100:.0f}% ➔ 最終核准: ${target_budget:,.0f}")
                     
-                    positions.append({
-                        '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
-                        '進場時間': entry_time, 
-                        '進場股數': TRADE_SHARES, 
-                        '停利階段': 0,
-                        '進場分數': int(latest_row.get('Buy_Score', 0) if "買" in status else latest_row.get('Sell_Score', 0)),
-                        '進場趨勢多頭': (latest_row['Close'] > latest_row.get('BBI', 0))
-                    })
-                    print(f"⚡ [扣款成功] {ticker} 買入 {TRADE_SHARES} 股 | 支出: ${total_buy_cost:,.0f}")
-                except Exception as e:
-                    print(f"⚠️ 進場失敗: {e}")
-            else:
-                print(f"❌ [餘額不足] {ticker} 無法進場")
+                # 3. 計算能買多少股 (需預留手續費空間)
+                fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
+                raw_shares = int(target_budget / (current_price * fee_mult))
+                
+                # 4. 台股優化邏輯：買得起整張就買整張，買不起就買零股
+                if raw_shares >= 1000:
+                    TRADE_SHARES = int(raw_shares / 1000) * 1000 # 捨去零頭，買 1000 的倍數
+                else:
+                    TRADE_SHARES = max(1, raw_shares) # 高價股買零股，最少買 1 股
+                    
+                total_buy_cost = current_price * TRADE_SHARES * fee_mult
+                print(f"⚙️ 系統精算：市價 {current_price} 元 ➔ 分配購買 {TRADE_SHARES} 股")
+
+                # 5. 檢查可用現金是否足夠
+                available_cash = get_available_cash()
+                if available_cash >= total_buy_cost:
+                    entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    try:
+                        with pyodbc.connect(DB_CONN_STR) as conn:
+                            cursor = conn.cursor()
+                            # 寫入 [停利階段] 與 [進場股數]
+                            cursor.execute('''
+                                INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [停利階段], [進場股數])
+                                VALUES (?, ?, ?, ?, ?, 0, ?)
+                            ''', (ticker, trade_dir, entry_time, round(current_price, 2), round(total_buy_cost, 0), TRADE_SHARES))
+                            conn.commit()
+                            
+                        update_account_cash(-total_buy_cost)
+                        
+                        positions.append({
+                            '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
+                            '進場時間': entry_time, 
+                            '進場股數': TRADE_SHARES, 
+                            '停利階段': 0,
+                            '進場分數': int(latest_row.get('Buy_Score', 0) if "買" in status else latest_row.get('Sell_Score', 0)),
+                            '進場趨勢多頭': (latest_row['Close'] > latest_row.get('BBI', 0))
+                        })
+                        print(f"⚡ [扣款成功] {ticker} 買入 {TRADE_SHARES} 股 | 支出: ${total_buy_cost:,.0f}")
+                    except Exception as e:
+                        print(f"⚠️ 進場失敗: {e}")
+                else:
+                    print(f"❌ [餘額不足] {ticker} 無法進場")
 
     # ==========================================
     # --- 狀況 B：部位控管與平倉 (含分批停利) ---
@@ -295,25 +357,40 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         is_partial = False
 
         # ==========================================
-        # 🌟 升級版：細膩化反轉出場邏輯
+        # 🌟 升級版：細膩化反轉出場邏輯與「讓利潤奔跑」機制
         # ==========================================
         if net_p <= -sl_line: 
             exit_msg = f"🛑 停損 (-{sl_line:.1f}%)"
         elif net_p >= tp_line: 
             exit_msg = f"🎯 最終停利 (+{tp_line:.1f}%)"
-        # 原本的分批停利邏輯 (達標一半獲利)
-        elif net_p >= tp_stage_1 and current_tp_stage == 0:
-            exit_msg = f"💰 達標第一階段 (+{tp_stage_1:.1f}%) ➔ 減碼 50% 入袋為安"
-            is_partial = True
             
-        # 👇 [重點修改] 反轉訊號的差異化處理
+        # 🌟 [優先級 1 升級] 動態第一階段停利 (避免錯殺大波段)
+        elif net_p >= tp_stage_1 and current_tp_stage == 0:
+            # 檢查目前趨勢是否強勁 (ADX > 閥值，且方向正確)
+            trend_is_with_me = (is_long and positions[0]['進場趨勢多頭']) or (not is_long and not positions[0]['進場趨勢多頭'])
+            adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
+            
+            if trend_is_with_me and adx_is_strong:
+                # 🌊 趨勢極強！不賣出任何股數，直接把階段標記為 1 (避開後續重複檢查)
+                positions[0]['停利階段'] = 1
+                try:
+                    with pyodbc.connect(DB_CONN_STR) as conn:
+                        conn.cursor().execute("UPDATE active_positions SET [停利階段] = 1 WHERE [Ticker SYMBOL] = ?", (ticker,))
+                        conn.commit()
+                except Exception as e:
+                    pass
+                print(f"🌊 {ticker} 獲利達標第一階段 (+{tp_stage_1:.1f}%)，但 ADX 顯示趨勢極強 ➔ 取消減碼，死抱全倉讓利潤奔跑！")
+            else:
+                # 🌤️ 趨勢普通或盤整：乖乖執行減碼 50% 入袋為安
+                exit_msg = f"💰 達標第一階段 (+{tp_stage_1:.1f}%) ➔ 趨勢偏弱，減碼 50% 入袋為安"
+                is_partial = True
+                
+        # 👇 反轉訊號的差異化處理 (維持不變)
         elif (is_long and "賣訊" in status) or (not is_long and "買訊" in status):
             if "弱" in status and current_tp_stage == 0:
-                # 🟡 弱反轉 (2分)：如果你還沒減碼過，就先賣一半避險
                 exit_msg = f"🔄 弱勢反轉 ({status}) ➔ 先減碼 50% 觀察"
                 is_partial = True
             else:
-                # 🟢🔴 強反轉 (3分以上) 或 已經減碼過了：直接全數清空結案
                 exit_msg = f"🔄 強勢反轉 ({status}) ➔ 全數結案撤退"
                 is_partial = False
             
