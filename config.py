@@ -58,5 +58,19 @@ PARAMS = {
     # --- 9. 系統底層運作設定 ---
     "SCAN_INTERVAL": 300,           # 實戰機台掃描間隔 (秒)
     "MAX_BATCHES": 3,               # 單一股票最多允許的分批進場次數
-    "MARKET_SLIPPAGE": 0.0015       # 市價單預設滑價耗損 (0.15%)
+    "MARKET_SLIPPAGE": 0.0015,       # 市價單預設滑價耗損 (0.15%)
+
+    # ==========================================
+    # 🌟 11. 策略因子開關 (Feature Toggles) 🌟      True 改成 False開關
+    # ==========================================
+    "USE_BBANDS": True,             # 啟用布林通道觸軌條件 (c1)
+    "USE_RSI": True,                # 啟用 RSI 超買超賣條件 (c2)
+    "USE_VOL_BREAKOUT": True,       # 啟用爆量條件 (c3)
+    "USE_MACD": True,               # 啟用 MACD 轉強/轉弱條件 (c4)
+    "USE_DIVERGENCE_RSI": True,     # 啟用 RSI 背離條件 (c5)
+    "USE_BBI_BREAKOUT": True,       # 啟用突破 BBI 條件 (c6)
+    "USE_CHIPS": True,              # 啟用三大法人同買/同賣條件 (c7)
+    "USE_DMI": True,                # 啟用 DMI 趨勢成型條件 (c8)
+    "USE_DIVERGENCE_CHIPS": True    # 啟用籌碼背離條件 (c9)
 }
+

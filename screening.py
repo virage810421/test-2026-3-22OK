@@ -254,46 +254,49 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if latest_check['Close'] < p['MIN_PRICE']: return None 
 
         # ==========================================
-        # D. ⚙️ 計分型邏輯閘 
+        # D. ⚙️ 計分型邏輯閘 (Feature Toggle 升級版)
         # ==========================================
+        # 🌟 魔法：創造一個「全都是 False」的空陣列。如果開關關閉，就回傳這個空陣列。
+        _F = pd.Series(False, index=df.index) 
+
         buy_trend = (df['Close'] > df['BBI']) & (df['BBI'] > df['BBI'].shift(1))
         sell_trend = (df['Close'] < df['BBI']) & (df['BBI'] < df['BBI'].shift(1))
 
-        buy_c1 = df['Low'] <= df['BB_Lower']
-        buy_c2 = df['RSI'] < df['DZ_Lower']
-        buy_c1_c2_score = (buy_c1 | buy_c2).astype(int) 
-
-        buy_c3 = (df['Volume'] > (df['Vol_MA20'] * p['VOL_BREAKOUT_MULTIPLIER'])) & (df['Close'] > df['Open'])
-        buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-        buy_c5 = detect_divergence(df['Low'].values, df['RSI'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.8, threshold=45)
-        buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
-        buy_c7 = (df.get('Foreign_Net', 0) > 0) & (df.get('Trust_Net', 0) > 0)
-        buy_c8 = (df['+DI14'] > df['-DI14']) & (df['ADX14'] >= p['ADX_TREND_THRESHOLD']) & (df['ADX14'] > df['ADX14'].shift(1))
-
-        buy_c9_base = detect_divergence(df['Low'].values, df['Total_Net'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.5)
+        # --- 買方邏輯 (讀取 config 開關) ---
+        buy_c1 = (df['Low'] <= df['BB_Lower']) if p.get('USE_BBANDS', True) else _F
+        buy_c2 = (df['RSI'] < df['DZ_Lower']) if p.get('USE_RSI', True) else _F
+        buy_c3 = ((df['Volume'] > (df['Vol_MA20'] * p['VOL_BREAKOUT_MULTIPLIER'])) & (df['Close'] > df['Open'])) if p.get('USE_VOL_BREAKOUT', True) else _F
+        buy_c4 = ((df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)) if p.get('USE_MACD', True) else _F
+        buy_c5 = detect_divergence(df['Low'].values, df['RSI'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.8, threshold=45) if p.get('USE_DIVERGENCE_RSI', True) else _F
+        buy_c6 = ((df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))) if p.get('USE_BBI_BREAKOUT', True) else _F
+        buy_c7 = ((df.get('Foreign_Net', 0) > 0) & (df.get('Trust_Net', 0) > 0)) if p.get('USE_CHIPS', True) else _F
+        buy_c8 = ((df['+DI14'] > df['-DI14']) & (df['ADX14'] >= p['ADX_TREND_THRESHOLD']) & (df['ADX14'] > df['ADX14'].shift(1))) if p.get('USE_DMI', True) else _F
+        
+        buy_c9_base = detect_divergence(df['Low'].values, df['Total_Net'].values, df['ATR'].values, is_top=False, distance=5, atr_mult=0.5) if p.get('USE_DIVERGENCE_CHIPS', True) else _F
         buy_c9 = buy_c9_base & (df['Total_Net'] > 0) 
 
-        df['Buy_Score'] = (buy_trend.astype(int) + buy_c1_c2_score + buy_c3.astype(int) + 
-                           buy_c4.astype(int) + buy_c5.astype(int) + buy_c6.astype(int) + 
-                           buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int))
+        # 🌟 買方總分計算 (把 c1 和 c2 拆開獨立計分)
+        df['Buy_Score'] = (buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + 
+                           buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + 
+                           buy_c6.astype(int) + buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int))
         
-        sell_c1 = df['High'] >= df['BB_Upper']
-        sell_c2 = df['RSI'] > df['DZ_Upper']
-        sell_c1_c2_score = (sell_c1 | sell_c2).astype(int) 
-
-        sell_c3 = (df['Volume'] > (df['Vol_MA20'] * p['VOL_BREAKOUT_MULTIPLIER'])) & (df['Close'] < df['Open'])
-        sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-        sell_c5 = detect_divergence(df['High'].values, df['RSI'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.8, threshold=55)
-        sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
-        sell_c7 = (df.get('Foreign_Net', 0) < 0) & (df.get('Trust_Net', 0) < 0)
-        sell_c8 = (df['-DI14'] > df['+DI14']) & (df['ADX14'] >= p['ADX_TREND_THRESHOLD']) & (df['ADX14'] > df['ADX14'].shift(1))
-
-        sell_c9_base = detect_divergence(df['High'].values, df['Total_Net'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.5)
+        # --- 賣方邏輯 (讀取 config 開關) ---
+        sell_c1 = (df['High'] >= df['BB_Upper']) if p.get('USE_BBANDS', True) else _F
+        sell_c2 = (df['RSI'] > df['DZ_Upper']) if p.get('USE_RSI', True) else _F
+        sell_c3 = ((df['Volume'] > (df['Vol_MA20'] * p['VOL_BREAKOUT_MULTIPLIER'])) & (df['Close'] < df['Open'])) if p.get('USE_VOL_BREAKOUT', True) else _F
+        sell_c4 = ((df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)) if p.get('USE_MACD', True) else _F
+        sell_c5 = detect_divergence(df['High'].values, df['RSI'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.8, threshold=55) if p.get('USE_DIVERGENCE_RSI', True) else _F
+        sell_c6 = ((df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))) if p.get('USE_BBI_BREAKOUT', True) else _F
+        sell_c7 = ((df.get('Foreign_Net', 0) < 0) & (df.get('Trust_Net', 0) < 0)) if p.get('USE_CHIPS', True) else _F
+        sell_c8 = ((df['-DI14'] > df['+DI14']) & (df['ADX14'] >= p['ADX_TREND_THRESHOLD']) & (df['ADX14'] > df['ADX14'].shift(1))) if p.get('USE_DMI', True) else _F
+        
+        sell_c9_base = detect_divergence(df['High'].values, df['Total_Net'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.5) if p.get('USE_DIVERGENCE_CHIPS', True) else _F
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
 
-        df['Sell_Score'] = (sell_trend.astype(int) + sell_c1_c2_score + sell_c3.astype(int) + 
-                             sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + 
-                             sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
+        # 🌟 賣方總分計算
+        df['Sell_Score'] = (sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + 
+                            sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + 
+                            sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
 
         # 動態滑價 (參數化)
         buy_adjust = np.where(buy_trend, 1.00, p['BUY_PULLBACK_RATE']) 
