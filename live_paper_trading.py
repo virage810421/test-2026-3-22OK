@@ -4,7 +4,7 @@ import pyodbc
 from datetime import datetime
 import yfinance as yf
 from advanced_chart import draw_chart
-from screening import inspect_stock, add_chip_data
+from screening import inspect_stock, add_chip_data, apply_slippage, calculate_pnl
 from config import PARAMS
 
 
@@ -70,7 +70,7 @@ def sync_portfolio_from_db():
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
             df = pd.read_sql("SELECT * FROM active_positions", conn)
-            for index, row in df.iterrows():
+            for _, row in df.iterrows():
                 ticker = row['Ticker SYMBOL']
                 if ticker not in portfolio:
                     portfolio[ticker] = []
@@ -257,46 +257,57 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         if not is_reverse_signal and len(positions) < MAX_BATCHES and not bought_today:
             
             # ==========================================
-            # 🌟 [優先級 2：EV 期望值動態資金分配 (Position Sizing)]
+            # 🧠 終極 AI 精算師：Risk Parity + 期望值 (EV) + MDD 降載
             # ==========================================
             ev_score = float(result_dict.get("期望值", 0))
             
             # 如果期望值為負，代表雖然有技術面訊號，但長期統計會賠錢，直接拒絕！
             if ev_score <= 0:
                 print(f"❄️ {ticker} 期望值為負 (EV: {ev_score:.3f}%) ➔ 長期勝算過低，系統放棄進場！")
-            
             else:
-                # 1. 計算單筆交易標準預算 (利用 config.py 中的設定)
-                base_budget = PARAMS['TOTAL_BUDGET'] / PARAMS['MAX_POSITIONS']
+                # 1. 決定基礎「風險承受額度」(Base Risk) - 預設為目前總淨值的 1%
+                base_risk = CURRENT_EQUITY * 0.01 
                 
-                # 2. 依據期望值 (EV) 決定投資權重 (讀取 PARAMS 參數)
-                if ev_score >= PARAMS['EV_HIGH_THRESHOLD']:
-                    target_budget = base_budget * PARAMS['EV_HIGH_MULTIPLIER']  
-                    print(f"🚀 {ticker} 極高勝算 (EV: {ev_score:.2f}%) ➔ 啟動 {PARAMS['EV_HIGH_MULTIPLIER']} 倍資金重壓 (${target_budget:,.0f})")
-                elif ev_score >= PARAMS['EV_BASE_THRESHOLD']:
-                    target_budget = base_budget * PARAMS['EV_BASE_MULTIPLIER']  
-                    print(f"🔥 {ticker} 標準勝算 (EV: {ev_score:.2f}%) ➔ 啟動標準資金 (${target_budget:,.0f})")
+                # 2. 依據期望值 (EV) 放大或縮小風險額度
+                if ev_score >= PARAMS.get('EV_HIGH_THRESHOLD', 2.0):
+                    target_risk = base_risk * PARAMS.get('EV_HIGH_MULTIPLIER', 1.5)
+                    print(f"🚀 {ticker} 極高勝算 (EV: {ev_score:.2f}%) ➔ 願意承擔 {PARAMS.get('EV_HIGH_MULTIPLIER', 1.5)} 倍風險")
+                elif ev_score >= PARAMS.get('EV_BASE_THRESHOLD', 1.0):
+                    target_risk = base_risk * PARAMS.get('EV_BASE_MULTIPLIER', 1.0)
+                    print(f"🔥 {ticker} 標準勝算 (EV: {ev_score:.2f}%) ➔ 啟動標準風險分配")
                 else:
-                    target_budget = base_budget * PARAMS['EV_LOW_MULTIPLIER']  
-                    print(f"👀 {ticker} 邊緣勝算 (EV: {ev_score:.2f}%) ➔ 啟動降載資金試單 (${target_budget:,.0f})")
+                    target_risk = base_risk * PARAMS.get('EV_LOW_MULTIPLIER', 0.5)
+                    print(f"👀 {ticker} 邊緣勝算 (EV: {ev_score:.2f}%) ➔ 降載風險試單")
 
-                # 🌟 [重點新增] 套用大盤 MDD 防護網降載乘數
+                # 3. 套用大盤 MDD 防護網降載乘數 (宏觀防禦)
                 if CURRENT_MDD_TIER < 1.0:
-                    target_budget = target_budget * CURRENT_MDD_TIER
-                    print(f"🛡️ [風控降載] 系統防禦狀態啟動，預算縮減為原計畫的 {CURRENT_MDD_TIER*100:.0f}% ➔ 最終核准: ${target_budget:,.0f}")
-
-                # 3. 計算能買多少股 (需預留手續費空間)
-                fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
-                raw_shares = int(target_budget / (current_price * fee_mult))
-                
-                # 4. 台股優化邏輯：買得起整張就買整張，買不起就買零股
-                if raw_shares >= 1000:
-                    TRADE_SHARES = int(raw_shares / 1000) * 1000 # 捨去零頭，買 1000 的倍數
-                else:
-                    TRADE_SHARES = max(1, raw_shares) # 高價股買零股，最少買 1 股
+                    target_risk = target_risk * CURRENT_MDD_TIER
+                    print(f"🛡️ [大盤防禦] 系統遭遇回撤，風險承受度強制縮減為 {CURRENT_MDD_TIER*100:.0f}%")
                     
+                # 4. 微觀防禦：計算這檔股票的專屬停損距離
+                volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
+                entry_sl_pct = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
+                
+                # 5. 反推能買多少股：股數 = 允許虧損金額 / (進場價 * 停損百分比)
+                raw_shares = target_risk / (current_price * entry_sl_pct)
+                
+                # 6. 台股最佳化買法 (優先買整張，買不起才買零股)
+                if raw_shares >= 1000:
+                    TRADE_SHARES = int(raw_shares // 1000) * 1000
+                else:
+                    TRADE_SHARES = max(1, int(raw_shares))
+                    
+                # 7. 防呆機制與精算最終成本
+                fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
                 total_buy_cost = current_price * TRADE_SHARES * fee_mult
-                print(f"⚙️ 系統精算：市價 {current_price} 元 ➔ 分配購買 {TRADE_SHARES} 股")
+                
+                # 單筆最高不允許超過帳戶總現金的 33%
+                max_affordable_cost = CURRENT_EQUITY * 0.33  
+                if total_buy_cost > max_affordable_cost:
+                    TRADE_SHARES = int(max_affordable_cost / (current_price * fee_mult))
+                    total_buy_cost = current_price * TRADE_SHARES * fee_mult
+                
+                print(f"⚙️ 精算師結案：停損距 {entry_sl_pct*100:.1f}%，風險上限 ${target_risk:,.0f} ➔ 核准購買 {TRADE_SHARES} 股")
 
                 # 5. 檢查可用現金是否足夠
                 available_cash = get_available_cash()
@@ -336,54 +347,84 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         total_invested = sum(p['投入資金'] for p in positions)
         avg_cost = sum(p['進場價'] * p['投入資金'] for p in positions) / total_invested
         
-        raw_p = (current_price - avg_cost) / avg_cost if is_long else (avg_cost - current_price) / avg_cost
-        net_p = (raw_p * 100) - (PARAMS['MARKET_SLIPPAGE'] * 100 * 2)
         
-        vol = (latest_row['BB_std'] * 1.5) / latest_row['Close']
-        sl_line = max(PARAMS['SL_MIN_PCT'], min(vol, PARAMS['SL_MAX_PCT'])) * 100
-        # ✅ 確認目前持倉方向與趨勢方向「一致」時，才啟動大波段停利
+        # ==========================================
+        # 🛡️ 實戰級：動態移動停利 (Trailing Stop) 免 SQL 魔法版
+        # ==========================================
+        volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
+        DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
+        
         trend_is_with_me = (is_long and positions[0]['進場趨勢多頭']) or (not is_long and not positions[0]['進場趨勢多頭'])
+        adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
+        DYNAMIC_TP = PARAMS['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else PARAMS['TP_BASE_PCT']
 
-        tp_line = (PARAMS['TP_TREND_PCT']*100) if (trend_is_with_me and latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']) else (PARAMS['TP_BASE_PCT']*100)
-        if positions[0]['進場分數'] >= 8: tp_line = 999.0
+        # 🌟 Pandas 魔法：直接利用 ticker_df 切片，找出進場後的極端價格！
+        try:
+            # 將字串轉換為 pandas 日期格式，並對齊到 00:00:00
+            entry_dt = pd.to_datetime(positions[0]['進場時間']).normalize()
+            # 擷取進場日到今天的全部 K 線
+            post_entry_df = ticker_df.loc[entry_dt:]
             
-        # 🌟 [功能 2] 定義第一階段停利線 (原目標的一半)
-        tp_stage_1 = tp_line * 0.5 
-        current_tp_stage = positions[0].get('停利階段', 0)
+            if is_long:
+                max_reached_price = max(post_entry_df['High'].max(), current_price, avg_cost)
+            else:
+                max_reached_price = min(post_entry_df['Low'].min(), current_price, avg_cost)
+        except Exception as e:
+            # 萬一時間解析失敗的備案
+            max_reached_price = current_price
+            
+        # 計算防守線與目標價
+        if is_long:
+            trailing_stop_price = max_reached_price * (1 - DYNAMIC_SL)
+            # 防線只進不退：取「原始停損」與「移動停損」的最高點
+            final_stop_price = max(avg_cost * (1 - DYNAMIC_SL), trailing_stop_price)
+            tp_price = avg_cost * (1 + DYNAMIC_TP)
+            tp_stage_1_price = avg_cost * (1 + (DYNAMIC_TP * 0.5))
+        else:
+            trailing_stop_price = max_reached_price * (1 + DYNAMIC_SL)
+            final_stop_price = min(avg_cost * (1 + DYNAMIC_SL), trailing_stop_price)
+            tp_price = avg_cost * (1 - DYNAMIC_TP)
+            tp_stage_1_price = avg_cost * (1 - (DYNAMIC_TP * 0.5))
 
+        current_tp_stage = positions[0].get('停利階段', 0)
         exit_msg = ""
         is_partial = False
 
         # ==========================================
-        # 🌟 升級版：細膩化反轉出場邏輯與「讓利潤奔跑」機制
+        # 🌟 觸發判定與部位平倉邏輯
         # ==========================================
-        if net_p <= -sl_line: 
-            exit_msg = f"🛑 停損 (-{sl_line:.1f}%)"
-        elif net_p >= tp_line: 
-            exit_msg = f"🎯 最終停利 (+{tp_line:.1f}%)"
+        is_stop_loss = (current_price <= final_stop_price) if is_long else (current_price >= final_stop_price)
+        # 如果是 10 分滿分的黃金陣型，無視傳統停利，交給 Trailing Stop 死咬趨勢
+        is_take_profit = ((current_price >= tp_price) if is_long else (current_price <= tp_price)) and positions[0]['進場分數'] < 10
+        is_stage_1 = (current_price >= tp_stage_1_price) if is_long else (current_price <= tp_stage_1_price)
+
+        if is_stop_loss:
+            real_loss_pct = ((current_price - avg_cost) / avg_cost) * 100 if is_long else ((avg_cost - current_price) / avg_cost) * 100
+            # 判斷是初始停損還是移動停利出場
+            if (is_long and final_stop_price > avg_cost) or (not is_long and final_stop_price < avg_cost):
+                exit_msg = f"🛡️ 移動鎖利觸發 (鎖住獲利 {real_loss_pct:.3f}%)"
+            else:
+                exit_msg = f"🛑 停損出場 ({real_loss_pct:.3f}%)"
+                
+        elif is_take_profit:
+            real_win_pct = ((current_price - avg_cost) / avg_cost) * 100 if is_long else ((avg_cost - current_price) / avg_cost) * 100
+            exit_msg = f"🎯 達標傳統停利 (+{real_win_pct:.3f}%)"
             
-        # 🌟 [優先級 1 升級] 動態第一階段停利 (避免錯殺大波段)
-        elif net_p >= tp_stage_1 and current_tp_stage == 0:
-            # 檢查目前趨勢是否強勁 (ADX > 閥值，且方向正確)
-            trend_is_with_me = (is_long and positions[0]['進場趨勢多頭']) or (not is_long and not positions[0]['進場趨勢多頭'])
-            adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
-            
+        elif is_stage_1 and current_tp_stage == 0:
             if trend_is_with_me and adx_is_strong:
-                # 🌊 趨勢極強！不賣出任何股數，直接把階段標記為 1 (避開後續重複檢查)
                 positions[0]['停利階段'] = 1
                 try:
                     with pyodbc.connect(DB_CONN_STR) as conn:
                         conn.cursor().execute("UPDATE active_positions SET [停利階段] = 1 WHERE [Ticker SYMBOL] = ?", (ticker,))
                         conn.commit()
-                except Exception as e:
-                    pass
-                print(f"🌊 {ticker} 獲利達標第一階段 (+{tp_stage_1:.1f}%)，但 ADX 顯示趨勢極強 ➔ 取消減碼，死抱全倉讓利潤奔跑！")
+                except: pass
+                print(f"🌊 {ticker} 達標第一階段，趨勢極強 ➔ 死抱全倉讓利潤奔跑！")
             else:
-                # 🌤️ 趨勢普通或盤整：乖乖執行減碼 50% 入袋為安
-                exit_msg = f"💰 達標第一階段 (+{tp_stage_1:.1f}%) ➔ 趨勢偏弱，減碼 50% 入袋為安"
+                real_win_pct = ((current_price - avg_cost) / avg_cost) * 100 if is_long else ((avg_cost - current_price) / avg_cost) * 100
+                exit_msg = f"💰 達標第一階段 (+{real_win_pct:.3f}%) ➔ 趨勢偏弱，減碼 50% 入袋為安"
                 is_partial = True
                 
-        # 👇 反轉訊號的差異化處理 (維持不變)
+        # 👇 反轉訊號的差異化處理
         elif (is_long and "賣訊" in status) or (not is_long and "買訊" in status):
             if "弱" in status and current_tp_stage == 0:
                 exit_msg = f"🔄 弱勢反轉 ({status}) ➔ 先減碼 50% 觀察"
@@ -412,25 +453,24 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
 
                         exit_fee_rate = PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']
                         
-                        # 🌟 區分多空現金流算法
-                        if is_long:
-                            # 多單出場：扣手續費與交易稅
-                            sell_net_mult = 1 - exit_fee_rate - PARAMS['TAX_RATE']
-                            total_exit_proceeds = current_price * shares_to_sell * sell_net_mult
-                            net_profit_cash = total_exit_proceeds - invested_portion
-                            
-                            # 這筆單實際拿回金庫的錢
-                            cash_returned_this_batch = total_exit_proceeds 
-                        else:
-                            # 空單出場：只扣手續費
-                            buy_back_cost = current_price * shares_to_sell * (1 + exit_fee_rate)
-                            net_profit_cash = invested_portion - buy_back_cost
-                            
-                            # 這筆單實際拿回金庫的錢 = 保證金 + 淨利
-                            cash_returned_this_batch = invested_portion + net_profit_cash
+                        # 🌟 1. 執行出場滑價計算
+                        trade_dir_int = 1 if is_long else -1
+                        actual_exit_price = apply_slippage(current_price, -trade_dir_int, PARAMS['MARKET_SLIPPAGE'])
                         
-                        # 🌟 統一計算報酬率與更新金庫
-                        profit_pct = (net_profit_cash / invested_portion) * 100
+                        # 🌟 2. 呼叫機構級計算機 (精算手續費與稅金)
+                        pnl, invested = calculate_pnl(
+                            direction=trade_dir_int,
+                            entry_price=batch['進場價'],
+                            exit_price=actual_exit_price,
+                            shares=shares_to_sell,
+                            fee_rate=exit_fee_rate,
+                            tax_rate=PARAMS['TAX_RATE']
+                        )
+                        
+                        # 🌟 3. 統一變數名稱，對接後續的 SQL 寫入
+                        net_profit_cash = pnl
+                        profit_pct = (pnl / invested) * 100
+                        cash_returned_this_batch = invested + pnl
                         total_cash_back += cash_returned_this_batch
                         current_bank_cash += cash_returned_this_batch 
                         

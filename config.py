@@ -12,7 +12,7 @@ PARAMS = {
     "DMI_PERIOD": 14,               # DMI 趨勢指標與 ATR 波動率的計算天數
     
     # --- 2. 策略濾網與觸發閥值 ---
-    "TRIGGER_SCORE": 3,             # 訊號發動最低分數 (總分超過此值才顯示買/賣訊)
+    "TRIGGER_SCORE": 5,             # 訊號發動最低分數 (總分超過此值才顯示買/賣訊)
     "ADX_TREND_THRESHOLD": 20,      # ADX 趨勢發動閥值 (高於此值代表趨勢成形)
     "MIN_PRICE": 10.0,              # 最低股價濾網 (過濾掉低價雞蛋股)
     "MIN_VOL_MA20": 1000000,        # 最低 20 日均量濾網 (確保流動性，單位：元)
@@ -69,7 +69,7 @@ PARAMS = {
     "USE_MACD": True,               # 啟用 MACD 轉強/轉弱條件 (c4)
     "USE_DIVERGENCE_RSI": True,     # 啟用 RSI 背離條件 (c5)
     "USE_BBI_BREAKOUT": True,       # 啟用突破 BBI 條件 (c6)
-    "USE_CHIPS": True,              # 啟用三大法人同買/同賣條件 (c7)
+    "USE_CHIPS": True,              # 啟用三大昨日法人同買/同賣條件 (c7)
     "USE_DMI": True,                # 啟用 DMI 趨勢成型條件 (c8)
     "USE_DIVERGENCE_CHIPS": True    # 啟用籌碼背離條件 (c9)
 }
