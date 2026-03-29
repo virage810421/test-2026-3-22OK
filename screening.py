@@ -376,13 +376,11 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                             np.where(sell_combo_3_diverge, "💣偷偷出貨", "無"))))))
         
 
-        # 動態滑價 (參數化)
-        buy_adjust = np.where(buy_trend, 1.00, p['BUY_PULLBACK_RATE']) 
-        sell_adjust = np.where(sell_trend, 1.00, p['SELL_PREMIUM_RATE'])
-        
-        # ✅ 改為參考昨天的收盤價來算掛單價
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= p['TRIGGER_SCORE'], df['Close'].shift(1) * buy_adjust, np.nan)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['Close'].shift(1) * sell_adjust, np.nan)
+        # ==========================================
+        # 🌟 訊號標記 (移除幽靈讓點機制，直接記錄觸發當下的收盤價)
+        # ==========================================
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= p['TRIGGER_SCORE'], df['Close'], np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['Close'], np.nan)
       
         # ==========================================
         # 4. 啟動回測引擎 (終極模組化架構 + Direction/Position 分離)

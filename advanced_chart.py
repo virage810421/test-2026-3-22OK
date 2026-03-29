@@ -108,8 +108,10 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", ex
     else:
         print("✅ 繪圖引擎：成功接收大腦 10 分制數據，同步畫圖。")
 
-    df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
-    df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
+    # 🌟 圖表標記 (同步參數檔的觸發分數，並為了視覺美觀稍微偏移 K 線，不擋住實體)
+    trigger_score = p.get('TRIGGER_SCORE', 3)
+    df['Buy_Signal'] = np.where(df['Buy_Score'] >= trigger_score, df['Low'] * 0.985, np.nan)
+    df['Sell_Signal'] = np.where(df['Sell_Score'] >= trigger_score, df['High'] * 1.015, np.nan)
 
     # -------------------------------
     # 4. 繪製圖表 (UI 升級版: 5 子圖)

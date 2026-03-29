@@ -18,9 +18,9 @@ PARAMS = {
     "MIN_VOL_MA20": 1000000,        # 最低 20 日均量濾網 (確保流動性，單位：元)
     "VOL_BREAKOUT_MULTIPLIER": 1.1, # 爆量定義 (當日量大於均量的 1.1 倍)
     
-    # --- 3. 動態讓點與滑價 (回檔接/溢價賣) ---
-    "BUY_PULLBACK_RATE": 0.97,      # 買進讓點 (設 0.97 代表觸發後跌 3% 才成交)
-    "SELL_PREMIUM_RATE": 1.03,      # 賣出溢價 (設 1.03 代表觸發後漲 3% 才賣出)
+    # # --- 3. 動態讓點與滑價 (回檔接/溢價賣) ---
+    # "BUY_PULLBACK_RATE": 0.97,      # 買進讓點 (設 0.97 代表觸發後跌 3% 才成交)
+    # "SELL_PREMIUM_RATE": 1.03,      # 賣出溢價 (設 1.03 代表觸發後漲 3% 才賣出)
     
     # --- 4. 摩擦成本 (台股預設) ---
     "FEE_RATE": 0.001425,           # 證券商公定手續費率 (0.1425%)
@@ -70,13 +70,13 @@ PARAMS = {
     "USE_DIVERGENCE_RSI": True,     # 啟用 RSI 背離條件 (c5)
     "USE_BBI_BREAKOUT": True,       # 啟用突破 BBI 條件 (c6)
     "USE_CHIPS": True,              # 啟用三大昨日法人同買/同賣條件 (c7)
-    "USE_DMI": True,                # 啟用 DMI 趨勢成型條件 (c8)
+    "USE_DMI": False,                # 啟用 DMI 趨勢成型條件 (c8)
     "USE_DIVERGENCE_CHIPS": True,    # 啟用籌碼背離條件 (c9)
     # 🌟 策略切換開關
-    'USE_SNIPER_MODE': True,  # True = 啟動黃金陣型狙擊 (嚴格) | False = 退回傳統 3 分制 (寬鬆)
+    'USE_SNIPER_MODE': False,  # True = 啟動黃金陣型狙擊 (嚴格) | False = 退回傳統 3 分制 (寬鬆)
     # 🛰️ 戰略方向控制
     'ALLOW_LONG': True,   # 是否允許做多 (買入)
-    'ALLOW_SHORT': True,  # 是否允許放空 (賣出)
+    'ALLOW_SHORT': False,  # 是否允許放空 (賣出)
 
 }
 
