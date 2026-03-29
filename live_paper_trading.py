@@ -13,8 +13,6 @@ from config import PARAMS
 # ==========================================
 portfolio = {}       # 現在裡面會存放「清單 (List)」，支援分批加碼
 trade_history = []   
-SCAN_INTERVAL = 300  
-FEE_SLIPPAGE = 0.0025 
 
 DB_CONN_STR = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
@@ -125,25 +123,25 @@ def run_live_simulation():
             
         mdd = (PEAK_EQUITY - total_equity) / PEAK_EQUITY if PEAK_EQUITY > 0 else 0
         
-        # 🛡️ 啟動三級防護網
-        if mdd >= 0.20:
+        # 🛡️ 啟動三級防護網 (讀取 PARAMS 參數)
+        if mdd >= PARAMS['MDD_LIMIT']:
             if not IS_FROZEN:
-                print(f"\n🚨🚨 [系統熔斷警報] 總資金回撤達 {mdd*100:.1f}%！超過極限 20%！🚨🚨")
+                print(f"\n🚨🚨 [系統熔斷警報] 總資金回撤達 {mdd*100:.1f}%！超過極限 {PARAMS['MDD_LIMIT']*100}%！🚨🚨")
                 print(f"🛑 系統已強制切換為【只出不進】的絕對保護模式！")
                 IS_FROZEN = True
             CURRENT_MDD_TIER = 0.0
             
-        elif mdd >= 0.15:
+        elif mdd >= PARAMS['MDD_LEVEL_2']:
             IS_FROZEN = False
-            if CURRENT_MDD_TIER != 0.2:
-                print(f"\n⚠️ [二級防護] 資金回撤達 {mdd*100:.1f}% ➔ 啟動重度防禦，新進部位強制縮水 80%！")
-                CURRENT_MDD_TIER = 0.2
+            if CURRENT_MDD_TIER != PARAMS['MDD_MULTIPLIER_2']:
+                print(f"\n⚠️ [二級防護] 資金回撤達 {mdd*100:.1f}% ➔ 啟動重度防禦，新進部位強制縮水 {PARAMS['MDD_MULTIPLIER_2']*100:.0f}%！")
+                CURRENT_MDD_TIER = PARAMS['MDD_MULTIPLIER_2']
                 
-        elif mdd >= 0.10:
+        elif mdd >= PARAMS['MDD_LEVEL_1']:
             IS_FROZEN = False
-            if CURRENT_MDD_TIER != 0.5:
-                print(f"\n🛡️ [一級防護] 資金回撤達 {mdd*100:.1f}% ➔ 啟動輕度防禦，新進部位強制砍半 (50%)！")
-                CURRENT_MDD_TIER = 0.5
+            if CURRENT_MDD_TIER != PARAMS['MDD_MULTIPLIER_1']:
+                print(f"\n🛡️ [一級防護] 資金回撤達 {mdd*100:.1f}% ➔ 啟動輕度防禦，新進部位降載至 {PARAMS['MDD_MULTIPLIER_1']*100:.0f}%！")
+                CURRENT_MDD_TIER = PARAMS['MDD_MULTIPLIER_1']
                 
         else:
             if IS_FROZEN or CURRENT_MDD_TIER < 1.0:
@@ -220,8 +218,8 @@ def run_live_simulation():
                 
                 handle_paper_trade(ticker, current_price, status, computed_df, result)
                 
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {SCAN_INTERVAL} 秒...")
-        time.sleep(SCAN_INTERVAL)
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {PARAMS['SCAN_INTERVAL']} 秒...")
+        time.sleep(PARAMS['SCAN_INTERVAL'])
 
 # ==========================================
 # 🎯 交易模組：支援分批加碼與平均成本計算
@@ -239,7 +237,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     total_prof = result_dict.get("累計報酬率(%)", 0)
     latest_row = ticker_df.iloc[-1] 
     
-    MAX_BATCHES = 3 
+    MAX_BATCHES = PARAMS['MAX_BATCHES']
     today_str = datetime.now().strftime("%Y-%m-%d")
     bought_today = any(p.get('進場時間', '').startswith(today_str) for p in positions)
     
@@ -271,22 +269,22 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                 # 1. 計算單筆交易標準預算 (利用 config.py 中的設定)
                 base_budget = PARAMS['TOTAL_BUDGET'] / PARAMS['MAX_POSITIONS']
                 
-                # 2. 依據期望值 (EV) 決定投資權重
-                if ev_score >= 2.0:
-                    target_budget = base_budget * 1.5  # 極高勝算：動用 1.5 倍資金重壓
-                    print(f"🚀 {ticker} 極高勝算 (EV: {ev_score:.2f}%) ➔ 啟動 1.5 倍資金重壓 (${target_budget:,.0f})")
-                elif ev_score >= 1.0:
-                    target_budget = base_budget * 1.0  # 標準勝算：動用標準資金
+                # 2. 依據期望值 (EV) 決定投資權重 (讀取 PARAMS 參數)
+                if ev_score >= PARAMS['EV_HIGH_THRESHOLD']:
+                    target_budget = base_budget * PARAMS['EV_HIGH_MULTIPLIER']  
+                    print(f"🚀 {ticker} 極高勝算 (EV: {ev_score:.2f}%) ➔ 啟動 {PARAMS['EV_HIGH_MULTIPLIER']} 倍資金重壓 (${target_budget:,.0f})")
+                elif ev_score >= PARAMS['EV_BASE_THRESHOLD']:
+                    target_budget = base_budget * PARAMS['EV_BASE_MULTIPLIER']  
                     print(f"🔥 {ticker} 標準勝算 (EV: {ev_score:.2f}%) ➔ 啟動標準資金 (${target_budget:,.0f})")
                 else:
-                    target_budget = base_budget * 0.5  # 邊緣勝算：只動用 50% 資金試單
-                    print(f"👀 {ticker} 邊緣勝算 (EV: {ev_score:.2f}%) ➔ 啟動半碼資金試單 (${target_budget:,.0f})")
+                    target_budget = base_budget * PARAMS['EV_LOW_MULTIPLIER']  
+                    print(f"👀 {ticker} 邊緣勝算 (EV: {ev_score:.2f}%) ➔ 啟動降載資金試單 (${target_budget:,.0f})")
 
                 # 🌟 [重點新增] 套用大盤 MDD 防護網降載乘數
                 if CURRENT_MDD_TIER < 1.0:
                     target_budget = target_budget * CURRENT_MDD_TIER
                     print(f"🛡️ [風控降載] 系統防禦狀態啟動，預算縮減為原計畫的 {CURRENT_MDD_TIER*100:.0f}% ➔ 最終核准: ${target_budget:,.0f}")
-                    
+
                 # 3. 計算能買多少股 (需預留手續費空間)
                 fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
                 raw_shares = int(target_budget / (current_price * fee_mult))
@@ -339,7 +337,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         avg_cost = sum(p['進場價'] * p['投入資金'] for p in positions) / total_invested
         
         raw_p = (current_price - avg_cost) / avg_cost if is_long else (avg_cost - current_price) / avg_cost
-        net_p = (raw_p * 100) - (FEE_SLIPPAGE * 100 * 2)
+        net_p = (raw_p * 100) - (PARAMS['MARKET_SLIPPAGE'] * 100 * 2)
         
         vol = (latest_row['BB_std'] * 1.5) / latest_row['Close']
         sl_line = max(PARAMS['SL_MIN_PCT'], min(vol, PARAMS['SL_MAX_PCT'])) * 100

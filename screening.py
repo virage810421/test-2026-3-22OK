@@ -81,7 +81,7 @@ def add_chip_data(df, ticker):
 # ==========================================
 # 📊 新增：基本面數據採集器 (FinMind 版)
 # ==========================================
-def add_fundamental_filter(ticker):
+def add_fundamental_filter(ticker, p=PARAMS):  # 🌟 補上 p=PARAMS 讓它能讀取設定
     """抓取營收與獲利能力，判斷基本面體質"""
     pure_ticker = ticker.split('.')[0]
     try:
@@ -96,10 +96,11 @@ def add_fundamental_filter(ticker):
             op_margin = 0.0
 
         f_score = 0
-        if rev_yoy > 0: f_score += 1
-        if rev_yoy > 20: f_score += 1 
-        if op_margin > 0: f_score += 1 
-        if op_margin < 0: f_score -= 2 
+        # 🌟 將寫死的數字替換成 Config 參數
+        if rev_yoy > p.get('FUNDAMENTAL_YOY_BASE', 0): f_score += 1
+        if rev_yoy > p.get('FUNDAMENTAL_YOY_EXCELLENT', 20): f_score += 1 
+        if op_margin > p.get('FUNDAMENTAL_OPM_BASE', 0): f_score += 1 
+        if op_margin < p.get('FUNDAMENTAL_OPM_BASE', 0): f_score -= 2 
 
         return {"營收年增率(%)": rev_yoy, "營業利益率(%)": op_margin, "基本面總分": f_score}
     except:
@@ -318,7 +319,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sim_balance = 10000000      
         TRADE_SHARES = 2000         
         
-        SLIPPAGE = 0.0015 
+        # 🌟 將寫死的 0.0015 換成總控制台的參數
+        SLIPPAGE = p['MARKET_SLIPPAGE'] 
         exit_fee_rate = p['FEE_RATE'] * p['FEE_DISCOUNT']
 
         db_conn = None
