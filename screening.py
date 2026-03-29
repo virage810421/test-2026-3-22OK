@@ -315,19 +315,49 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
 
         # ==========================================
-        # 🌟 第二步：升級版黃金陣型狙擊系統 (Pattern Matching)
+        # 🌟 第二步：雙核計分引擎 (傳統累加 vs 陣型狙擊)
         # ==========================================
-        # 定義多方陣型
-        combo_1_breakout = buy_c7 & buy_c3 & buy_c6 
+        # 1. 引擎 A：傳統累加算分 (舊版邏輯)
+        base_buy_score = (buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + 
+                          buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + 
+                          buy_c6.astype(int) + buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int))
+        
+        base_sell_score = (sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + 
+                           sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + 
+                           sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
+
+        # 2. 引擎 B：黃金陣型狙擊 (帶有 2 日訊號記憶體)
+        buy_c3_mem = buy_c3 | buy_c3.shift(1)  
+        buy_c7_mem = buy_c7 | buy_c7.shift(1)  
+        sell_c3_mem = sell_c3 | sell_c3.shift(1)
+        sell_c7_mem = sell_c7 | sell_c7.shift(1)
+        
+        combo_1_breakout = buy_c7_mem & buy_c3_mem & buy_c6 
         combo_2_reversal = buy_c1 & buy_c2 & buy_c5 
         combo_3_diverge  = buy_c9 & buy_c4 & buy_trend 
-        df['Buy_Score'] = np.where(combo_1_breakout | combo_2_reversal | combo_3_diverge, 10, 0)
-
-        # 定義空方陣型
-        sell_combo_1_breakdown = sell_c7 & sell_c3 & sell_c6 
+        
+        sell_combo_1_breakdown = sell_c7_mem & sell_c3_mem & sell_c6 
         sell_combo_2_reversal  = sell_c1 & sell_c2 & sell_c5 
         sell_combo_3_diverge   = sell_c9 & sell_c4 & sell_trend 
-        df['Sell_Score'] = np.where(sell_combo_1_breakdown | sell_combo_2_reversal | sell_combo_3_diverge, 10, 0)
+
+        # 🌟 3. 系統總開關 (由 PARAMS 控制切換)
+        if p.get('USE_SNIPER_MODE', True):
+            # 狙擊模式開啟：只看陣型，符合給 10 分，不符合 0 分
+            df['Buy_Score'] = np.where(combo_1_breakout | combo_2_reversal | combo_3_diverge, 10, 0)
+            df['Sell_Score'] = np.where(sell_combo_1_breakdown | sell_combo_2_reversal | sell_combo_3_diverge, 10, 0)
+        # 🌟 [新增] 多空方向戰略攔截器
+        if not p.get('ALLOW_LONG', True):
+            df['Buy_Score'] = 0
+            # 同時也讓標籤變回「無」，避免 UI 干擾
+            df['Golden_Type'] = np.where(df['Buy_Score'] > 0, df['Golden_Type'], "無")
+            
+        if not p.get('ALLOW_SHORT', True):
+            df['Sell_Score'] = 0
+            df['Golden_Type'] = np.where(df['Sell_Score'] > 0, df['Golden_Type'], "無")
+        else:
+            # 狙擊模式關閉：退回傳統的加總計分制
+            df['Buy_Score'] = base_buy_score
+            df['Sell_Score'] = base_sell_score
 
         # ==========================================
         # 🏷️ 第三步：終極陣型標籤機 (涵蓋多空雙向)
@@ -338,7 +368,15 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                             np.where(sell_combo_1_breakdown, "🧊主力倒貨",
                             np.where(sell_combo_2_reversal, "💀貪婪摸頭",
                             np.where(sell_combo_3_diverge, "💣偷偷出貨", "無"))))))
-
+        # 🌟 [新增] 多空方向戰略攔截器 (放置於 Prev_Score 偏移之前)
+        if not p.get('ALLOW_LONG', True):
+            df['Buy_Score'] = 0
+            df['Golden_Type'] = np.where(df['Buy_Score'] > 0, df['Golden_Type'], "無")
+            
+        if not p.get('ALLOW_SHORT', True):
+            df['Sell_Score'] = 0
+            df['Golden_Type'] = np.where(df['Sell_Score'] > 0, df['Golden_Type'], "無")
+            
         # 動態滑價 (參數化)
         buy_adjust = np.where(buy_trend, 1.00, p['BUY_PULLBACK_RATE']) 
         sell_adjust = np.where(sell_trend, 1.00, p['SELL_PREMIUM_RATE'])

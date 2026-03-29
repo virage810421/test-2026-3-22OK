@@ -245,6 +245,14 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     # --- 狀況 A：進場 / 分批加碼 (選項一：市價追擊模式) ---
     # ==========================================
     if ("買訊" in status or "賣訊" in status):
+        # 🌟 [新增] 多空進場實體攔截 (放置於 AI 精算師啟動之前)
+        if "買訊" in status and not PARAMS.get('ALLOW_LONG', True):
+            print(f"🚫 {ticker} 產生買訊，但系統已關閉【做多開關】，放棄進場。")
+            return 
+            
+        if "賣訊" in status and not PARAMS.get('ALLOW_SHORT', True):
+            print(f"🚫 {ticker} 產生賣訊，但系統已關閉【放空開關】，放棄進場。")
+            return
         
         # 🌟 攔截機制：如果系統熔斷，無情拒絕任何新資金進場！
         if IS_FROZEN:
