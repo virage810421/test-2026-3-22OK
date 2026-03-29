@@ -454,18 +454,23 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                         shares_to_sell = batch.get('進場股數', 2000)
                         invested_portion = batch['投入資金']
                         
-                        # 🌟 採用 GPT 防護機制：避免除以 2 變成 0 股
+                        # 🌟 採用 GPT 防護機制：避免除以 2 變成 0 股，並加入全平倉判定
                         if is_partial:
                             shares_to_sell = max(1, int(shares_to_sell / 2))
-                            invested_portion = invested_portion / 2
+                            # 🛡️ [防禦] 如果算出來要賣的股數等於或大於持有股數，強制轉為全部平倉
+                            if shares_to_sell >= batch.get('進場股數', 2000):
+                                is_partial = False
+                                shares_to_sell = batch.get('進場股數', 2000)
+                            else:
+                                invested_portion = invested_portion / 2
 
                         exit_fee_rate = PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']
                         
-                        # 🌟 1. 執行出場滑價計算
+                        # 1. 執行出場滑價計算
                         trade_dir_int = 1 if is_long else -1
                         actual_exit_price = apply_slippage(current_price, -trade_dir_int, PARAMS['MARKET_SLIPPAGE'])
                         
-                        # 🌟 2. 呼叫機構級計算機 (精算手續費與稅金)
+                        # 2. 呼叫機構級計算機 (精算手續費與稅金)
                         pnl, invested = calculate_pnl(
                             direction=trade_dir_int,
                             entry_price=batch['進場價'],
@@ -475,10 +480,13 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                             tax_rate=PARAMS['TAX_RATE']
                         )
                         
-                        # 🌟 3. 統一變數名稱，對接後續的 SQL 寫入
+                        # 3. 統一變數名稱，對接後續的 SQL 寫入
                         net_profit_cash = pnl
                         profit_pct = (pnl / invested) * 100
-                        cash_returned_this_batch = invested + pnl
+                        
+                        # 🌟 [修復：會計帳面漏水] 改用 invested_portion，將當初的進場手續費精準補回帳戶
+                        cash_returned_this_batch = invested_portion + pnl
+                        
                         total_cash_back += cash_returned_this_batch
                         current_bank_cash += cash_returned_this_batch 
                         
@@ -496,15 +504,19 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                             batch['投入資金'] -= invested_portion
                             batch['停利階段'] = 1
 
+                    # 更新銀行總可用現金
                     update_account_cash(total_cash_back)
                     CURRENT_EQUITY = current_bank_cash
 
                     if is_partial:
+                        # 🌟 [修復：碎股脫節] 直接傳入 Python 算好的剩餘數字，不讓 SQL 自己除以 2
+                        remaining_funds = batch['投入資金']
+                        remaining_shares = batch['進場股數']
                         cursor.execute('''
                             UPDATE active_positions 
-                            SET [投入資金] = [投入資金] / 2, [進場股數] = [進場股數] / 2, [停利階段] = 1 
+                            SET [投入資金] = ?, [進場股數] = ?, [停利階段] = 1 
                             WHERE [Ticker SYMBOL] = ?
-                        ''', (ticker,))
+                        ''', (remaining_funds, remaining_shares, ticker))
                         print(f"[{exit_time}] {exit_msg} | {ticker} 領回: ${total_cash_back:,.0f} | 剩餘部位留倉")
                     else:
                         cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ?', (ticker,))
