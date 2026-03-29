@@ -30,7 +30,7 @@ PARAMS = {
     # --- 5. 動態防線極限值 (依波動率縮放) ---
     "SL_MIN_PCT": 0.030,            # 最小停損百分比 (強制保命線)
     "SL_MAX_PCT": 0.100,            # 最大停損百分比 (波動劇烈時的極限)
-    "TP_BASE_PCT": 0.20,            # 基礎停利百分比 (達到 20% 考慮出場)
+    "TP_BASE_PCT": 0.10,            # 基礎停利百分比 (達到 10% 考慮出場)
     "TP_TREND_PCT": 0.250,          # 趨勢加成停利百分比 (強勢趨勢時放長線)
     
     # --- 6. 資金控管 ---
@@ -70,7 +70,7 @@ PARAMS = {
     "USE_DIVERGENCE_RSI": True,     # 啟用 RSI 背離條件 (c5)
     "USE_BBI_BREAKOUT": True,       # 啟用突破 BBI 條件 (c6)
     "USE_CHIPS": True,              # 啟用三大昨日法人同買/同賣條件 (c7)
-    "USE_DMI": False,                # 啟用 DMI 趨勢成型條件 (c8)
+    "USE_DMI": True,                # 啟用 DMI 趨勢成型條件 (c8)
     "USE_DIVERGENCE_CHIPS": True,    # 啟用籌碼背離條件 (c9)
     # 🌟 策略切換開關
     'USE_SNIPER_MODE': False,  # True = 啟動黃金陣型狙擊 (嚴格) | False = 退回傳統 3 分制 (寬鬆)

@@ -284,14 +284,24 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if latest_check['Close'] < p['MIN_PRICE']: return None 
 
         # ==========================================
-        # D. ⚙️ 計分型邏輯閘 (順序修正完整版)
+        # 🌟 第一層：定義市場狀態 (Regime Filter)
+        # 判斷現在的大環境，決定該用什麼戰術
+        # ==========================================
+        adx_strong = df['ADX14'] >= p['ADX_TREND_THRESHOLD']
+        is_bull_trend = (df['Close'] > df['BBI']) & adx_strong
+        is_bear_trend = (df['Close'] < df['BBI']) & adx_strong
+        is_ranging = ~(is_bull_trend | is_bear_trend)
+
+        df['Regime'] = np.where(is_bull_trend, '趨勢多頭', 
+                       np.where(is_bear_trend, '趨勢空頭', '區間盤整'))
+
+        # ==========================================
+        # 🌟 第二層：計算基礎條件 (維持底層指標計算)
         # ==========================================
         _F = pd.Series(False, index=df.index) 
-
         buy_trend = (df['Close'] > df['BBI']) & (df['BBI'] > df['BBI'].shift(1))
         sell_trend = (df['Close'] < df['BBI']) & (df['BBI'] < df['BBI'].shift(1))
 
-        # --- 第一步：計算所有基礎條件 (必須先算完！) ---
         buy_c1 = (df['Low'] <= df['BB_Lower']) if p.get('USE_BBANDS', True) else _F
         buy_c2 = (df['RSI'] < df['DZ_Lower']) if p.get('USE_RSI', True) else _F
         buy_c3 = ((df['Volume'] > (df['Vol_MA20'] * p['VOL_BREAKOUT_MULTIPLIER'])) & (df['Close'] > df['Open'])) if p.get('USE_VOL_BREAKOUT', True) else _F
@@ -315,9 +325,62 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
 
         # ==========================================
-        # 🌟 第二步：雙核計分引擎 (計算基礎分數與陣型)
+        # 🌟 第三層：Setup 分流 (將陣型與市場狀態綁定)
         # ==========================================
-        # A. 傳統累加算分
+        buy_c3_mem = buy_c3 | buy_c3.shift(1)  
+        buy_c7_mem = buy_c7 | buy_c7.shift(1)  
+        
+        # 1. 突破發動 Setup (只在【趨勢多頭】或【盤整轉多】時允許)
+        setup_breakout = buy_c7_mem & buy_c3_mem & buy_c6 
+        valid_breakout = setup_breakout & (is_bull_trend | is_ranging)
+        
+        # 2. 超跌反彈 Setup (嚴禁在空頭趨勢中接刀，只在盤整區操作)
+        setup_reversal = buy_c1 & buy_c2 & buy_c5 
+        valid_reversal = setup_reversal & is_ranging
+        
+        # 3. 籌碼潛伏 Setup (只在盤整或跌勢末端允許)
+        setup_divergence = buy_c9 & buy_c4 & buy_trend 
+        valid_divergence = setup_divergence & (is_ranging | is_bear_trend)
+
+        # -- 空方 Setup --
+        sell_c3_mem = sell_c3 | sell_c3.shift(1)
+        sell_c7_mem = sell_c7 | sell_c7.shift(1)
+
+        sell_setup_breakdown = sell_c7_mem & sell_c3_mem & sell_c6 
+        valid_sell_breakdown = sell_setup_breakdown & (is_bear_trend | is_ranging)
+        
+        sell_setup_reversal  = sell_c1 & sell_c2 & sell_c5 
+        valid_sell_reversal = sell_setup_reversal & is_ranging
+        
+        sell_setup_divergence = sell_c9 & sell_c4 & sell_trend 
+        valid_sell_divergence = sell_setup_divergence & (is_ranging | is_bull_trend)
+
+        # ==========================================
+        # 🌟 第四層：扣板機觸發 (Trigger) + 計分引擎
+        # ==========================================
+        # 昨天的 Setup 背景是否成立？
+        prev_valid_breakout = valid_breakout.shift(1).fillna(False)
+        prev_valid_reversal = valid_reversal.shift(1).fillna(False)
+        prev_valid_divergence = valid_divergence.shift(1).fillna(False)
+
+        prev_valid_sell_breakdown = valid_sell_breakdown.shift(1).fillna(False)
+        prev_valid_sell_reversal = valid_sell_reversal.shift(1).fillna(False)
+        prev_valid_sell_divergence = valid_sell_divergence.shift(1).fillna(False)
+
+        # 今天的 Trigger：實質的價格表態確認！
+        trigger_long = df['Close'] > df['High'].shift(1)  # 今天收盤必須大於昨天最高價
+        trigger_short = df['Close'] < df['Low'].shift(1)  # 今天收盤必須小於昨天最低價
+
+        # 終極訊號：Setup (背景) + Trigger (確認)
+        final_long_breakout = prev_valid_breakout & trigger_long
+        final_long_reversal = prev_valid_reversal & trigger_long
+        final_long_divergence = prev_valid_divergence & trigger_long
+
+        final_short_breakdown = prev_valid_sell_breakdown & trigger_short
+        final_short_reversal = prev_valid_sell_reversal & trigger_short
+        final_short_divergence = prev_valid_sell_divergence & trigger_short
+
+        # A. 傳統累加算分 (保留給非狙擊模式使用)
         base_buy_score = (buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + 
                           buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + 
                           buy_c6.astype(int) + buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int))
@@ -326,54 +389,38 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                            sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + 
                            sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
 
-        # B. 黃金陣型組合 (加上 2 日訊號記憶體)
-        buy_c3_mem = buy_c3 | buy_c3.shift(1)  
-        buy_c7_mem = buy_c7 | buy_c7.shift(1)  
-        sell_c3_mem = sell_c3 | sell_c3.shift(1)
-        sell_c7_mem = sell_c7 | sell_c7.shift(1)
-        
-        combo_1_breakout = buy_c7_mem & buy_c3_mem & buy_c6 
-        combo_2_reversal = buy_c1 & buy_c2 & buy_c5 
-        combo_3_diverge  = buy_c9 & buy_c4 & buy_trend 
-        
-        sell_combo_1_breakdown = sell_c7_mem & sell_c3_mem & sell_c6 
-        sell_combo_2_reversal  = sell_c1 & sell_c2 & sell_c5 
-        sell_combo_3_diverge   = sell_c9 & sell_c4 & sell_trend 
-
-        # C. 根據模式設定最終分數
+        # B. 根據模式設定最終分數
         if p.get('USE_SNIPER_MODE', True):
-            df['Buy_Score'] = np.where(combo_1_breakout | combo_2_reversal | combo_3_diverge, 10, 0)
-            df['Sell_Score'] = np.where(sell_combo_1_breakdown | sell_combo_2_reversal | sell_combo_3_diverge, 10, 0)
+            df['Buy_Score'] = np.where(final_long_breakout | final_long_reversal | final_long_divergence, 10, 0)
+            df['Sell_Score'] = np.where(final_short_breakdown | final_short_reversal | final_short_divergence, 10, 0)
         else:
             df['Buy_Score'] = base_buy_score
             df['Sell_Score'] = base_sell_score
 
         # ==========================================
-        # 🌟 第三步：方向攔截器 (沒收不要的陣型，精準拔除)
+        # 🌟 方向攔截器 (沒收不要的陣型，精準拔除)
         # ==========================================
         if not p.get('ALLOW_LONG', True):
             df['Buy_Score'] = 0
-            # 安全地將多方陣型強制關閉，保留原本的 pandas 格式
-            combo_1_breakout = combo_1_breakout & False
-            combo_2_reversal = combo_2_reversal & False
-            combo_3_diverge  = combo_3_diverge & False
+            final_long_breakout = final_long_breakout & False
+            final_long_reversal = final_long_reversal & False
+            final_long_divergence = final_long_divergence & False
 
         if not p.get('ALLOW_SHORT', True):
             df['Sell_Score'] = 0
-            # 安全地將空方陣型強制關閉
-            sell_combo_1_breakdown = sell_combo_1_breakdown & False
-            sell_combo_2_reversal  = sell_combo_2_reversal & False
-            sell_combo_3_diverge   = sell_combo_3_diverge & False
+            final_short_breakdown = final_short_breakdown & False
+            final_short_reversal = final_short_reversal & False
+            final_short_divergence = final_short_divergence & False
 
         # ==========================================
-        # 🌟 第四步：終極陣型標籤機 (最後才貼標籤)
+        # 🌟 終極陣型標籤機 (最後才貼標籤)
         # ==========================================
-        df['Golden_Type'] = np.where(combo_1_breakout, "🔥主力點火", 
-                            np.where(combo_2_reversal, "🩸恐慌抄底", 
-                            np.where(combo_3_diverge, "🕵️籌碼潛伏", 
-                            np.where(sell_combo_1_breakdown, "🧊主力倒貨",
-                            np.where(sell_combo_2_reversal, "💀貪婪摸頭",
-                            np.where(sell_combo_3_diverge, "💣偷偷出貨", "無"))))))
+        df['Golden_Type'] = np.where(final_long_breakout, "🔥主力點火(已確認)", 
+                            np.where(final_long_reversal, "🩸恐慌抄底(已確認)", 
+                            np.where(final_long_divergence, "🕵️籌碼潛伏(已確認)", 
+                            np.where(final_short_breakdown, "🧊主力倒貨(已確認)",
+                            np.where(final_short_reversal, "💀貪婪摸頭(已確認)",
+                            np.where(final_short_divergence, "💣偷偷出貨(已確認)", "無"))))))
         
 
         # ==========================================
@@ -657,12 +704,18 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if sell_c8.iloc[-1]: sell_details.append(f"📉DMI空頭成型(歷{int((sell_c8 & actual_sell_signals).sum())}次)")
         if sell_c9.iloc[-1]: sell_details.append(f"💣結構頂背離(歷{int((sell_c9 & actual_sell_signals).sum())}次)")
         
+        # 🌟 讀取我們在第四層做好的終極標籤
+        golden_tag = latest_row.get('Golden_Type', '無')
         trigger_str = "-"
+
         if buy_score >= 3:
-            status = f"🔴 強買訊 ({buy_score}/10)"
+            # 如果有黃金陣型就顯示陣型，沒有就顯示傳統強買訊
+            tag_name = golden_tag if golden_tag != "無" else "強買訊"
+            status = f"🔴 {tag_name} ({buy_score}/10)"
             trigger_str = " + ".join(buy_details)
         elif sell_score >= 3:   
-            status = f"🟢 強賣訊 ({sell_score}/10)"
+            tag_name = golden_tag if golden_tag != "無" else "強賣訊"
+            status = f"🟢 {tag_name} ({sell_score}/10)"
             trigger_str = " + ".join(sell_details)
         elif buy_score == 2:    
             status = f"🟡 弱買訊 ({buy_score}/10)"
@@ -907,7 +960,7 @@ if __name__ == "__main__":
             print("  (恭喜！所有指標均具備實戰貢獻紀錄)")
 
         print("\n" + "-"*75)
-        print("💡 註：歷史助攻次數是指在『總分 ≥ 4』時，該指標出現在獲勝組合中的次數。")
+        print("💡 註：歷史助攻次數是指在『總分 ≥ 3』時，該指標出現在獲勝組合中的次數。")
 
     else:
         print("掃描失敗，無資料輸出。")

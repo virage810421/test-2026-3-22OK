@@ -333,13 +333,17 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                             
                         update_account_cash(-total_buy_cost)
                         
+                        # 🌟 擷取這筆交易的「陣型標籤」(從大腦傳來的 status 字串中切出來)
+                        setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
+                        
                         positions.append({
                             '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
                             '進場時間': entry_time, 
                             '進場股數': TRADE_SHARES, 
                             '停利階段': 0,
                             '進場分數': int(latest_row.get('Buy_Score', 0) if "買" in status else latest_row.get('Sell_Score', 0)),
-                            '進場趨勢多頭': (latest_row['Close'] > latest_row.get('BBI', 0))
+                            '進場趨勢多頭': (latest_row['Close'] > latest_row.get('BBI', 0)),
+                            '陣型標籤': setup_tag  # 🌟 記住它是抄底、點火還是潛伏！
                         })
                         print(f"⚡ [扣款成功] {ticker} 買入 {TRADE_SHARES} 股 | 支出: ${total_buy_cost:,.0f}")
                     except Exception as e:
@@ -357,14 +361,32 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         
         
         # ==========================================
-        # 🛡️ 實戰級：動態移動停利 (Trailing Stop) 免 SQL 魔法版
+        # 🛡️ 實戰級：根據「陣型 (Setup)」實施客製化停利策略
         # ==========================================
         volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
-        DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
+        setup_tag = positions[0].get('陣型標籤', '傳統訊號') # 讀取進場時的陣型
         
         trend_is_with_me = (is_long and positions[0]['進場趨勢多頭']) or (not is_long and not positions[0]['進場趨勢多頭'])
         adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
-        DYNAMIC_TP = PARAMS['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else PARAMS['TP_BASE_PCT']
+
+        # 🌟 核心：依據不同 Setup，給予不同的防守與停利目標
+        if "抄底" in setup_tag or "摸頭" in setup_tag:
+            # 【均值回歸型】目標是搶反彈，快進快出！
+            DYNAMIC_SL = PARAMS['SL_MIN_PCT'] # 停損抓最緊 (打錯就跑)
+            DYNAMIC_TP = 0.08  # 只要賺 8% 就滿足，不貪心
+            ignore_tp = False  # 絕對不貪心，打到目標價強制作結
+            
+        elif "點火" in setup_tag or "倒貨" in setup_tag:
+            # 【趨勢突破型】目標是吃大波段，讓利潤奔跑！
+            DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT'])) # 給予合理的洗盤空間
+            DYNAMIC_TP = PARAMS['TP_TREND_PCT'] # 基礎目標設很高
+            ignore_tp = True   # 🌟 無視傳統目標價，完全交給 Trailing Stop 死咬趨勢！
+            
+        else:
+            # 【潛伏型或傳統 3 分制】中規中矩的作法
+            DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
+            DYNAMIC_TP = PARAMS['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else PARAMS['TP_BASE_PCT']
+            ignore_tp = positions[0]['進場分數'] >= 10 # 只有 10 分滿分才死咬
 
         # 🌟 Pandas 魔法：直接利用 ticker_df 切片，找出進場後的極端價格！
         try:
@@ -402,8 +424,10 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         # 🌟 觸發判定與部位平倉邏輯
         # ==========================================
         is_stop_loss = (current_price <= final_stop_price) if is_long else (current_price >= final_stop_price)
-        # 如果是 10 分滿分的黃金陣型，無視傳統停利，交給 Trailing Stop 死咬趨勢
-        is_take_profit = ((current_price >= tp_price) if is_long else (current_price <= tp_price)) and positions[0]['進場分數'] < 10
+        
+        # 🌟 使用我們上面客製化的 ignore_tp 開關
+        is_take_profit = ((current_price >= tp_price) if is_long else (current_price <= tp_price)) and not ignore_tp
+        
         is_stage_1 = (current_price >= tp_stage_1_price) if is_long else (current_price <= tp_stage_1_price)
 
         if is_stop_loss:
