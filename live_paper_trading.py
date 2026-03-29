@@ -202,7 +202,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     bought_today = any(p.get('進場時間', '').startswith(today_str) for p in positions)
     
     # ==========================================
-    # --- 狀況 A：進場 / 分批加碼 ---
+    # --- 狀況 A：進場 / 分批加碼 (選項一：市價追擊模式) ---
     # ==========================================
     if ("買訊" in status or "賣訊" in status):
         trade_dir = '做多(Long)' if "買" in status else '放空(Short)'
@@ -211,16 +211,33 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         # 加上冷卻機制：今天沒買過才能買
         if not is_reverse_signal and len(positions) < MAX_BATCHES and not bought_today:
             
-            # 🌟 [功能 1] 動態試單：2分買1000，3分買2000
+            # ==========================================
+            # 🌟 [優先級 2：法人動態資金分配 (Position Sizing)]
+            # ==========================================
+            # 1. 計算單筆交易標準預算 (利用 config.py 中的設定)
+            # 例如：總預算 1000萬 / 允許同時持倉 20檔 = 每檔標準配額 50 萬
+            base_budget = PARAMS['TOTAL_BUDGET'] / PARAMS['MAX_POSITIONS']
+            
+            # 2. 依據訊號強弱調整實際預算
             if "弱" in status:
-                TRADE_SHARES = 1000  
-                print(f"👀 偵測到弱訊號，啟動試單模式 ({TRADE_SHARES} 股)")
+                target_budget = base_budget * 0.5  # 弱訊號試單：只押 50% 預算
+                print(f"👀 {ticker} 弱訊號試單 ➔ 啟動半碼預算 (${target_budget:,.0f})")
             else:
-                TRADE_SHARES = 2000  
-                print(f"🔥 偵測到強訊號，標準部位進場 ({TRADE_SHARES} 股)")
+                target_budget = base_budget        # 強訊號標準：押滿 100% 預算
+                print(f"🔥 {ticker} 強訊號進場 ➔ 啟動標準預算 (${target_budget:,.0f})")
 
+            # 3. 計算能買多少股 (需預留手續費空間)
             fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
+            raw_shares = int(target_budget / (current_price * fee_mult))
+            
+            # 4. 台股優化邏輯：買得起整張就買整張，買不起就買零股
+            if raw_shares >= 1000:
+                TRADE_SHARES = int(raw_shares / 1000) * 1000 # 捨去零頭，買 1000 的倍數
+            else:
+                TRADE_SHARES = max(1, raw_shares) # 高價股買零股，最少買 1 股
+                
             total_buy_cost = current_price * TRADE_SHARES * fee_mult
+            print(f"⚙️ 系統精算：市價 {current_price} 元 ➔ 分配購買 {TRADE_SHARES} 股")
             
             available_cash = get_available_cash()
             if available_cash >= total_buy_cost:
@@ -228,7 +245,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                 try:
                     with pyodbc.connect(DB_CONN_STR) as conn:
                         cursor = conn.cursor()
-                        # 🌟 寫入 [停利階段] 與 [進場股數]
+                        # 寫入 [停利階段] 與 [進場股數]
                         cursor.execute('''
                             INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [停利階段], [進場股數])
                             VALUES (?, ?, ?, ?, ?, 0, ?)
@@ -264,7 +281,10 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         
         vol = (latest_row['BB_std'] * 1.5) / latest_row['Close']
         sl_line = max(PARAMS['SL_MIN_PCT'], min(vol, PARAMS['SL_MAX_PCT'])) * 100
-        tp_line = (PARAMS['TP_TREND_PCT']*100) if (positions[0]['進場趨勢多頭'] and latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']) else (PARAMS['TP_BASE_PCT']*100)
+        # ✅ 確認目前持倉方向與趨勢方向「一致」時，才啟動大波段停利
+        trend_is_with_me = (is_long and positions[0]['進場趨勢多頭']) or (not is_long and not positions[0]['進場趨勢多頭'])
+
+        tp_line = (PARAMS['TP_TREND_PCT']*100) if (trend_is_with_me and latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']) else (PARAMS['TP_BASE_PCT']*100)
         if positions[0]['進場分數'] >= 8: tp_line = 999.0
             
         # 🌟 [功能 2] 定義第一階段停利線 (原目標的一半)
@@ -310,20 +330,36 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                         shares_to_sell = batch.get('進場股數', 2000)
                         invested_portion = batch['投入資金']
                         
-                        # 如果是部分停利，數量與成本減半
+                        # 🌟 採用 GPT 防護機制：避免除以 2 變成 0 股
                         if is_partial:
-                            shares_to_sell = int(shares_to_sell / 2)
+                            shares_to_sell = max(1, int(shares_to_sell / 2))
                             invested_portion = invested_portion / 2
 
-                        sell_net_mult = 1 - (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']) - PARAMS['TAX_RATE']
-                        total_exit_proceeds = current_price * shares_to_sell * sell_net_mult
+                        exit_fee_rate = PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']
                         
-                        net_profit_cash = total_exit_proceeds - invested_portion
+                        # 🌟 區分多空現金流算法
+                        if is_long:
+                            # 多單出場：扣手續費與交易稅
+                            sell_net_mult = 1 - exit_fee_rate - PARAMS['TAX_RATE']
+                            total_exit_proceeds = current_price * shares_to_sell * sell_net_mult
+                            net_profit_cash = total_exit_proceeds - invested_portion
+                            
+                            # 這筆單實際拿回金庫的錢
+                            cash_returned_this_batch = total_exit_proceeds 
+                        else:
+                            # 空單出場：只扣手續費
+                            buy_back_cost = current_price * shares_to_sell * (1 + exit_fee_rate)
+                            net_profit_cash = invested_portion - buy_back_cost
+                            
+                            # 這筆單實際拿回金庫的錢 = 保證金 + 淨利
+                            cash_returned_this_batch = invested_portion + net_profit_cash
+                        
+                        # 🌟 統一計算報酬率與更新金庫
                         profit_pct = (net_profit_cash / invested_portion) * 100
+                        total_cash_back += cash_returned_this_batch
+                        current_bank_cash += cash_returned_this_batch 
                         
-                        total_cash_back += total_exit_proceeds
-                        current_bank_cash += total_exit_proceeds 
-                        
+                        # 寫入歷史明細表
                         cursor.execute('''
                             INSERT INTO trade_history 
                             ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])

@@ -105,6 +105,44 @@ def add_fundamental_filter(ticker):
     except:
         return {"營收年增率(%)": 0.000, "營業利益率(%)": 0.000, "基本面總分": 0}
 
+
+# ==========================================
+# 🧰 工具層 (Tool Layer)：純粹的計算機，不綁定任何股票狀態
+# ==========================================
+def apply_slippage(price, direction, slippage):
+    return price * (1 + slippage * direction)
+
+def get_exit_price(entry_price, open_price, sl_pct, direction):
+    stop_price = entry_price * (1 - sl_pct * direction)
+    # 跳空判斷
+    if (direction == 1 and open_price < stop_price) or \
+       (direction == -1 and open_price > stop_price):
+        return open_price
+    else:
+        return stop_price
+    
+# 👇 🌟 新增這段：停利精準計算器
+def get_tp_price(entry_price, open_price, tp_pct, direction):
+    target_price = entry_price * (1 + tp_pct * direction)
+    # 停利跳空判斷：多單開在目標價之上，或空單開在目標價之下 (幸運多賺)
+    if (direction == 1 and open_price > target_price) or \
+       (direction == -1 and open_price < target_price):
+        return open_price
+    return target_price
+
+def calculate_pnl(direction, entry_price, exit_price, shares, fee_rate, tax_rate):
+    invested = entry_price * shares
+    if direction == 1:
+        entry_cost = invested * (1 + fee_rate)
+        exit_value = exit_price * shares * (1 - fee_rate - tax_rate)
+        pnl = exit_value - entry_cost
+    else:
+        entry_value = invested * (1 - fee_rate - tax_rate)
+        exit_cost = exit_price * shares * (1 + fee_rate)
+        pnl = entry_value - exit_cost
+    return pnl, invested
+
+
 # ==========================================
 # 1. 核心檢測模組封裝 (全面參數化)
 # ==========================================
@@ -260,142 +298,177 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         buy_adjust = np.where(buy_trend, 1.00, p['BUY_PULLBACK_RATE']) 
         sell_adjust = np.where(sell_trend, 1.00, p['SELL_PREMIUM_RATE'])
         
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= p['TRIGGER_SCORE'], df['Low'] * buy_adjust, np.nan)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['High'] * sell_adjust, np.nan)
+        # ✅ 改為參考昨天的收盤價來算掛單價
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= p['TRIGGER_SCORE'], df['Close'].shift(1) * buy_adjust, np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['Close'].shift(1) * sell_adjust, np.nan)
       
         # ==========================================
-        # 4. 啟動回測引擎 (以「股數」為基準的真實損益計算)
+        # 4. 啟動回測引擎 (終極模組化架構 + Direction/Position 分離)
         # ==========================================
-        position = 0
+
+        # --- 回測環境初始化 ---
+        position = 0             
+        direction = 0
         entry_price = 0          
-        actual_entry_cost = 0    
         entry_trend_is_bull = False 
         entry_score = 0  
         entry_date = None 
         trades = []
         
-        # 🌟 資金與股數設定
-        sim_balance = 10000000      # 初始本金：一千萬
-        TRADE_SHARES = 2000         # 🌟 設定每次交易的股數 (例如：2000股 = 2張)
-
-        # 成本乘數計算 (含折讓與稅金)
-        BUY_COST_MULTIPLIER = 1 + (p['FEE_RATE'] * p['FEE_DISCOUNT'])
-        SELL_NET_MULTIPLIER = 1 - (p['FEE_RATE'] * p['FEE_DISCOUNT']) - p['TAX_RATE']
+        sim_balance = 10000000      
+        TRADE_SHARES = 2000         
         
+        SLIPPAGE = 0.0015 
+        exit_fee_rate = p['FEE_RATE'] * p['FEE_DISCOUNT']
+
         db_conn = None
         db_cursor = None
         try:
             db_conn = pyodbc.connect(DB_CONN_STR)
             db_cursor = db_conn.cursor()
-            
         except Exception as e:
             print(f"⚠️ 資料庫連線失敗: {e}")
 
-        for index, row in df.iterrows():
-            # --- 狀況 1：準備進場 ---
-            if position == 0 and not pd.isna(row['Buy_Signal']):
-                if row['Buy_Signal'] >= row['Low']:
-                    position = 1
-                    raw_entry = min(row['Buy_Signal'], row['Open']) 
-                    
-                    # 🌟 計算這筆單「實際花掉」的總成本 (含手續費)
-                    # 公式：股價 * 股數 * 成本乘數
-                    actual_entry_total = raw_entry * TRADE_SHARES * BUY_COST_MULTIPLIER
-                    
-                    actual_entry_cost = raw_entry * BUY_COST_MULTIPLIER
-                    entry_price = raw_entry 
-                    entry_trend_is_bull = buy_trend.loc[index]
-                    entry_score = row['Buy_Score'] 
-                    entry_date = index 
-            
-            # --- 狀況 2：持倉中，判斷出場 ---
-            elif position == 1:
-                def calculate_and_log_trade(raw_exit_price, exit_date):
-                    nonlocal sim_balance 
-                    
-                    # 🌟 計算進場總額與出場總額
-                    total_entry_cost = entry_price * TRADE_SHARES * BUY_COST_MULTIPLIER
-                    total_exit_proceeds = raw_exit_price * TRADE_SHARES * SELL_NET_MULTIPLIER
-                    
-                    # 🌟 真實淨利金額 = 出場拿回來的錢 - 進場付出的錢
-                    net_profit_cash = total_exit_proceeds - total_entry_cost
-                    
-                    # 報酬率 (仍以單價計算，結果是一樣的)
-                    profit_pct = ((total_exit_proceeds - total_entry_cost) / total_entry_cost) * 100
-                    
-                    # 🌟 更新本金餘額
-                    sim_balance += net_profit_cash 
+        df['Prev_Buy_Score'] = df['Buy_Score'].shift(1)
+        df['Prev_Sell_Score'] = df['Sell_Score'].shift(1)
+        df['Prev_Trend'] = buy_trend.shift(1)
 
+        for index, row in df.iterrows():
+            if pd.isna(row['Prev_Buy_Score']):
+                continue
+
+            safe_open = row['Open'] if row['Open'] > 0 else 0.0001
+            safe_close = row['Close'] if row['Close'] > 0 else 0.0001
+
+            # ====================
+            # 進場
+            # ====================
+            if position == 0:
+                if row['Prev_Buy_Score'] >= p['TRIGGER_SCORE']:
+                    direction = 1
+                elif row['Prev_Sell_Score'] >= p['TRIGGER_SCORE']:
+                    direction = -1
+                else:
+                    continue
+
+                position = 1
+                entry_price = apply_slippage(safe_open, direction, SLIPPAGE)
+                entry_date = index
+                entry_score = row['Prev_Buy_Score'] if direction == 1 else row['Prev_Sell_Score']
+                entry_trend_is_bull = row['Prev_Trend']
+                
+            # ====================
+            # 出場
+            # ====================
+            else:
+                volatility_pct = (row['BB_std'] * 1.5) / safe_close
+                DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
+
+                trend_is_with_me = (direction == 1 and entry_trend_is_bull) or (direction == -1 and not entry_trend_is_bull)
+
+                adx = row['ADX14'] if not pd.isna(row['ADX14']) else 0
+
+                DYNAMIC_TP = p['TP_TREND_PCT'] if (trend_is_with_me and adx > p['ADX_TREND_THRESHOLD']) else p['TP_BASE_PCT']
+
+                if entry_score >= 8:
+                    DYNAMIC_TP = 9.99
+
+                # === 停損判斷 ===
+                stop_price = get_exit_price(entry_price, safe_open, DYNAMIC_SL, direction)
+
+                # === 停利判斷 ===
+                tp_price = entry_price * (1 + DYNAMIC_TP * direction)
+
+                is_exit = False
+                actual_exit_price = 0
+
+                # 停損
+                if (direction == 1 and row['Low'] <= stop_price) or \
+                   (direction == -1 and row['High'] >= stop_price):
+                    actual_exit_price = stop_price
+                    is_exit = True
+
+                # 🎯 停利 
+                elif (direction == 1 and row['High'] >= tp_price) or \
+                     (direction == -1 and row['Low'] <= tp_price):
+                    # 🌟 呼叫工具層：達標就賣在目標價，跳空暴漲則賣在開盤價！
+                    actual_exit_price = get_tp_price(entry_price, safe_open, DYNAMIC_TP, direction)
+                    is_exit = True
+
+                # 反轉
+                elif (direction == 1 and row['Prev_Sell_Score'] >= p['TRIGGER_SCORE']) or \
+                     (direction == -1 and row['Prev_Buy_Score'] >= p['TRIGGER_SCORE']):
+                    actual_exit_price = safe_open
+                    is_exit = True
+
+                # 結算與紀錄
+                if is_exit:
+                    # 加上出場滑價 (-direction 巧妙讓多單扣錢，空單加錢)
+                    actual_exit_price = apply_slippage(actual_exit_price, -direction, SLIPPAGE)
+
+                    pnl, invested = calculate_pnl(
+                        direction,
+                        entry_price,
+                        actual_exit_price,
+                        TRADE_SHARES,
+                        exit_fee_rate,
+                        p['TAX_RATE']
+                    )
+
+                    profit_pct = (pnl / invested) * 100
+                    sim_balance += pnl
+                    trades.append(profit_pct)
+
+                    # 寫入 SQL 資料庫
                     if db_cursor:
                         try:
+                            dir_str = "做多(Long)" if direction == 1 else "放空(Short)"
                             db_cursor.execute('''
                                 INSERT INTO backtest_history 
                                 ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            ''', (ticker, "做多(Long)", entry_date, exit_date, entry_price, 
-                                  raw_exit_price, round(profit_pct, 3), round(net_profit_cash, 0), round(sim_balance, 0)))
+                            ''', (ticker, dir_str, entry_date, index, round(entry_price, 2), 
+                                  round(actual_exit_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0)))
                             db_conn.commit()
                         except Exception:
                             pass 
-                    return profit_pct
 
-                # --- 出場觸發邏輯 (保持不變) ---
-                max_profit_pct = (row['High'] - actual_entry_cost) / actual_entry_cost
-                max_loss_pct = (row['Low'] - actual_entry_cost) / actual_entry_cost
-                volatility_pct = (row['BB_std'] * 1.5) / row['Close']
-                DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT'])) 
-                
-                if entry_trend_is_bull and row['ADX14'] > p['ADX_TREND_THRESHOLD']:
-                    DYNAMIC_TP = p['TP_TREND_PCT'] 
-                    if entry_score >= 8: DYNAMIC_TP = 9.99
-                else:
-                    DYNAMIC_TP = p['TP_BASE_PCT']
+                    position = 0
+                    direction = 0
 
-                if max_loss_pct <= -DYNAMIC_SL:
-                    sl_price = actual_entry_cost * (1 - DYNAMIC_SL)
-                    actual_sl_price = min(sl_price, row['Open'])
-                    trades.append(calculate_and_log_trade(actual_sl_price, index))
-                    position = 0
-                elif max_profit_pct >= DYNAMIC_TP:
-                    tp_price = actual_entry_cost * (1 + DYNAMIC_TP)
-                    actual_tp_price = max(tp_price, row['Open'])
-                    trades.append(calculate_and_log_trade(actual_tp_price, index))
-                    position = 0
-                elif not pd.isna(row['Sell_Signal']):
-                    actual_sell_price = min(row['Sell_Signal'], row['High'])
-                    trades.append(calculate_and_log_trade(actual_sell_price, index))
-                    position = 0
-
+        # ==========================================
         # 結算最後一筆未平倉部位
-        if position == 1:
+        # ==========================================
+        if position != 0:
             final_raw_price = df.iloc[-1]['Close']
+            final_slip_price = apply_slippage(final_raw_price, -direction, SLIPPAGE)
             
-            # 🌟 1. 修正：用真實股數計算總金額，與上方邏輯統一
-            total_entry_cost = entry_price * TRADE_SHARES * BUY_COST_MULTIPLIER
-            total_exit_proceeds = final_raw_price * TRADE_SHARES * SELL_NET_MULTIPLIER
+            pnl, invested = calculate_pnl(
+                direction, 
+                entry_price, 
+                final_slip_price, 
+                TRADE_SHARES, 
+                exit_fee_rate, 
+                p['TAX_RATE']
+            )
             
-            # 🌟 2. 修正：算出真實淨損益金額
-            final_net_cash = total_exit_proceeds - total_entry_cost
-            final_profit_pct = (final_net_cash / total_entry_cost) * 100
-            trades.append(final_profit_pct)
+            profit_pct = (pnl / invested) * 100
+            sim_balance += pnl
+            trades.append(profit_pct)
             
             if db_cursor:
                 try:
-                    # 🌟 3. 修正：更新結餘本金
-                    sim_balance += final_net_cash 
-                    
-                    # 🌟 4. 修正：補上 [結餘本金] 欄位，共 9 個問號
+                    dir_str = "做多(Long)" if direction == 1 else "放空(Short)"
                     db_cursor.execute('''
                         INSERT INTO backtest_history 
                         ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (ticker, "做多(Long)", entry_date, df.index[-1], entry_price, 
-                          final_raw_price, round(final_profit_pct, 3), round(final_net_cash, 0), round(sim_balance, 0)))
+                    ''', (ticker, dir_str, entry_date, df.index[-1], round(entry_price, 2), 
+                          round(final_slip_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0)))
                     db_conn.commit()
                 except Exception as e:
-                    # 🌟 5. 修正：不要再用 pass 了！把錯誤印出來
                     print(f"⚠️ 最後結算寫入 SQL 失敗 ({ticker}): {e}")
-        
+                    
         if db_conn:
             db_conn.close()
 
@@ -544,13 +617,7 @@ if __name__ == "__main__":
     # 權值與趨勢
     "2330.TW", "2454.TW", "2317.TW", "2303.TW", "2308.TW",
     # AI 伺服器
-    "2382.TW", "3231.TW", "6669.TW", "2357.TW", "3034.TW",
-    # 航運
-    "2603.TW", "2609.TW", "2615.TW",
-    # 金融
-    "2881.TW", "2882.TW", "2891.TW",
-    # 重電與傳產
-    "1519.TW", "1513.TW", "2618.TW", "2002.TW"
+    "2382.TW", "3231.TW"
 ]
 
     
