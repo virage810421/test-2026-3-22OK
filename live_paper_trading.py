@@ -75,18 +75,25 @@ def sync_portfolio_from_db():
                 if ticker not in portfolio:
                     portfolio[ticker] = []
                 
-                # 🌟 更新：同步讀取真實的股數與停利階段
+                # 🌟 更新：同步讀取真實的股數、停利階段，以及「機構級歸因欄位」
                 portfolio[ticker].append({
                     '進場價': float(row['進場價']),
                     '方向': row['方向'],
                     '進場時間': row['進場時間'].strftime("%Y-%m-%d %H:%M:%S") if pd.notnull(row['進場時間']) else "未知",
                     '投入資金': float(row['投入資金']) if '投入資金' in row else 0.0,
-                    
                     '停利階段': int(row.get('停利階段', 0)) if pd.notnull(row.get('停利階段', 0)) else 0,
                     '進場股數': int(row.get('進場股數', 2000)) if pd.notnull(row.get('進場股數', 2000)) else 2000,
                     
-                    '進場分數': 3,
-                    '進場趨勢多頭': True
+                    # ✨ 新增：歸因記憶恢復
+                    '市場狀態': row.get('市場狀態', '未知'),
+                    '進場陣型': row.get('進場陣型', '傳統訊號'),
+                    '期望值': float(row.get('期望值', 0.0)) if pd.notnull(row.get('期望值')) else 0.0,
+                    '預期停損(%)': float(row.get('預期停損(%)', 0.0)) if pd.notnull(row.get('預期停損(%)')) else 0.0,
+                    '預期停利(%)': float(row.get('預期停利(%)', 0.0)) if pd.notnull(row.get('預期停利(%)')) else 0.0,
+                    '風報比(RR)': float(row.get('風報比(RR)', 0.0)) if pd.notnull(row.get('風報比(RR)')) else 0.0,
+                    '風險金額': float(row.get('風險金額', 0.0)) if pd.notnull(row.get('風險金額')) else 0.0,
+                    
+                    '進場趨勢多頭': True # 保留相容性
                 })
             print(f"✅ 同步完成！")
     except Exception as e:
@@ -269,67 +276,86 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
             # ==========================================
             ev_score = float(result_dict.get("期望值", 0))
             
-            # 如果期望值為負，代表雖然有技術面訊號，但長期統計會賠錢，直接拒絕！
+            # ✨ 1. 預先試算風報比 (RR 濾網)
+            setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
+            current_regime = latest_row.get('Regime', '未知')
+            
+            volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
+            entry_sl_pct = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
+            
+            trend_is_bull = (latest_row['Close'] > latest_row.get('BBI', 0))
+            trend_is_with_me = (trade_dir == '做多(Long)' and trend_is_bull) or (trade_dir == '放空(Short)' and not trend_is_bull)
+            adx_is_strong = latest_row.get('ADX14', 0) > PARAMS.get('ADX_TREND_THRESHOLD', 20)
+            entry_tp_pct = PARAMS['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else PARAMS['TP_BASE_PCT']
+            
+            rr_ratio = entry_tp_pct / entry_sl_pct if entry_sl_pct > 0 else 0
+
+            # 🚨 雙重品質把關：EV 必須大於 0，且風報比(RR) 必須及格
             if ev_score <= 0:
                 print(f"❄️ {ticker} 期望值為負 (EV: {ev_score:.3f}%) ➔ 長期勝算過低，系統放棄進場！")
+            elif rr_ratio < PARAMS.get('MIN_RR_RATIO', 1.5):
+                print(f"⚖️ {ticker} 訊號觸發，但風報比過低 (RR: {rr_ratio:.2f} < 1.5) ➔ 潛在獲利不值得冒險，放棄進場！")
             else:
-                # 1. 決定基礎「風險承受額度」(Base Risk) - 預設為目前總淨值的 1%
+                # 2. 決定基礎「風險承受額度」(Base Risk) 
                 base_risk = CURRENT_EQUITY * 0.01 
                 
-                # 2. 依據期望值 (EV) 放大或縮小風險額度
-                if ev_score >= PARAMS.get('EV_HIGH_THRESHOLD', 2.0):
-                    target_risk = base_risk * PARAMS.get('EV_HIGH_MULTIPLIER', 1.5)
-                    print(f"🚀 {ticker} 極高勝算 (EV: {ev_score:.2f}%) ➔ 願意承擔 {PARAMS.get('EV_HIGH_MULTIPLIER', 1.5)} 倍風險")
-                elif ev_score >= PARAMS.get('EV_BASE_THRESHOLD', 1.0):
-                    target_risk = base_risk * PARAMS.get('EV_BASE_MULTIPLIER', 1.0)
-                    print(f"🔥 {ticker} 標準勝算 (EV: {ev_score:.2f}%) ➔ 啟動標準風險分配")
+                # ✨ 3. 動態信心權重 (倉位管理：讓分數降級為資金控管工具)
+                if "點火" in setup_tag or "倒貨" in setup_tag:
+                    conviction_mult = 1.2
+                    print(f"🚀 {ticker} 高度信心陣型 ({setup_tag}) ➔ 風險額度放大至 1.2 倍")
+                elif "抄底" in setup_tag or "摸頭" in setup_tag:
+                    conviction_mult = 0.7
+                    print(f"👀 {ticker} 逆勢陣型 ({setup_tag}) ➔ 風險額度降載至 0.7 倍試單")
                 else:
-                    target_risk = base_risk * PARAMS.get('EV_LOW_MULTIPLIER', 0.5)
-                    print(f"👀 {ticker} 邊緣勝算 (EV: {ev_score:.2f}%) ➔ 降載風險試單")
-
-                # 3. 套用大盤 MDD 防護網降載乘數 (宏觀防禦)
+                    conviction_mult = 1.0
+                    
+                target_risk = base_risk * conviction_mult
+                
+                # 套用大盤 MDD 防護網降載乘數
                 if CURRENT_MDD_TIER < 1.0:
                     target_risk = target_risk * CURRENT_MDD_TIER
                     print(f"🛡️ [大盤防禦] 系統遭遇回撤，風險承受度強制縮減為 {CURRENT_MDD_TIER*100:.0f}%")
-                    
-                # 4. 微觀防禦：計算這檔股票的專屬停損距離
-                volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
-                entry_sl_pct = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
                 
-                # 5. 反推能買多少股：股數 = 允許虧損金額 / (進場價 * 停損百分比)
+                # 反推能買多少股，並加上流動性過濾 (不得超過 20 日均量的 5%)
                 raw_shares = target_risk / (current_price * entry_sl_pct)
+                max_liquidity_shares = (latest_row.get('Vol_MA20', 1000) * 1000) * 0.05
+                raw_shares = min(raw_shares, max_liquidity_shares)
                 
-                # 6. 台股最佳化買法 (優先買整張，買不起才買零股)
                 if raw_shares >= 1000:
                     TRADE_SHARES = int(raw_shares // 1000) * 1000
                 else:
                     TRADE_SHARES = max(1, int(raw_shares))
                     
-                # 7. 防呆機制與精算最終成本
                 fee_mult = (1 + (PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']))
                 total_buy_cost = current_price * TRADE_SHARES * fee_mult
                 
-                # 單筆最高不允許超過帳戶總現金的 33%
-                max_affordable_cost = CURRENT_EQUITY * 0.33  
+                max_affordable_cost = CURRENT_EQUITY * 0.33 
                 if total_buy_cost > max_affordable_cost:
                     TRADE_SHARES = int(max_affordable_cost / (current_price * fee_mult))
                     total_buy_cost = current_price * TRADE_SHARES * fee_mult
                 
-                print(f"⚙️ 精算師結案：停損距 {entry_sl_pct*100:.1f}%，風險上限 ${target_risk:,.0f} ➔ 核准購買 {TRADE_SHARES} 股")
+                print(f"⚙️ 結構式風控結案：RR {rr_ratio:.2f} | 停損距 {entry_sl_pct*100:.1f}% | 實質風險 ${target_risk:,.0f} ➔ 核准購買 {TRADE_SHARES} 股")
 
-                # 5. 檢查可用現金是否足夠
+                # 5. 檢查可用現金並寫入 SQL
                 available_cash = get_available_cash()
                 if available_cash >= total_buy_cost:
                     entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     try:
                         with pyodbc.connect(DB_CONN_STR) as conn:
                             cursor = conn.cursor()
-                            # 寫入 [停利階段] 與 [進場股數]
+                            # ✨ 擴充 SQL 寫入：包含 7 個歸因欄位
                             cursor.execute('''
-                                INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [停利階段], [進場股數])
-                                VALUES (?, ?, ?, ?, ?, 0, ?)
-                            ''', (ticker, trade_dir, entry_time, round(current_price, 2), round(total_buy_cost, 0), TRADE_SHARES))
+                                INSERT INTO active_positions (
+                                    [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [停利階段], [進場股數],
+                                    [市場狀態], [進場陣型], [期望值], [預期停損(%)], [預期停利(%)], [風報比(RR)], [風險金額]
+                                )
+                                VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (
+                                ticker, trade_dir, entry_time, round(current_price, 2), round(total_buy_cost, 0), TRADE_SHARES,
+                                current_regime, setup_tag, round(ev_score, 3), round(entry_sl_pct*100, 2), round(entry_tp_pct*100, 2), round(rr_ratio, 2), round(target_risk, 0)
+                            ))
                             conn.commit()
+                            
                             
                         update_account_cash(-total_buy_cost)
                         
@@ -338,12 +364,12 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                         
                         positions.append({
                             '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
-                            '進場時間': entry_time, 
-                            '進場股數': TRADE_SHARES, 
-                            '停利階段': 0,
-                            '進場分數': int(latest_row.get('Buy_Score', 0) if "買" in status else latest_row.get('Sell_Score', 0)),
-                            '進場趨勢多頭': (latest_row['Close'] > latest_row.get('BBI', 0)),
-                            '陣型標籤': setup_tag  # 🌟 記住它是抄底、點火還是潛伏！
+                            '進場時間': entry_time, '進場股數': TRADE_SHARES, '停利階段': 0,
+                            '進場趨勢多頭': trend_is_bull,
+                            # ✨ 存入快取記憶體
+                            '陣型標籤': setup_tag, '市場狀態': current_regime, 
+                            '期望值': ev_score, '預期停損(%)': entry_sl_pct, '預期停利(%)': entry_tp_pct, 
+                            '風報比(RR)': rr_ratio, '風險金額': target_risk
                         })
                         print(f"⚡ [扣款成功] {ticker} 買入 {TRADE_SHARES} 股 | 支出: ${total_buy_cost:,.0f}")
                     except Exception as e:
@@ -514,15 +540,20 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                         total_cash_back += cash_returned_this_batch
                         current_bank_cash += cash_returned_this_batch 
                         
-                        # 寫入歷史明細表
+                        # ✨ 寫入歷史明細表 (擴充機構級歸因)
                         cursor.execute('''
                             INSERT INTO trade_history 
-                            ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', (ticker, batch['方向'], batch['進場時間'], exit_time, 
-                              round(batch['進場價'], 2), round(current_price, 2), 
-                              round(profit_pct, 3), round(net_profit_cash, 0), round(current_bank_cash, 0)))
-
+                            ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
+                             [市場狀態], [進場陣型], [期望值], [預期停損(%)], [預期停利(%)], [風報比(RR)], [風險金額])
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (
+                            ticker, batch['方向'], batch['進場時間'], exit_time, 
+                            round(batch['進場價'], 2), round(current_price, 2), 
+                            round(profit_pct, 3), round(net_profit_cash, 0), round(current_bank_cash, 0),
+                            batch.get('市場狀態', '未知'), batch.get('陣型標籤', '傳統訊號'),
+                            round(batch.get('期望值', 0.0), 3), round(batch.get('預期停損(%)', 0.0)*100, 2), 
+                            round(batch.get('預期停利(%)', 0.0)*100, 2), round(batch.get('風報比(RR)', 0.0), 2), round(batch.get('風險金額', 0.0), 0)
+                        ))
                         if is_partial:
                             batch['進場股數'] -= shares_to_sell
                             batch['投入資金'] -= invested_portion
