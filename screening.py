@@ -390,38 +390,25 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                            sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + 
                            sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
 
-        # B. 根據模式設定最終分數
-        if p.get('USE_SNIPER_MODE', True):
-            df['Buy_Score'] = np.where(final_long_breakout | final_long_reversal | final_long_divergence, 10, 0)
-            df['Sell_Score'] = np.where(final_short_breakdown | final_short_reversal | final_short_divergence, 10, 0)
-        else:
-            df['Buy_Score'] = base_buy_score
-            df['Sell_Score'] = base_sell_score
-
         # ==========================================
-        # 🌟 方向攔截器 (沒收不要的陣型，精準拔除)
+        # 🌟 Layer 1 升級：獨立策略模組 (取代舊版分數制)
         # ==========================================
         if not p.get('ALLOW_LONG', True):
-            df['Buy_Score'] = 0
-            final_long_breakout = final_long_breakout & False
-            final_long_reversal = final_long_reversal & False
-            final_long_divergence = final_long_divergence & False
-
+            final_long_breakout, final_long_reversal, final_long_divergence = False, False, False
         if not p.get('ALLOW_SHORT', True):
-            df['Sell_Score'] = 0
-            final_short_breakdown = final_short_breakdown & False
-            final_short_reversal = final_short_reversal & False
-            final_short_divergence = final_short_divergence & False
+            final_short_breakdown, final_short_reversal, final_short_divergence = False, False, False
 
-        # ==========================================
-        # 🌟 終極陣型標籤機 (最後才貼標籤)
-        # ==========================================
-        df['Golden_Type'] = np.where(final_long_breakout, "🔥主力點火(已確認)", 
-                            np.where(final_long_reversal, "🩸恐慌抄底(已確認)", 
-                            np.where(final_long_divergence, "🕵️籌碼潛伏(已確認)", 
-                            np.where(final_short_breakdown, "🧊主力倒貨(已確認)",
-                            np.where(final_short_reversal, "💀貪婪摸頭(已確認)",
-                            np.where(final_short_divergence, "💣偷偷出貨(已確認)", "無"))))))
+        # 1. 建立獨立陣型標籤 (這就是未來的 Strategy ID)
+        df['Golden_Type'] = np.where(final_long_breakout, "TREND_LONG", 
+                            np.where(final_long_reversal, "REVERSAL_LONG", 
+                            np.where(final_long_divergence, "CHIP_LONG", 
+                            np.where(final_short_breakdown, "TREND_SHORT",
+                            np.where(final_short_reversal, "REVERSAL_SHORT",
+                            np.where(final_short_divergence, "CHIP_SHORT", "無"))))))
+
+        # 2. 分數降級為單純的「強弱顯示標記」，不再決定進場
+        df['Buy_Score'] = base_buy_score
+        df['Sell_Score'] = base_sell_score
         
 
         # ==========================================
@@ -464,9 +451,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['Prev_Buy_Score'] = df['Buy_Score'].shift(1)
         df['Prev_Sell_Score'] = df['Sell_Score'].shift(1)
         df['Prev_Trend'] = buy_trend.shift(1)
-        # ✨ 新增：將昨天的陣型與環境狀態往後遞延一天，讓今天進場時能讀取到記憶
-        df['Prev_Golden_Type'] = df['Golden_Type'].shift(1)
-        df['Prev_Regime'] = df['Regime'].shift(1)
+        df['Prev_Golden_Type'] = df['Golden_Type'].shift(1) # ✨ 新增：記住昨天的陣型
+        df['Prev_Regime'] = df['Regime'].shift(1)           # ✨ 新增：記住昨天的市場狀態
 
         for index, row in df.iterrows():
             if pd.isna(row['Prev_Buy_Score']):
@@ -475,18 +461,23 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             safe_open = row['Open'] if row['Open'] > 0 else 0.0001
             safe_close = row['Close'] if row['Close'] > 0 else 0.0001
 
-            # # ====================
-            # 🌟 機構級結構式進場 (含 RR 濾網)
+            # ====================
+            # 🌟 Layer 1 升級：結構式進場 (含 RR 濾網，完全依賴陣型標籤)
             # ====================
             if position == 0:
-                # 1. 讀取前一天的結構式訊號 (Regime + Setup + Trigger 已在算分時被包裝為 10 分)
-                is_long_signal = (row['Prev_Buy_Score'] == 10) if p.get('USE_SNIPER_MODE', True) else (row['Prev_Buy_Score'] >= p['TRIGGER_SCORE'])
-                is_short_signal = (row['Prev_Sell_Score'] == 10) if p.get('USE_SNIPER_MODE', True) else (row['Prev_Sell_Score'] >= p['TRIGGER_SCORE'])
-
-                if not (is_long_signal or is_short_signal):
-                    continue
-
-                temp_direction = 1 if is_long_signal else -1
+                prev_setup = row['Prev_Golden_Type']
+                
+                if prev_setup in ["TREND_LONG", "REVERSAL_LONG", "CHIP_LONG"]:
+                    temp_direction = 1
+                elif prev_setup in ["TREND_SHORT", "REVERSAL_SHORT", "CHIP_SHORT"]:
+                    temp_direction = -1
+                else:
+                    # 如果不是狙擊陣型，且非狙擊模式下分數也沒達標，則放棄
+                    if p.get('USE_SNIPER_MODE', True) or (row['Prev_Buy_Score'] < p['TRIGGER_SCORE'] and row['Prev_Sell_Score'] < p['TRIGGER_SCORE']):
+                        continue
+                    # 傳統 3 分制進場備案
+                    temp_direction = 1 if row['Prev_Buy_Score'] >= p['TRIGGER_SCORE'] else -1
+                    prev_setup = "傳統訊號"
                 
                 # 2. 預先試算進場價與風險 (Risk: 停損距)
                 temp_entry_price = apply_slippage(safe_open, temp_direction, SLIPPAGE)
@@ -554,17 +545,27 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 # 計算實際承擔的風險金額
                 entry_risk_amount = TRADE_SHARES * entry_price * temp_sl_pct
             # ====================
-            # 出場 (含 Trailing Stop 移動停利)
+            # 🌟 Layer 1 升級：跟策略綁定的智能出場
             # ====================
             else:
                 volatility_pct = (row['BB_std'] * 1.5) / safe_close
-                DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
-
-                trend_is_with_me = (direction == 1 and entry_trend_is_bull) or (direction == -1 and not entry_trend_is_bull)
-                adx = row['ADX14'] if not pd.isna(row['ADX14']) else 0
                 
-                # 基礎目標價 (若無觸發移動停利，則在這邊獲利了結)
-                DYNAMIC_TP = p['TP_TREND_PCT'] if (trend_is_with_me and adx > p['ADX_TREND_THRESHOLD']) else p['TP_BASE_PCT']
+                # 根據當初進場的陣型，給予不同的防禦與攻擊目標
+                if "REVERSAL" in entry_setup or "摸頭" in entry_setup or "抄底" in entry_setup:
+                    # 【反轉狙擊】：快進快出，停損設極小，達到 8% 固定目標就跑
+                    DYNAMIC_SL = p['SL_MIN_PCT']
+                    DYNAMIC_TP = 0.08
+                    ignore_tp = False 
+                elif "TREND" in entry_setup or "點火" in entry_setup or "倒貨" in entry_setup:
+                    # 【趨勢狙擊】：容忍波動，不設固定停利，死咬移動防守線
+                    DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
+                    DYNAMIC_TP = p['TP_TREND_PCT']
+                    ignore_tp = True  
+                else:
+                    # 【籌碼狙擊/傳統訊號】：中規中矩
+                    DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
+                    DYNAMIC_TP = p['TP_BASE_PCT']
+                    ignore_tp = False
 
                 # 🚨 拔除原本 9.99 的危險寫法，改用動態追蹤！
                 
@@ -936,11 +937,6 @@ if __name__ == "__main__":
         print(f"💵 建議單筆限額：${(base_allocation * risk_factor):,.0f}")
         print("-" * 83)
         
-        if top_longs:
-            print(f"🚩 【作多首選】: {top_longs[0]['Ticker SYMBOL']} (評分: {top_longs[0]['期望值評分']:.3f})")
-        if top_shorts:
-            print(f"🏳️ 【放空首選】: {top_shorts[0]['Ticker SYMBOL']} (評分: {top_shorts[0]['期望值評分']:.3f})")
-            
         if top_longs:
             print(f"🚩 【作多首選】: {top_longs[0]['Ticker SYMBOL']} (真實期望值: {top_longs[0]['期望值']:.3f}%)")
         if top_shorts:
