@@ -168,8 +168,8 @@ def inspect_stock(ticker, preloaded_df=None):
         sell_c9 = price_new_high & chip_new_low & (df['Total_Net'] < 0)
         df['Sell_Score'] = sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int)
 
-        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 4, df['Low'] * 0.98, np.nan)
-        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 4, df['High'] * 1.02, np.nan)
+        df['Buy_Signal'] = np.where(df['Buy_Score'] >= 2, df['Low'] * 0.98, np.nan)
+        df['Sell_Signal'] = np.where(df['Sell_Score'] >= 2, df['High'] * 1.02, np.nan)
       
         # ==========================================
         # 4. 啟動回測引擎 
@@ -267,9 +267,9 @@ def inspect_stock(ticker, preloaded_df=None):
             "今日系統燈號": status,
             "結構診斷": structure_status,
             "觸發條件明細": trigger_str,
-            "系統勝率(%)": f"{win_rate:.3f}",       # 確保為 3 位小數
-            "累計報酬率(%)": f"{total_profit:.3f}"  # 確保為 3 位小數
-        }
+            "系統勝率(%)": f"{win_rate:.3f}",       
+            "累計報酬率(%)": f"{total_profit:.3f}"  
+        }, df
 
     except Exception as e:
         print(f"檢測 {ticker} 時發生錯誤: {e}")
@@ -303,15 +303,18 @@ if __name__ == "__main__":
         ticker_df.dropna(how='all', inplace=True)
         ticker_df = add_chip_data(ticker_df, ticker)
         
-        result = inspect_stock(ticker, preloaded_df=ticker_df)
+        # 將原本的 result = inspect_stock(...) 替換成以下邏輯：
+        eval_data = inspect_stock(ticker, preloaded_df=ticker_df)
         
-        if result:
+        if eval_data:
+            result, computed_df = eval_data  # 拆解出報告與算好的 DataFrame
             report_cards.append(result)
             
             if "觀望中" not in result["今日系統燈號"]:
                 print(f"⚠️ 系統警報：偵測到 {ticker} 產生【{result['今日系統燈號']}】！")
                 print(f"自動切換至 {ticker} 精密儀表板進行深度檢驗...")
-                draw_chart(ticker, preloaded_df=ticker_df)
+                # 這裡改傳 computed_df，這樣畫圖工具就能讀到 RSI 和訊號了！
+                draw_chart(ticker, preloaded_df=computed_df, backtest_info=result)
 
     if report_cards:
         final_report = pd.DataFrame(report_cards)

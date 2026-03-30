@@ -57,16 +57,17 @@ def run_live_simulation():
             # 加入籌碼資料
             ticker_df = add_chip_data(ticker_df, ticker)
             
-            # 2. 進行策略檢驗
-            result = inspect_stock(ticker, preloaded_df=ticker_df)
-            if not result:
+            # 2. 進行策略檢驗 (原本的寫法)
+            eval_data = inspect_stock(ticker, preloaded_df=ticker_df)
+            if not eval_data:
                 continue
-                
+            
+            result, computed_df = eval_data  # 接住算好的 DataFrame
             status = result['今日系統燈號']
             current_price = result['最新收盤價']
             
-            # 3. 執行模擬交易決策
-            handle_paper_trade(ticker, current_price, status, ticker_df)
+            # 3. 執行模擬交易決策 (把 computed_df 傳進去給畫圖用)
+            handle_paper_trade(ticker, current_price, status, computed_df)
 
         print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {SCAN_INTERVAL} 秒...")
         time.sleep(SCAN_INTERVAL)
