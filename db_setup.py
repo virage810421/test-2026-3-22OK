@@ -34,7 +34,6 @@ def setup_tsql_database():
         print("🏗️ 開始檢查 6 大核心資料表...")
 
         # --- 表單 1：歷史交易總帳 (trade_history) ---
-        # --- 表單 1：歷史交易總帳 (trade_history) ---
         cursor.execute('''
             IF OBJECT_ID('trade_history', 'U') IS NULL
             BEGIN
@@ -51,6 +50,7 @@ def setup_tsql_database():
                 )
             END
         ''')
+        print("   👉 檢查/建立 [trade_history] 成功")
 
         # --- 表單 2：目前持倉工作區 (active_positions) ---
         cursor.execute('''
@@ -65,41 +65,6 @@ def setup_tsql_database():
                     [投入資金] FLOAT,
                     [停利階段] INT,
                     [進場股數] INT
-                )
-            END
-        ''')
-
-        # --- 表單 4：歷史勝率與報酬追蹤表 (strategy_performance) ---
-        cursor.execute('''
-            IF OBJECT_ID('strategy_performance', 'U') IS NULL
-            BEGIN
-                CREATE TABLE strategy_performance (
-                    [Log_ID] INT IDENTITY(1,1) PRIMARY KEY,
-                    [紀錄時間] DATETIME,
-                    [Ticker SYMBOL] VARCHAR(20),
-                    [系統勝率(%)] DECIMAL(10,3),
-                    [累計報酬率(%)] DECIMAL(10,3),
-                    [今日燈號] NVARCHAR(50),
-                    [期望值] DECIMAL(10,3)
-                )
-            END
-        ''')
-
-        # --- 表單 5：大腦回測明細 (backtest_history) ---
-        cursor.execute('''
-            IF OBJECT_ID('backtest_history', 'U') IS NULL
-            BEGIN
-                CREATE TABLE backtest_history (
-                    [Log_ID] INT IDENTITY(1,1) PRIMARY KEY,
-                    [Ticker SYMBOL] VARCHAR(20),
-                    [方向] NVARCHAR(10),
-                    [進場時間] DATETIME,
-                    [出場時間] DATETIME,
-                    [進場價] FLOAT,
-                    [出場價] FLOAT,
-                    [報酬率(%)] DECIMAL(10,3),
-                    [淨損益金額] FLOAT,
-                    [結餘本金] FLOAT
                 )
             END
         ''')
@@ -132,7 +97,8 @@ def setup_tsql_database():
                     [Ticker SYMBOL] VARCHAR(20),
                     [系統勝率(%)] DECIMAL(10,3),
                     [累計報酬率(%)] DECIMAL(10,3),
-                    [今日燈號] NVARCHAR(50)
+                    [今日燈號] NVARCHAR(50),
+                    [期望值] DECIMAL(10,3)
                 )
             END
         ''')
@@ -151,7 +117,9 @@ def setup_tsql_database():
                     [出場時間] DATETIME,
                     [進場價] FLOAT,
                     [出場價] FLOAT,
-                    [報酬率(%)] DECIMAL(10,3)
+                    [報酬率(%)] DECIMAL(10,3),
+                    [淨損益金額] FLOAT,
+                    [結餘本金] FLOAT
                 )
             END
         ''')

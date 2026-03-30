@@ -1,5 +1,6 @@
 import yfinance as yf
 import pandas as pd
+pd.set_option('future.no_silent_downcasting', True)
 import numpy as np
 import pyodbc 
 from advanced_chart import draw_chart
