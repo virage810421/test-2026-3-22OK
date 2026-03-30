@@ -6,6 +6,7 @@ import yfinance as yf
 from advanced_chart import draw_chart
 from screening import inspect_stock, add_chip_data, apply_slippage, calculate_pnl
 from config import PARAMS
+from performance import get_strategy_ev  # ✨ Layer 2 匯入績效大腦
 
 
 # ==========================================
@@ -266,32 +267,36 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     today_str = datetime.now().strftime("%Y-%m-%d")
     bought_today = any(p.get('進場時間', '').startswith(today_str) for p in positions)
     
-   # ==========================================
+   
+    # ==========================================
     # --- 狀況 A：進場 / 分批加碼 (選項一：市價追擊模式) ---
     # ==========================================
-    if ("買訊" in status or "賣訊" in status):
+    is_long_signal = "LONG" in status or "買訊" in status
+    is_short_signal = "SHORT" in status or "賣訊" in status
+
+    if is_long_signal or is_short_signal:
         # ✨ [新增] 微結構防護：漲停買不到，跌停空不到
-        if "買訊" in status and is_limit_up:
-            print(f"🧱 {ticker} 亮出買訊，但目前【漲停鎖死】，市場無賣單，物理拒絕進場！")
+        if is_long_signal and is_limit_up:
+            print(f"🧱 {ticker} 亮出作多陣型，但目前【漲停鎖死】，市場無賣單，物理拒絕進場！")
             return
-        if "賣訊" in status and is_limit_down:
-            print(f"🧱 {ticker} 亮出賣訊，但目前【跌停鎖死】，禁止借券放空，物理拒絕進場！")
+        if is_short_signal and is_limit_down:
+            print(f"🧱 {ticker} 亮出放空陣型，但目前【跌停鎖死】，禁止借券放空，物理拒絕進場！")
             return
 
-        # 🌟 多空進場實體攔截 (放置於 AI 精算師啟動之前)
-        if "買訊" in status and not PARAMS.get('ALLOW_LONG', True):
-            print(f"🚫 {ticker} 產生買訊，但系統已關閉【做多開關】，放棄進場。")
+        # 🌟 多空進場實體攔截
+        if is_long_signal and not PARAMS.get('ALLOW_LONG', True):
+            print(f"🚫 {ticker} 產生多方訊號，但系統已關閉【做多開關】，放棄進場。")
             return 
             
-        if "賣訊" in status and not PARAMS.get('ALLOW_SHORT', True):
-            print(f"🚫 {ticker} 產生賣訊，但系統已關閉【放空開關】，放棄進場。")
+        if is_short_signal and not PARAMS.get('ALLOW_SHORT', True):
+            print(f"🚫 {ticker} 產生空方訊號，但系統已關閉【放空開關】，放棄進場。")
             return
         
         # 🌟 攔截機制：如果系統熔斷，無情拒絕任何新資金進場！
         if IS_FROZEN:
             print(f"❄️ {ticker} 出現 {status}，但系統熔斷保護中，拒絕進場！")
         else:
-            trade_dir = '做多(Long)' if "買" in status else '放空(Short)'
+            trade_dir = '做多(Long)' if is_long_signal else '放空(Short)'
             is_reverse_signal = has_position and positions[0]['方向'] != trade_dir
         
         # 加上冷卻機制：今天沒買過才能買
@@ -300,7 +305,11 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
             # ==========================================
             # 🧠 終極 AI 精算師：Risk Parity + 期望值 (EV) + MDD 降載
             # ==========================================
-            ev_score = float(result_dict.get("期望值", 0))
+            setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
+            current_regime = latest_row.get('Regime', '未知')
+            
+            # ✨ Layer 2 升級：直接向 performance.py 查詢該陣型的真實期望值！(取代舊版假數據)
+            ev_score = get_strategy_ev(setup_tag, current_regime)
             
             # ✨ 1. 預先試算風報比 (RR 濾網)
             setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
@@ -326,10 +335,10 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
                 base_risk = CURRENT_EQUITY * 0.01 
                 
                 # ✨ 3. 動態信心權重 (倉位管理：讓分數降級為資金控管工具)
-                if "點火" in setup_tag or "倒貨" in setup_tag:
+                if "TREND" in setup_tag or "點火" in setup_tag or "倒貨" in setup_tag:
                     conviction_mult = 1.2
                     print(f"🚀 {ticker} 高度信心陣型 ({setup_tag}) ➔ 風險額度放大至 1.2 倍")
-                elif "抄底" in setup_tag or "摸頭" in setup_tag:
+                elif "REVERSAL" in setup_tag or "抄底" in setup_tag or "摸頭" in setup_tag:
                     conviction_mult = 0.7
                     print(f"👀 {ticker} 逆勢陣型 ({setup_tag}) ➔ 風險額度降載至 0.7 倍試單")
                 else:
@@ -422,13 +431,13 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
 
         # 🌟 核心：依據不同 Setup，給予不同的防守與停利目標
-        if "抄底" in setup_tag or "摸頭" in setup_tag:
+        if "REVERSAL" in setup_tag or "抄底" in setup_tag or "摸頭" in setup_tag:
             # 【均值回歸型】目標是搶反彈，快進快出！
             DYNAMIC_SL = PARAMS['SL_MIN_PCT'] # 停損抓最緊 (打錯就跑)
             DYNAMIC_TP = 0.08  # 只要賺 8% 就滿足，不貪心
             ignore_tp = False  # 絕對不貪心，打到目標價強制作結
             
-        elif "點火" in setup_tag or "倒貨" in setup_tag:
+        elif "TREND" in setup_tag or "點火" in setup_tag or "倒貨" in setup_tag:
             # 【趨勢突破型】目標是吃大波段，讓利潤奔跑！
             DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT'])) # 給予合理的洗盤空間
             DYNAMIC_TP = PARAMS['TP_TREND_PCT'] # 基礎目標設很高
