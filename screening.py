@@ -598,13 +598,13 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                             dir_str = "做多(Long)" if direction == 1 else "放空(Short)"
                             db_cursor.execute('''
                                 INSERT INTO backtest_history 
-                                ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            ''', (ticker, dir_str, entry_date, index, round(entry_price, 2), 
+                                ([策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', ("動態防禦精算策略", ticker, dir_str, entry_date, index, round(entry_price, 2), 
                                   round(actual_exit_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0)))
                             db_conn.commit()
                         except Exception:
-                            pass 
+                            pass
 
                     position = 0
                     direction = 0
@@ -634,9 +634,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                     dir_str = "做多(Long)" if direction == 1 else "放空(Short)"
                     db_cursor.execute('''
                         INSERT INTO backtest_history 
-                        ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (ticker, dir_str, entry_date, df.index[-1], round(entry_price, 2), 
+                        ([策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', ("動態防禦精算策略", ticker, dir_str, entry_date, df.index[-1], round(entry_price, 2), 
                           round(final_slip_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0)))
                     db_conn.commit()
                 except Exception as e:
