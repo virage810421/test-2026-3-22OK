@@ -121,8 +121,8 @@ def draw_chart(ticker, preloaded_df=None):
     df['Sell_Score'] = sell_c1.astype(int) + sell_c2.astype(int) + sell_c3.astype(int) + sell_c4.astype(int)
 
     # 圖表專屬輸出：輸出「價格座標」，讓 Plotly 知道要在哪裡畫出三角形箭頭
-    df['Buy_Signal'] = np.where(df['Buy_Score'] >= 3, df['Low'] * 0.98, np.nan)
-    df['Sell_Signal'] = np.where(df['Sell_Score'] >= 3, df['High'] * 1.02, np.nan)
+    df['Buy_Signal'] = np.nan
+    df['Sell_Signal'] = np.nan
     
 
     # 【升級】⚙️ 策略回測引擎 (雙向作動：做多 + 放空)
@@ -142,28 +142,27 @@ def draw_chart(ticker, preloaded_df=None):
     for index, row in df.iterrows():
         # 狀況 A：【空手】狀態下，偵測到【買入訊號】 -> 打入前進檔，進場做多
         if position == 0:
-    # 🔥 決策核心：比較權重並確認訊號存在
             buy_val = row['Buy_Score']
             sell_val = row['Sell_Score']
 
-    # 狀況 A：買方力道強於賣方，且達到進場門檻
-        if buy_val > sell_val and not pd.isna(row['Buy_Signal']):
-             position = 1
-             entry_price = row['Close']
-             entry_date = index
-             trade_type = "做多(Long)"
+            if buy_val > sell_val and buy_val >= 3: # 直接用分數判斷
+                position = 1
+                entry_price = row['Close']
+                entry_date = index
+                trade_type = "做多(Long)"
+                df.at[index, 'Buy_Signal'] = entry_price # 🌟 在真正成交這天畫買入箭頭
 
-    # 狀況 B：賣方力道強於買方，且達到進場門檻
-        elif sell_val > buy_val and not pd.isna(row['Sell_Signal']):
-            position = -1
-            entry_price = row['Close']
-            entry_date = index
-            trade_type = "放空(Short)"
+            elif sell_val > buy_val and sell_val >= 3:
+                position = -1
+                entry_price = row['Close']
+                entry_date = index
+                trade_type = "放空(Short)"
+                df.at[index, 'Sell_Signal'] = entry_price # 🌟 在真正成交這天畫放空箭頭
 
-        # 狀況 C：持有【多單】時，偵測到【賣出訊號】 -> 多單平倉
-        elif position == 1 and not pd.isna(row['Sell_Signal']):
+        ## 狀況 C：持有【多單】時，偵測到【賣出訊號】 -> 多單平倉
+        elif position == 1 and row['Sell_Score'] >= 3:
             exit_price = row['Close']
-            # ⚡️ 通電：做多利潤算法 (原始利潤 - 來回摩擦成本)
+            df.at[index, 'Sell_Signal'] = exit_price # 🌟 在真正平倉這天畫賣出箭頭
             profit_pct = ((exit_price - entry_price) / entry_price * 100) - round_trip_cost_pct 
             trades.append({
                 '方向': trade_type, '進場日': entry_date, '出場日': index,
@@ -171,10 +170,10 @@ def draw_chart(ticker, preloaded_df=None):
             })
             position = 0 # 恢復空手
 
-        # 狀況 D：持有【空單】時，偵測到【買入訊號】 -> 空單回補
-        elif position == -1 and not pd.isna(row['Buy_Signal']):
+       # 狀況 D：持有【空單】時，偵測到【買入訊號】 -> 空單回補
+        elif position == -1 and row['Buy_Score'] >= 3:
             exit_price = row['Close']
-            # ⚡️ 通電：做空利潤算法 (原始利潤 - 來回摩擦成本)
+            df.at[index, 'Buy_Signal'] = exit_price # 🌟 在真正回補這天畫買入箭頭
             profit_pct = ((entry_price - exit_price) / entry_price * 100) - round_trip_cost_pct 
             trades.append({
                 '方向': trade_type, '進場日': entry_date, '出場日': index,
@@ -219,30 +218,63 @@ def draw_chart(ticker, preloaded_df=None):
         backtest_text = "<b>⚙️ 雙向策略回測報告</b><br>• 在此區間內無完整交易觸發"
 
     # -------------------------------
-    # 2. 強化版背離偵測函數 (導入 ATR 動態公差)
+    # 2. 強化版背離偵測函數 (導入 ATR 動態公差 + 拔除未來函數)
     # -------------------------------
     def find_divergence(price_series, indicator_series, atr_series, is_top=True, distance=7, atr_mult=1.0, threshold=None):
-        dynamic_prominence = atr_series * atr_mult
-        if is_top:
-            peaks, _ = find_peaks(price_series, distance=distance, prominence=dynamic_prominence)
-        else:
-            peaks, _ = find_peaks(-price_series, distance=distance, prominence=dynamic_prominence)
+        """
+        【無未來函數版本】
+        嚴格只使用 t-1 之前的資料尋找前波高低點，杜絕資料洩漏。
+        回傳格式維持 (p1, p2) 座標對，以相容舊版的 Plotly 繪圖邏輯。
+        """
+        p_vals = price_series if isinstance(price_series, np.ndarray) else price_series.values
+        i_vals = indicator_series if isinstance(indicator_series, np.ndarray) else indicator_series.values
+        a_vals = atr_series if isinstance(atr_series, np.ndarray) else atr_series.values
         
         div_signals = []
-        for i in range(1, len(peaks)):
-            p1, p2 = peaks[i-1], peaks[i]
+        lookback = 20  # 強制設定回看視窗為 20 天，尋找前一波高低點
+        
+        for i in range(lookback, len(p_vals)):
+            # 擷取過去的視窗 (排除今天 i，確保找出來的是「前一波」的波段點)
+            past_p = p_vals[i-lookback : i-1]
+            past_i = i_vals[i-lookback : i-1]
+            
+            if len(past_p) == 0: continue
+            
             if is_top:
-                cond_price = price_series[p2] > price_series[p1]
-                cond_indicator = indicator_series[p2] < indicator_series[p1]
-                cond_thresh = True if threshold is None else indicator_series[p2] > threshold
-                if cond_price and cond_indicator and cond_thresh:
-                    div_signals.append((p1, p2))
+                # 找前一波的最高點
+                local_prev_idx = np.argmax(past_p)
+                prev_p = past_p[local_prev_idx]
+                prev_i = past_i[local_prev_idx]
+                # 換算回整段資料的絕對索引位置 (p1)
+                absolute_prev_idx = i - lookback + local_prev_idx
+                
+                # 條件 1：價格創新高，但指標沒創新高 (頂背離)
+                cond_div = (p_vals[i] > prev_p) and (i_vals[i] < prev_i)
+                # 條件 2：指標必須達到超買區門檻
+                cond_thresh = True if threshold is None else (i_vals[i] > threshold)
+                # 條件 3：中間必須有合理的回檔 (用 ATR 衡量，確保是兩個獨立的山頭)
+                retrace_valid = (prev_p - np.min(p_vals[absolute_prev_idx : i])) > (a_vals[i] * atr_mult)
+                
+                if cond_div and cond_thresh and retrace_valid:
+                    div_signals.append((absolute_prev_idx, i)) # 記錄 (前高點, 今天)
+                    
             else:
-                cond_price = price_series[p2] < price_series[p1]
-                cond_indicator = indicator_series[p2] > indicator_series[p1]
-                cond_thresh = True if threshold is None else indicator_series[p2] < threshold
-                if cond_price and cond_indicator and cond_thresh:
-                    div_signals.append((p1, p2))
+                # 找前一波的最低點
+                local_prev_idx = np.argmin(past_p)
+                prev_p = past_p[local_prev_idx]
+                prev_i = past_i[local_prev_idx]
+                absolute_prev_idx = i - lookback + local_prev_idx
+                
+                # 條件 1：價格創新低，但指標沒創新低 (底背離)
+                cond_div = (p_vals[i] < prev_p) and (i_vals[i] > prev_i)
+                # 條件 2：指標必須達到超賣區門檻
+                cond_thresh = True if threshold is None else (i_vals[i] < threshold)
+                # 條件 3：中間必須有合理的反彈 (確保是兩個獨立的谷底)
+                retrace_valid = (np.max(p_vals[absolute_prev_idx : i]) - prev_p) > (a_vals[i] * atr_mult)
+                
+                if cond_div and cond_thresh and retrace_valid:
+                    div_signals.append((absolute_prev_idx, i)) # 記錄 (前低點, 今天)
+        
         return div_signals
 
     rsi_top = find_divergence(df['High'].values, df['RSI'].values, df['ATR'].values, is_top=True, distance=7, atr_mult=1.0, threshold=55)
@@ -334,9 +366,7 @@ if __name__ == "__main__":
     test_targets =  [
         "2330.TW", "2454.TW", "2303.TW", "2337.TW", 
         "2317.TW", "2382.TW", "3231.TW", "2356.TW", "2376.TW", 
-        "2603.TW", "2609.TW", "2615.TW", 
-        "2881.TW", "2882.TW", "2884.TW", "2886.TW", "2891.TW",
-        "1503.TW", "1519.TW", "1513.TW"
+        "2603.TW"
     ]
     print("啟動手動測試模式，開始批次分析...\n")
     for ticker in test_targets:
