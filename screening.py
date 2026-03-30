@@ -523,17 +523,33 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 entry_sl_record = temp_sl_pct
                 entry_tp_record = temp_tp_pct
                 
-                # 🧠 AI 精算師：依據波動率動態計算購買股數
-                risk_allowance = sim_balance * 0.015 
-                raw_shares = risk_allowance / (entry_price * temp_sl_pct)
+                # 🧠 AI 精算師：動態信心權重 + 流動性微結構過濾
+                base_risk_allowance = sim_balance * 0.015 
                 
+                # 1. 信心權重調整 (跟實盤完全同步)
+                if "點火" in entry_setup or "倒貨" in entry_setup:
+                    conviction_mult = 1.2
+                elif "抄底" in entry_setup or "摸頭" in entry_setup:
+                    conviction_mult = 0.7
+                else:
+                    conviction_mult = 1.0
+                    
+                target_risk = base_risk_allowance * conviction_mult
+                raw_shares = target_risk / (entry_price * temp_sl_pct)
+                
+                # 2. 流動性天花板：單筆買入不得超過該股票近 20 日均量的 5%
+                max_liquidity_shares = (row.get('Vol_MA20', 1000) * 1000) * 0.05
+                raw_shares = min(raw_shares, max_liquidity_shares)
+                
+                # 3. 資金天花板：最多只能用掉帳戶總額的 33%
+                max_affordable_shares = int((sim_balance * 0.33) / entry_price)
+                raw_shares = min(raw_shares, max_affordable_shares)
+                
+                # 4. 零股/整張最佳化
                 if raw_shares >= 1000:
                     TRADE_SHARES = int(raw_shares // 1000) * 1000
                 else:
                     TRADE_SHARES = max(1, int(raw_shares))
-                    
-                max_affordable_shares = int((sim_balance * 0.33) / entry_price)
-                TRADE_SHARES = min(TRADE_SHARES, max_affordable_shares)
                 
                 # 計算實際承擔的風險金額
                 entry_risk_amount = TRADE_SHARES * entry_price * temp_sl_pct

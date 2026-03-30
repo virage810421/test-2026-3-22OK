@@ -223,6 +223,19 @@ def run_live_simulation():
                 status = result['今日系統燈號']
                 current_price = result['最新收盤價']
                 
+                # ✨ 新增：X 光透視診斷 (讓系統不再安靜)
+                latest_row = computed_df.iloc[-1]
+                regime = latest_row.get('Regime', '未知')
+                golden_tag = latest_row.get('Golden_Type', '無')
+                
+                if "觀望中" in status:
+                    # 第一關：根本沒有觸發陣型與扣板機
+                    print(f"  🔍 {ticker} | 環境: {regime.ljust(4)} | 陣型: 未成型 | 結論: 不符合進場結構")
+                else:
+                    # 第二關：有陣型，交給 handle_paper_trade 去做 EV 與 RR 檢查
+                    # (它會在裡面印出因為 EV 或 RR 拒絕的訊息)
+                    print(f"  🎯 {ticker} | 環境: {regime.ljust(4)} | 陣型: {golden_tag.ljust(8)} | 結論: 觸發初審，進入精算程序...")
+                
                 handle_paper_trade(ticker, current_price, status, computed_df, result)
                 
         print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {PARAMS['SCAN_INTERVAL']} 秒...")
@@ -233,7 +246,7 @@ def run_live_simulation():
 # ==========================================
 
 def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
-    global portfolio, CURRENT_EQUITY, IS_FROZEN, CURRENT_MDD_TIER  # 🌟 補上 CURRENT_MDD_TIER 
+    global portfolio, CURRENT_EQUITY, IS_FROZEN, CURRENT_MDD_TIER  
     if ticker not in portfolio:
         portfolio[ticker] = []
         
@@ -244,15 +257,28 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     total_prof = result_dict.get("累計報酬率(%)", 0)
     latest_row = ticker_df.iloc[-1] 
     
+    # ✨ 終極微結構防護：計算昨日收盤價，判定是否碰觸 10% 漲跌停
+    prev_close = ticker_df['Close'].iloc[-2] if len(ticker_df) >= 2 else current_price
+    is_limit_up = current_price >= prev_close * 1.095  # 漲幅達 9.5% 以上視為漲停邊緣
+    is_limit_down = current_price <= prev_close * 0.905 # 跌幅達 9.5% 以上視為跌停邊緣 
+    
     MAX_BATCHES = PARAMS['MAX_BATCHES']
     today_str = datetime.now().strftime("%Y-%m-%d")
     bought_today = any(p.get('進場時間', '').startswith(today_str) for p in positions)
     
-    # ==========================================
+   # ==========================================
     # --- 狀況 A：進場 / 分批加碼 (選項一：市價追擊模式) ---
     # ==========================================
     if ("買訊" in status or "賣訊" in status):
-        # 🌟 [新增] 多空進場實體攔截 (放置於 AI 精算師啟動之前)
+        # ✨ [新增] 微結構防護：漲停買不到，跌停空不到
+        if "買訊" in status and is_limit_up:
+            print(f"🧱 {ticker} 亮出買訊，但目前【漲停鎖死】，市場無賣單，物理拒絕進場！")
+            return
+        if "賣訊" in status and is_limit_down:
+            print(f"🧱 {ticker} 亮出賣訊，但目前【跌停鎖死】，禁止借券放空，物理拒絕進場！")
+            return
+
+        # 🌟 多空進場實體攔截 (放置於 AI 精算師啟動之前)
         if "買訊" in status and not PARAMS.get('ALLOW_LONG', True):
             print(f"🚫 {ticker} 產生買訊，但系統已關閉【做多開關】，放棄進場。")
             return 
@@ -450,11 +476,16 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         # 🌟 觸發判定與部位平倉邏輯
         # ==========================================
         is_stop_loss = (current_price <= final_stop_price) if is_long else (current_price >= final_stop_price)
-        
-        # 🌟 使用我們上面客製化的 ignore_tp 開關
         is_take_profit = ((current_price >= tp_price) if is_long else (current_price <= tp_price)) and not ignore_tp
-        
         is_stage_1 = (current_price >= tp_stage_1_price) if is_long else (current_price <= tp_stage_1_price)
+
+        # ✨ 微結構防護：想跑但跑不掉的殘酷現實
+        if (is_stop_loss or is_take_profit or is_stage_1) and (is_long and is_limit_down):
+            print(f"⛓️ {ticker} 觸發出場，但目前【跌停鎖死】無人接刀，強制留倉承受風險！")
+            return # 強制中斷出場程序
+        if (is_stop_loss or is_take_profit or is_stage_1) and (not is_long and is_limit_up):
+            print(f"⛓️ {ticker} 空單觸發回補，但目前【漲停鎖死】無法買回，強制留倉承受風險！")
+            return # 強制中斷出場程序
 
         if is_stop_loss:
             real_loss_pct = ((current_price - avg_cost) / avg_cost) * 100 if is_long else ((avg_cost - current_price) / avg_cost) * 100
