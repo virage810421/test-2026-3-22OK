@@ -214,7 +214,18 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", ex
     try:
         # 動態顯示滿分 (如果是大腦傳來的，最高是 10 分)
         max_score = 10 if 'Buy_Score' in df.columns else 4
-        signal_text = f"<b>💡 訊號觀測站</b><br>多方得分: {int(df['Buy_Score'].iloc[-1])}/{max_score}<br>空方得分: {int(df['Sell_Score'].iloc[-1])}/{max_score}"
+        
+        # ✨ 新增：讀取大腦的「結構式標籤」
+        current_regime = df['Regime'].iloc[-1] if 'Regime' in df.columns else "未知"
+        golden_tag = df['Golden_Type'].iloc[-1] if 'Golden_Type' in df.columns else "無"
+        
+        signal_text = (
+            f"<b>💡 訊號觀測站</b><br>"
+            f"大環境: <span style='color:gold'><b>{current_regime}</b></span><br>"
+            f"今日陣型: <span style='color:#00BFFF'><b>{golden_tag}</b></span><br>"
+            f"多方得分: {int(df['Buy_Score'].iloc[-1])}/{max_score}<br>"
+            f"空方得分: {int(df['Sell_Score'].iloc[-1])}/{max_score}"
+        )
     except (IndexError, KeyError, ValueError):
         signal_text = "<b>💡 訊號觀測站</b><br>得分: 計算中..."
     

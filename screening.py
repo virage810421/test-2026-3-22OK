@@ -921,23 +921,14 @@ if __name__ == "__main__":
             risk_factor = 0.300
             market_msg = "🌪️ 多空勢均力敵（盤整），自動降載至 30% 嚴防雙巴。"
 
-        # --- 2. 綜合評分計算 (融合勝率、報酬率與基本面加權) ---
-        for r in report_cards:
-            win_rate = float(r["系統勝率(%)"]) / 100
-            total_ret = abs(float(r["累計報酬率(%)"])) 
-            f_weight = int(r["基本面總分"]) * 2
-            
-            # 給予基本面順風車獎勵
-            bonus = f_weight if "買訊" in r["今日系統燈號"] else -f_weight if "賣訊" in r["今日系統燈號"] else 0
-            r["期望值評分"] = round((total_ret * win_rate) + bonus, 3)
-
+        # --- 2. 🌟 真實期望值排序 (捨棄舊版假評分，完全使用回測引擎的 EV) ---
         long_candidates = [r for r in report_cards if "買訊" in r["今日系統燈號"]]
         short_candidates = [r for r in report_cards if "賣訊" in r["今日系統燈號"]]
 
-        top_longs = sorted(long_candidates, key=lambda x: x.get("期望值評分", 0), reverse=True)
-        top_shorts = sorted(short_candidates, key=lambda x: x.get("期望值評分", 0), reverse=True)
-        all_ranked = sorted([r for r in report_cards if "觀望" not in r["今日系統燈號"]], key=lambda x: x.get('期望值評分', 0), reverse=True)
-
+        # 排序邏輯：直接依賴「大腦」算出來的「真實期望值」進行降序排列
+        top_longs = sorted(long_candidates, key=lambda x: x.get("期望值", 0), reverse=True)
+        top_shorts = sorted(short_candidates, key=lambda x: x.get("期望值", 0), reverse=True)
+        all_ranked = sorted([r for r in report_cards if "觀望" not in r["今日系統燈號"]], key=lambda x: x.get('期望值', 0), reverse=True)
         # --- 3. 印出雙向戰略配置報告 ---
         print("\n" + "═"*30 + " ⚔️ 雙向戰略配置報告 " + "═"*30)
         print(f"📈 多頭比例：{bull_count/total_count:.1%} | 📉 空頭比例：{bear_count/total_count:.1%}")
@@ -950,6 +941,11 @@ if __name__ == "__main__":
         if top_shorts:
             print(f"🏳️ 【放空首選】: {top_shorts[0]['Ticker SYMBOL']} (評分: {top_shorts[0]['期望值評分']:.3f})")
             
+        if top_longs:
+            print(f"🚩 【作多首選】: {top_longs[0]['Ticker SYMBOL']} (真實期望值: {top_longs[0]['期望值']:.3f}%)")
+        if top_shorts:
+            print(f"🏳️ 【放空首選】: {top_shorts[0]['Ticker SYMBOL']} (真實期望值: {top_shorts[0]['期望值']:.3f}%)")
+      
         print("-" * 83)
         if not all_ranked:
             print("📭 市場方向不明且無強烈訊號，建議空手觀望。")
@@ -957,23 +953,27 @@ if __name__ == "__main__":
             print(f"🎯 綜合排序前 {MAX_POSITIONS} 名進場建議：")
             for i, stock in enumerate(all_ranked[:MAX_POSITIONS]):
                 direction = "🔴 做多" if "買訊" in stock["今日系統燈號"] else "🟢 放空"
-                print(f"  {i+1}. {stock['Ticker SYMBOL']} | {direction} | 期望評分: {stock['期望值評分']:.3f} | 建議配置: ${(base_allocation * risk_factor):,.0f}")
+                # ✨ 提取陣型名稱，讓清單更具實戰意義
+                setup_name = stock['今日系統燈號'].split(' ')[1] if len(stock['今日系統燈號'].split(' ')) > 1 else "傳統訊號"
+                print(f"  {i+1}. {stock['Ticker SYMBOL']} | {direction} | 陣型: {setup_name.ljust(8)} | 期望值(EV): {stock['期望值']:.3f}% | 建議配置: ${(base_allocation * risk_factor):,.0f}")
         print("═"*83)
 
-        # --- 4. 印出今日海選總表 ---
+        # --- 4. 📊 印出今日海選總表 (機構級版) ---
         final_report = pd.DataFrame(report_cards)
         pd.set_option('display.unicode.east_asian_width', True) 
         
-        print("\n" + "="*25 + " 今日海選總表 " + "="*25)
+        print("\n" + "="*30 + " 📊 今日海選總表 (真實數據透視) " + "="*30)
+  
+        # 🌟 重新排列欄位，把「真實期望值」跟「勝率」往前擺，徹底捨棄假評分
         display_cols = [
-            "Ticker SYMBOL", "最新收盤價", "結構強度", "今日系統燈號", 
-            "結構診斷", "基本面總分", "營收年增率(%)", "營業利益率(%)", 
-            "系統勝率(%)", "累計報酬率(%)", "期望值評分", "觸發條件明細"
+            "Ticker SYMBOL", "最新收盤價", "今日系統燈號", "期望值", 
+            "系統勝率(%)", "累計報酬率(%)", "結構診斷", 
+            "基本面總分", "營收年增率(%)", "觸發條件明細"
         ]
         
         actual_cols = [col for col in display_cols if col in final_report.columns]
         print(final_report[actual_cols].to_string(index=False))
-        print("="*75)
+        print("="*95)
 
         # --- 5. 印出指標戰力分佈報告 ---
         all_condition_keys = [
