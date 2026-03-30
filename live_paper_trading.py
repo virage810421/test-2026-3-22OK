@@ -168,7 +168,9 @@ def run_live_simulation():
             time.sleep(1) 
             
             ticker_df = batch_data.xs(ticker, axis=1, level=1).copy() if isinstance(batch_data.columns, pd.MultiIndex) else batch_data.copy()
-            ticker_df.dropna(how='all', inplace=True)
+            # ✨ 疫苗 1：嚴格剃除沒有收盤價的幽靈 K 線，防止 NaN 病毒感染
+            ticker_df.dropna(subset=['Close'], inplace=True)
+            ticker_df.ffill(inplace=True) 
             if ticker_df.empty: continue
                 
             today_str = datetime.now().strftime("%Y-%m-%d")
@@ -200,10 +202,16 @@ def run_live_simulation():
                 # 🌟 1. 從字典中提取資料 (包含剛算好的期望值)
                 win_rate = float(result.get("系統勝率(%)", 0))
                 total_prof = float(result.get("累計報酬率(%)", 0))
-                ev_score = float(result.get("期望值", 0)) # 🌟 [新增] 提取期望值
+                ev_score = float(result.get("期望值", 0))
+                
+
+                # 🛡️ 終極防護：阻斷 NaN 病毒寫入 SQL 導致崩潰
+                if pd.isna(win_rate): win_rate = 0.0
+                if pd.isna(total_prof): total_prof = 0.0
+                if pd.isna(ev_score): ev_score = 0.0
                 status_tag = result.get("今日系統燈號", "無訊號")
                 log_time = datetime.now()
-
+                
                 try:
                     with pyodbc.connect(DB_CONN_STR) as conn:
                         cursor = conn.cursor()
@@ -316,6 +324,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
             current_regime = latest_row.get('Regime', '未知')
             
             volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
+            if pd.isna(volatility_pct): volatility_pct = PARAMS['SL_MAX_PCT'] # 🛡️ 防禦 NaN 感染，給予最大寬容停損
             entry_sl_pct = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
             
             trend_is_bull = (latest_row['Close'] > latest_row.get('BBI', 0))

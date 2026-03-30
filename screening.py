@@ -158,6 +158,12 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             
         if df.empty: return None
         
+        # ✨ 疫苗 3：終極除蟲防線，在計算任何指標前，把沒有收盤價的無效 K 線直接剃除！
+        df.dropna(subset=['Close'], inplace=True)
+        df.ffill(inplace=True)
+        if df.empty: return None
+        
+        
         # 1. 基礎指標計算 (RSI)
         delta = df['Close'].diff()
         gain = delta.where(delta > 0, 0)
@@ -482,6 +488,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 # 2. 預先試算進場價與風險 (Risk: 停損距)
                 temp_entry_price = apply_slippage(safe_open, temp_direction, SLIPPAGE)
                 volatility_pct = (row['BB_std'] * 1.5) / safe_close
+                if pd.isna(volatility_pct): volatility_pct = p['SL_MAX_PCT'] # 🛡️ 防止 NaN 感染
                 temp_sl_pct = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
                 
                 # 3. 預先試算預期報酬 (Reward: 停利距)
@@ -549,6 +556,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             # ====================
             else:
                 volatility_pct = (row['BB_std'] * 1.5) / safe_close
+                if pd.isna(volatility_pct): volatility_pct = p['SL_MAX_PCT'] # 🛡️ 防止 NaN 感染
+                
+                # 根據當初進場的陣型，給予不同的防禦與攻擊目標
                 
                 # 根據當初進場的陣型，給予不同的防禦與攻擊目標
                 if "REVERSAL" in entry_setup or "摸頭" in entry_setup or "抄底" in entry_setup:
@@ -890,10 +900,10 @@ if __name__ == "__main__":
                 print(f"自動切換至 {ticker} 精密儀表板進行深度檢驗...")
                 draw_chart(
                     ticker, 
-                    preloaded_df=ticker_df, 
+                    preloaded_df=result["計算後資料"],  # ✨ 正解：傳入包含所有指標的計算後資料
                     win_rate=result["系統勝率(%)"], 
                     total_profit=result["累計報酬率(%)"],
-                    expected_value=result["期望值"] # 🌟 把這顆球丟過去！
+                    expected_value=result["期望值"] 
                 )
 
     # ==========================================
