@@ -30,7 +30,7 @@ def add_chip_data(df, ticker):
     (修正版：對齊 API 回傳的英文名稱，並新增自營商)
     """
     pure_ticker = ticker.split('.')[0]
-    start_dt = (pd.Timestamp.today() - pd.Timedelta(days=120)).strftime("%Y-%m-%d")
+    start_dt = (pd.Timestamp.today() - pd.Timedelta(days=730)).strftime("%Y-%m-%d")
     
     try:
         chip_df = dl.taiwan_stock_institutional_investors(stock_id=pure_ticker, start_date=start_dt)
@@ -591,7 +591,17 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                     profit_pct = (pnl / invested) * 100
                     sim_balance += pnl
                     trades.append(profit_pct)
+                    # 範例邏輯：根據當前的市場狀態給予不同名稱
+                    current_regime = row['Regime'] 
 
+                    if current_regime == "趨勢多頭":
+                        current_strategy_name = "強勢多頭攻堅"
+                    elif current_regime == "趨勢空頭":
+                        current_strategy_name = "空頭防禦撤退"
+                    elif current_regime == "區間盤整":
+                        current_strategy_name = "區間震盪低買"
+                    else:
+                        current_strategy_name = "動態防禦" # 預設備用名稱
                     # 寫入 SQL 資料庫
                     if db_cursor:
                         try:
@@ -600,7 +610,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                                 INSERT INTO backtest_history 
                                 ([策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            ''', ("動態防禦精算策略", ticker, dir_str, entry_date, index, round(entry_price, 2), 
+                            ''', (current_strategy_name, ticker, dir_str, entry_date, index, round(entry_price, 2), 
                                   round(actual_exit_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0)))
                             db_conn.commit()
                         except Exception:
