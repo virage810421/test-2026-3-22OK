@@ -2,20 +2,17 @@ import pyodbc
 import sys
 
 def setup_tsql_database():
-    # ==========================================
-    # 🛡️ 安全保險鎖：確認是否執行核彈級重置
-    # ==========================================
     print("========================================================")
-    print("💣 【資料庫核彈級重置系統】")
-    print("⚠️ 警告：這將永久刪除所有交易紀錄、持倉、回測與籌碼資料！")
+    print("💣 【資料庫核彈級重置：升級機構級歸因日誌】")
+    print("⚠️ 警告：這將永久刪除所有舊資料表，並建立包含全新風控欄位的新表！")
     print("========================================================")
     
-    confirm = input("🚀 確定要執行「全庫刪除並重建乾淨空表」嗎？(y/n): ")
+    confirm = input("🚀 確定要執行「全庫刪除並升級新架構」嗎？(y/n): ")
     if confirm.lower() != 'y':
-        print("🛑 已安全取消作業，您的資料毫髮無傷。")
+        print("🛑 已安全取消作業。")
         return
 
-    print("\n🔧 準備連線至 SQL Server 進行全庫建置與檢查...")
+    print("\n🔧 準備連線至 SQL Server 進行建置...")
     
     master_conn_str = (
         r'DRIVER={ODBC Driver 17 for SQL Server};'
@@ -29,46 +26,34 @@ def setup_tsql_database():
         conn = pyodbc.connect(master_conn_str, autocommit=True)
         cursor = conn.cursor()
 
-        # 1. 檢查並建立 Database
         cursor.execute('''
             IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '股票online')
             BEGIN
                 CREATE DATABASE 股票online;
             END
         ''')
-        print("✅ 資料庫 [股票online] 確認/建立完成！")
 
-        conn.close()
-
-        # 2. 切換至目標資料庫
         target_conn_str = master_conn_str.replace('DATABASE=master;', 'DATABASE=股票online;')
         conn = pyodbc.connect(target_conn_str)
         cursor = conn.cursor()
 
         # ==========================================
-        # 💣 核彈級清理：強制刪除所有舊資料表
+        # 💣 清理舊表
         # ==========================================
-        print("\n💣 啟動強制重置模式，正在刪除舊有資料表...")
         tables_to_drop = [
-            'trade_history',
-            'active_positions',
-            'daily_chip_data',
-            'strategy_performance',
-            'backtest_history',
-            'account_info'
+            'trade_history', 'active_positions', 'daily_chip_data',
+            'strategy_performance', 'backtest_history', 'account_info'
         ]
-        
         for table in tables_to_drop:
             cursor.execute(f"IF OBJECT_ID('{table}', 'U') IS NOT NULL DROP TABLE {table}")
         print("🗑️ 舊資料表已全數刪除完畢！\n")
 
-
         # ==========================================
-        # 🏗️ 開始建立全新資料表
+        # 🏗️ 建立全新資料表 (包含 ✨ 歸因擴充欄位)
         # ==========================================
-        print("🏗️ 開始建立 6 大核心資料表 (全新乾淨版)...")
+        print("🏗️ 開始建立 6 大核心資料表 (機構級擴充版)...")
 
-        # --- 表單 1：歷史交易總帳 (trade_history) ---
+        # --- 表單 1：歷史交易總帳 (實戰版) ---
         cursor.execute('''
             CREATE TABLE trade_history (
                 [Ticker SYMBOL] VARCHAR(20),
@@ -79,12 +64,21 @@ def setup_tsql_database():
                 [出場價] FLOAT,
                 [報酬率(%)] DECIMAL(10,3),
                 [淨損益金額] FLOAT,
-                [結餘本金] FLOAT
+                [結餘本金] FLOAT,
+                -- ✨ 機構級歸因欄位 ✨
+                [市場狀態] NVARCHAR(50),
+                [進場陣型] NVARCHAR(50),
+                [期望值] DECIMAL(10,3),
+                [預期停損(%)] DECIMAL(10,3),
+                [預期停利(%)] DECIMAL(10,3),
+                [風報比(RR)] DECIMAL(10,3),
+                [風險金額] FLOAT
             )
         ''')
-        print("   👉 建立 [trade_history] 成功")
+        print("   👉 建立 [trade_history] 成功 (已擴充 7 個歸因欄位)")
 
-        # --- 表單 2：目前持倉工作區 (active_positions) ---
+        # --- 表單 2：目前持倉工作區 ---
+        # 為了能在平倉時寫入日誌，持倉表也要記住當初進場的理由
         cursor.execute('''
             CREATE TABLE active_positions (
                 [Ticker SYMBOL] VARCHAR(20),
@@ -93,12 +87,20 @@ def setup_tsql_database():
                 [進場價] FLOAT,
                 [投入資金] FLOAT,
                 [停利階段] INT,
-                [進場股數] INT
+                [進場股數] INT,
+                -- ✨ 持倉快取記憶 ✨
+                [市場狀態] NVARCHAR(50),
+                [進場陣型] NVARCHAR(50),
+                [期望值] DECIMAL(10,3),
+                [預期停損(%)] DECIMAL(10,3),
+                [預期停利(%)] DECIMAL(10,3),
+                [風報比(RR)] DECIMAL(10,3),
+                [風險金額] FLOAT
             )
         ''')
         print("   👉 建立 [active_positions] 成功")
 
-        # --- 表單 3：每日法人籌碼庫 (daily_chip_data) ---
+        # --- 表單 3：每日法人籌碼庫 ---
         cursor.execute('''
             CREATE TABLE daily_chip_data (
                 [日期] DATE,
@@ -112,7 +114,7 @@ def setup_tsql_database():
         ''')
         print("   👉 建立 [daily_chip_data] 成功")
 
-        # --- 表單 4：歷史勝率與報酬追蹤表 (strategy_performance) ---
+        # --- 表單 4：策略績效追蹤表 ---
         cursor.execute('''
             CREATE TABLE strategy_performance (
                 [Ticker SYMBOL] VARCHAR(20),
@@ -125,7 +127,7 @@ def setup_tsql_database():
         ''')
         print("   👉 建立 [strategy_performance] 成功")
 
-        # --- 表單 5：大腦回測明細 (backtest_history) ---
+        # --- 表單 5：大腦回測明細 ---
         cursor.execute('''
             CREATE TABLE backtest_history (
                 [策略名稱] NVARCHAR(50),
@@ -137,12 +139,20 @@ def setup_tsql_database():
                 [出場價] FLOAT,
                 [報酬率(%)] DECIMAL(10,3),
                 [淨損益金額] FLOAT,
-                [結餘本金] FLOAT
+                [結餘本金] FLOAT,
+                -- ✨ 機構級歸因欄位 ✨
+                [市場狀態] NVARCHAR(50),
+                [進場陣型] NVARCHAR(50),
+                [期望值] DECIMAL(10,3),
+                [預期停損(%)] DECIMAL(10,3),
+                [預期停利(%)] DECIMAL(10,3),
+                [風報比(RR)] DECIMAL(10,3),
+                [風險金額] FLOAT
             )
         ''')
-        print("   👉 建立 [backtest_history] 成功")
+        print("   👉 建立 [backtest_history] 成功 (已擴充 7 個歸因欄位)")
 
-        # --- 表單 6：帳戶資訊 (account_info) ---
+        # --- 表單 6：帳戶資訊 ---
         cursor.execute('''
             CREATE TABLE account_info (
                 [帳戶名稱] NVARCHAR(50) PRIMARY KEY,
@@ -150,10 +160,13 @@ def setup_tsql_database():
                 [最後更新時間] DATETIME
             )
         ''')
-        print("   👉 建立 [account_info] 成功")
+        
+        # 自動給予預設資金
+        cursor.execute("INSERT INTO account_info ([帳戶名稱], [可用現金], [最後更新時間]) VALUES ('我的實戰帳戶', 1000000, GETDATE())")
+        print("   👉 建立 [account_info] 成功 (已注入預設資金 1,000,000)")
 
         conn.commit()
-        print("\n✅ 系統基礎建設已全部就緒！(舊資料已徹底清除)")
+        print("\n✅ 資料庫擴充升級完畢！底層風控容器已準備就緒。")
 
     except Exception as e:
         print(f"\n❌ 發生未知的錯誤: {e}")

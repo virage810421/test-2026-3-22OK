@@ -250,7 +250,7 @@ if __name__ == "__main__":
         print(f"📡 正在處理 {ticker}...")
         
         # 1. 取得原始 K 線資料 (預設 1 年)
-        data = yf.download(ticker, period="1y", progress=False)
+        data = yf.download(ticker, period="2y", progress=False)
         if data.empty: continue
         df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
         

@@ -464,6 +464,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['Prev_Buy_Score'] = df['Buy_Score'].shift(1)
         df['Prev_Sell_Score'] = df['Sell_Score'].shift(1)
         df['Prev_Trend'] = buy_trend.shift(1)
+        # ✨ 新增：將昨天的陣型與環境狀態往後遞延一天，讓今天進場時能讀取到記憶
+        df['Prev_Golden_Type'] = df['Golden_Type'].shift(1)
+        df['Prev_Regime'] = df['Regime'].shift(1)
 
         for index, row in df.iterrows():
             if pd.isna(row['Prev_Buy_Score']):
@@ -472,48 +475,68 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             safe_open = row['Open'] if row['Open'] > 0 else 0.0001
             safe_close = row['Close'] if row['Close'] > 0 else 0.0001
 
-            # ====================
-            # 進場 (含機構級 Risk Parity 資金控管)
+            # # ====================
+            # 🌟 機構級結構式進場 (含 RR 濾網)
             # ====================
             if position == 0:
-                # 🌟 解除硬限制，改由 config.py 的 TRIGGER_SCORE 動態決定進場門檻
-                if row['Prev_Buy_Score'] >= p['TRIGGER_SCORE']:
-                    direction = 1
-                elif row['Prev_Sell_Score'] >= p['TRIGGER_SCORE']:
-                    direction = -1
-                else:
+                # 1. 讀取前一天的結構式訊號 (Regime + Setup + Trigger 已在算分時被包裝為 10 分)
+                is_long_signal = (row['Prev_Buy_Score'] == 10) if p.get('USE_SNIPER_MODE', True) else (row['Prev_Buy_Score'] >= p['TRIGGER_SCORE'])
+                is_short_signal = (row['Prev_Sell_Score'] == 10) if p.get('USE_SNIPER_MODE', True) else (row['Prev_Sell_Score'] >= p['TRIGGER_SCORE'])
+
+                if not (is_long_signal or is_short_signal):
                     continue
 
-                position = 1
-                entry_price = apply_slippage(safe_open, direction, SLIPPAGE)
-                entry_date = index
-                entry_score = row['Prev_Buy_Score'] if direction == 1 else row['Prev_Sell_Score']
-                entry_trend_is_bull = row['Prev_Trend']
+                temp_direction = 1 if is_long_signal else -1
                 
-                max_reached_price = entry_price 
+                # 2. 預先試算進場價與風險 (Risk: 停損距)
+                temp_entry_price = apply_slippage(safe_open, temp_direction, SLIPPAGE)
+                volatility_pct = (row['BB_std'] * 1.5) / safe_close
+                temp_sl_pct = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
+                
+                # 3. 預先試算預期報酬 (Reward: 停利距)
+                temp_trend_is_bull = row['Prev_Trend']
+                trend_is_with_me = (temp_direction == 1 and temp_trend_is_bull) or (temp_direction == -1 and not temp_trend_is_bull)
+                adx = row['ADX14'] if not pd.isna(row['ADX14']) else 0
+                temp_tp_pct = p['TP_TREND_PCT'] if (trend_is_with_me and adx > p['ADX_TREND_THRESHOLD']) else p['TP_BASE_PCT']
+                
+                # ✨ 4. 風報比 (RR) 核心濾網
+                rr_ratio = temp_tp_pct / temp_sl_pct
+                if rr_ratio < p.get('MIN_RR_RATIO', 1.5):  
+                    # 💡 拒絕交易：如果潛在獲利沒有停損風險的 1.5 倍，訊號再好也不做！
+                    continue
 
                 # ==========================================
-                # 🧠 AI 精算師：依據波動率動態計算購買股數
+                # ✅ 通過所有考驗，正式進場！
                 # ==========================================
-                # 1. 估算這檔股票目前的合理停損 % 數
-                volatility_pct = (row['BB_std'] * 1.5) / safe_close
-                entry_sl_pct = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
+                direction = temp_direction
+                position = direction
+                entry_price = temp_entry_price
+                entry_date = index
+                entry_score = row['Prev_Buy_Score'] if direction == 1 else row['Prev_Sell_Score']
+                entry_trend_is_bull = temp_trend_is_bull
+                max_reached_price = entry_price 
                 
-                # 2. 定義單筆交易「絕對不能超過的虧損上限」(例如總資金的 1.5%)
+                # ✨ 記憶進場時的歸因標籤 (供出場寫入資料庫用)
+                entry_regime = row['Prev_Regime']
+                entry_setup = row['Prev_Golden_Type'] if row['Prev_Golden_Type'] != "無" else "傳統訊號"
+                entry_rr = rr_ratio
+                entry_sl_record = temp_sl_pct
+                entry_tp_record = temp_tp_pct
+                
+                # 🧠 AI 精算師：依據波動率動態計算購買股數
                 risk_allowance = sim_balance * 0.015 
+                raw_shares = risk_allowance / (entry_price * temp_sl_pct)
                 
-                # 3. 反推能買多少股：股數 = 允許虧損金額 / (進場價 * 停損百分比)
-                raw_shares = risk_allowance / (entry_price * entry_sl_pct)
-                
-                # 4. 台股最佳化買法 (優先買整張，買不起才買零股)
                 if raw_shares >= 1000:
                     TRADE_SHARES = int(raw_shares // 1000) * 1000
                 else:
                     TRADE_SHARES = max(1, int(raw_shares))
                     
-                # 5. 防呆機制：再怎麼重壓，單筆總金額不能超過帳戶剩餘現金的 33%
                 max_affordable_shares = int((sim_balance * 0.33) / entry_price)
                 TRADE_SHARES = min(TRADE_SHARES, max_affordable_shares)
+                
+                # 計算實際承擔的風險金額
+                entry_risk_amount = TRADE_SHARES * entry_price * temp_sl_pct
             # ====================
             # 出場 (含 Trailing Stop 移動停利)
             # ====================
@@ -602,19 +625,26 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                         current_strategy_name = "區間震盪低買"
                     else:
                         current_strategy_name = "動態防禦" # 預設備用名稱
-                    # 寫入 SQL 資料庫
+                    # ✨ 寫入 SQL 資料庫 (擴充歸因欄位)
                     if db_cursor:
                         try:
                             dir_str = "做多(Long)" if direction == 1 else "放空(Short)"
+                            strategy_name = "結構式風控策略"
+                            
                             db_cursor.execute('''
                                 INSERT INTO backtest_history 
-                                ([策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            ''', (current_strategy_name, ticker, dir_str, entry_date, index, round(entry_price, 2), 
-                                  round(actual_exit_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0)))
+                                ([策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間], 
+                                 [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
+                                 [市場狀態], [進場陣型], [期望值], [預期停損(%)], [預期停利(%)], [風報比(RR)], [風險金額])
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (
+                                strategy_name, ticker, dir_str, entry_date, index, 
+                                round(entry_price, 2), round(actual_exit_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0),
+                                entry_regime, entry_setup, 0.0, round(entry_sl_record*100, 2), round(entry_tp_record*100, 2), round(entry_rr, 2), round(entry_risk_amount, 0)
+                            ))
                             db_conn.commit()
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            print(f"寫入資料庫失敗: {e}")
 
                     position = 0
                     direction = 0
@@ -639,15 +669,23 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             sim_balance += pnl
             trades.append(profit_pct)
             
+            # ✨ 最後結算寫入 SQL (擴充歸因欄位)
             if db_cursor:
                 try:
                     dir_str = "做多(Long)" if direction == 1 else "放空(Short)"
+                    strategy_name = "結構式風控策略"
+                    
                     db_cursor.execute('''
                         INSERT INTO backtest_history 
-                        ([策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', ("動態防禦精算策略", ticker, dir_str, entry_date, df.index[-1], round(entry_price, 2), 
-                          round(final_slip_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0)))
+                        ([策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間], 
+                         [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
+                         [市場狀態], [進場陣型], [期望值], [預期停損(%)], [預期停利(%)], [風報比(RR)], [風險金額])
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        strategy_name, ticker, dir_str, entry_date, df.index[-1], 
+                        round(entry_price, 2), round(final_slip_price, 2), round(profit_pct, 3), round(pnl, 0), round(sim_balance, 0),
+                        entry_regime, entry_setup, 0.0, round(entry_sl_record*100, 2), round(entry_tp_record*100, 2), round(entry_rr, 2), round(entry_risk_amount, 0)
+                    ))
                     db_conn.commit()
                 except Exception as e:
                     print(f"⚠️ 最後結算寫入 SQL 失敗 ({ticker}): {e}")

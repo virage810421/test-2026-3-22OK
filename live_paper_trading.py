@@ -386,7 +386,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
             # 【潛伏型或傳統 3 分制】中規中矩的作法
             DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
             DYNAMIC_TP = PARAMS['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else PARAMS['TP_BASE_PCT']
-            ignore_tp = positions[0]['進場分數'] >= 10 # 只有 10 分滿分才死咬
+            ignore_tp = positions[0]['進場分數'] >= 3 # 只有 3 分以上才死咬
 
         # 🌟 Pandas 魔法：直接利用 ticker_df 切片，找出進場後的極端價格！
         try:
