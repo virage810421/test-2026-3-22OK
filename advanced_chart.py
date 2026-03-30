@@ -85,28 +85,7 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", ex
     df['BB_std'] = df['Close'].rolling(window=p['BB_WINDOW']).std()
     df['BB_Upper'] = df['MA20'] + (df['BB_std'] * p['BB_STD'])
     df['BB_Lower'] = df['MA20'] - (df['BB_std'] * p['BB_STD'])
-    # -------------------------------
-    # 3. 雙向 9 分制邏輯閘 (聰明過濾版)
-    # -------------------------------
-    if 'Buy_Score' not in df.columns:   
-        print("ℹ️ 繪圖引擎：無預算分數，啟動基礎 4 分制計算...")
-        
-        buy_c1 = df['Low'] <= df['BB_Lower']
-        buy_c2 = df['RSI'] < df['DZ_Lower']
-        buy_c3 = (df['Volume'] > (df['Volume'].rolling(p['VOL_WINDOW']).mean() * 1.1)) & (df['Close'] > df['Open'])
-        buy_c4 = (df['MACD_Hist'] > df['MACD_Hist'].shift(1)) & (df['DIF'] < 0)
-        buy_c6 = (df['Close'] > df['BBI']) & (df['Close'].shift(1) <= df['BBI'].shift(1))
-        
-        sell_c1 = df['High'] >= df['BB_Upper']
-        sell_c2 = df['RSI'] > df['DZ_Upper']
-        sell_c3 = (df['Volume'] > (df['Volume'].rolling(p['VOL_WINDOW']).mean() * 1.1)) & (df['Close'] < df['Open'])
-        sell_c4 = (df['MACD_Hist'] < df['MACD_Hist'].shift(1)) & (df['DIF'] > 0)
-        sell_c6 = (df['Close'] < df['BBI']) & (df['Close'].shift(1) >= df['BBI'].shift(1))
-
-        df['Buy_Score'] = (buy_c1 | buy_c2).astype(int) + buy_c3.astype(int) + buy_c4.astype(int) + buy_c6.astype(int)
-        df['Sell_Score'] = (sell_c1 | sell_c2).astype(int) + sell_c3.astype(int) + sell_c4.astype(int) + sell_c6.astype(int)
-    else:
-        print("✅ 繪圖引擎：成功接收大腦 10 分制數據，同步畫圖。")
+    
 
     # 🌟 圖表標記 (同步參數檔的觸發分數，並為了視覺美觀稍微偏移 K 線，不擋住實體)
     trigger_score = p.get('TRIGGER_SCORE', 3)
@@ -262,24 +241,31 @@ if __name__ == "__main__":
     import yfinance as yf
     from screening import inspect_stock, add_chip_data
     
-    test_targets = ["2330.TW"]
-    print("啟動手動單機測試模式...\n")
+    # 設定你想單獨測試的股票清單
+    test_targets = ["2330.TW", "2454.TW", "2317.TW", "3231.TW"]
+    
+    print("🚀 啟動單機對接測試模式：繪圖引擎將完全聽命於『大腦 (screening.py)』...\n")
+    
     for ticker in test_targets:
-        # 1. 先自己下載乾淨的價格
-        df = yf.download(ticker, period="1y", progress=False)
-        df = df.xs(ticker, axis=1, level=1).copy() if isinstance(df.columns, pd.MultiIndex) else df.copy()
+        print(f"📡 正在處理 {ticker}...")
         
-        # 2. 🌟 呼叫外掛，把籌碼貼上去 (就是這步之前漏掉了！)
+        # 1. 取得原始 K 線資料 (預設 1 年)
+        data = yf.download(ticker, period="1y", progress=False)
+        if data.empty: continue
+        df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
+        
+        # 2. 貼上籌碼外掛 [cite: 53]
         df = add_chip_data(df, ticker)
         
-        # 3. 再丟給大腦去算分數與背離
+        # 3. 丟給大腦運算 (得到 10 分制分數與回測成績) [cite: 60, 160]
         result = inspect_stock(ticker, preloaded_df=df)
-       
+        
+        # 4. 如果大腦運算成功，將 [計算後資料] 傳給畫圖函式顯示 
         if result and "計算後資料" in result:
             draw_chart(
                 ticker, 
-                preloaded_df=result["計算後資料"], 
+                preloaded_df=result["計算後資料"],  # 🌟 傳入大腦算好的 DataFrame
                 win_rate=result.get("系統勝率(%)", "N/A"), 
                 total_profit=result.get("累計報酬率(%)", "N/A"),
-                expected_value=result.get("期望值", "N/A") # 🌟 把測試區的球也補上
+                expected_value=result.get("期望值", "N/A")
             )
