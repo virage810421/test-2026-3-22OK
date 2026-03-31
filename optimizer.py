@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 
 from screening import inspect_stock, add_chip_data
 from config import PARAMS as BASE_PARAMS
-
+from kline_cache import get_smart_klines
 # ==========================================
 # 🌌 1. 擴充版「參數宇宙」(防過度擬合版)
 # ==========================================
@@ -33,33 +33,39 @@ def generate_random_params():
     return new_params
 
 def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=None):
-    # 如果有傳入特定產業清單就用傳入的，否則用預設的 TEST_TICKERS
-    targets = ticker_list if ticker_list else TEST_TICKERS
-    print(f"\n🚀 啟動 Layer 3：AI 滾動盲測尋標引擎 (準備測試 {iterations} 組)...\n")
-    
-    # 往下所有的 TEST_TICKERS 都要改成 targets
-    print("📥 正在下載歷史 K 線與法人籌碼，並建立【訓練集】與【測試集】...")
-    batch_data = yf.download(targets, period="2y", progress=False)
     """
     機構級 Walk-Forward 引擎：
     split_ratio = 0.7 代表前 70% 拿來訓練，後 30% 拿來盲測驗證。
     """
+    # 如果有傳入特定產業清單就用傳入的，否則用預設的 TEST_TICKERS
+    targets = ticker_list if ticker_list else TEST_TICKERS
     print(f"\n🚀 啟動 Layer 3：AI 滾動盲測尋標引擎 (準備測試 {iterations} 組)...\n")
     
     # --- A. 預先下載並切分資料 ---
-    print("📥 正在下載歷史 K 線與法人籌碼，並建立【訓練集】與【測試集】...")
-    batch_data = yf.download(TEST_TICKERS, period="2y", progress=False)
+    print("📥 正在智慧調閱歷史 K 線與法人籌碼...")
+    # 🌟 啟動快取引擎
+    ticker_dfs = get_smart_klines(targets)
     
     train_dfs = {}
     test_dfs = {}
     
     for ticker in targets:
-        df = batch_data.xs(ticker, axis=1, level=1).copy() if isinstance(batch_data.columns, pd.MultiIndex) else batch_data.copy()
+        if ticker not in ticker_dfs:
+            print(f"⚠️ 無法取得 {ticker} 資料，已自動略過。")
+            continue
+            
+        df = ticker_dfs[ticker].copy()
         df.dropna(subset=['Close'], inplace=True)
         df.ffill(inplace=True)
         if df.empty or len(df) < 100: continue
         
+        # 貼上籌碼外掛
         df = add_chip_data(df, ticker)
+        
+        # 🌟 預載入基本面數據，拯救 FinMind 額度！
+        from screening import add_fundamental_filter
+        f_data = add_fundamental_filter(ticker, p=BASE_PARAMS)
+        df.fundamental_cache = f_data
         
         # 🌟 核心：將資料切成兩半 (Train vs Test)
         split_idx = int(len(df) * split_ratio)

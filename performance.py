@@ -2,6 +2,7 @@ import pyodbc
 import pandas as pd
 import numpy as np
 import warnings
+import time
 warnings.filterwarnings('ignore', category=UserWarning)
 
 
@@ -103,16 +104,21 @@ def print_report(results):
 
 def get_strategy_ev(setup_tag, regime):
     """
-    提供給實戰機台 (live_paper_trading.py) 呼叫的 API。
-    實戰機台在進場前，會先打電話問這個函數：「這個陣型能賺錢嗎？」
+    提供給實戰機台呼叫的 API。
+    加入 Cache 機制：每 1 小時才重新查一次資料庫，其他時間直接秒回快取數據！
     """
-    results = analyze_performance()
-    if not results: return 0.0
+    global _EV_CACHE, _LAST_UPDATE
     
+    current_time = time.time()
+    # 如果距離上次更新超過 3600 秒 (1小時)，才重新查詢 SQL
+    if current_time - _LAST_UPDATE > 3600:
+        results = analyze_performance("backtest_history")
+        if results:
+            _EV_CACHE = {k: v["真實期望值(EV%)"] for k, v in results.items()}
+        _LAST_UPDATE = current_time
+        
     strat_key = f"{setup_tag} ({regime})"
-    if strat_key in results:
-        return results[strat_key]["真實期望值(EV%)"]
-    return 0.0 # 若無足夠歷史數據，預設 EV 為 0 (邊緣試單)
+    return _EV_CACHE.get(strat_key, 0.0) # 若無數據，預設 EV 為 0 (邊緣試單)
 
 if __name__ == "__main__":
     print("啟動 Layer 2 績效透視引擎...")

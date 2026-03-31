@@ -9,6 +9,7 @@ from config import PARAMS, WATCH_LIST
 from performance import get_strategy_ev  # ✨ Layer 2 匯入績效大腦
 from param_storage import load_all_params
 from sector_classifier import get_stock_sector
+from kline_cache import get_smart_klines
 # 啟動時自動讀取 AI 最新優化的 JSON 成果
 AUTO_PARAMS = load_all_params()
 
@@ -169,14 +170,17 @@ def run_live_simulation():
         print(f"\n[{current_time}] 📡 啟動定時海選雷達，掃描 {len(WATCH_LIST)} 檔標的...")
 
         try:
-            batch_data = yf.download(WATCH_LIST, period="2y", progress=False)
+            # 🌟 實戰增量更新：只會抓取「今天」的最新跳動資料，其餘全用本地存檔！
+            ticker_dfs = get_smart_klines(WATCH_LIST)
         except Exception as e:
-            print(f"⚠️ 網路連線失敗: {e}"); time.sleep(60); continue
+            print(f"⚠️ K線智慧調閱失敗: {e}"); time.sleep(60); continue
 
         for ticker in WATCH_LIST:
-            time.sleep(1) 
+            time.sleep(1)
+
+            if ticker not in ticker_dfs: continue
+            ticker_df = ticker_dfs[ticker].copy() # 直接拿拼好的資料
             
-            ticker_df = batch_data.xs(ticker, axis=1, level=1).copy() if isinstance(batch_data.columns, pd.MultiIndex) else batch_data.copy()
             # ✨ 疫苗 1：嚴格剃除沒有收盤價的幽靈 K 線，防止 NaN 病毒感染
             ticker_df.dropna(subset=['Close'], inplace=True)
             ticker_df.ffill(inplace=True) 
@@ -472,9 +476,10 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             
         else:
             # 【潛伏型或傳統 3 分制】中規中矩的作法
-            DYNAMIC_SL = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) # 🌟 改
-            DYNAMIC_TP = sys_params['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else sys_params['TP_BASE_PCT'] # 🌟 改
-            ignore_tp = positions[0]['進場分數'] >= 3 # 只有 3 分以上才死咬
+            DYNAMIC_SL = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) 
+            DYNAMIC_TP = sys_params['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else sys_params['TP_BASE_PCT'] 
+            # 🌟 [修復防當機] 改用 .get 防呆，或直接依賴陣型標籤
+            ignore_tp = positions[0].get('進場分數', 0) >= 3
 
         # 🌟 Pandas 魔法：直接利用 ticker_df 切片，找出進場後的極端價格！
         try:
