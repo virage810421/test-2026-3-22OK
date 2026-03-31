@@ -1,0 +1,208 @@
+import yfinance as yf  # 🚀 關鍵補強
+import pandas as pd
+import numpy as np
+import random
+from copy import deepcopy
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern
+import warnings
+warnings.filterwarnings('ignore')
+
+from screening import inspect_stock, add_chip_data
+from config import PARAMS as BASE_PARAMS
+from kline_cache import get_smart_klines
+
+# ==========================================
+# 🌌 參數宇宙 (與原本相同，供 AI 探索)
+# ==========================================
+PARAM_SPACE = {
+    "RSI_PERIOD": [10, 14, 20],               
+    "MACD_FAST": [10, 12, 15],                
+    "MACD_SLOW": [20, 26, 30],                
+    "ADX_TREND_THRESHOLD": [15, 20, 25],      
+    "BB_STD": [1.5, 2.0, 2.5],                
+    "VOL_BREAKOUT_MULTIPLIER": [1.1, 1.5, 2.0], 
+    "SL_MIN_PCT": [0.02, 0.03, 0.04],         
+    "TP_BASE_PCT": [0.08, 0.10, 0.12],        
+    "TP_TREND_PCT": [0.15, 0.20, 0.25],       
+    "MIN_RR_RATIO": [1.2, 1.5, 2.0]            
+}
+
+TEST_TICKERS = ["2330.TW", "2454.TW", "2317.TW", "2603.TW", "2881.TW", "1519.TW"]
+
+# ==========================================
+# 🧠 核心 1：帕雷托前緣篩選 (Pareto Selection)
+# ==========================================
+def is_dominated(a, b):
+    """加入「報酬率」作為全面輾壓的評判標準"""
+    return (
+        b["EV"] >= a["EV"] and
+        b["WinRate"] >= a["WinRate"] and
+        b["TotalReturn"] >= a["TotalReturn"] and # 🌟 新增：報酬率必須大於等於
+        b["MDD"] <= a["MDD"] and 
+        (b["EV"] > a["EV"] or b["WinRate"] > a["WinRate"] or b["TotalReturn"] > a["TotalReturn"] or b["MDD"] < a["MDD"])
+    )
+
+def get_pareto_frontier(results):
+    pareto_front = []
+    for i, res1 in enumerate(results):
+        dominated = False
+        for j, res2 in enumerate(results):
+            if i != j and is_dominated(res1, res2):
+                dominated = True
+                break
+        if not dominated:
+            pareto_front.append(res1)
+    return pareto_front
+
+# ==========================================
+# 🧠 核心 2：評估函數 (對接您現有的大腦)
+# ==========================================
+def evaluate_params(params, train_dfs, targets):
+    total_ev = 0.0
+    total_winrate = 0.0
+    total_return = 0.0 # 🌟 新增：累計報酬率變數
+    valid_stocks = 0
+    
+    for ticker in targets:
+        if ticker not in train_dfs: continue
+        df = train_dfs[ticker].copy()
+        
+        result = inspect_stock(ticker, preloaded_df=df, p=params)
+        
+        if result and not pd.isna(result.get("期望值")):
+            ev = float(result.get("期望值", 0))
+            win_rate = float(result.get("系統勝率(%)", 0))
+            ret = float(result.get("累計報酬率(%)", 0)) # 🌟 新增：從大腦抓取報酬率
+            
+            if -20 < ev < 20: 
+                total_ev += ev
+                total_winrate += win_rate
+                total_return += ret # 🌟 累加報酬率
+                valid_stocks += 1
+                
+    if valid_stocks == 0:
+        return {"EV": -999.0, "WinRate": 0.0, "TotalReturn": -999.0, "MDD": 999.0}
+        
+    avg_ev = total_ev / valid_stocks
+    avg_winrate = total_winrate / valid_stocks
+    avg_return = total_return / valid_stocks # 🌟 計算平均報酬率
+    
+    pseudo_mdd = 100.0 if avg_ev < 0 else (100.0 / (avg_ev + 1e-5)) 
+    
+    # 🌟 回傳時把 TotalReturn 也打包進去
+    return {"EV": avg_ev, "WinRate": avg_winrate, "TotalReturn": avg_return, "MDD": pseudo_mdd}
+
+# ==========================================
+# 🚀 核心 3：貝氏最佳化主程式 (Bayesian Optimization)
+# ==========================================
+def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
+    targets = ticker_list if ticker_list else TEST_TICKERS
+    print(f"\n🚀 啟動【機構級】貝氏最佳化引擎 (Bayesian Optimization)...\n")
+    
+    # --- 1. 下載與切分資料 ---
+    batch_data = yf.download(targets, period="2y", progress=False)
+    train_dfs = {}
+    
+    for ticker in targets:
+        try:
+            df = batch_data.xs(ticker, axis=1, level=1).copy() if isinstance(batch_data.columns, pd.MultiIndex) else batch_data.copy()
+            df.dropna(subset=['Close'], inplace=True)
+            df = add_chip_data(df, ticker)
+            split_idx = int(len(df) * split_ratio)
+            train_dfs[ticker] = df.iloc[:split_idx].copy()
+        except Exception:
+            continue
+
+    # --- 2. 初始化高斯過程回歸模型 (Gaussian Process) ---
+    kernel = Matern(nu=2.5)
+    model = GaussianProcessRegressor(kernel=kernel, alpha=1e-2, normalize_y=True)
+    
+    X_train = []
+    y_train = []
+    all_results = []
+    
+    # 🌟 核心修正：只萃取我們正在優化的「數值型參數」，過濾掉不相關的 List
+    optimizable_keys = list(PARAM_SPACE.keys())
+
+    # 先隨機抽取 5 組作為 AI 的「初始先驗知識」
+    print("🧠 階段一：建立初始先驗知識 (隨機探索 5 組)...")
+    for _ in range(5):
+        p = deepcopy(BASE_PARAMS)
+        for k, v in PARAM_SPACE.items(): p[k] = random.choice(v)
+        
+        metrics = evaluate_params(p, train_dfs, targets)
+        if metrics["EV"] != -999.0:
+            # 🌟 只把數值特徵餵給 AI
+            features = [p[k] for k in optimizable_keys]
+            X_train.append(features)
+            y_train.append(metrics["EV"]) 
+            all_results.append({"Params": p, **metrics})
+
+    # --- 3. 貝氏推論循環 (探索與開發) ---
+    print("\n🧠 階段二：啟動貝氏推論 (集中火力尋找黃金參數區間)...")
+    for i in range(n_iter):
+        if len(X_train) > 0:
+            model.fit(X_train, y_train)
+            
+        # 產生 100 組虛擬候選人
+        candidates = []
+        for _ in range(100):
+            p = deepcopy(BASE_PARAMS)
+            for k, v in PARAM_SPACE.items(): p[k] = random.choice(v)
+            candidates.append(p)
+            
+        # 🌟 候選人同樣只萃取數值特徵
+        X_candidates = [[c[k] for k in optimizable_keys] for c in candidates]
+        
+        # AI 預測
+        preds, stds = model.predict(X_candidates, return_std=True)
+        
+        # UCB 策略
+        ucb = preds + 1.96 * stds
+        best_idx = np.argmax(ucb)
+        best_candidate = candidates[best_idx]
+        
+        print(f"🔄 [推論進度 {i+1}/{n_iter}] AI 鎖定高潛力參數組合進行實測...", end="\r")
+        
+        # 實測
+        metrics = evaluate_params(best_candidate, train_dfs, targets)
+        
+        if metrics["EV"] != -999.0:
+            features = [best_candidate[k] for k in optimizable_keys]
+            X_train.append(features)
+            y_train.append(metrics["EV"])
+            all_results.append({"Params": best_candidate, **metrics})
+
+    # --- 4. 帕雷托前緣決策 ---
+    print("\n\n⚖️ 階段三：進入帕雷托前緣篩選 (排除被輾壓的劣質參數)...")
+    pareto_front = get_pareto_frontier(all_results)
+    
+    if not pareto_front:
+        print("⚠️ 找不到有效的黃金參數。")
+        return None
+        
+    # 從帕雷托前緣中，挑選 EV 最高的作為本期冠軍
+    pareto_front.sort(key=lambda x: x["EV"], reverse=True)
+    champion = pareto_front[0]
+    
+    print("\n" + "═"*50)
+    print("🏆 【貝氏演算法 x 帕雷托前緣】終極分析報告")
+    print("═"*50)
+    print(f"🔹 總測試組數: {len(all_results)} 組")
+    print(f"🔹 帕雷托黃金解: {len(pareto_front)} 組 (彼此不分軒輊)")
+    # 🌟 依照您的要求，全部顯示中文並精確到小數點後 3 位
+    print(f"🥇 期望值: {champion['EV']:.3f}%")
+    print(f"🥇 系統勝率: {champion['WinRate']:.3f}%")
+    print(f"🥇 累計報酬率: {champion['TotalReturn']:.3f}%") 
+    print("═"*50)
+    
+    # 🌟 將勝率和報酬率一起回傳給自動化工廠
+    return {
+        "Params": champion["Params"], 
+        "Train_EV": champion["EV"], 
+        "WinRate": champion["WinRate"], 
+        "TotalReturn": champion["TotalReturn"]
+    }
+if __name__ == "__main__":
+    run_bayesian_optimization(n_iter=30)

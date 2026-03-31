@@ -1,48 +1,63 @@
-
-from optimizer import run_walk_forward_optimization
-from param_storage import save_sector_params
+import time
 from sector_classifier import get_stock_sector
+from param_storage import save_sector_params
 from config import WATCH_LIST
 
+# 🌟 [核心開關] 在這裡切換您的引擎
+# True  = 使用最新「貝氏演算法 x 帕雷托前緣」 (高度智慧)
+# False = 使用舊版「隨機走訪優化」 (快速簡單)
+USE_ADVANCED_BAYES = True 
+
+# 🔗 動態匯入引擎
+if USE_ADVANCED_BAYES:
+    from advanced_optimizer import run_bayesian_optimization as run_engine
+    print("🚀 引擎模式：【機構級 - 貝氏智慧引擎】已掛載")
+else:
+    from optimizer import run_walk_forward_optimization as run_engine
+    print("🚀 引擎模式：【基礎級 - 隨機回測引擎】已掛載")
+
 def start_automated_training():
-    print("🚀 啟動【全自動產業感知與優化流水線】...")
-    
-    # 1. 自動分門別類 (把大清單拆成不同產業的小清單)
-    sector_groups = {"TECH": [], "SHIPPING": [], "FINANCE": [], "OTHERS": []}
+    """
+    全自動產業優化流水線
+    """
+    # 1. 產業分類 (這部分維持您原本的優良邏輯)
+    sector_groups = {}
     for ticker in WATCH_LIST:
-        cat = get_stock_sector(ticker)
-        sector_groups[cat].append(ticker)
+        sector = get_stock_sector(ticker)
+        if sector not in sector_groups:
+            sector_groups[sector] = []
+        sector_groups[sector].append(ticker)
+    
+    print(f"📊 產業分類完成，共 {len(sector_groups)} 個組別，準備開始訓練...")
 
-    # 2. 針對各個有股票的產業池進行獨立訓練
-    for sector_name, tickers in sector_groups.items():
-        if not tickers: continue  # 如果該產業沒半支股票，就跳過
+    # 2. 開始循環訓練
+    for sector, tickers in sector_groups.items():
+        print(f"\n" + "="*40)
+        print(f"📂 正在優化產業：{sector} (標的：{tickers})")
+        print("="*40)
         
-        print("\n" + "="*60)
-        print(f"🏗️ 正在針對【{sector_name}】板塊進行深度優化訓練...")
-        print(f"📚 自動分類標的清單: {tickers}")
-        print("="*60)
-        
-        # 呼叫大腦，傳入自動分好類的清單
-        result = run_walk_forward_optimization(iterations=100, split_ratio=0.7, ticker_list=tickers)
-        
-        if result:
-            train_ev = result["Train_EV"]
-            test_ev = result["Test_EV"]
-            best_params = result["Params"]
-
-            # 🛡️ 斷崖偵測與勝率檢查
-            if train_ev > 0 and (train_ev - test_ev) > (train_ev * 0.7):
-                print(f"🚨 【過度擬合斷崖】訓練 EV: {train_ev:.3f}%, 盲測 EV: {test_ev:.3f}% ➔ 直接棄用！")
-                continue
+        try:
+            # 🌟 根據開關自動呼叫對應的引擎
+            # 這裡我們統一使用 run_engine 這個別名來呼叫
+            if USE_ADVANCED_BAYES:
+                # 貝氏引擎通常 30 次就很精準
+                result = run_engine(n_iter=30, ticker_list=tickers) 
+            else:
+                # 舊引擎通常需要較多次數來靠運氣抓好參數
+                result = run_engine(iterations=100, ticker_list=tickers)
+            
+            if result and result.get("Params"):
+                # 3. 存入軍火庫 (JSON)
+                save_sector_params(sector, result["Params"])
+                print(f"✅ {sector} 優化成功！已儲存至 automated_sector_params.json")
+                print(f"📈 訓練集 EV: {result.get('Train_EV', 0):.3f}%")
+            else:
+                print(f"⚠️ {sector} 未能產出有效參數，跳過儲存。")
                 
-            if test_ev <= 0:
-                print(f"🚨 【盲測失敗】實戰期望值為負 ({test_ev:.3f}%) ➔ 放棄存檔！")
-                continue
-
-            print(f"✅ 【驗證通過】參數穩定 (盲測 EV: {test_ev:.3f}%)，正在更新產業軍火庫...")
-            save_sector_params(sector_name, best_params)
-
-    print("\n🎉 全產業自動訓練結束！實戰大腦已獲取最新武器參數。")
+        except Exception as e:
+            print(f"❌ {sector} 訓練過程發生崩潰: {e}")
+        
+        time.sleep(2) # 讓電腦喘口氣
 
 if __name__ == "__main__":
     start_automated_training()
