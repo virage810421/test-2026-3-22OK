@@ -4,10 +4,7 @@ import numpy as np
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
-# ==========================================
-# ⚙️ 資料庫連線設定
 
-# ==========================================
 # ⚙️ 資料庫連線設定
 # ==========================================
 DB_CONN_STR = (
