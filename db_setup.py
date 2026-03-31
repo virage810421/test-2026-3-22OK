@@ -1,6 +1,3 @@
-
-
-
 import pyodbc
 import sys
 
@@ -14,6 +11,9 @@ def setup_tsql_database():
     if confirm.lower() != 'y':
         print("🛑 已安全取消作業。")
         return
+
+    # 🌟 新增：詢問是否刪除籌碼資料
+    clear_chips = input("❓ 是否要一併刪除【法人籌碼庫 (daily_chip_data)】？(選 n 可保留已下載的歷史籌碼) (y/n): ")
 
     print("\n🔧 準備連線至 SQL Server 進行建置...")
     
@@ -44,12 +44,21 @@ def setup_tsql_database():
         # 💣 清理舊表
         # ==========================================
         tables_to_drop = [
-            'trade_history', 'active_positions', 'daily_chip_data',
+            'trade_history', 'active_positions', 
             'strategy_performance', 'backtest_history', 'account_info'
         ]
+        
+        # 💡 根據使用者的選擇，決定是否把 daily_chip_data 加入刪除名單
+        if clear_chips.lower() == 'y':
+            tables_to_drop.append('daily_chip_data')
+            
         for table in tables_to_drop:
             cursor.execute(f"IF OBJECT_ID('{table}', 'U') IS NOT NULL DROP TABLE {table}")
-        print("🗑️ 舊資料表已全數刪除完畢！\n")
+            
+        if clear_chips.lower() == 'y':
+            print("🗑️ 舊資料表 (含籌碼庫) 已全數刪除完畢！\n")
+        else:
+            print("🗑️ 交易與帳戶舊資料表已刪除！(✅ 已為您保留 daily_chip_data 籌碼歷史)\n")
 
         # ==========================================
         # 🏗️ 建立全新資料表 (包含 ✨ 歸因擴充欄位)
@@ -104,18 +113,22 @@ def setup_tsql_database():
         print("   👉 建立 [active_positions] 成功")
 
         # --- 表單 3：每日法人籌碼庫 ---
+        # 💡 加入防護：如果使用者選擇保留舊表 (表已存在)，這裡不會報錯覆蓋
         cursor.execute('''
-            CREATE TABLE daily_chip_data (
-                [日期] DATE,
-                [Ticker SYMBOL] VARCHAR(20),
-                [外資買賣超] FLOAT,
-                [投信買賣超] FLOAT,
-                [自營商買賣超] FLOAT,
-                [三大法人合計] FLOAT,
-                PRIMARY KEY ([日期], [Ticker SYMBOL])
-            )
+            IF OBJECT_ID('daily_chip_data', 'U') IS NULL
+            BEGIN
+                CREATE TABLE daily_chip_data (
+                    [日期] DATE,
+                    [Ticker SYMBOL] VARCHAR(20),
+                    [外資買賣超] FLOAT,
+                    [投信買賣超] FLOAT,
+                    [自營商買賣超] FLOAT,
+                    [三大法人合計] FLOAT,
+                    PRIMARY KEY ([日期], [Ticker SYMBOL])
+                )
+            END
         ''')
-        print("   👉 建立 [daily_chip_data] 成功")
+        print("   👉 建立/確認 [daily_chip_data] 成功")
 
         # --- 表單 4：策略績效追蹤表 ---
         cursor.execute('''
@@ -178,4 +191,4 @@ def setup_tsql_database():
             conn.close()
 
 if __name__ == "__main__":
-    setup_tsql_database();
+    setup_tsql_database()
