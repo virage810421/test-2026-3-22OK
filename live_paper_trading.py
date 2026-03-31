@@ -7,8 +7,11 @@ from advanced_chart import draw_chart
 from screening import inspect_stock, add_chip_data, apply_slippage, calculate_pnl
 from config import PARAMS, SECTOR_MAP
 from performance import get_strategy_ev  # ✨ Layer 2 匯入績效大腦
+from param_storage import load_all_params
 
 
+# 啟動時自動讀取最新的優化成果
+AUTO_PARAMS = load_all_params()
 # ==========================================
 # 💼 虛擬帳戶、機台與資料庫設定
 # ==========================================

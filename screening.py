@@ -854,6 +854,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             "系統勝率(%)": f"{win_rate:.3f}",       
             "累計報酬率(%)": f"{total_profit:.3f}", 
             "期望值": round(expected_value, 3),
+            "交易次數": total_trades,                 # ✨ 補上這個！讓 Optimizer 的懲罰機制生效
+            "最大虧損(%)": 0,                         # ✨ 補上預設值防呆 (若未來有算 MDD 可替換)
             "診斷數據": diagnostic_data,  
             "計算後資料": df             
         }

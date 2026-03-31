@@ -32,7 +32,14 @@ def generate_random_params():
         new_params[key] = random.choice(values)
     return new_params
 
-def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
+def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=None):
+    # 如果有傳入特定產業清單就用傳入的，否則用預設的 TEST_TICKERS
+    targets = ticker_list if ticker_list else TEST_TICKERS
+    print(f"\n🚀 啟動 Layer 3：AI 滾動盲測尋標引擎 (準備測試 {iterations} 組)...\n")
+    
+    # 往下所有的 TEST_TICKERS 都要改成 targets
+    print("📥 正在下載歷史 K 線與法人籌碼，並建立【訓練集】與【測試集】...")
+    batch_data = yf.download(targets, period="2y", progress=False)
     """
     機構級 Walk-Forward 引擎：
     split_ratio = 0.7 代表前 70% 拿來訓練，後 30% 拿來盲測驗證。
@@ -46,7 +53,7 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
     train_dfs = {}
     test_dfs = {}
     
-    for ticker in TEST_TICKERS:
+    for ticker in targets:
         df = batch_data.xs(ticker, axis=1, level=1).copy() if isinstance(batch_data.columns, pd.MultiIndex) else batch_data.copy()
         df.dropna(subset=['Close'], inplace=True)
         df.ffill(inplace=True)
@@ -69,13 +76,18 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
     results_log = []
     for i in range(1, iterations + 1):
         candidate_params = generate_random_params()
+        
+        # 🌟 [防護 1] 滑價壓力測試：強制把滑價耗損加倍 (例如 0.3%)
+        candidate_params['MARKET_SLIPPAGE'] = 0.003
+        
         print(f"🔄 [訓練進度 {i}/{iterations}] 正在驗證新變異參數...", end="\r")
         
         total_ev = 0.0
         total_score = 0.0  # ✨ 新增：用來記錄扣分後的終極分數
         valid_stocks = 0
+        min_single_ev = 999.0  # 🌟 用來記錄最慘的那檔股票 EV
         
-        for ticker in TEST_TICKERS:
+        for ticker in targets:
             if ticker not in train_dfs: continue
             df = train_dfs[ticker].copy()
             
@@ -83,8 +95,10 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
             result = inspect_stock(ticker, preloaded_df=df, p=candidate_params)
             
             if result and not pd.isna(result.get("期望值")):
-                # 抓取大腦算好的各項數據 (使用 get 防呆，如果沒這欄位就給預設值)
+                # 抓取大腦算好的各項數據
                 ev = float(result.get("期望值", 0))
+                min_single_ev = min(min_single_ev, ev) # 🌟 紀錄最低 EV
+                
                 win_rate = float(result.get("系統勝率(%)", result.get("勝率(%)", 50))) 
                 mdd = abs(float(result.get("最大虧損(%)", 0)))
                 trade_count = int(result.get("交易次數", 10))
@@ -114,9 +128,13 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
         avg_score = total_score / valid_stocks if valid_stocks > 0 else -999.0
         avg_ev = total_ev / valid_stocks if valid_stocks > 0 else -999.0
 
-        # 🔪 4. 廣泛有效性懲罰 (如果 6 檔標的裡只有不到 3 檔能賺錢，代表參數太冷門)
-        if valid_stocks < len(TEST_TICKERS) * 0.5: 
+        # 🔪 4. 廣泛有效性懲罰 (如果測試標的裡只有不到一半能賺錢，代表參數太冷門)
+        if valid_stocks < len(targets) * 0.5:  # 🌟 注意這裡改成 targets 了
             avg_score -= 1.5  
+
+        # 🌟 [防護 2] 參數穩定度：不允許單一股票出現毀滅性虧損
+        if min_single_ev < -0.5:
+            avg_score -= 5.0  # 只要有一檔股票 EV 跌破 -0.5%，直接重罰淘汰！
 
         results_log.append({
             "Train_EV": avg_ev,       # 🌟 只用來印出顯示，不參與排名
@@ -146,7 +164,7 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
     test_total_ev = 0.0
     test_valid_stocks = 0
     
-    for ticker in TEST_TICKERS:
+    for ticker in targets:
         if ticker not in test_dfs: continue
         df = test_dfs[ticker].copy()
         
@@ -184,7 +202,14 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
         current_val = BASE_PARAMS.get(k)
         marker = "✨ (建議修改)" if v != current_val else "✅ (維持不變)"
         print(f"  {k.ljust(22)}: {str(v).ljust(6)} {marker}")
-
+    # 🌟 輸出前，把滑價改回正常值 (例如 0.15%)，以免實戰機台被懲罰
+    best_candidate["Params"]['MARKET_SLIPPAGE'] = 0.0015
+    
+    return {
+        "Params": best_candidate["Params"],
+        "Train_EV": best_candidate['Train_EV'],
+        "Test_EV": test_avg_ev
+    }
 if __name__ == "__main__":
     # 將次數拉高到 50 次，讓 AI 有足夠的樣本找出真理
     run_walk_forward_optimization(iterations=100)
