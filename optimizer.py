@@ -72,6 +72,7 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
         print(f"🔄 [訓練進度 {i}/{iterations}] 正在驗證新變異參數...", end="\r")
         
         total_ev = 0.0
+        total_score = 0.0  # ✨ 新增：用來記錄扣分後的終極分數
         valid_stocks = 0
         
         for ticker in TEST_TICKERS:
@@ -82,19 +83,51 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7):
             result = inspect_stock(ticker, preloaded_df=df, p=candidate_params)
             
             if result and not pd.isna(result.get("期望值")):
-                ev = float(result["期望值"])
-                # 簡單過濾，確保該參數不是靠單一極端值撐起來的
-                if -20 < ev < 20: 
+                # 抓取大腦算好的各項數據 (使用 get 防呆，如果沒這欄位就給預設值)
+                ev = float(result.get("期望值", 0))
+                win_rate = float(result.get("系統勝率(%)", result.get("勝率(%)", 50))) 
+                mdd = abs(float(result.get("最大虧損(%)", 0)))
+                trade_count = int(result.get("交易次數", 10))
+
+                # 🌟 基礎分數就是 EV (賺錢能力)
+                score = ev
+
+                # 🔪 1. 心理壓力懲罰 (針對低勝率)
+                if win_rate < 45:
+                    score -= (45 - win_rate) * 0.1  
+
+                # 🔪 2. 破產風險懲罰 (針對高 MDD)
+                if mdd > 15:
+                    score -= (mdd - 15) * 0.2
+
+                # 🔪 3. 運氣成分懲罰 (針對單檔股票交易次數太少)
+                if trade_count < 5:
+                    score -= 2.0  
+
+                # 過濾掉極端異常值後，加總平均
+                if -20 < score < 20: 
+                    total_score += score
                     total_ev += ev
                     valid_stocks += 1
         
+        # 結算這組參數的平均表現
+        avg_score = total_score / valid_stocks if valid_stocks > 0 else -999.0
         avg_ev = total_ev / valid_stocks if valid_stocks > 0 else -999.0
+
+        # 🔪 4. 廣泛有效性懲罰 (如果 6 檔標的裡只有不到 3 檔能賺錢，代表參數太冷門)
+        if valid_stocks < len(TEST_TICKERS) * 0.5: 
+            avg_score -= 1.5  
+
         results_log.append({
-            "Train_EV": avg_ev,
+            "Train_EV": avg_ev,       # 🌟 只用來印出顯示，不參與排名
+            "Score": avg_score,       # 🌟 真正用來排名的終極分數
             "Params": candidate_params
         })
 
-    results_log.sort(key=lambda x: x["Train_EV"], reverse=True)
+    # ==========================================
+    # 🏆 結算：使用加了懲罰的「終極分數 (Score)」來選出冠軍
+    # ==========================================
+    results_log.sort(key=lambda x: x["Score"], reverse=True)
     best_candidate = results_log[0]
     
     if best_candidate['Train_EV'] == -999.0:

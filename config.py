@@ -80,4 +80,54 @@ PARAMS = {
 
 }
 
- 
+ # ==========================================
+# 🌟 12. 多重產業專屬參數 (Sector-Specific Overrides)
+# ==========================================
+# 使用 .copy() 繼承原本的 PARAMS，然後只針對特定產業覆寫關鍵數值
+
+# 💻 1. 科技半導體專用 (特徵：趨勢延續性強，允許較大的停利空間)
+TECH_PARAMS = PARAMS.copy()
+TECH_PARAMS.update({
+    "RSI_PERIOD": 14,               # 維持標準
+    "TP_TREND_PCT": 0.25,           # 科技股趨勢出來很驚人，放長線 (25%)
+    "VOL_BREAKOUT_MULTIPLIER": 1.2  # 稍微爆量就可以視為表態
+})
+
+# 🚢 2. 航運週期股專用 (特徵：波動極大、暴漲暴跌，需要極端敏銳的指標)
+SHIPPING_PARAMS = PARAMS.copy()
+SHIPPING_PARAMS.update({
+    "RSI_PERIOD": 10,               # 縮短天數，讓指標反應更快
+    "SL_MAX_PCT": 0.10,             # 放寬停損極限 (航運洗盤很深)
+    "BB_STD": 2.2,                  # 布林通道標準差調寬，避免假突破
+    "TP_BASE_PCT": 0.15             # 基礎停利拉高，不吃魚頭魚尾只吃大魚身
+})
+
+# 🏦 3. 金融權值股專用 (特徵：牛皮、緩漲急跌，需要過濾雜訊)
+FINANCE_PARAMS = PARAMS.copy()
+FINANCE_PARAMS.update({
+    "RSI_PERIOD": 20,               # 拉長天數，過濾日常雜訊
+    "MIN_RR_RATIO": 1.2,            # 金融股肉不多，風報比要求可稍微降低
+    "MDD_LIMIT": 0.10               # 金融股如果回撤 10% 通常代表大盤要崩了，提早熔斷
+})
+
+# ==========================================
+# 🗺️ 股票代號與參數的「自動對應雷達圖 (Sector Map)」
+# ==========================================
+SECTOR_MAP = {
+    # 科技半導體
+    "2330.TW": TECH_PARAMS,
+    "2454.TW": TECH_PARAMS,
+    "2317.TW": TECH_PARAMS,
+    "2382.TW": TECH_PARAMS,
+    "3231.TW": TECH_PARAMS,
+    
+    # 航運股
+    "2603.TW": SHIPPING_PARAMS,
+    "2609.TW": SHIPPING_PARAMS,
+    "2615.TW": SHIPPING_PARAMS,
+    
+    # 金融股
+    "2881.TW": FINANCE_PARAMS,
+    "2882.TW": FINANCE_PARAMS,
+    "2891.TW": FINANCE_PARAMS,
+}

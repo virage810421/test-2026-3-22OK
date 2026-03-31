@@ -5,7 +5,7 @@ from datetime import datetime
 import yfinance as yf
 from advanced_chart import draw_chart
 from screening import inspect_stock, add_chip_data, apply_slippage, calculate_pnl
-from config import PARAMS
+from config import PARAMS, SECTOR_MAP
 from performance import get_strategy_ev  # ✨ Layer 2 匯入績效大腦
 
 
@@ -196,9 +196,14 @@ def run_live_simulation():
                 ticker_df['Trust_Net'] = ticker_df.get('Trust_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
                 ticker_df['Dealers_Net'] = ticker_df.get('Dealers_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
 
-            result = inspect_stock(ticker, preloaded_df=ticker_df)
+                # 🌟 核心升級：動態掛載多重產業參數
+                # 去 SECTOR_MAP 查表，如果這檔股票沒有被特別分類，就用預設的 PARAMS
+                current_stock_params = SECTOR_MAP.get(ticker, PARAMS)
         
-            if result and "計算後資料" in result:
+                # 將專屬參數傳遞給大腦 (保留原本的 preloaded_df，並加入 p=current_stock_params)
+                result = inspect_stock(ticker, preloaded_df=ticker_df, p=current_stock_params)
+    
+        if result and "計算後資料" in result:
                 # 🌟 1. 從字典中提取資料 (包含剛算好的期望值)
                 win_rate = float(result.get("系統勝率(%)", 0))
                 total_prof = float(result.get("累計報酬率(%)", 0))
@@ -245,7 +250,8 @@ def run_live_simulation():
                     # (它會在裡面印出因為 EV 或 RR 拒絕的訊息)
                     print(f"  🎯 {ticker} | 環境: {regime.ljust(4)} | 陣型: {golden_tag.ljust(8)} | 結論: 觸發初審，進入精算程序...")
                 
-                handle_paper_trade(ticker, current_price, status, computed_df, result)
+                # 🌟 修復：把該股票專屬的產業參數，一併傳給負責下單計算的手
+                handle_paper_trade(ticker, current_price, status, computed_df, result, current_stock_params)
                 
         print(f"[{datetime.now().strftime('%H:%M:%S')}] 掃描完成。進入冷卻等待 {PARAMS['SCAN_INTERVAL']} 秒...")
         time.sleep(PARAMS['SCAN_INTERVAL'])
@@ -254,8 +260,8 @@ def run_live_simulation():
 # 🎯 交易模組：支援分批加碼與平均成本計算
 # ==========================================
 
-def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
-    global portfolio, CURRENT_EQUITY, IS_FROZEN, CURRENT_MDD_TIER  
+def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sys_params):
+    global portfolio, CURRENT_EQUITY, IS_FROZEN, CURRENT_MDD_TIER
     if ticker not in portfolio:
         portfolio[ticker] = []
         
@@ -271,7 +277,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
     is_limit_up = current_price >= prev_close * 1.095  # 漲幅達 9.5% 以上視為漲停邊緣
     is_limit_down = current_price <= prev_close * 0.905 # 跌幅達 9.5% 以上視為跌停邊緣 
     
-    MAX_BATCHES = PARAMS['MAX_BATCHES']
+    MAX_BATCHES = sys_params['MAX_BATCHES']
     today_str = datetime.now().strftime("%Y-%m-%d")
     bought_today = any(p.get('進場時間', '').startswith(today_str) for p in positions)
     
@@ -324,20 +330,22 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
             current_regime = latest_row.get('Regime', '未知')
             
             volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
-            if pd.isna(volatility_pct): volatility_pct = PARAMS['SL_MAX_PCT'] # 🛡️ 防禦 NaN 感染，給予最大寬容停損
-            entry_sl_pct = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
+            MAX_BATCHES = sys_params['MAX_BATCHES']  # 🌟 改用 sys_params
+    # ... 中間省略 ...
+            if pd.isna(volatility_pct): volatility_pct = sys_params['SL_MAX_PCT'] # 🌟 改
+            entry_sl_pct = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) # 🌟 改
             
             trend_is_bull = (latest_row['Close'] > latest_row.get('BBI', 0))
             trend_is_with_me = (trade_dir == '做多(Long)' and trend_is_bull) or (trade_dir == '放空(Short)' and not trend_is_bull)
-            adx_is_strong = latest_row.get('ADX14', 0) > PARAMS.get('ADX_TREND_THRESHOLD', 20)
-            entry_tp_pct = PARAMS['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else PARAMS['TP_BASE_PCT']
+            adx_is_strong = latest_row.get('ADX14', 0) > sys_params.get('ADX_TREND_THRESHOLD', 20) # 🌟 改
+            entry_tp_pct = sys_params['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else sys_params['TP_BASE_PCT'] # 🌟 改
             
             rr_ratio = entry_tp_pct / entry_sl_pct if entry_sl_pct > 0 else 0
 
             # 🚨 雙重品質把關：EV 必須大於 0，且風報比(RR) 必須及格
             if ev_score <= 0:
                 print(f"❄️ {ticker} 期望值為負 (EV: {ev_score:.3f}%) ➔ 長期勝算過低，系統放棄進場！")
-            elif rr_ratio < PARAMS.get('MIN_RR_RATIO', 1.5):
+            elif rr_ratio < sys_params.get('MIN_RR_RATIO', 1.5): # 🌟 改
                 print(f"⚖️ {ticker} 訊號觸發，但風報比過低 (RR: {rr_ratio:.2f} < 1.5) ➔ 潛在獲利不值得冒險，放棄進場！")
             else:
                 # 2. 決定基礎「風險承受額度」(Base Risk) 
@@ -440,22 +448,23 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict):
         adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
 
         # 🌟 核心：依據不同 Setup，給予不同的防守與停利目標
+        # 🌟 核心：依據不同 Setup，給予不同的防守與停利目標
         if "REVERSAL" in setup_tag or "抄底" in setup_tag or "摸頭" in setup_tag:
             # 【均值回歸型】目標是搶反彈，快進快出！
-            DYNAMIC_SL = PARAMS['SL_MIN_PCT'] # 停損抓最緊 (打錯就跑)
+            DYNAMIC_SL = sys_params['SL_MIN_PCT'] # 🌟 改
             DYNAMIC_TP = 0.08  # 只要賺 8% 就滿足，不貪心
             ignore_tp = False  # 絕對不貪心，打到目標價強制作結
             
         elif "TREND" in setup_tag or "點火" in setup_tag or "倒貨" in setup_tag:
             # 【趨勢突破型】目標是吃大波段，讓利潤奔跑！
-            DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT'])) # 給予合理的洗盤空間
-            DYNAMIC_TP = PARAMS['TP_TREND_PCT'] # 基礎目標設很高
+            DYNAMIC_SL = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) # 🌟 改
+            DYNAMIC_TP = sys_params['TP_TREND_PCT'] # 🌟 改
             ignore_tp = True   # 🌟 無視傳統目標價，完全交給 Trailing Stop 死咬趨勢！
             
         else:
             # 【潛伏型或傳統 3 分制】中規中矩的作法
-            DYNAMIC_SL = max(PARAMS['SL_MIN_PCT'], min(volatility_pct, PARAMS['SL_MAX_PCT']))
-            DYNAMIC_TP = PARAMS['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else PARAMS['TP_BASE_PCT']
+            DYNAMIC_SL = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) # 🌟 改
+            DYNAMIC_TP = sys_params['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else sys_params['TP_BASE_PCT'] # 🌟 改
             ignore_tp = positions[0]['進場分數'] >= 3 # 只有 3 分以上才死咬
 
         # 🌟 Pandas 魔法：直接利用 ticker_df 切片，找出進場後的極端價格！
