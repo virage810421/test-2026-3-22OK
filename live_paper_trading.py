@@ -5,13 +5,26 @@ from datetime import datetime
 import yfinance as yf
 from advanced_chart import draw_chart
 from screening import inspect_stock, add_chip_data, apply_slippage, calculate_pnl
-from config import PARAMS, SECTOR_MAP
+from config import PARAMS, WATCH_LIST
 from performance import get_strategy_ev  # ✨ Layer 2 匯入績效大腦
 from param_storage import load_all_params
-
-
-# 啟動時自動讀取最新的優化成果
+from sector_classifier import get_stock_sector
+# 啟動時自動讀取 AI 最新優化的 JSON 成果
 AUTO_PARAMS = load_all_params()
+
+# 建立一個簡單的雷達，判斷這檔股票屬於哪個產業
+def get_sector_by_ticker(ticker):
+    if ticker in ["2330.TW", "2454.TW", "2317.TW", "2382.TW", "3231.TW"]: return "TECH"
+    if ticker in ["2603.TW", "2609.TW", "2615.TW"]: return "SHIPPING"
+    if ticker in ["2881.TW", "2882.TW", "2891.TW", "2886.TW"]: return "FINANCE"
+    return "UNKNOWN"
+
+# 修改查表邏輯，優先使用剛出爐的 AI 參數
+def get_params_for_stock(ticker):
+    sector = get_sector_by_ticker(ticker) 
+    if sector in AUTO_PARAMS:
+        return AUTO_PARAMS[sector]
+    return SECTOR_MAP.get(ticker, PARAMS) # 沒自動參數才用舊的
 # ==========================================
 # 💼 虛擬帳戶、機台與資料庫設定
 # ==========================================
@@ -25,13 +38,6 @@ DB_CONN_STR = (
     r'Trusted_Connection=yes;'
 )
 
-watch_list = [
-    "2330.TW", "2454.TW", "2317.TW", "2303.TW", "2308.TW",
-    "2382.TW", "3231.TW", "6669.TW", "2357.TW", "3034.TW",
-    "2603.TW", "2609.TW", "2615.TW",
-    "2881.TW", "2882.TW", "2891.TW",
-    "1519.TW", "1513.TW", "2618.TW", "2002.TW"
-]
 
 chip_cache = {}
 CURRENT_EQUITY = 0.0
@@ -70,7 +76,7 @@ def update_account_cash(change_amount):
 def sync_portfolio_from_db():
     print("🔄 正在與 SQL Server 同步持倉狀態...")
     global portfolio
-    portfolio = {ticker: [] for ticker in watch_list} 
+    portfolio = {ticker: [] for ticker in WATCH_LIST} 
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
             df = pd.read_sql("SELECT * FROM active_positions", conn)
@@ -160,14 +166,14 @@ def run_live_simulation():
                 IS_FROZEN = False
             CURRENT_MDD_TIER = 1.0
         
-        print(f"\n[{current_time}] 📡 啟動定時海選雷達，掃描 {len(watch_list)} 檔標的...")
+        print(f"\n[{current_time}] 📡 啟動定時海選雷達，掃描 {len(WATCH_LIST)} 檔標的...")
 
         try:
-            batch_data = yf.download(watch_list, period="2y", progress=False)
+            batch_data = yf.download(WATCH_LIST, period="2y", progress=False)
         except Exception as e:
             print(f"⚠️ 網路連線失敗: {e}"); time.sleep(60); continue
 
-        for ticker in watch_list:
+        for ticker in WATCH_LIST:
             time.sleep(1) 
             
             ticker_df = batch_data.xs(ticker, axis=1, level=1).copy() if isinstance(batch_data.columns, pd.MultiIndex) else batch_data.copy()
@@ -199,10 +205,10 @@ def run_live_simulation():
                 ticker_df['Trust_Net'] = ticker_df.get('Trust_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
                 ticker_df['Dealers_Net'] = ticker_df.get('Dealers_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
 
-                # 🌟 核心升級：動態掛載多重產業參數
-                # 去 SECTOR_MAP 查表，如果這檔股票沒有被特別分類，就用預設的 PARAMS
-                current_stock_params = SECTOR_MAP.get(ticker, PARAMS)
-        
+                # 🌟 自動掛載：優先使用昨晚 AI 剛訓練好的產業參數，沒有的話再用預設值
+                current_stock_params = get_params_for_stock(ticker)
+                current_sector = get_stock_sector(ticker)
+                current_stock_params = AUTO_PARAMS.get(current_sector, PARAMS)
                 # 將專屬參數傳遞給大腦 (保留原本的 preloaded_df，並加入 p=current_stock_params)
                 result = inspect_stock(ticker, preloaded_df=ticker_df, p=current_stock_params)
     

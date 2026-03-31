@@ -111,23 +111,11 @@ FINANCE_PARAMS.update({
 })
 
 # ==========================================
-# 🗺️ 股票代號與參數的「自動對應雷達圖 (Sector Map)」
+# 🎯 終極實戰與訓練觀察清單 (系統會自動判斷它們的產業)
 # ==========================================
-SECTOR_MAP = {
-    # 科技半導體
-    "2330.TW": TECH_PARAMS,
-    "2454.TW": TECH_PARAMS,
-    "2317.TW": TECH_PARAMS,
-    "2382.TW": TECH_PARAMS,
-    "3231.TW": TECH_PARAMS,
-    
-    # 航運股
-    "2603.TW": SHIPPING_PARAMS,
-    "2609.TW": SHIPPING_PARAMS,
-    "2615.TW": SHIPPING_PARAMS,
-    
-    # 金融股
-    "2881.TW": FINANCE_PARAMS,
-    "2882.TW": FINANCE_PARAMS,
-    "2891.TW": FINANCE_PARAMS,
-}
+WATCH_LIST = [
+    "2330.TW", "2454.TW", "2317.TW", "2382.TW", "3231.TW", # 科技
+    "2603.TW", "2609.TW", "2615.TW",                       # 航運
+    "2881.TW", "2882.TW", "2891.TW", "2886.TW",            # 金融
+    "1519.TW", "1513.TW", "2002.TW", "1101.TW"             # 其他傳產或重電
+]
