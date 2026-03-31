@@ -50,7 +50,11 @@ def start_automated_training():
                 # 3. 存入軍火庫 (JSON)
                 save_sector_params(sector, result["Params"])
                 print(f"✅ {sector} 優化成功！已儲存至 automated_sector_params.json")
-                print(f"📈 訓練集 EV: {result.get('Train_EV', 0):.3f}%")
+                # 🌟 在產線上直接顯示三大核心數據，並精確到小數點後 3 位
+                ev_val = result.get('Train_EV', 0)
+                win_val = result.get('WinRate', 0)
+                ret_val = result.get('TotalReturn', 0)
+                print(f"📈 訓練成果 ➔ 期望值: {ev_val:.3f}% | 系統勝率: {win_val:.3f}% | 累計報酬率: {ret_val:.3f}%")
             else:
                 print(f"⚠️ {sector} 未能產出有效參數，跳過儲存。")
                 
