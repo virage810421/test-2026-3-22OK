@@ -6,7 +6,7 @@ import yfinance as yf
 from advanced_chart import draw_chart
 from screening import inspect_stock, add_chip_data, apply_slippage, calculate_pnl
 from config import PARAMS, WATCH_LIST
-from performance import get_strategy_ev  # ✨ Layer 2 匯入績效大腦
+from performance import get_strategy_ev, check_strategy_health  # 🌟 補上 check_strategy_health
 from param_storage import load_all_params
 from sector_classifier import get_stock_sector
 from kline_cache import get_smart_klines
@@ -341,6 +341,12 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             # ✨ Layer 2 升級：直接向 performance.py 查詢該陣型的真實期望值！(取代舊版假數據)
             ev_score = get_strategy_ev(setup_tag, current_regime)
             
+            health_status, health_msg = check_strategy_health(setup_tag)
+            if health_status == "KILL":
+                print(f"💀 [淘汰防護] {ticker} 觸發 {setup_tag}，但該戰術近期失效 ({health_msg}) ➔ 物理阻斷進場！")
+                return # 直接結束，不買了！
+           
+            
             # ✨ 1. 預先試算風報比 (RR 濾網)
             setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
             current_regime = latest_row.get('Regime', '未知')
@@ -578,10 +584,13 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                         shares_to_sell = batch.get('進場股數', 2000)
                         invested_portion = batch['投入資金']
                         
-                        if is_partial:
+                        # 🌟 修復重點 1：建立獨立的 batch_partial，防止這筆單的狀態污染到下一筆單
+                        batch_partial = is_partial 
+                        
+                        if batch_partial: # 🌟 修復重點 2：改用獨立變數判定
                             shares_to_sell = max(1, int(shares_to_sell / 2))
                             if shares_to_sell >= batch.get('進場股數', 2000):
-                                is_partial = False
+                                batch_partial = False # 只改變「這一筆單」的平倉模式
                                 shares_to_sell = batch.get('進場股數', 2000)
                             else:
                                 invested_portion = invested_portion / 2
@@ -628,14 +637,13 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                         })
 
                         # 2. 更新或刪除 active_positions (加入進場時間防止覆蓋到其他分批加碼單)
-                        if is_partial:
+                        if batch_partial:  # 🌟 修復重點 3：下方結算部位時，同樣改用獨立變數
                             batch['進場股數'] -= shares_to_sell
                             batch['投入資金'] -= invested_portion
                             batch['停利階段'] = 1
                             
                             remaining_funds = batch['投入資金']
                             remaining_shares = batch['進場股數']
-                            # 🔧 修復：WHERE 條件加上 [進場時間]
                             cursor.execute('''
                                 UPDATE active_positions 
                                 SET [投入資金] = ?, [進場股數] = ?, [停利階段] = 1 
@@ -643,8 +651,9 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                             ''', (remaining_funds, remaining_shares, ticker, batch['進場時間']))
                             print(f"[{exit_time}] {exit_msg} | {ticker} 領回: ${cash_returned_this_batch:,.0f} | 剩餘部位留倉")
                         else:
-                            # 🔧 修復：WHERE 條件加上 [進場時間]
                             cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?', (ticker, batch['進場時間']))
+                            # 🌟 安全標記，稍後統一清理 Python 清單
+                            batch['進場股數'] = 0 
                             print(f"[{exit_time}] {exit_msg} | {ticker} 結案！領回: ${cash_returned_this_batch:,.0f}")
 
                     # 🔧 修復：拔除 update_account_cash，直接利用現在的 cursor 一次性更新現金，避免 Deadlock
@@ -656,11 +665,12 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                     
                     CURRENT_EQUITY = current_bank_cash
 
-                    if not is_partial:
-                        portfolio[ticker] = [] 
+                    portfolio[ticker] = [b for b in portfolio[ticker] if b.get('進場股數', 0) > 0]
+                    if len(portfolio[ticker]) == 0:
                         draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof, expected_value=result_dict.get("期望值", 0))
 
-                    conn.commit()
+                    conn.commit() 
+                        
             except Exception as e:
                 print(f"⚠️ 出場結算失敗: {e}")
 
