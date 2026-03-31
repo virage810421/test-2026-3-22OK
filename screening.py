@@ -22,58 +22,45 @@ DB_CONN_STR = (
 )
 
 # ==========================================
-# 🔌 籌碼資料外掛模組 (資料合併處理廠)
+# 🔌 籌碼資料外掛模組 (本地 SQL 直連版 - 零 API 消耗)
 # ==========================================
 def add_chip_data(df, ticker):
     """
-    負責把 yfinance 的價格表，貼上 FinMind 的三大法人買賣超資料
-    (修正版：對齊 API 回傳的英文名稱，並新增自營商)
+    負責從本地 SQL 資料庫 (daily_chip_data) 讀取三大法人買賣超資料，
+    並完美貼上 yfinance 的價格表。
     """
-    pure_ticker = ticker.split('.')[0]
-    start_dt = (pd.Timestamp.today() - pd.Timedelta(days=730)).strftime("%Y-%m-%d")
-    
     try:
-        chip_df = dl.taiwan_stock_institutional_investors(stock_id=pure_ticker, start_date=start_dt)
-        
-        # 如果沒抓到資料，提早結束並給 0
-        if chip_df is None or (isinstance(chip_df, pd.DataFrame) and chip_df.empty):
+        # 🌟 直接向 SQL Server 請求該股票的歷史籌碼
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            query = "SELECT [日期], [外資買賣超], [投信買賣超], [自營商買賣超] FROM daily_chip_data WHERE [Ticker SYMBOL] = ?"
+            chip_df = pd.read_sql(query, conn, params=(ticker,))
+            
+        # 如果資料庫裡還沒有這檔股票的籌碼，直接給 0
+        if chip_df.empty:
             df['Foreign_Net'], df['Trust_Net'], df['Dealers_Net'] = 0, 0, 0
             return df
             
-        chip_df['Net'] = chip_df['buy'] - chip_df['sell']
+        # 🌟 整理 SQL 撈出來的資料，將日期設為索引
+        chip_df['日期'] = pd.to_datetime(chip_df['日期']).dt.normalize()
+        chip_df.set_index('日期', inplace=True)
         
-        # 🌟 1. 改用英文名稱搜尋三大法人
-        foreign = chip_df[chip_df['name'].str.contains('Foreign_Investor')].groupby('date')['Net'].sum()
-        trust = chip_df[chip_df['name'].str.contains('Investment_Trust')].groupby('date')['Net'].sum()
-        dealers = chip_df[chip_df['name'].str.contains('Dealer')].groupby('date')['Net'].sum()
-        
-        # 🌟 絕對強制的日期對齊術 (解決合併變 0 的問題)
+        # 🌟 絕對強制的日期對齊術 (解決與 yfinance 合併變 0 的問題)
         if df.index.tz is not None:
             df.index = df.index.tz_localize(None)
-        df.index = pd.to_datetime(df.index).normalize() # 強制移除 yfinance 的隱藏時間
+        df.index = pd.to_datetime(df.index).normalize()
 
-        if not foreign.empty: 
-            foreign.index = pd.to_datetime(foreign.index).normalize()
-        if not trust.empty: 
-            trust.index = pd.to_datetime(trust.index).normalize()
-        if not dealers.empty: 
-            dealers.index = pd.to_datetime(dealers.index).normalize()
+        # 🌟 將三大法人併入主 DataFrame (重新命名為系統認識的英文欄位)
+        df = df.join(chip_df['外資買賣超'].rename('Foreign_Net'), how='left')
+        df = df.join(chip_df['投信買賣超'].rename('Trust_Net'), how='left')
+        df = df.join(chip_df['自營商買賣超'].rename('Dealers_Net'), how='left')
 
-        # 🌟 2. 將三大法人併入你的 df
-        df = df.join(foreign.rename('Foreign_Net'), how='left')
-        df = df.join(trust.rename('Trust_Net'), how='left')
-        df = df.join(dealers.rename('Dealers_Net'), how='left')
-
-        # 空白的日子填補 0
+        # 空白的日子 (例如假日或沒開盤) 填補 0
         df['Foreign_Net'] = df['Foreign_Net'].ffill().fillna(0)
         df['Trust_Net'] = df['Trust_Net'].ffill().fillna(0)
         df['Dealers_Net'] = df['Dealers_Net'].ffill().fillna(0)
         
-    except KeyError as e:
-        print(f"❌ {ticker} API 結構錯誤: {e}")
-        df['Foreign_Net'], df['Trust_Net'], df['Dealers_Net'] = 0, 0, 0
     except Exception as e:
-        print(f"⚠️ {ticker} 籌碼處理發生錯誤: {e}")
+        print(f"⚠️ {ticker} 本地籌碼庫讀取失敗: {e}")
         df['Foreign_Net'], df['Trust_Net'], df['Dealers_Net'] = 0, 0, 0
         
     return df
