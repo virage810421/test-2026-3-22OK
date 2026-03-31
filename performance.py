@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import pyodbc
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
 
 # 🌟 統一資料庫連線字串
 DB_CONN_STR = (

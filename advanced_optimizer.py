@@ -103,6 +103,7 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
     # --- 1. 下載與切分資料 ---
     batch_data = yf.download(targets, period="2y", progress=False)
     train_dfs = {}
+    test_dfs = {} # 🌟 新增：準備測試卷的資料夾
     
     for ticker in targets:
         try:
@@ -110,7 +111,8 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
             df.dropna(subset=['Close'], inplace=True)
             df = add_chip_data(df, ticker)
             split_idx = int(len(df) * split_ratio)
-            train_dfs[ticker] = df.iloc[:split_idx].copy()
+            train_dfs[ticker] = df.iloc[:split_idx].copy()   # 70% 供 AI 訓練
+            test_dfs[ticker] = df.iloc[split_idx:].copy()    # 🌟 30% 鎖進保險箱，供最後盲測
         except Exception:
             continue
 
@@ -186,23 +188,29 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
     pareto_front.sort(key=lambda x: x["EV"], reverse=True)
     champion = pareto_front[0]
     
+    # 🌟 新增：階段四，盲測大考 (Out-of-Sample Validation)
+    print("\n🔬 階段四：盲測大考 (對未知的 30% 行情進行壓力測試)...")
+    test_metrics = evaluate_params(champion["Params"], test_dfs, targets)
+    
     print("\n" + "═"*50)
     print("🏆 【貝氏演算法 x 帕雷托前緣】終極分析報告")
     print("═"*50)
     print(f"🔹 總測試組數: {len(all_results)} 組")
     print(f"🔹 帕雷托黃金解: {len(pareto_front)} 組 (彼此不分軒輊)")
-    # 🌟 依照您的要求，全部顯示中文並精確到小數點後 3 位
-    print(f"🥇 期望值: {champion['EV']:.3f}%")
-    print(f"🥇 系統勝率: {champion['WinRate']:.3f}%")
-    print(f"🥇 累計報酬率: {champion['TotalReturn']:.3f}%") 
+    print("-" * 50)
+    print("🥇 [訓練集 70% - 學習成果]")
+    print(f"   期望值: {champion['EV']:.3f}% | 勝率: {champion['WinRate']:.3f}% | 報酬率: {champion['TotalReturn']:.3f}%")
+    print("🎯 [測試集 30% - 盲測真實表現]")
+    print(f"   期望值: {test_metrics['EV']:.3f}% | 勝率: {test_metrics['WinRate']:.3f}% | 報酬率: {test_metrics['TotalReturn']:.3f}%")
     print("═"*50)
     
-    # 🌟 將勝率和報酬率一起回傳給自動化工廠
+    # 回傳給 auto_optimizer 的資料，加上 Test_EV
     return {
         "Params": champion["Params"], 
         "Train_EV": champion["EV"], 
-        "WinRate": champion["WinRate"], 
-        "TotalReturn": champion["TotalReturn"]
+        "Test_EV": test_metrics["EV"],     # 🌟 真正回傳盲測的期望值
+        "WinRate": test_metrics["WinRate"], # 🌟 回傳盲測的勝率，這更具實戰意義
+        "TotalReturn": test_metrics["TotalReturn"]
     }
 if __name__ == "__main__":
     run_bayesian_optimization(n_iter=30)
