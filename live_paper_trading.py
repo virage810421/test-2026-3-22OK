@@ -13,19 +13,16 @@ from kline_cache import get_smart_klines
 # 啟動時自動讀取 AI 最新優化的 JSON 成果
 AUTO_PARAMS = load_all_params()
 
-# 建立一個簡單的雷達，判斷這檔股票屬於哪個產業
-def get_sector_by_ticker(ticker):
-    if ticker in ["2330.TW", "2454.TW", "2317.TW", "2382.TW", "3231.TW"]: return "TECH"
-    if ticker in ["2603.TW", "2609.TW", "2615.TW"]: return "SHIPPING"
-    if ticker in ["2881.TW", "2882.TW", "2891.TW", "2886.TW"]: return "FINANCE"
-    return "UNKNOWN"
-
-# 修改查表邏輯，優先使用剛出爐的 AI 參數
+# 修改查表邏輯，優先使用剛出爐的 AI 參數 (串接最新自動感知器)
 def get_params_for_stock(ticker):
-    sector = get_sector_by_ticker(ticker) 
+    # 🌟 直接呼叫我們寫好的 sector_classifier，全自動判斷產業！
+    sector = get_stock_sector(ticker) 
+    
     if sector in AUTO_PARAMS:
         return AUTO_PARAMS[sector]
-    return SECTOR_MAP.get(ticker, PARAMS) # 沒自動參數才用舊的
+        
+    # 如果還沒有自動訓練出該產業的參數，直接用 config 裡的 PARAMS 預設值兜底
+    return PARAMS
 # ==========================================
 # 💼 虛擬帳戶、機台與資料庫設定
 # ==========================================
@@ -180,7 +177,7 @@ def run_live_simulation():
 
             if ticker not in ticker_dfs: continue
             ticker_df = ticker_dfs[ticker].copy() # 直接拿拼好的資料
-            
+
             # ✨ 疫苗 1：嚴格剃除沒有收盤價的幽靈 K 線，防止 NaN 病毒感染
             ticker_df.dropna(subset=['Close'], inplace=True)
             ticker_df.ffill(inplace=True) 
@@ -204,19 +201,18 @@ def run_live_simulation():
                     ticker_df = ticker_df.join(chip_cache[ticker]['trust'], how='left')
                 if chip_cache[ticker]['dealers'] is not None:
                     ticker_df = ticker_df.join(chip_cache[ticker]['dealers'], how='left')
-                
+                 
                 ticker_df['Foreign_Net'] = ticker_df.get('Foreign_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
                 ticker_df['Trust_Net'] = ticker_df.get('Trust_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
                 ticker_df['Dealers_Net'] = ticker_df.get('Dealers_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
 
-                # 🌟 自動掛載：優先使用昨晚 AI 剛訓練好的產業參數，沒有的話再用預設值
-                current_stock_params = get_params_for_stock(ticker)
-                current_sector = get_stock_sector(ticker)
-                current_stock_params = AUTO_PARAMS.get(current_sector, PARAMS)
-                # 將專屬參數傳遞給大腦 (保留原本的 preloaded_df，並加入 p=current_stock_params)
-                result = inspect_stock(ticker, preloaded_df=ticker_df, p=current_stock_params)
+            # 🌟 自動掛載：優先使用昨晚 AI 剛訓練好的產業參數，沒有的話再用預設值
+            current_stock_params = get_params_for_stock(ticker)
+            
+            # 將專屬參數傳遞給大腦 (保留原本的 preloaded_df，並加入 p=current_stock_params)
+            result = inspect_stock(ticker, preloaded_df=ticker_df, p=current_stock_params)
     
-        if result and "計算後資料" in result:
+            if result and "計算後資料" in result:
                 # 🌟 1. 從字典中提取資料 (包含剛算好的期望值)
                 win_rate = float(result.get("系統勝率(%)", 0))
                 total_prof = float(result.get("累計報酬率(%)", 0))

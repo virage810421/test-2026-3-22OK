@@ -102,6 +102,12 @@ def print_report(results):
         print(f"🚨 毒藥策略警告：【{worst_strat.name}】")
         print(f"   👉 長期期望值為負 ({worst_strat['真實期望值(EV%)']}%)！這代表越做越賠，強烈建議在 config 中禁用此環境下的該陣型！")
 
+
+
+# 👇 🚨 就是漏了這兩行！它們必須放在 def 的「外面」和「上面」！
+_EV_CACHE = {}
+_LAST_UPDATE = 0
+
 def get_strategy_ev(setup_tag, regime):
     """
     提供給實戰機台呼叫的 API。
@@ -118,7 +124,7 @@ def get_strategy_ev(setup_tag, regime):
         _LAST_UPDATE = current_time
         
     strat_key = f"{setup_tag} ({regime})"
-    return _EV_CACHE.get(strat_key, 0.0) # 若無數據，預設 EV 為 0 (邊緣試單)
+    return _EV_CACHE.get(strat_key, 0.0)
 
 if __name__ == "__main__":
     print("啟動 Layer 2 績效透視引擎...")

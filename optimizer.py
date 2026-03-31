@@ -37,13 +37,12 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
     機構級 Walk-Forward 引擎：
     split_ratio = 0.7 代表前 70% 拿來訓練，後 30% 拿來盲測驗證。
     """
-    # 如果有傳入特定產業清單就用傳入的，否則用預設的 TEST_TICKERS
     targets = ticker_list if ticker_list else TEST_TICKERS
     print(f"\n🚀 啟動 Layer 3：AI 滾動盲測尋標引擎 (準備測試 {iterations} 組)...\n")
     
     # --- A. 預先下載並切分資料 ---
     print("📥 正在智慧調閱歷史 K 線與法人籌碼...")
-    # 🌟 啟動快取引擎
+    # 🌟 換上跟實戰機台一樣的智慧快取引擎，再也不怕斷線！
     ticker_dfs = get_smart_klines(targets)
     
     train_dfs = {}
@@ -62,7 +61,7 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
         # 貼上籌碼外掛
         df = add_chip_data(df, ticker)
         
-        # 🌟 預載入基本面數據，拯救 FinMind 額度！
+        # 🌟 預載入基本面數據 (拯救 FinMind 額度，讓訓練速度提升 100 倍！)
         from screening import add_fundamental_filter
         f_data = add_fundamental_filter(ticker, p=BASE_PARAMS)
         df.fundamental_cache = f_data
@@ -218,4 +217,4 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
     }
 if __name__ == "__main__":
     # 將次數拉高到 50 次，讓 AI 有足夠的樣本找出真理
-    run_walk_forward_optimization(iterations=100)
+    run_walk_forward_optimization(iterations=50)
