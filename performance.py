@@ -104,7 +104,7 @@ def print_report(results):
 
 
 
-# 👇 🚨 就是漏了這兩行！它們必須放在 def 的「外面」和「上面」！
+# 🌟 全域快取記憶體，防止對 SQL 進行 DDoS 攻擊
 _EV_CACHE = {}
 _LAST_UPDATE = 0
 

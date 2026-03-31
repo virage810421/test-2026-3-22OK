@@ -37,34 +37,39 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
     機構級 Walk-Forward 引擎：
     split_ratio = 0.7 代表前 70% 拿來訓練，後 30% 拿來盲測驗證。
     """
+    # 如果有傳入特定產業清單就用傳入的，否則用預設的 TEST_TICKERS
     targets = ticker_list if ticker_list else TEST_TICKERS
     print(f"\n🚀 啟動 Layer 3：AI 滾動盲測尋標引擎 (準備測試 {iterations} 組)...\n")
     
     # --- A. 預先下載並切分資料 ---
-    print("📥 正在智慧調閱歷史 K 線與法人籌碼...")
-    # 🌟 換上跟實戰機台一樣的智慧快取引擎，再也不怕斷線！
-    ticker_dfs = get_smart_klines(targets)
+    print("📥 正在下載歷史 K 線與法人籌碼，並建立【訓練集】與【測試集】...")
+    # 🌟 確保只下載一次清單中的股票
+    batch_data = yf.download(targets, period="2y", progress=False)
     
     train_dfs = {}
     test_dfs = {}
     
     for ticker in targets:
-        if ticker not in ticker_dfs:
-            print(f"⚠️ 無法取得 {ticker} 資料，已自動略過。")
+        # 🛡️ 異常防護網：如果 Yahoo API 沒抓到這檔股票，自動略過不崩潰
+        try:
+            if isinstance(batch_data.columns, pd.MultiIndex):
+                if ticker not in batch_data.columns.get_level_values(1):
+                    print(f"⚠️ Yahoo API 暫時無法取得 {ticker} 資料，已自動略過。")
+                    continue
+                df = batch_data.xs(ticker, axis=1, level=1).copy()
+            else:
+                if batch_data.empty: continue
+                df = batch_data.copy()
+        except (KeyError, ValueError):
+            print(f"⚠️ {ticker} 資料提取異常，已自動略過。")
             continue
             
-        df = ticker_dfs[ticker].copy()
         df.dropna(subset=['Close'], inplace=True)
         df.ffill(inplace=True)
         if df.empty or len(df) < 100: continue
         
         # 貼上籌碼外掛
         df = add_chip_data(df, ticker)
-        
-        # 🌟 預載入基本面數據 (拯救 FinMind 額度，讓訓練速度提升 100 倍！)
-        from screening import add_fundamental_filter
-        f_data = add_fundamental_filter(ticker, p=BASE_PARAMS)
-        df.fundamental_cache = f_data
         
         # 🌟 核心：將資料切成兩半 (Train vs Test)
         split_idx = int(len(df) * split_ratio)
@@ -217,4 +222,4 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
     }
 if __name__ == "__main__":
     # 將次數拉高到 50 次，讓 AI 有足夠的樣本找出真理
-    run_walk_forward_optimization(iterations=50)
+    run_walk_forward_optimization(iterations=100)

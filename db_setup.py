@@ -1,3 +1,6 @@
+
+
+
 import pyodbc
 import sys
 
@@ -175,4 +178,4 @@ def setup_tsql_database():
             conn.close()
 
 if __name__ == "__main__":
-    setup_tsql_database()
+    setup_tsql_database();

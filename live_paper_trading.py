@@ -13,16 +13,19 @@ from kline_cache import get_smart_klines
 # 啟動時自動讀取 AI 最新優化的 JSON 成果
 AUTO_PARAMS = load_all_params()
 
-# 修改查表邏輯，優先使用剛出爐的 AI 參數 (串接最新自動感知器)
+# 建立一個簡單的雷達，判斷這檔股票屬於哪個產業
+def get_sector_by_ticker(ticker):
+    if ticker in ["2330.TW", "2454.TW", "2317.TW", "2382.TW", "3231.TW"]: return "TECH"
+    if ticker in ["2603.TW", "2609.TW", "2615.TW"]: return "SHIPPING"
+    if ticker in ["2881.TW", "2882.TW", "2891.TW", "2886.TW"]: return "FINANCE"
+    return "UNKNOWN"
+
+# 修改查表邏輯，優先使用剛出爐的 AI 參數
 def get_params_for_stock(ticker):
-    # 🌟 直接呼叫我們寫好的 sector_classifier，全自動判斷產業！
-    sector = get_stock_sector(ticker) 
-    
+    sector = get_sector_by_ticker(ticker) 
     if sector in AUTO_PARAMS:
         return AUTO_PARAMS[sector]
-        
-    # 如果還沒有自動訓練出該產業的參數，直接用 config 裡的 PARAMS 預設值兜底
-    return PARAMS
+    return PARAMS # 🔧 修復：移除未定義的 SECTOR_MAP，直接退回使用預設 PARAMS
 # ==========================================
 # 💼 虛擬帳戶、機台與資料庫設定
 # ==========================================
@@ -177,7 +180,7 @@ def run_live_simulation():
 
             if ticker not in ticker_dfs: continue
             ticker_df = ticker_dfs[ticker].copy() # 直接拿拼好的資料
-
+            
             # ✨ 疫苗 1：嚴格剃除沒有收盤價的幽靈 K 線，防止 NaN 病毒感染
             ticker_df.dropna(subset=['Close'], inplace=True)
             ticker_df.ffill(inplace=True) 
@@ -185,7 +188,8 @@ def run_live_simulation():
                 
             today_str = datetime.now().strftime("%Y-%m-%d")
             
-            # 籌碼快取機制
+           
+            # ... 前面是籌碼快取的 if/else 判斷區塊 ...
             if ticker not in chip_cache or chip_cache[ticker].get('date') != today_str:
                 ticker_df = add_chip_data(ticker_df, ticker)
                 chip_cache[ticker] = {
@@ -196,22 +200,25 @@ def run_live_simulation():
                 }
             else:
                 if chip_cache[ticker]['foreign'] is not None:
-                    ticker_df = ticker_df.join(chip_cache[ticker]['foreign'], how='left')
+                    ticker_df['Foreign_Net'] = chip_cache[ticker]['foreign']
                 if chip_cache[ticker]['trust'] is not None:
-                    ticker_df = ticker_df.join(chip_cache[ticker]['trust'], how='left')
+                    ticker_df['Trust_Net'] = chip_cache[ticker]['trust']
                 if chip_cache[ticker]['dealers'] is not None:
-                    ticker_df = ticker_df.join(chip_cache[ticker]['dealers'], how='left')
-                 
+                    ticker_df['Dealers_Net'] = chip_cache[ticker]['dealers']
+                    
                 ticker_df['Foreign_Net'] = ticker_df.get('Foreign_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
                 ticker_df['Trust_Net'] = ticker_df.get('Trust_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
                 ticker_df['Dealers_Net'] = ticker_df.get('Dealers_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
 
-            # 🌟 自動掛載：優先使用昨晚 AI 剛訓練好的產業參數，沒有的話再用預設值
+            # ==========================================
+            # 🌟 修復重點：以下這 4 行必須「獨立」在 if/else 之外！(與 if 對齊)
+            # ==========================================
             current_stock_params = get_params_for_stock(ticker)
-            
+            current_sector = get_stock_sector(ticker)
+            current_stock_params = AUTO_PARAMS.get(current_sector, PARAMS)
             # 將專屬參數傳遞給大腦 (保留原本的 preloaded_df，並加入 p=current_stock_params)
             result = inspect_stock(ticker, preloaded_df=ticker_df, p=current_stock_params)
-    
+            
             if result and "計算後資料" in result:
                 # 🌟 1. 從字典中提取資料 (包含剛算好的期望值)
                 win_rate = float(result.get("系統勝率(%)", 0))
@@ -568,14 +575,11 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                     total_cash_back = 0
                     
                     for batch in positions:
-                        # 讀取當初買了多少股
                         shares_to_sell = batch.get('進場股數', 2000)
                         invested_portion = batch['投入資金']
                         
-                        # 🌟 採用 GPT 防護機制：避免除以 2 變成 0 股，並加入全平倉判定
                         if is_partial:
                             shares_to_sell = max(1, int(shares_to_sell / 2))
-                            # 🛡️ [防禦] 如果算出來要賣的股數等於或大於持有股數，強制轉為全部平倉
                             if shares_to_sell >= batch.get('進場股數', 2000):
                                 is_partial = False
                                 shares_to_sell = batch.get('進場股數', 2000)
@@ -583,12 +587,9 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                                 invested_portion = invested_portion / 2
 
                         exit_fee_rate = PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT']
-                        
-                        # 1. 執行出場滑價計算
                         trade_dir_int = 1 if is_long else -1
                         actual_exit_price = apply_slippage(current_price, -trade_dir_int, PARAMS['MARKET_SLIPPAGE'])
                         
-                        # 2. 呼叫機構級計算機 (精算手續費與稅金)
                         pnl, invested = calculate_pnl(
                             direction=trade_dir_int,
                             entry_price=batch['進場價'],
@@ -598,17 +599,14 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                             tax_rate=PARAMS['TAX_RATE']
                         )
                         
-                        # 3. 統一變數名稱，對接後續的 SQL 寫入
                         net_profit_cash = pnl
                         profit_pct = (pnl / invested) * 100
-                        
-                        # 🌟 [修復：會計帳面漏水] 改用 invested_portion，將當初的進場手續費精準補回帳戶
                         cash_returned_this_batch = invested_portion + pnl
                         
                         total_cash_back += cash_returned_this_batch
                         current_bank_cash += cash_returned_this_batch 
                         
-                        # ✨ 寫入歷史明細表 (擴充機構級歸因)
+                        # 1. 寫入 SQL 歷史明細
                         cursor.execute('''
                             INSERT INTO trade_history 
                             ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
@@ -622,30 +620,44 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                             round(batch.get('期望值', 0.0), 3), round(batch.get('預期停損(%)', 0.0)*100, 2), 
                             round(batch.get('預期停利(%)', 0.0)*100, 2), round(batch.get('風報比(RR)', 0.0), 2), round(batch.get('風險金額', 0.0), 0)
                         ))
+
+                        # 🔧 修復：同步更新 Python 本地清單，確保程式結束時印得出明細
+                        trade_history.append({
+                            '股票': ticker, '方向': batch['方向'], '進場時間': batch['進場時間'],
+                            '出場時間': exit_time, '報酬率(%)': round(profit_pct, 2), '淨損益': round(net_profit_cash, 0)
+                        })
+
+                        # 2. 更新或刪除 active_positions (加入進場時間防止覆蓋到其他分批加碼單)
                         if is_partial:
                             batch['進場股數'] -= shares_to_sell
                             batch['投入資金'] -= invested_portion
                             batch['停利階段'] = 1
+                            
+                            remaining_funds = batch['投入資金']
+                            remaining_shares = batch['進場股數']
+                            # 🔧 修復：WHERE 條件加上 [進場時間]
+                            cursor.execute('''
+                                UPDATE active_positions 
+                                SET [投入資金] = ?, [進場股數] = ?, [停利階段] = 1 
+                                WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?
+                            ''', (remaining_funds, remaining_shares, ticker, batch['進場時間']))
+                            print(f"[{exit_time}] {exit_msg} | {ticker} 領回: ${cash_returned_this_batch:,.0f} | 剩餘部位留倉")
+                        else:
+                            # 🔧 修復：WHERE 條件加上 [進場時間]
+                            cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?', (ticker, batch['進場時間']))
+                            print(f"[{exit_time}] {exit_msg} | {ticker} 結案！領回: ${cash_returned_this_batch:,.0f}")
 
-                    # 更新銀行總可用現金
-                    update_account_cash(total_cash_back)
+                    # 🔧 修復：拔除 update_account_cash，直接利用現在的 cursor 一次性更新現金，避免 Deadlock
+                    cursor.execute('''
+                        UPDATE account_info 
+                        SET [可用現金] = ?, [最後更新時間] = ? 
+                        WHERE [帳戶名稱] = '我的實戰帳戶'
+                    ''', (current_bank_cash, datetime.now()))
+                    
                     CURRENT_EQUITY = current_bank_cash
 
-                    if is_partial:
-                        # 🌟 [修復：碎股脫節] 直接傳入 Python 算好的剩餘數字，不讓 SQL 自己除以 2
-                        remaining_funds = batch['投入資金']
-                        remaining_shares = batch['進場股數']
-                        cursor.execute('''
-                            UPDATE active_positions 
-                            SET [投入資金] = ?, [進場股數] = ?, [停利階段] = 1 
-                            WHERE [Ticker SYMBOL] = ?
-                        ''', (remaining_funds, remaining_shares, ticker))
-                        print(f"[{exit_time}] {exit_msg} | {ticker} 領回: ${total_cash_back:,.0f} | 剩餘部位留倉")
-                    else:
-                        cursor.execute('DELETE FROM active_positions WHERE [Ticker SYMBOL] = ?', (ticker,))
+                    if not is_partial:
                         portfolio[ticker] = [] 
-                        print(f"[{exit_time}] {exit_msg} | {ticker} 全數結案！領回: ${total_cash_back:,.0f} | 餘額: ${CURRENT_EQUITY:,.0f}")
-                        
                         draw_chart(ticker, preloaded_df=ticker_df, win_rate=win_rate, total_profit=total_prof, expected_value=result_dict.get("期望值", 0))
 
                     conn.commit()

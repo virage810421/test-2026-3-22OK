@@ -59,12 +59,7 @@ PARAMS = {
     "SCAN_INTERVAL": 300,           # 實戰機台掃描間隔 (秒)
     "MAX_BATCHES": 3,               # 單一股票最多允許的分批進場次數
     "MARKET_SLIPPAGE": 0.0015,       # 市價單預設滑價耗損 (0.15%)
-    
-    # --- 10. 基本面濾網門檻 ---
-    "FUNDAMENTAL_YOY_BASE": 0,      # 營收年增率基礎門檻 (%)
-    "FUNDAMENTAL_YOY_EXCELLENT": 20,# 營收年增率優秀門檻 (%)
-    "FUNDAMENTAL_OPM_BASE": 0,      # 營業利益率底線 (%)
-    
+
     # ==========================================
     # 🌟 11. 策略因子開關 (Feature Toggles) 🌟      True 改成 False開關
     # ==========================================

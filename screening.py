@@ -1,4 +1,3 @@
-from matplotlib import ticker
 import yfinance as yf
 import pandas as pd
 pd.set_option('future.no_silent_downcasting', True)
@@ -12,7 +11,7 @@ from config import PARAMS
 # ==========================================
 # ⚡️ 初始化 DataLoader 與資料庫連線設定
 # ==========================================
-API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0zMSAxNTowMDowNSIsInVzZXJfaWQiOiJob25kYSIsImlwIjoiMTE0LjM1LjEzMi4xNjkiLCJleHAiOjE3NzU1NDUyMDV9.IA0e1K5AOybO9VFr3T2HTZm_IHCJB163m6uIxqWgGOo"
+API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNyAyMjowNTowMCIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.JmayRjSVQqs6SdyCdLn1Z8uWyuYgvHHjOE32UxWI-_8"
 dl = DataLoader(token=API_TOKEN)
 
 DB_CONN_STR = (
@@ -839,11 +838,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             "📉DMI空頭成型":[int(sell_c8.sum()),int((sell_c8 & actual_sell_signals).sum())],
             "💣結構頂背離":[int(sell_c9.sum()),int((sell_c9 & actual_sell_signals).sum())]
         }
-        
-        if hasattr(df, 'fundamental_cache'):
-            f_data = df.fundamental_cache
-        else:
-            f_data = add_fundamental_filter(ticker, p=p)
+
+        f_data = add_fundamental_filter(ticker)
         
         return {
             "Ticker SYMBOL": ticker,

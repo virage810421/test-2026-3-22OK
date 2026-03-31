@@ -21,8 +21,8 @@ def update_daily_chips():
         "1519", "1513", "2618", "2002"
     ]
 
-    # 設定要抓取的天數 (如果是第一次跑，可以抓過去 5 天補齊資料)
-    days_to_fetch = 360
+    # 設定要抓取的天數 (如果是第一次跑，可以抓過去 10 天補齊資料)
+    days_to_fetch = 10
     start_dt = (datetime.now() - timedelta(days=days_to_fetch)).strftime("%Y-%m-%d")
     
     dl = DataLoader()
