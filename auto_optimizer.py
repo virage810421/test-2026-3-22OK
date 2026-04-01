@@ -9,7 +9,7 @@ from config import WATCH_LIST
 # ==========================================
 # True = 使用【貝氏大腦】(快速、尋找極限期望值)
 # False = 使用【滾動盲測大腦】(嚴格防護、抗滑價、抗回撤)
-USE_ADVANCED_BAYES = True
+USE_ADVANCED_BAYES = False
 
 if USE_ADVANCED_BAYES:
     from advanced_optimizer import run_bayesian_optimization as run_engine

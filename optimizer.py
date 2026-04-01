@@ -227,4 +227,4 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
     }
 if __name__ == "__main__":
     # 將次數拉高到 50 次，讓 AI 有足夠的樣本找出真理
-    run_walk_forward_optimization(iterations=100)
+    run_walk_forward_optimization(iterations=500)

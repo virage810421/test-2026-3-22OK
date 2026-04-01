@@ -326,8 +326,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         buy_c7_mem = buy_c7 | buy_c7.shift(1)  
         
         # 1. 突破發動 Setup (只在【趨勢多頭】或【盤整轉多】時允許)
-        setup_breakout = buy_c7_mem & buy_c3_mem & buy_c6 
-        valid_breakout = setup_breakout & (is_bull_trend | is_ranging)
+        breakout_score = (buy_c7_mem.astype(int) + buy_c3_mem.astype(int) + buy_c6.astype(int))
+        valid_breakout = (breakout_score >= 2) & (is_bull_trend | is_ranging) # 3 個條件中滿足 2 個就視為陣型成型
         
         # 2. 超跌反彈 Setup (嚴禁在空頭趨勢中接刀，只在盤整區操作)
         setup_reversal = buy_c1 & buy_c2 & buy_c5 
