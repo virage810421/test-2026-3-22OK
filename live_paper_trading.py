@@ -8,6 +8,7 @@ from screening import inspect_stock, add_chip_data, apply_slippage, calculate_pn
 from config import PARAMS, WATCH_LIST
 from performance import get_strategy_ev, check_strategy_health  # 🌟 補上 check_strategy_health
 from param_storage import load_all_params
+from strategies import get_active_strategy
 from sector_classifier import get_stock_sector
 from kline_cache import get_smart_klines
 # 啟動時自動讀取 AI 最新優化的 JSON 成果
@@ -372,16 +373,10 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             else:
                 # 2. 決定基礎「風險承受額度」(Base Risk) - 已連線至 config.py
                 base_risk = CURRENT_EQUITY * PARAMS.get('BASE_RISK_PCT', 0.02)
-                
-                # ✨ 3. 動態信心權重 (倉位管理：讓分數降級為資金控管工具)
-                if "TREND" in setup_tag or "點火" in setup_tag or "倒貨" in setup_tag:
-                    conviction_mult = 1.2
-                    print(f"🚀 {ticker} 高度信心陣型 ({setup_tag}) ➔ 風險額度放大至 1.2 倍")
-                elif "REVERSAL" in setup_tag or "抄底" in setup_tag or "摸頭" in setup_tag:
-                    conviction_mult = 0.7
-                    print(f"👀 {ticker} 逆勢陣型 ({setup_tag}) ➔ 風險額度降載至 0.7 倍試單")
-                else:
-                    conviction_mult = 1.0
+                # ✨ 3. 動態信心權重 (模組化策略接管)
+                active_strategy = get_active_strategy(setup_tag)
+                conviction_mult = active_strategy.get_conviction_multiplier()
+                print(f"🧩 {ticker} 掛載模組: {active_strategy.strategy_name} ({setup_tag}) ➔ 風險乘數: {conviction_mult}x")
                     
                 target_risk = base_risk * conviction_mult
                 
@@ -412,7 +407,12 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
 
                 # 5. 檢查可用現金並寫入 SQL
                 available_cash = get_available_cash()
-                if available_cash >= total_buy_cost:
+                # ✨ 檢查是否開啟「無限資金測試模式」
+                is_test_mode = PARAMS.get('IGNORE_CASH_LIMIT', False)
+
+                if is_test_mode or (available_cash >= total_buy_cost):
+                    if is_test_mode and available_cash < total_buy_cost:
+                        print(f"⚠️ [測試模式] 餘額不足 (${available_cash:,.0f})，強制放行進場 ${total_buy_cost:,.0f}")
                     entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     try:
                         with pyodbc.connect(DB_CONN_STR) as conn:
@@ -431,7 +431,8 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                             conn.commit()
                             
                             
-                        update_account_cash(-total_buy_cost)
+                        if not is_test_mode:
+                            update_account_cash(-total_buy_cost) # 🌟 真實模式才去資料庫扣款
                         
                         # 🌟 擷取這筆交易的「陣型標籤」(從大腦傳來的 status 字串中切出來)
                         setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
@@ -449,7 +450,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                     except Exception as e:
                         print(f"⚠️ 進場失敗: {e}")
                 else:
-                    print(f"❌ [餘額不足] {ticker} 無法進場")
+                    print(f"❌ [餘額不足] {ticker} 無法進場 (目前餘額: ${available_cash:,.0f})")
 
     # ==========================================
     # --- 狀況 B：部位控管與平倉 (含分批停利) ---
@@ -469,26 +470,12 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
         trend_is_with_me = (is_long and positions[0]['進場趨勢多頭']) or (not is_long and not positions[0]['進場趨勢多頭'])
         adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
 
-        # 🌟 核心：依據不同 Setup，給予不同的防守與停利目標
-        # 🌟 核心：依據不同 Setup，給予不同的防守與停利目標
-        if "REVERSAL" in setup_tag or "抄底" in setup_tag or "摸頭" in setup_tag:
-            # 【均值回歸型】目標是搶反彈，快進快出！
-            DYNAMIC_SL = sys_params['SL_MIN_PCT'] # 🌟 改
-            DYNAMIC_TP = 0.08  # 只要賺 8% 就滿足，不貪心
-            ignore_tp = False  # 絕對不貪心，打到目標價強制作結
-            
-        elif "TREND" in setup_tag or "點火" in setup_tag or "倒貨" in setup_tag:
-            # 【趨勢突破型】目標是吃大波段，讓利潤奔跑！
-            DYNAMIC_SL = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) # 🌟 改
-            DYNAMIC_TP = sys_params['TP_TREND_PCT'] # 🌟 改
-            ignore_tp = True   # 🌟 無視傳統目標價，完全交給 Trailing Stop 死咬趨勢！
-            
-        else:
-            # 【潛伏型或傳統 3 分制】中規中矩的作法
-            DYNAMIC_SL = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) 
-            DYNAMIC_TP = sys_params['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else sys_params['TP_BASE_PCT'] 
-            # 🌟 [修復防當機] 改用 .get 防呆，或直接依賴陣型標籤
-            ignore_tp = positions[0].get('進場分數', 0) >= 3
+        # ✨ 模組化出場邏輯接管 (幾行程式碼取代原本一大串)
+        entry_score = positions[0].get('進場分數', 0)
+        active_strategy = get_active_strategy(setup_tag)
+        DYNAMIC_SL, DYNAMIC_TP, ignore_tp = active_strategy.get_exit_rules(
+            sys_params, volatility_pct, trend_is_with_me, adx_is_strong, entry_score
+        )
 
         # 🌟 Pandas 魔法：直接利用 ticker_df 切片，找出進場後的極端價格！
         try:

@@ -3,7 +3,7 @@ import pandas as pd
 import pyodbc
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
-from config import DB_CONN_STR, PARAMS
+from config import PARAMS
 # 🌟 統一資料庫連線字串
 DB_CONN_STR = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
