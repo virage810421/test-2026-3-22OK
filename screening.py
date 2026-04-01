@@ -819,7 +819,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         f_data = add_fundamental_filter(ticker)
         
 
-
+        latest = df.iloc[-1]
        # 1. 🐋 籌碼判定 (CHIP)：修正為 Foreign_Net 與 Trust_Net
         is_chip_driven = latest.get('Foreign_Net', 0) > 0 and latest.get('Trust_Net', 0) > 0 
         
