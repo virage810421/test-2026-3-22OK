@@ -72,8 +72,7 @@ PARAMS = {
     "USE_CHIPS": True,              # 啟用三大昨日法人同買/同賣條件 (c7)
     "USE_DMI": True,                # 啟用 DMI 趨勢成型條件 (c8)
     "USE_DIVERGENCE_CHIPS": True,    # 啟用籌碼背離條件 (c9)
-    # 🌟 策略切換開關
-    'USE_SNIPER_MODE': True,  # True = 啟動黃金陣型狙擊 (嚴格) | False = 退回傳統 3 分制 (寬鬆)
+    
     # 🛰️ 戰略方向控制
     'ALLOW_LONG': True,   # 是否允許做多 (買入)
     'ALLOW_SHORT': False,  # 是否允許放空 (賣出)

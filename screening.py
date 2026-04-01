@@ -455,24 +455,30 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             safe_open = row['Open'] if row['Open'] > 0 else 0.0001
             safe_close = row['Close'] if row['Close'] > 0 else 0.0001
 
-            # ====================
-            # 🌟 Layer 1 升級：結構式進場 (含 RR 濾網，完全依賴陣型標籤)
+           # ====================
+            # 🌟 Layer 1 升級：結構式進場 (分數降級，陣型為王)
             # ====================
             if position == 0:
                 prev_setup = row['Prev_Golden_Type']
+                prev_buy_score = row['Prev_Buy_Score']
+                prev_sell_score = row['Prev_Sell_Score']
                 
-                # 🌟 這裡要包含所有我們定義過的四大艦隊標籤，少一個 AI 就不會進場！
+                # 🌟 嚴格紀律：沒有陣型，不管分數多高都強制觀望，直接跳過！
+                if prev_setup == "無":
+                    continue
+
                 if prev_setup in ["BREAKOUT_LONG", "REVERSAL_LONG", "CHIP_LONG", "TREND_LONG"]:
                     temp_direction = 1
+                    # 🎯 狙擊發動：有陣型，且戰力高達 7 分以上，升級為狙擊武器！
+                    if prev_buy_score >= 7: 
+                        prev_setup = "SNIPER_黃金狙擊"
+                        
                 elif prev_setup in ["BREAKOUT_SHORT", "REVERSAL_SHORT", "CHIP_SHORT", "TREND_SHORT"]:
                     temp_direction = -1
+                    if prev_sell_score >= 7: 
+                        prev_setup = "SNIPER_黃金狙擊"
                 else:
-                    # 如果不是狙擊陣型，且非狙擊模式下分數也沒達標，則放棄
-                    if p.get('USE_SNIPER_MODE', True) or (row['Prev_Buy_Score'] < p['TRIGGER_SCORE'] and row['Prev_Sell_Score'] < p['TRIGGER_SCORE']):
-                        continue
-                    # 傳統 3 分制進場備案
-                    temp_direction = 1 if row['Prev_Buy_Score'] >= p['TRIGGER_SCORE'] else -1
-                    prev_setup = "傳統訊號"
+                    continue
                 
                 # 2. 預先試算進場價與風險 (Risk: 停損距)
                 temp_entry_price = apply_slippage(safe_open, temp_direction, SLIPPAGE)
@@ -757,97 +763,54 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if sell_c8.iloc[-1]: sell_details.append(f"📉DMI空頭成型(歷{int((sell_c8 & actual_sell_signals).sum())}次)")
         if sell_c9.iloc[-1]: sell_details.append(f"💣結構頂背離(歷{int((sell_c9 & actual_sell_signals).sum())}次)")
         
-        # 🌟 讀取我們在第四層做好的終極標籤
-        golden_tag = latest_row.get('Golden_Type', '無')
-        trigger_str = "-"
-
-        if buy_score >= 3:
-            # 如果有黃金陣型就顯示陣型，沒有就顯示傳統強買訊
-            tag_name = golden_tag if golden_tag != "無" else "強買訊"
-            status = f"🔴 {tag_name} ({buy_score}/10)"
-            trigger_str = " + ".join(buy_details)
-        elif sell_score >= 3:   
-            tag_name = golden_tag if golden_tag != "無" else "強賣訊"
-            status = f"🟢 {tag_name} ({sell_score}/10)"
-            trigger_str = " + ".join(sell_details)
-        elif buy_score == 2:    
-            status = f"🟡 弱買訊 ({buy_score}/10)"
-            trigger_str = " + ".join(buy_details)
-        elif sell_score == 2:
-            status = f"🟡 弱賣訊 ({sell_score}/10)"
-            trigger_str = " + ".join(sell_details)
-        else:
-            max_score = max(buy_score, sell_score)
-            status = f"⚪ 觀望中 ({max_score}/10)"
-            if buy_score >= sell_score and buy_score > 0:
-                trigger_str = "已亮燈: " + " + ".join(buy_details)
-            elif sell_score > buy_score and sell_score > 0:
-                trigger_str = "已亮燈: " + " + ".join(sell_details)
-            else:
-                trigger_str = "無"
-
-        if latest_row['ADX14'] < p['ADX_TREND_THRESHOLD']:
-            trigger_str += " (⚠️ 盤整中，訊號效力減弱)"
-
-        strength_diff = buy_score - sell_score
-        structure_status = "多頭佔優" if strength_diff > 2 else "空頭佔優" if strength_diff < -2 else "結構盤整"
-
-        diagnostic_data = {
-            "BBI多頭趨勢": [int(buy_trend.sum()), int((buy_trend & actual_buy_signals).sum())],
-            "破下軌": [int(buy_c1.sum()), int((buy_c1 & actual_buy_signals).sum())],
-            "RSI超賣": [int(buy_c2.sum()), int((buy_c2 & actual_buy_signals).sum())],
-            "爆量": [int(buy_c3.sum()), int((buy_c3 & actual_buy_signals).sum())],
-            "MACD轉強": [int(buy_c4.sum()), int((buy_c4 & actual_buy_signals).sum())],
-            "底背離": [int(buy_c5.sum()), int((buy_c5 & actual_buy_signals).sum())],
-            "🌟突破BBI": [int(buy_c6.sum()), int((buy_c6 & actual_buy_signals).sum())],
-            "🔥昨日法人同買": [int(buy_c7.sum()), int((buy_c7 & actual_buy_signals).sum())],
-            "📈DMI趨勢成型": [int(buy_c8.sum()), int((buy_c8 & actual_buy_signals).sum())],
-            "💎結構底背離": [int(buy_c9.sum()), int((buy_c9 & actual_buy_signals).sum())],
-            
-            "BBI空頭趨勢": [int(sell_trend.sum()), int((sell_trend & actual_sell_signals).sum())],
-            "頂上軌":[int(sell_c1.sum()),int((sell_c1 & actual_sell_signals).sum())],
-            "RSI超買":[int(sell_c2.sum()),int((sell_c2 & actual_sell_signals).sum())],
-            "爆量":[int(sell_c3.sum()),int((sell_c3 & actual_sell_signals).sum())],
-            "MACD轉弱":[int(sell_c4.sum()),int((sell_c4 & actual_sell_signals).sum())],
-            "頂背離":[int(sell_c5.sum()),int((sell_c5 & actual_sell_signals).sum())],
-            "💀跌破BBI":[int(sell_c6.sum()),int((sell_c6 & actual_sell_signals).sum())],
-            "🧊昨日法人同賣":[int(sell_c7.sum()),int((sell_c7 & actual_sell_signals).sum())],
-            "📉DMI空頭成型":[int(sell_c8.sum()),int((sell_c8 & actual_sell_signals).sum())],
-            "💣結構頂背離":[int(sell_c9.sum()),int((sell_c9 & actual_sell_signals).sum())]
-        }
-
-        f_data = add_fundamental_filter(ticker)
-        
-
+        # ==========================================
+        # 🎯 雷達兵：四大艦隊陣型判定與狙擊發動
+        # ==========================================
         latest = df.iloc[-1]
-       # 1. 🐋 籌碼判定 (CHIP)：修正為 Foreign_Net 與 Trust_Net
-        is_chip_driven = latest.get('Foreign_Net', 0) > 0 and latest.get('Trust_Net', 0) > 0 
         
-        # 2. 🚀 突破判定 (BREAKOUT)：修正為 Vol_MA20
+        is_chip_driven = latest.get('Foreign_Net', 0) > 0 and latest.get('Trust_Net', 0) > 0 
         vol_multiplier = p.get('VOL_BREAKOUT_MULTIPLIER', 1.5)
         is_breakout = latest.get('Volume', 0) > (latest.get('Vol_MA20', latest.get('Volume', 0)) * vol_multiplier)
-        
-        # 3. 🏓 均值回歸判定 (REVERSAL)：修正為 BB_Lower 與 RSI
         is_reversal = latest.get('Close', 0) <= latest.get('BB_Lower', 0) or latest.get('RSI', 50) < 30
-        
-        # 4. 📈 趨勢判定 (TREND)：修正為 BBI
         adx_threshold = p.get('ADX_TREND_THRESHOLD', 20)
         is_trend = latest.get('ADX14', 0) > adx_threshold and latest.get('Close', 0) > latest.get('BBI', 0)
 
-        # ==========================================
-        # 🏷️ 階梯式貼標籤 (Priority Routing)
-        # ==========================================
-        setup_tag = "傳統訊號" # 預設
+        # 🌟 1. 分數降級：現在分數只用來顯示「戰鬥力」，不再具有發動交易的權限
+        max_score = max(buy_score, sell_score)
+        trigger_str = " + ".join(buy_details) if buy_score > sell_score else " + ".join(sell_details)
+        if not trigger_str: trigger_str = "無"
 
-        if is_chip_driven:
-            setup_tag = "CHIP_法人籌碼"      # 優先級 1：最高信仰，重壓
+        # 🌟 2. 狙擊發動條件：必須有陣型成立，且「戰鬥力高達 7 分以上」，自動升級為狙擊武器！
+        has_formation = is_chip_driven or is_breakout or is_reversal or is_trend
+        is_sniper_target = has_formation and (max_score >= 7)
+
+        # 🏷️ 3. 階梯式貼標籤
+        setup_tag = "無陣型"
+        if is_sniper_target:
+            setup_tag = "SNIPER_黃金狙擊"  # 觸發 strategies.py 的狙擊武器
+        elif is_chip_driven:
+            setup_tag = "CHIP_法人籌碼"      
         elif is_breakout:
-            setup_tag = "BREAKOUT_帶量突破"  # 優先級 2：動能爆發，放大資金
+            setup_tag = "BREAKOUT_帶量突破"  
         elif is_reversal:
-            setup_tag = "REVERSAL_均值回歸"  # 優先級 3：乖離過大，降載接刀
+            setup_tag = "REVERSAL_均值回歸"  
         elif is_trend:
-            setup_tag = "TREND_順勢多頭"     # 優先級 4：順風順水，標準資金
+            setup_tag = "TREND_順勢多頭"     
 
+        # 🌟 4. 狀態燈號生成：加入買賣訊關鍵字，讓實戰機台能聽懂指令！
+        if setup_tag != "無陣型":
+            if buy_score > sell_score:
+                status = f"🔴 {setup_tag} 買訊 (戰力: {max_score}/10)"
+            else:
+                status = f"🟢 {setup_tag} 賣訊 (戰力: {max_score}/10)"
+        else:
+            status = f"⚪ 觀望中 (戰力: {max_score}/10)"
+
+        if latest_row['ADX14'] < p['ADX_TREND_THRESHOLD']:
+            trigger_str += " (⚠️ 盤整中，動能稍弱)"
+
+        strength_diff = buy_score - sell_score
+        structure_status = "多頭佔優" if strength_diff > 2 else "空頭佔優" if strength_diff < -2 else "結構盤整"
         return {
             "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),
