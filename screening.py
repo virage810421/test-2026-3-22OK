@@ -159,7 +159,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         avg_gain = gain.ewm(alpha=1/p['RSI_PERIOD'], min_periods=p['RSI_PERIOD'], adjust=False).mean()
         avg_loss = loss.ewm(alpha=1/p['RSI_PERIOD'], min_periods=p['RSI_PERIOD'], adjust=False).mean()
         rs = avg_gain / avg_loss.replace(0, np.nan)
-        df['RSI'] = 100 - (100 / (1 + rs))
+        df['RSI'] = np.where(avg_loss == 0, 100, 100 - (100 / (1 + rs)))
         
         df['RSI_MA'] = df['RSI'].rolling(window=p['RSI_PERIOD']).mean()
         df['RSI_STD'] = df['RSI'].rolling(window=p['RSI_PERIOD']).std()
@@ -513,15 +513,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 # 🧠 AI 精算師：動態信心權重 + 流動性微結構過濾
                 base_risk_allowance = sim_balance * 0.015 
                 
-                # 🧠 AI 精算師：與 strategies.py 完全同步的信心權重
-                if "CHIP" in entry_setup:
-                    conviction_mult = 1.5
-                elif "BREAKOUT" in entry_setup:
-                    conviction_mult = 1.2
-                elif "REVERSAL" in entry_setup:
-                    conviction_mult = 0.8
-                else:
-                    conviction_mult = 1.0
+                # 🧠 AI 精算師：呼叫 strategies.py，確保回測與實戰邏輯 100% 一致！
+                active_strategy_bt = get_active_strategy(entry_setup)
+                conviction_mult = active_strategy_bt.get_conviction_multiplier(row, entry_regime)
                     
                 target_risk = base_risk_allowance * conviction_mult
                 raw_shares = target_risk / (entry_price * temp_sl_pct)
@@ -826,25 +820,19 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         
 
 
-        # ==========================================
-        # 🎯 雷達兵：四大艦隊陣型標籤判定 (Setup Tag Generation)
-        # ==========================================
-        # 抓取最新一天的資料列
-        latest = df.iloc[-1]
+       # 1. 🐋 籌碼判定 (CHIP)：修正為 Foreign_Net 與 Trust_Net
+        is_chip_driven = latest.get('Foreign_Net', 0) > 0 and latest.get('Trust_Net', 0) > 0 
         
-        # 1. 🐋 籌碼判定 (CHIP)：檢查有沒有外資或投信買超欄位 (安全讀取，沒有則預設為0)
-        is_chip_driven = latest.get('Foreign_Buy', 0) > 0 and latest.get('Trust_Buy', 0) > 0 
-        
-        # 2. 🚀 突破判定 (BREAKOUT)：今日成交量 > 均量 X 倍
+        # 2. 🚀 突破判定 (BREAKOUT)：修正為 Vol_MA20
         vol_multiplier = p.get('VOL_BREAKOUT_MULTIPLIER', 1.5)
-        is_breakout = latest.get('Volume', 0) > (latest.get('Vol_MA5', latest.get('Volume', 0)) * vol_multiplier)
+        is_breakout = latest.get('Volume', 0) > (latest.get('Vol_MA20', latest.get('Volume', 0)) * vol_multiplier)
         
-        # 3. 🏓 均值回歸判定 (REVERSAL)：跌破布林下軌 或 RSI 極度超賣
-        is_reversal = latest.get('Close', 0) <= latest.get('BB_lower', 0) or latest.get('RSI14', 50) < 30
+        # 3. 🏓 均值回歸判定 (REVERSAL)：修正為 BB_Lower 與 RSI
+        is_reversal = latest.get('Close', 0) <= latest.get('BB_Lower', 0) or latest.get('RSI', 50) < 30
         
-        # 4. 📈 趨勢判定 (TREND)：ADX 動能強勁 且 站在長均線之上
+        # 4. 📈 趨勢判定 (TREND)：修正為 BBI
         adx_threshold = p.get('ADX_TREND_THRESHOLD', 20)
-        is_trend = latest.get('ADX14', 0) > adx_threshold and latest.get('Close', 0) > latest.get('MA_LONG', 0)
+        is_trend = latest.get('ADX14', 0) > adx_threshold and latest.get('Close', 0) > latest.get('BBI', 0)
 
         # ==========================================
         # 🏷️ 階梯式貼標籤 (Priority Routing)

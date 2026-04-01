@@ -261,7 +261,6 @@ def run_live_simulation():
 # ==========================================
 # 🎯 交易模組：支援分批加碼與平均成本計算
 # ==========================================
-
 def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sys_params):
     global portfolio, CURRENT_EQUITY, IS_FROZEN, CURRENT_MDD_TIER
     if ticker not in portfolio:
@@ -274,24 +273,18 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
     total_prof = result_dict.get("累計報酬率(%)", 0)
     latest_row = ticker_df.iloc[-1] 
     
-    # ✨ 終極微結構防護：計算昨日收盤價，判定是否碰觸 10% 漲跌停
     prev_close = ticker_df['Close'].iloc[-2] if len(ticker_df) >= 2 else current_price
-    is_limit_up = current_price >= prev_close * 1.095  # 漲幅達 9.5% 以上視為漲停邊緣
-    is_limit_down = current_price <= prev_close * 0.905 # 跌幅達 9.5% 以上視為跌停邊緣 
+    is_limit_up = current_price >= prev_close * 1.095  
+    is_limit_down = current_price <= prev_close * 0.905 
     
     MAX_BATCHES = sys_params['MAX_BATCHES']
     today_str = datetime.now().strftime("%Y-%m-%d")
     bought_today = any(p.get('進場時間', '').startswith(today_str) for p in positions)
     
-   
-    # ==========================================
-    # --- 狀況 A：進場 / 分批加碼 (選項一：市價追擊模式) ---
-    # ==========================================
     is_long_signal = "LONG" in status or "買訊" in status
     is_short_signal = "SHORT" in status or "賣訊" in status
 
     if is_long_signal or is_short_signal:
-        # ✨ [新增] 微結構防護：漲停買不到，跌停空不到
         if is_long_signal and is_limit_up:
             print(f"🧱 {ticker} 亮出作多陣型，但目前【漲停鎖死】，市場無賣單，物理拒絕進場！")
             return
@@ -299,7 +292,6 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             print(f"🧱 {ticker} 亮出放空陣型，但目前【跌停鎖死】，禁止借券放空，物理拒絕進場！")
             return
 
-        # 🌟 多空進場實體攔截
         if is_long_signal and not PARAMS.get('ALLOW_LONG', True):
             print(f"🚫 {ticker} 產生多方訊號，但系統已關閉【做多開關】，放棄進場。")
             return 
@@ -308,75 +300,57 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             print(f"🚫 {ticker} 產生空方訊號，但系統已關閉【放空開關】，放棄進場。")
             return
         
-        # 🌟 攔截機制：如果系統熔斷，無情拒絕任何新資金進場！
         if IS_FROZEN:
             print(f"❄️ {ticker} 出現 {status}，但系統熔斷保護中，拒絕進場！")
         else:
             trade_dir = '做多(Long)' if is_long_signal else '放空(Short)'
             is_reverse_signal = has_position and positions[0]['方向'] != trade_dir
         
-        # 加上冷卻機制：今天沒買過才能買
         if not is_reverse_signal and len(positions) < MAX_BATCHES and not bought_today:
             
-            # ==========================================
-            # 🧠 終極 AI 精算師：Risk Parity + 期望值 (EV) + MDD 降載
-            # ==========================================
             setup_tag = result_dict.get('陣型標籤', '傳統訊號')
             current_regime = latest_row.get('Regime', '未知')
             
-            # ✨ Layer 2 升級：直接向 performance.py 查詢該陣型的真實期望值！(取代舊版假數據)
             ev_score = get_strategy_ev(setup_tag, current_regime)
-            
             health_status, health_msg = check_strategy_health(setup_tag)
             if health_status == "KILL":
                 print(f"💀 [淘汰防護] {ticker} 觸發 {setup_tag}，但該戰術近期失效 ({health_msg}) ➔ 物理阻斷進場！")
-                return # 直接結束，不買了！
+                return 
            
-            
-            # ✨ 1. 預先試算風報比 (RR 濾網)
-            setup_tag = result_dict.get('陣型標籤', '傳統訊號')
-            current_regime = latest_row.get('Regime', '未知')
-            
             volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
-            MAX_BATCHES = sys_params['MAX_BATCHES']  # 🌟 改用 sys_params
-    # ... 中間省略 ...
-            if pd.isna(volatility_pct): volatility_pct = sys_params['SL_MAX_PCT'] # 🌟 改
-            entry_sl_pct = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) # 🌟 改
+            if pd.isna(volatility_pct): volatility_pct = sys_params['SL_MAX_PCT']
+            entry_sl_pct = max(sys_params['SL_MIN_PCT'], min(volatility_pct, sys_params['SL_MAX_PCT'])) 
             
             trend_is_bull = (latest_row['Close'] > latest_row.get('BBI', 0))
             trend_is_with_me = (trade_dir == '做多(Long)' and trend_is_bull) or (trade_dir == '放空(Short)' and not trend_is_bull)
-            adx_is_strong = latest_row.get('ADX14', 0) > sys_params.get('ADX_TREND_THRESHOLD', 20) # 🌟 改
-            entry_tp_pct = sys_params['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else sys_params['TP_BASE_PCT'] # 🌟 改
+            adx_is_strong = latest_row.get('ADX14', 0) > sys_params.get('ADX_TREND_THRESHOLD', 20)
+            entry_tp_pct = sys_params['TP_TREND_PCT'] if (trend_is_with_me and adx_is_strong) else sys_params['TP_BASE_PCT'] 
             
             rr_ratio = entry_tp_pct / entry_sl_pct if entry_sl_pct > 0 else 0
 
-            # 🚨 雙重品質把關：EV 必須大於 0，且風報比(RR) 必須及格
             if ev_score <= 0:
                 print(f"❄️ {ticker} 期望值為負 (EV: {ev_score:.3f}%) ➔ 長期勝算過低，系統放棄進場！")
-            elif rr_ratio < sys_params.get('MIN_RR_RATIO', 1.5): # 🌟 改
+            elif rr_ratio < sys_params.get('MIN_RR_RATIO', 1.5):
                 print(f"⚖️ {ticker} 訊號觸發，但風報比過低 (RR: {rr_ratio:.2f} < 1.5) ➔ 潛在獲利不值得冒險，放棄進場！")
             else:
-                # 2. 決定基礎「風險承受額度」(Base Risk) - 已連線至 config.py
                 base_risk = CURRENT_EQUITY * PARAMS.get('BASE_RISK_PCT', 0.02)
                 
-                # ✨ 3. 動態信心權重 (AI 機器學習接管 🔥)
+                # ✨ AI 機器學習核心接管點 ✨
                 active_strategy = get_active_strategy(setup_tag)
-                # 🌟 讓 AI 看一眼當下的 K 線特徵，動態決定要押幾倍資金！
+                # 🌟 修復 Bug：傳遞最新 K 線特徵與市場狀態給 AI 大腦！
                 conviction_mult = active_strategy.get_conviction_multiplier(latest_row, current_regime)
                 
-                # 如果 AI 判定勝率過低回傳 0，則直接中斷進場程序！
                 if conviction_mult == 0.0:
-                    return
-                print(f"🧩 {ticker} 掛載模組: {active_strategy.strategy_name} ({setup_tag}) ➔ 風險乘數: {conviction_mult}x")
+                    print(f"🛑 [AI 阻斷] {ticker} 勝率預測過低，物理阻斷開槍！")
+                    return # 直接結束，不買了！
                     
+                print(f"🧩 {ticker} 掛載模組: {active_strategy.strategy_name} ({setup_tag}) ➔ 風險乘數: {conviction_mult:.2f}x")
                 target_risk = base_risk * conviction_mult
                 
-                # 套用大盤 MDD 防護網降載乘數
                 if CURRENT_MDD_TIER < 1.0:
                     target_risk = target_risk * CURRENT_MDD_TIER
                     print(f"🛡️ [大盤防禦] 系統遭遇回撤，風險承受度強制縮減為 {CURRENT_MDD_TIER*100:.0f}%")
                 
-                # 反推能買多少股，並加上流動性過濾 (不得超過 20 日均量的 5%)
                 raw_shares = target_risk / (current_price * entry_sl_pct)
                 max_liquidity_shares = (latest_row.get('Vol_MA20', 1000) * 1000) * 0.05
                 raw_shares = min(raw_shares, max_liquidity_shares)
@@ -396,9 +370,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                 
                 print(f"⚙️ 結構式風控結案：RR {rr_ratio:.2f} | 停損距 {entry_sl_pct*100:.1f}% | 實質風險 ${target_risk:,.0f} ➔ 核准購買 {TRADE_SHARES} 股")
 
-                # 5. 檢查可用現金並寫入 SQL
                 available_cash = get_available_cash()
-                # ✨ 檢查是否開啟「無限資金測試模式」
                 is_test_mode = PARAMS.get('IGNORE_CASH_LIMIT', False)
 
                 if is_test_mode or (available_cash >= total_buy_cost):
@@ -408,7 +380,6 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                     try:
                         with pyodbc.connect(DB_CONN_STR) as conn:
                             cursor = conn.cursor()
-                            # ✨ 擴充 SQL 寫入：包含 7 個歸因欄位
                             cursor.execute('''
                                 INSERT INTO active_positions (
                                     [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [停利階段], [進場股數],
@@ -421,20 +392,16 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                             ))
                             conn.commit()
                             
-                            
                         if not is_test_mode:
-                            update_account_cash(-total_buy_cost) # 🌟 真實模式才去資料庫扣款
+                            update_account_cash(-total_buy_cost) 
                         
-                        # 🌟 擷取這筆交易的「陣型標籤」(從大腦傳來的 status 字串中切出來)
-                        setup_tag = result_dict.get('陣型標籤', '傳統訊號')
-                        # 🌟 先抓出進場當下的強弱分數
                         entry_score_val = int(latest_row.get('Buy_Score', 0)) if is_long_signal else int(latest_row.get('Sell_Score', 0))
                         
                         positions.append({
                             '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
                             '進場時間': entry_time, '進場股數': TRADE_SHARES, '停利階段': 0,
                             '進場趨勢多頭': trend_is_bull,
-                            '進場分數': entry_score_val, # ✨ 修復：補上進場分數，供 strategies.py 判斷出場
+                            '進場分數': entry_score_val,
                             '陣型標籤': setup_tag, '市場狀態': current_regime, 
                             '期望值': ev_score, '預期停損(%)': entry_sl_pct, '預期停利(%)': entry_tp_pct, 
                             '風報比(RR)': rr_ratio, '風險金額': target_risk
