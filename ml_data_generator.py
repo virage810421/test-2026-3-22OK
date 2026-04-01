@@ -67,7 +67,10 @@ def generate_ml_dataset(tickers):
 
     final_df = pd.DataFrame(ml_dataset)
     if not final_df.empty:
-        final_df.to_csv("ml_training_data.csv", index=False, encoding='utf-8-sig')
+        import os
+        os.makedirs("data", exist_ok=True) # 確保資料夾存在
+        # 👇 加上 data/ 路徑
+        final_df.to_csv("data/ml_training_data.csv", index=False, encoding='utf-8-sig')
         print(f"✅ [兵工廠] 成功萃取 {len(final_df)} 筆戰鬥紀錄，已存為 ml_training_data.csv！")
     else:
         print("⚠️ 萃取失敗，沒有產生任何有效數據。")

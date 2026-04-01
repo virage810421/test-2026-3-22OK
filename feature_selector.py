@@ -1,10 +1,11 @@
 import pandas as pd
 import joblib
+import os # 記得在最上方補上 import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import RFECV
 
 # 🌟 關鍵：請檢查這行名字是否一字不差
-def auto_select_best_features(csv_file="ml_training_data.csv"):
+def auto_select_best_features(csv_file="data/ml_training_data.csv"):
     print("🎯 [精選引擎] 開始從指標池中挑選黃金組合...")
     
     try:
@@ -49,7 +50,8 @@ def auto_select_best_features(csv_file="ml_training_data.csv"):
         print("📉 [已剔除雜訊]：無 (所有指標皆有效)")
 
     # 儲存精選名單，供大腦訓練與未來實戰機台讀取
-    joblib.dump(selected_features, "selected_features.pkl")
+    os.makedirs("models", exist_ok=True)
+    joblib.dump(selected_features, "models/selected_features.pkl")
     return selected_features
 
 if __name__ == "__main__":

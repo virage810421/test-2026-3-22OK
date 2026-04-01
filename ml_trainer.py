@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 import joblib
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -9,13 +10,13 @@ def train_regime_models():
     print("🧠 [訓練中心] 準備啟動 AI 模型訓練...")
     
     # 🌟 1. 啟動精選引擎，獲取黃金指標組合 (正式呼叫！)
-    best_features = auto_select_best_features("ml_training_data.csv")
+    best_features = auto_select_best_features("data/ml_training_data.csv")
     if not best_features:
         print("❌ 無法獲取精選特徵，訓練中止。")
         return
-
+    
     try:
-        df = pd.read_csv("ml_training_data.csv")
+        df = pd.read_csv("data/ml_training_data.csv")
     except FileNotFoundError:
         print("❌ 找不到訓練資料 ml_training_data.csv，請先執行兵工廠。")
         return
@@ -58,7 +59,8 @@ def train_regime_models():
         print(classification_report(y_test, y_pred, zero_division=0)) 
         
         # 4. 儲存模型 (打包成武器檔)
-        model_filename = f"model_{regime}.pkl"
+        os.makedirs("models", exist_ok=True)
+        model_filename = f"models/model_{regime}.pkl" 
         joblib.dump(clf, model_filename)
         print(f"💾 模型已保存為: {model_filename}")
 

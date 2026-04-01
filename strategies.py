@@ -10,10 +10,11 @@ import os
 AI_MODELS = {}
 SELECTED_FEATURES = []
 try:
-    if os.path.exists("selected_features.pkl"):
-        SELECTED_FEATURES = joblib.load("selected_features.pkl")
+    # 👇 加上 models/ 路徑
+    if os.path.exists("models/selected_features.pkl"):
+        SELECTED_FEATURES = joblib.load("models/selected_features.pkl")
         for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
-            model_path = f"model_{regime}.pkl"
+            model_path = f"models/model_{regime}.pkl" # 👇 加上 models/ 路徑
             if os.path.exists(model_path):
                 AI_MODELS[regime] = joblib.load(model_path)
         print("🤖 [戰術背包] 已成功掛載 AI 機器學習預測模型！")
