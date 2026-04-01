@@ -1,0 +1,9 @@
+import joblib
+
+# 載入模型
+try:
+    model = joblib.load('model_區間盤整.pkl')
+    print("使用 joblib 載入成功！")
+    print(model)
+except Exception as e:
+    print(f"joblib 載入也失敗了: {e}")

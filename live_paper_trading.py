@@ -358,9 +358,15 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             else:
                 # 2. 決定基礎「風險承受額度」(Base Risk) - 已連線至 config.py
                 base_risk = CURRENT_EQUITY * PARAMS.get('BASE_RISK_PCT', 0.02)
-                # ✨ 3. 動態信心權重 (模組化策略接管)
+                
+                # ✨ 3. 動態信心權重 (AI 機器學習接管 🔥)
                 active_strategy = get_active_strategy(setup_tag)
-                conviction_mult = active_strategy.get_conviction_multiplier()
+                # 🌟 讓 AI 看一眼當下的 K 線特徵，動態決定要押幾倍資金！
+                conviction_mult = active_strategy.get_conviction_multiplier(latest_row, current_regime)
+                
+                # 如果 AI 判定勝率過低回傳 0，則直接中斷進場程序！
+                if conviction_mult == 0.0:
+                    return
                 print(f"🧩 {ticker} 掛載模組: {active_strategy.strategy_name} ({setup_tag}) ➔ 風險乘數: {conviction_mult}x")
                     
                 target_risk = base_risk * conviction_mult
