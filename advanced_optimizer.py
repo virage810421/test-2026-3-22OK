@@ -205,4 +205,4 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
         "TotalReturn": test_metrics["TotalReturn"]
     }
 if __name__ == "__main__":
-    run_bayesian_optimization(n_iter=30)
+    run_bayesian_optimization(n_iter=50)
