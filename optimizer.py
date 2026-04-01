@@ -21,7 +21,7 @@ PARAM_SPACE = {
     "SL_MIN_PCT": [0.02, 0.03, 0.04],         
     "TP_BASE_PCT": [0.08, 0.10, 0.12],        
     "TP_TREND_PCT": [0.15, 0.20, 0.25],       
-    "MIN_RR_RATIO": [1.2, 1.5, 2.0]           
+    "MIN_RR_RATIO": BASE_PARAMS.get('AI_RR_SEARCH_SPACE', [1.0, 1.2, 1.5, 2.0])          
 }
 
 TEST_TICKERS = ["2330.TW", "2454.TW", "2317.TW", "2603.TW", "2881.TW", "1519.TW"]
@@ -155,6 +155,10 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
     # ==========================================
     # 🏆 結算：使用加了懲罰的「終極分數 (Score)」來選出冠軍
     # ==========================================
+    if not results_log:
+        print("⚠️ 訓練失敗：查無有效參數，請檢查網路連線或放寬篩選條件。")
+        return None
+        
     results_log.sort(key=lambda x: x["Score"], reverse=True)
     best_candidate = results_log[0]
     
@@ -213,7 +217,8 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
         marker = "✨ (建議修改)" if v != current_val else "✅ (維持不變)"
         print(f"  {k.ljust(22)}: {str(v).ljust(6)} {marker}")
     # 🌟 輸出前，把滑價改回正常值 (例如 0.15%)，以免實戰機台被懲罰
-    best_candidate["Params"]['MARKET_SLIPPAGE'] = 0.0015
+    # 🌟 輸出前，將滑價恢復成 config.py 中的真實設定，杜絕硬編碼覆寫
+    best_candidate["Params"]['MARKET_SLIPPAGE'] = BASE_PARAMS.get('MARKET_SLIPPAGE', 0.0015)
     
     return {
         "Params": best_candidate["Params"],

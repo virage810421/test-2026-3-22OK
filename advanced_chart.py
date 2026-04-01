@@ -46,45 +46,6 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", ex
     if df.empty or len(df) < 10:
         print(f"⚠️ {ticker} 繪圖引擎警告：資料不完整，已安全跳過。")
         return 
-
-    # -------------------------------
-    # 2. 數據獲取與全套指標計算 
-    # -------------------------------
-    # RSI 
-    delta = df['Close'].diff()
-    gain = delta.where(delta > 0, 0)
-    loss = -delta.where(delta < 0, 0)
-    avg_gain = gain.ewm(alpha=1/p['RSI_PERIOD'], min_periods=p['RSI_PERIOD'], adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1/p['RSI_PERIOD'], min_periods=p['RSI_PERIOD'], adjust=False).mean()
-    rs = avg_gain / avg_loss.replace(0, np.nan)
-    df['RSI'] = 100 - (100 / (1 + rs))
-    df['RSI_MA'] = df['RSI'].rolling(window=p['RSI_PERIOD']).mean()
-    df['RSI_STD'] = df['RSI'].rolling(window=p['RSI_PERIOD']).std()
-    df['DZ_Upper'] = df['RSI_MA'] + (df['RSI_STD'] * 1.5)
-    df['DZ_Lower'] = df['RSI_MA'] - (df['RSI_STD'] * 1.5)
-
-    # MACD
-    df['EMA12'] = df['Close'].ewm(span=p['MACD_FAST'], adjust=False).mean()
-    df['EMA26'] = df['Close'].ewm(span=p['MACD_SLOW'], adjust=False).mean()
-    df['DIF'] = df['EMA12'] - df['EMA26']
-    df['MACD_Signal'] = df['DIF'].ewm(span=p['MACD_SIGNAL'], adjust=False).mean()
-    df['MACD_Hist'] = (df['DIF'] - df['MACD_Signal']) * 2
-
-    # BBI 
-    bbi_cols = []
-    for days in p['BBI_PERIODS']:
-        col_name = f'MA{days}'
-        df[col_name] = df['Close'].rolling(window=days).mean()
-        bbi_cols.append(df[col_name])
-    df['BBI'] = sum(bbi_cols) / len(p['BBI_PERIODS'])
-    
-    # ATR 
-    df['TR'] = np.maximum.reduce([df['High'] - df['Low'], (df['High'] - df['Close'].shift(1)).abs(), (df['Low'] - df['Close'].shift(1)).abs()])
-    df['ATR'] = df['TR'].ewm(alpha=1/14, adjust=False).mean()
-    df['MA20'] = df['Close'].rolling(window=p['BB_WINDOW']).mean()
-    df['BB_std'] = df['Close'].rolling(window=p['BB_WINDOW']).std()
-    df['BB_Upper'] = df['MA20'] + (df['BB_std'] * p['BB_STD'])
-    df['BB_Lower'] = df['MA20'] - (df['BB_std'] * p['BB_STD'])
     
 
     # 🌟 圖表標記 (同步參數檔的觸發分數，並為了視覺美觀稍微偏移 K 線，不擋住實體)
@@ -219,10 +180,13 @@ def draw_chart(ticker, preloaded_df=None, win_rate="N/A", total_profit="N/A", ex
         current_regime = df['Regime'].iloc[-1] if 'Regime' in df.columns else "未知"
         golden_tag = df['Golden_Type'].iloc[-1] if 'Golden_Type' in df.columns else "無"
         
+        # 🌟 修復：如果不是特殊陣型，就顯示傳統訊號
+        display_tag = golden_tag if golden_tag != "無" else "傳統波段"
+
         signal_text = (
             f"<b>💡 訊號觀測站</b><br>"
             f"大環境: <span style='color:gold'><b>{current_regime}</b></span><br>"
-            f"今日陣型: <span style='color:#00BFFF'><b>{golden_tag}</b></span><br>"
+            f"今日陣型: <span style='color:#00BFFF'><b>{display_tag}</b></span><br>"
             f"多方得分: {int(df['Buy_Score'].iloc[-1])}/{max_score}<br>"
             f"空方得分: {int(df['Sell_Score'].iloc[-1])}/{max_score}"
         )

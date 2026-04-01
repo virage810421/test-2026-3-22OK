@@ -6,7 +6,7 @@ from config import WATCH_LIST
 # 🌟 [核心開關] 在這裡切換您的引擎
 # True  = 使用最新「貝氏演算法 x 帕雷托前緣」 (高度智慧)
 # False = 使用舊版「隨機走訪優化」 (快速簡單)
-USE_ADVANCED_BAYES = True 
+USE_ADVANCED_BAYES = False 
 
 # 🔗 動態匯入引擎
 if USE_ADVANCED_BAYES:

@@ -391,11 +391,11 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if not p.get('ALLOW_SHORT', True):
             final_short_breakdown, final_short_reversal, final_short_divergence = False, False, False
 
-        # 1. 建立獨立陣型標籤 (這就是未來的 Strategy ID)
-        df['Golden_Type'] = np.where(final_long_breakout, "TREND_LONG", 
+        # 🌟 同步四大艦隊陣型名稱
+        df['Golden_Type'] = np.where(final_long_breakout, "BREAKOUT_LONG", 
                             np.where(final_long_reversal, "REVERSAL_LONG", 
                             np.where(final_long_divergence, "CHIP_LONG", 
-                            np.where(final_short_breakdown, "TREND_SHORT",
+                            np.where(final_short_breakdown, "BREAKOUT_SHORT",
                             np.where(final_short_reversal, "REVERSAL_SHORT",
                             np.where(final_short_divergence, "CHIP_SHORT", "無"))))))
 
@@ -460,9 +460,10 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             if position == 0:
                 prev_setup = row['Prev_Golden_Type']
                 
-                if prev_setup in ["TREND_LONG", "REVERSAL_LONG", "CHIP_LONG"]:
+                # 🌟 這裡要包含所有我們定義過的四大艦隊標籤，少一個 AI 就不會進場！
+                if prev_setup in ["BREAKOUT_LONG", "REVERSAL_LONG", "CHIP_LONG", "TREND_LONG"]:
                     temp_direction = 1
-                elif prev_setup in ["TREND_SHORT", "REVERSAL_SHORT", "CHIP_SHORT"]:
+                elif prev_setup in ["BREAKOUT_SHORT", "REVERSAL_SHORT", "CHIP_SHORT", "TREND_SHORT"]:
                     temp_direction = -1
                 else:
                     # 如果不是狙擊陣型，且非狙擊模式下分數也沒達標，則放棄
@@ -511,11 +512,13 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 # 🧠 AI 精算師：動態信心權重 + 流動性微結構過濾
                 base_risk_allowance = sim_balance * 0.015 
                 
-                # 1. 信心權重調整 (跟實盤完全同步)
-                if "點火" in entry_setup or "倒貨" in entry_setup:
+                # 🧠 AI 精算師：與 strategies.py 完全同步的信心權重
+                if "CHIP" in entry_setup:
+                    conviction_mult = 1.5
+                elif "BREAKOUT" in entry_setup:
                     conviction_mult = 1.2
-                elif "抄底" in entry_setup or "摸頭" in entry_setup:
-                    conviction_mult = 0.7
+                elif "REVERSAL" in entry_setup:
+                    conviction_mult = 0.8
                 else:
                     conviction_mult = 1.0
                     
@@ -545,24 +548,23 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 volatility_pct = (row['BB_std'] * 1.5) / safe_close
                 if pd.isna(volatility_pct): volatility_pct = p['SL_MAX_PCT'] # 🛡️ 防止 NaN 感染
                 
-                # 根據當初進場的陣型，給予不同的防禦與攻擊目標
-                
-                # 根據當初進場的陣型，給予不同的防禦與攻擊目標
-                if "REVERSAL" in entry_setup or "摸頭" in entry_setup or "抄底" in entry_setup:
-                    # 【反轉狙擊】：快進快出，停損設極小，達到 8% 固定目標就跑
+                # 根據四大艦隊陣型，給予不同的防禦與攻擊目標
+                if "REVERSAL" in entry_setup:
                     DYNAMIC_SL = p['SL_MIN_PCT']
-                    DYNAMIC_TP = 0.08
+                    DYNAMIC_TP = p['TP_BASE_PCT'] # 與 strategies.py 同步
                     ignore_tp = False 
-                elif "TREND" in entry_setup or "點火" in entry_setup or "倒貨" in entry_setup:
-                    # 【趨勢狙擊】：容忍波動，不設固定停利，死咬移動防守線
-                    DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
+                elif "BREAKOUT" in entry_setup:
+                    DYNAMIC_SL = p['SL_MIN_PCT'] 
                     DYNAMIC_TP = p['TP_TREND_PCT']
                     ignore_tp = True  
-                else:
-                    # 【籌碼狙擊/傳統訊號】：中規中矩
-                    DYNAMIC_SL = max(p['SL_MIN_PCT'], min(volatility_pct, p['SL_MAX_PCT']))
-                    DYNAMIC_TP = p['TP_BASE_PCT']
-                    ignore_tp = False
+                elif "CHIP" in entry_setup:
+                    DYNAMIC_SL = max(p['SL_MIN_PCT'] * 2.0, p['SL_MAX_PCT'])
+                    DYNAMIC_TP = p['TP_TREND_PCT']
+                    ignore_tp = True
+                else: # TREND & 傳統訊號
+                    DYNAMIC_SL = max(p['SL_MIN_PCT'] * 1.5, min(volatility_pct, p['SL_MAX_PCT']))
+                    DYNAMIC_TP = p['TP_TREND_PCT']
+                    ignore_tp = True
 
                 # 🚨 拔除原本 9.99 的危險寫法，改用動態追蹤！
                 
@@ -828,12 +830,49 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
 
         f_data = add_fundamental_filter(ticker)
         
+
+
+        # ==========================================
+        # 🎯 雷達兵：四大艦隊陣型標籤判定 (Setup Tag Generation)
+        # ==========================================
+        # 抓取最新一天的資料列
+        latest = df.iloc[-1]
+        
+        # 1. 🐋 籌碼判定 (CHIP)：檢查有沒有外資或投信買超欄位 (安全讀取，沒有則預設為0)
+        is_chip_driven = latest.get('Foreign_Buy', 0) > 0 and latest.get('Trust_Buy', 0) > 0 
+        
+        # 2. 🚀 突破判定 (BREAKOUT)：今日成交量 > 均量 X 倍
+        vol_multiplier = p.get('VOL_BREAKOUT_MULTIPLIER', 1.5)
+        is_breakout = latest.get('Volume', 0) > (latest.get('Vol_MA5', latest.get('Volume', 0)) * vol_multiplier)
+        
+        # 3. 🏓 均值回歸判定 (REVERSAL)：跌破布林下軌 或 RSI 極度超賣
+        is_reversal = latest.get('Close', 0) <= latest.get('BB_lower', 0) or latest.get('RSI14', 50) < 30
+        
+        # 4. 📈 趨勢判定 (TREND)：ADX 動能強勁 且 站在長均線之上
+        adx_threshold = p.get('ADX_TREND_THRESHOLD', 20)
+        is_trend = latest.get('ADX14', 0) > adx_threshold and latest.get('Close', 0) > latest.get('MA_LONG', 0)
+
+        # ==========================================
+        # 🏷️ 階梯式貼標籤 (Priority Routing)
+        # ==========================================
+        setup_tag = "傳統訊號" # 預設
+
+        if is_chip_driven:
+            setup_tag = "CHIP_法人籌碼"      # 優先級 1：最高信仰，重壓
+        elif is_breakout:
+            setup_tag = "BREAKOUT_帶量突破"  # 優先級 2：動能爆發，放大資金
+        elif is_reversal:
+            setup_tag = "REVERSAL_均值回歸"  # 優先級 3：乖離過大，降載接刀
+        elif is_trend:
+            setup_tag = "TREND_順勢多頭"     # 優先級 4：順風順水，標準資金
+
         return {
             "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),
             "結構強度": f"{strength_diff:+d}", 
             "今日系統燈號": status,
             "結構診斷": structure_status,
+            "陣型標籤": setup_tag,
             "觸發條件明細": trigger_str,
             "基本面總分": f_data["基本面總分"],
             "營收年增率(%)": f"{f_data['營收年增率(%)']:.3f}",

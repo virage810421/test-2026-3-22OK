@@ -14,19 +14,7 @@ from kline_cache import get_smart_klines
 # 啟動時自動讀取 AI 最新優化的 JSON 成果
 AUTO_PARAMS = load_all_params()
 
-# 建立一個簡單的雷達，判斷這檔股票屬於哪個產業
-def get_sector_by_ticker(ticker):
-    if ticker in ["2330.TW", "2454.TW", "2317.TW", "2382.TW", "3231.TW"]: return "TECH"
-    if ticker in ["2603.TW", "2609.TW", "2615.TW"]: return "SHIPPING"
-    if ticker in ["2881.TW", "2882.TW", "2891.TW", "2886.TW"]: return "FINANCE"
-    return "UNKNOWN"
 
-# 修改查表邏輯，優先使用剛出爐的 AI 參數
-def get_params_for_stock(ticker):
-    sector = get_sector_by_ticker(ticker) 
-    if sector in AUTO_PARAMS:
-        return AUTO_PARAMS[sector]
-    return PARAMS # 🔧 修復：移除未定義的 SECTOR_MAP，直接退回使用預設 PARAMS
 # ==========================================
 # 💼 虛擬帳戶、機台與資料庫設定
 # ==========================================
@@ -211,10 +199,7 @@ def run_live_simulation():
                 ticker_df['Trust_Net'] = ticker_df.get('Trust_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
                 ticker_df['Dealers_Net'] = ticker_df.get('Dealers_Net', pd.Series(0, index=ticker_df.index)).ffill().fillna(0)
 
-            # ==========================================
-            # 🌟 修復重點：以下這 4 行必須「獨立」在 if/else 之外！(與 if 對齊)
-            # ==========================================
-            current_stock_params = get_params_for_stock(ticker)
+            # 🌟 直接使用外部專業模組進行產業判定，並向 AI 提取專屬參數
             current_sector = get_stock_sector(ticker)
             current_stock_params = AUTO_PARAMS.get(current_sector, PARAMS)
             # 將專屬參數傳遞給大腦 (保留原本的 preloaded_df，並加入 p=current_stock_params)
@@ -336,7 +321,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             # ==========================================
             # 🧠 終極 AI 精算師：Risk Parity + 期望值 (EV) + MDD 降載
             # ==========================================
-            setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
+            setup_tag = result_dict.get('陣型標籤', '傳統訊號')
             current_regime = latest_row.get('Regime', '未知')
             
             # ✨ Layer 2 升級：直接向 performance.py 查詢該陣型的真實期望值！(取代舊版假數據)
@@ -349,7 +334,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
            
             
             # ✨ 1. 預先試算風報比 (RR 濾網)
-            setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
+            setup_tag = result_dict.get('陣型標籤', '傳統訊號')
             current_regime = latest_row.get('Regime', '未知')
             
             volatility_pct = (latest_row['BB_std'] * 1.5) / current_price
@@ -435,13 +420,15 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                             update_account_cash(-total_buy_cost) # 🌟 真實模式才去資料庫扣款
                         
                         # 🌟 擷取這筆交易的「陣型標籤」(從大腦傳來的 status 字串中切出來)
-                        setup_tag = status.split(' ')[1] if len(status.split(' ')) > 1 else "傳統訊號"
+                        setup_tag = result_dict.get('陣型標籤', '傳統訊號')
+                        # 🌟 先抓出進場當下的強弱分數
+                        entry_score_val = int(latest_row.get('Buy_Score', 0)) if is_long_signal else int(latest_row.get('Sell_Score', 0))
                         
                         positions.append({
                             '進場價': current_price, '方向': trade_dir, '投入資金': total_buy_cost,
                             '進場時間': entry_time, '進場股數': TRADE_SHARES, '停利階段': 0,
                             '進場趨勢多頭': trend_is_bull,
-                            # ✨ 存入快取記憶體
+                            '進場分數': entry_score_val, # ✨ 修復：補上進場分數，供 strategies.py 判斷出場
                             '陣型標籤': setup_tag, '市場狀態': current_regime, 
                             '期望值': ev_score, '預期停損(%)': entry_sl_pct, '預期停利(%)': entry_tp_pct, 
                             '風報比(RR)': rr_ratio, '風險金額': target_risk
