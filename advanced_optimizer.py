@@ -1,4 +1,4 @@
-import yfinance as yf  # 🚀 關鍵補強
+import yfinance as yf  
 import pandas as pd
 import numpy as np
 import random
@@ -8,16 +8,16 @@ from sklearn.gaussian_process.kernels import Matern
 import warnings
 warnings.filterwarnings('ignore')
 
+# 🌟 乾淨且單一的匯入
+from config import PARAMS
 from screening import inspect_stock, add_chip_data
-from config import PARAMS as BASE_PARAMS
-from kline_cache import get_smart_klines
 
 # ==========================================
-# 🌌 參數宇宙 (與原本相同，供 AI 探索)
+# 🌌 參數宇宙 (戰術指標範圍留在此處，風險底線連線至 config)
 # ==========================================
 PARAM_SPACE = {
     "RSI_PERIOD": [10, 14, 20],               
-    "MACD_FAST": [10, 12, 15],                
+    "MACD_FAST": [10, 12, 15],                  
     "MACD_SLOW": [20, 26, 30],                
     "ADX_TREND_THRESHOLD": [15, 20, 25],      
     "BB_STD": [1.5, 2.0, 2.5],                
@@ -25,11 +25,10 @@ PARAM_SPACE = {
     "SL_MIN_PCT": [0.02, 0.03, 0.04],         
     "TP_BASE_PCT": [0.08, 0.10, 0.12],        
     "TP_TREND_PCT": [0.15, 0.20, 0.25],       
-    "MIN_RR_RATIO": [1.2, 1.5, 2.0]            
+    "MIN_RR_RATIO": PARAMS.get('AI_RR_SEARCH_SPACE', [1.0, 1.2, 1.5, 2.0]),  # 🌟 連線至 config 中央控制            
 }
 
 TEST_TICKERS = ["2330.TW", "2454.TW", "2317.TW", "2603.TW", "2881.TW", "1519.TW"]
-
 # ==========================================
 # 🧠 核心 1：帕雷托前緣篩選 (Pareto Selection)
 # ==========================================
@@ -101,9 +100,10 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
     print(f"\n🚀 啟動【機構級】貝氏最佳化引擎 (Bayesian Optimization)...\n")
     
     # --- 1. 下載與切分資料 ---
-    batch_data = yf.download(targets, period="2y", progress=False)
+    # 🌟 修復 1：確保 period 為 "4y"
+    batch_data = yf.download(targets, period="4y", progress=False)
     train_dfs = {}
-    test_dfs = {} # 🌟 新增：準備測試卷的資料夾
+    test_dfs = {} 
     
     for ticker in targets:
         try:
@@ -112,11 +112,11 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
             df = add_chip_data(df, ticker)
             split_idx = int(len(df) * split_ratio)
             train_dfs[ticker] = df.iloc[:split_idx].copy()   # 70% 供 AI 訓練
-            test_dfs[ticker] = df.iloc[split_idx:].copy()    # 🌟 30% 鎖進保險箱，供最後盲測
+            test_dfs[ticker] = df.iloc[split_idx:].copy()    # 30% 鎖進保險箱，供最後盲測
         except Exception:
             continue
 
-    # --- 2. 初始化高斯過程回歸模型 (Gaussian Process) ---
+    # --- 2. 初始化高斯過程回歸模型 ---
     kernel = Matern(nu=2.5)
     model = GaussianProcessRegressor(kernel=kernel, alpha=1e-2, normalize_y=True)
     
@@ -124,18 +124,17 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
     y_train = []
     all_results = []
     
-    # 🌟 核心修正：只萃取我們正在優化的「數值型參數」，過濾掉不相關的 List
     optimizable_keys = list(PARAM_SPACE.keys())
 
     # 先隨機抽取 5 組作為 AI 的「初始先驗知識」
     print("🧠 階段一：建立初始先驗知識 (隨機探索 5 組)...")
     for _ in range(5):
-        p = deepcopy(BASE_PARAMS)
+        # 🌟 修復 2：將 BASE_PARAMS 改為 PARAMS
+        p = deepcopy(PARAMS)
         for k, v in PARAM_SPACE.items(): p[k] = random.choice(v)
         
         metrics = evaluate_params(p, train_dfs, targets)
         if metrics["EV"] != -999.0:
-            # 🌟 只把數值特徵餵給 AI
             features = [p[k] for k in optimizable_keys]
             X_train.append(features)
             y_train.append(metrics["EV"]) 
@@ -150,24 +149,19 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
         # 產生 100 組虛擬候選人
         candidates = []
         for _ in range(100):
-            p = deepcopy(BASE_PARAMS)
+            # 🌟 修復 3：這裡的 BASE_PARAMS 也一併改為 PARAMS
+            p = deepcopy(PARAMS)
             for k, v in PARAM_SPACE.items(): p[k] = random.choice(v)
             candidates.append(p)
             
-        # 🌟 候選人同樣只萃取數值特徵
         X_candidates = [[c[k] for k in optimizable_keys] for c in candidates]
-        
-        # AI 預測
         preds, stds = model.predict(X_candidates, return_std=True)
-        
-        # UCB 策略
         ucb = preds + 1.96 * stds
         best_idx = np.argmax(ucb)
         best_candidate = candidates[best_idx]
         
         print(f"🔄 [推論進度 {i+1}/{n_iter}] AI 鎖定高潛力參數組合進行實測...", end="\r")
         
-        # 實測
         metrics = evaluate_params(best_candidate, train_dfs, targets)
         
         if metrics["EV"] != -999.0:
@@ -188,7 +182,6 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
     pareto_front.sort(key=lambda x: x["EV"], reverse=True)
     champion = pareto_front[0]
     
-    # 🌟 新增：階段四，盲測大考 (Out-of-Sample Validation)
     print("\n🔬 階段四：盲測大考 (對未知的 30% 行情進行壓力測試)...")
     test_metrics = evaluate_params(champion["Params"], test_dfs, targets)
     
@@ -204,12 +197,11 @@ def run_bayesian_optimization(n_iter=30, split_ratio=0.7, ticker_list=None):
     print(f"   期望值: {test_metrics['EV']:.3f}% | 勝率: {test_metrics['WinRate']:.3f}% | 報酬率: {test_metrics['TotalReturn']:.3f}%")
     print("═"*50)
     
-    # 回傳給 auto_optimizer 的資料，加上 Test_EV
     return {
         "Params": champion["Params"], 
         "Train_EV": champion["EV"], 
-        "Test_EV": test_metrics["EV"],     # 🌟 真正回傳盲測的期望值
-        "WinRate": test_metrics["WinRate"], # 🌟 回傳盲測的勝率，這更具實戰意義
+        "Test_EV": test_metrics["EV"], 
+        "WinRate": test_metrics["WinRate"], 
         "TotalReturn": test_metrics["TotalReturn"]
     }
 if __name__ == "__main__":

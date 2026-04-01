@@ -370,8 +370,8 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
             elif rr_ratio < sys_params.get('MIN_RR_RATIO', 1.5): # 🌟 改
                 print(f"⚖️ {ticker} 訊號觸發，但風報比過低 (RR: {rr_ratio:.2f} < 1.5) ➔ 潛在獲利不值得冒險，放棄進場！")
             else:
-                # 2. 決定基礎「風險承受額度」(Base Risk) 
-                base_risk = CURRENT_EQUITY * 0.01 
+                # 2. 決定基礎「風險承受額度」(Base Risk) - 已連線至 config.py
+                base_risk = CURRENT_EQUITY * PARAMS.get('BASE_RISK_PCT', 0.02)
                 
                 # ✨ 3. 動態信心權重 (倉位管理：讓分數降級為資金控管工具)
                 if "TREND" in setup_tag or "點火" in setup_tag or "倒貨" in setup_tag:

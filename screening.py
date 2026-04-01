@@ -11,7 +11,7 @@ from config import PARAMS
 # ==========================================
 # ⚡️ 初始化 DataLoader 與資料庫連線設定
 # ==========================================
-API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMy0yNyAyMjowNTowMCIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMjcuMjQwLjI1MC4xNTIifQ.JmayRjSVQqs6SdyCdLn1Z8uWyuYgvHHjOE32UxWI-_8"
+API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wNC0wMSAxMDo1MDoyOCIsInVzZXJfaWQiOiJob25kYSIsImlwIjoiMTI1LjIyNC4xNDguMjM2IiwiZXhwIjoxNzc1NjE2NjI4fQ.803KvO4-3l9K0lDcfzAoTGl78i-YUIrBX75useoNq_Q"
 dl = DataLoader(token=API_TOKEN)
 
 DB_CONN_STR = (

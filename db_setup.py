@@ -179,7 +179,7 @@ def setup_tsql_database():
         
         # 自動給予預設資金
         cursor.execute("INSERT INTO account_info ([帳戶名稱], [可用現金], [最後更新時間]) VALUES ('我的實戰帳戶', 50000000, GETDATE())")
-        print("   👉 建立 [account_info] 成功 (已注入預設資金 1,000,000)")
+        print("   👉 建立 [account_info] 成功 (已注入預設資金 500,000,000)")
 
         conn.commit()
         print("\n✅ 資料庫擴充升級完畢！底層風控容器已準備就緒。")

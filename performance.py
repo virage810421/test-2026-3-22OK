@@ -3,7 +3,7 @@ import pandas as pd
 import pyodbc
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
-
+from config import DB_CONN_STR, PARAMS
 # 🌟 統一資料庫連線字串
 DB_CONN_STR = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
@@ -71,10 +71,10 @@ def check_strategy_health(setup_tag, min_trades=10):
             std_pnl = np.std(pnl_array)
             sharpe = 0 if std_pnl == 0 else np.mean(pnl_array) / std_pnl
             
-            # 🚨 淘汰判定：勝率跌破 35%，或近期根本在穩定賠錢 (Sharpe < 0)
-            if win_rate < 0.350 or sharpe < 0:
-                return "KILL", f"勝率崩潰 {win_rate*100:.3f}% | Sharpe {sharpe:.3f}"
-                
+            # 🚨 淘汰判定：動態讀取 config.py 的勝率底線，或近期根本在穩定賠錢 (Sharpe < 0)
+            kill_rate = PARAMS.get('LIVE_MONITOR_WIN_RATE', 0.30)
+            if win_rate < kill_rate or sharpe < 0:
+                return "KILL", f"勝率崩潰 {win_rate*100:.3f}% (低於防線 {kill_rate*100:.1f}%) | Sharpe {sharpe:.3f}"
             return "KEEP", f"健康良好 (勝率 {win_rate*100:.3f}% | Sharpe {sharpe:.3f})"
             
     except Exception as e:
