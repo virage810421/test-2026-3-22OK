@@ -3,18 +3,20 @@ from sector_classifier import get_stock_sector
 from param_storage import save_sector_params
 from config import WATCH_LIST
 
-# 🌟 [核心開關] 在這裡切換您的引擎
-# True  = 使用最新「貝氏演算法 x 帕雷托前緣」 (高度智慧)
-# False = 使用舊版「隨機走訪優化」 (快速簡單)
-USE_ADVANCED_BAYES = False 
 
-# 🔗 動態匯入引擎
+# ==========================================
+# 🧠 總司令的 AI 大腦切換開關
+# ==========================================
+# True = 使用【貝氏大腦】(快速、尋找極限期望值)
+# False = 使用【滾動盲測大腦】(嚴格防護、抗滑價、抗回撤)
+USE_ADVANCED_BAYES = True
+
 if USE_ADVANCED_BAYES:
     from advanced_optimizer import run_bayesian_optimization as run_engine
-    print("🚀 引擎模式：【機構級 - 貝氏智慧引擎】已掛載")
+    print("🧠 [總部廣播] 工廠已掛載：【貝氏推論大腦 (advanced_optimizer.py)】")
 else:
     from optimizer import run_walk_forward_optimization as run_engine
-    print("🚀 引擎模式：【基礎級 - 隨機回測引擎】已掛載")
+    print("🧠 [總部廣播] 工廠已掛載：【滾動盲測大腦 (opti1mizer.py)】")
 
 def start_automated_training():
     """

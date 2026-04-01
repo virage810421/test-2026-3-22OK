@@ -6,6 +6,7 @@ import pyodbc
 from advanced_chart import draw_chart
 from FinMind.data import DataLoader
 from config import PARAMS
+from strategies import get_active_strategy  # 🌟 讓回測引擎也能呼叫四大艦隊
 
 
 # ==========================================
@@ -548,23 +549,16 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 volatility_pct = (row['BB_std'] * 1.5) / safe_close
                 if pd.isna(volatility_pct): volatility_pct = p['SL_MAX_PCT'] # 🛡️ 防止 NaN 感染
                 
-                # 根據四大艦隊陣型，給予不同的防禦與攻擊目標
-                if "REVERSAL" in entry_setup:
-                    DYNAMIC_SL = p['SL_MIN_PCT']
-                    DYNAMIC_TP = p['TP_BASE_PCT'] # 與 strategies.py 同步
-                    ignore_tp = False 
-                elif "BREAKOUT" in entry_setup:
-                    DYNAMIC_SL = p['SL_MIN_PCT'] 
-                    DYNAMIC_TP = p['TP_TREND_PCT']
-                    ignore_tp = True  
-                elif "CHIP" in entry_setup:
-                    DYNAMIC_SL = max(p['SL_MIN_PCT'] * 2.0, p['SL_MAX_PCT'])
-                    DYNAMIC_TP = p['TP_TREND_PCT']
-                    ignore_tp = True
-                else: # TREND & 傳統訊號
-                    DYNAMIC_SL = max(p['SL_MIN_PCT'] * 1.5, min(volatility_pct, p['SL_MAX_PCT']))
-                    DYNAMIC_TP = p['TP_TREND_PCT']
-                    ignore_tp = True
+                # ✨ 補上變數定義，消除底線報錯
+                trend_is_with_me = (direction == 1 and entry_trend_is_bull) or (direction == -1 and not entry_trend_is_bull)
+                adx_val = row['ADX14'] if not pd.isna(row['ADX14']) else 0
+                adx_is_strong = adx_val > p.get('ADX_TREND_THRESHOLD', 20)
+                
+                # ✨ 模組化出場邏輯接管：直接呼叫 strategies.py，確保訓練與實戰 100% 邏輯一致！
+                active_strategy = get_active_strategy(entry_setup)
+                DYNAMIC_SL, DYNAMIC_TP, ignore_tp = active_strategy.get_exit_rules(
+                    p, volatility_pct, trend_is_with_me, adx_is_strong, entry_score
+                )
 
                 # 🚨 拔除原本 9.99 的危險寫法，改用動態追蹤！
                 
@@ -587,7 +581,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                         actual_exit_price = stop_price
                         is_exit = True
                     # 2. 檢查是否暴漲直接達標 (傳統停利)
-                    elif row['High'] >= tp_price and entry_score < 10: 
+                    elif row['High'] >= tp_price and entry_score < 10 and not ignore_tp: 
                         actual_exit_price = get_tp_price(entry_price, safe_open, DYNAMIC_TP, 1)
                         is_exit = True
                         
@@ -602,7 +596,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                     if row['High'] >= stop_price:
                         actual_exit_price = stop_price
                         is_exit = True
-                    elif row['Low'] <= tp_price and entry_score < 10:
+                    elif row['Low'] <= tp_price and entry_score < 10 and not ignore_tp:
                         actual_exit_price = get_tp_price(entry_price, safe_open, DYNAMIC_TP, -1)
                         is_exit = True
 
