@@ -29,68 +29,63 @@ DB_CONN_STR = (
 
 
 # ==========================================
-# 🚀 智慧快取下載器 (Smart Cache Engine)
+# 🚀 智慧快取下載器 (Smart Cache Engine) - 終極假日記憶版
 # ==========================================
 def smart_download(ticker, period="1y"):
     """
-    一天只抓一次 API，其餘時間秒讀快取！斷網時自動讀取舊檔防當機。
+    一天只抓一次 API，其餘時間秒讀快取！
+    假日自動讀取週五快取，達成真正的零消耗！
     """
     os.makedirs("data/kline_cache", exist_ok=True)
     cache_file = f"data/kline_cache/{ticker}_{period}.csv"
-    today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # 1. 檢查是否有今日最新的快取
+    today = datetime.now().date()
+    is_weekend = today.weekday() >= 5 # 5是週六，6是週日
+    
+    # 1. 檢查快取
     if os.path.exists(cache_file):
-        file_mtime = datetime.fromtimestamp(os.path.getmtime(cache_file)).strftime('%Y-%m-%d')
-        if file_mtime == today_str:
-            # 命中快取！直接讀取本地檔案，節省 API 呼叫 (0 消耗！)
+        file_mtime_date = datetime.fromtimestamp(os.path.getmtime(cache_file)).date()
+        days_diff = (today - file_mtime_date).days
+        
+        # 🌟 核心防禦：如果是今天抓的，或者是「週末且快取是3天內的(週五)」，直接秒讀！
+        if days_diff == 0 or (is_weekend and days_diff <= 3):
             return pd.read_csv(cache_file, index_col=0, parse_dates=True)
             
-    # 2. 如果沒有快取或已過期，則向 API 請求新資料
+    # 2. 如果真的沒有或過期，才向 API 請求新資料
     try:
         data = yf.download(ticker, period=period, progress=False)
         if data.empty: 
             return pd.DataFrame()
             
-        # 處理 yfinance 版本差異
         df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
-        
-        # 寫入快取檔案
         df.to_csv(cache_file)
         return df
     except Exception as e:
         print(f"⚠️ {ticker} 網路下載失敗: {e}")
-        # 如果斷網，嘗試讀取舊快取頂著用
         if os.path.exists(cache_file):
             print(f"♻️ 啟用備用方案：讀取 {ticker} 舊有快取資料。")
             return pd.read_csv(cache_file, index_col=0, parse_dates=True)
         return pd.DataFrame()
-# ==========================================
-# 🌟 全系統唯一：AI 特徵統一提取晶片 (雙向全武器滿配版)
-# ==========================================
+
+
 def extract_ai_features(row):
     """
     確保『兵工廠訓練』跟『實戰機台』看到的數值 100% 相同。
     """
     features = {}
     
-    # 🌟 補丁：加入分母防呆
+    # 1. 浮動式連續數值 (基礎環境)
     ma20 = row.get('MA20', 0)
+    # 🌟 終極防呆：分母加上 0.001 避免除以零
     features['BB_Width'] = (row.get('BB_Upper', 0) - row.get('BB_Lower', 0)) / (ma20 + 0.001) if ma20 != 0 else 0
     
     vol_ma20 = row.get('Vol_MA20', 0)
-    # 🌟 補丁：確保 Volume_Ratio 不會因為 vol_ma20 為 0 而崩潰
+    # 🌟 終極防呆：分母加上 0.001 避免除以零
     features['Volume_Ratio'] = row.get('Volume', 0) / (vol_ma20 + 0.001) if vol_ma20 != 0 else 1
-    # 1. 浮動式連續數值 (基礎環境)
+    
     features['RSI'] = row.get('RSI', 50)
     features['MACD_Hist'] = row.get('MACD_Hist', 0)
     features['ADX'] = row.get('ADX14', 25)
-    
-    ma20 = row.get('MA20', 0)
-    features['BB_Width'] = (row.get('BB_Upper', 0) - row.get('BB_Lower', 0)) / ma20 if ma20 > 0 else 0
-    
-    vol_ma20 = row.get('Vol_MA20', 0)
-    features['Volume_Ratio'] = row.get('Volume', 0) / (vol_ma20 + 1) if vol_ma20 > 0 else 1
 
     features['Foreign_Net'] = row.get('Foreign_Net', 0)
     features['Trust_Net'] = row.get('Trust_Net', 0)
