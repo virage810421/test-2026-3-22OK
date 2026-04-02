@@ -101,7 +101,8 @@ def run_walk_forward_optimization(iterations=50, split_ratio=0.7, ticker_list=No
             if ticker not in train_dfs: continue
             df = train_dfs[ticker].copy()
             
-            # 使用訓練集跑大腦回測
+            # 🌟 啟動旁路：告訴雷達兵現在是最佳化模式，不要呼叫龐大的 AI 模型！
+            candidate_params['IS_OPTIMIZING'] = True  
             result = inspect_stock(ticker, preloaded_df=df, p=candidate_params)
             
             if result and not pd.isna(result.get("期望值")):

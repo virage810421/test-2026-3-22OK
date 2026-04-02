@@ -519,9 +519,12 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                 # 🧠 AI 精算師：動態信心權重 + 流動性微結構過濾
                 base_risk_allowance = sim_balance * 0.015 
                 
-                # 🧠 AI 精算師：呼叫 strategies.py，確保回測與實戰邏輯 100% 一致！
-                active_strategy_bt = get_active_strategy(entry_setup)
-                conviction_mult = active_strategy_bt.get_conviction_multiplier(row, entry_regime)
+                # 🧠 最佳化防凍結機制：如果是跑 Optimizer，暫時關閉 AI 算力，純測物理指標！
+                if p.get('IS_OPTIMIZING', False):
+                    conviction_mult = 2.0 if "SNIPER" in entry_setup else 1.0
+                else:
+                    active_strategy_bt = get_active_strategy(entry_setup)
+                    conviction_mult = active_strategy_bt.get_conviction_multiplier(row, entry_regime)
                     
                 target_risk = base_risk_allowance * conviction_mult
                 raw_shares = target_risk / (entry_price * temp_sl_pct)
@@ -811,6 +814,34 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
 
         strength_diff = buy_score - sell_score
         structure_status = "多頭佔優" if strength_diff > 2 else "空頭佔優" if strength_diff < -2 else "結構盤整"
+        # 🌟 補回：被誤刪的診斷數據字典 (用於產出戰鬥力分佈報告)
+        diagnostic_data = {
+            "BBI多頭趨勢": [int(buy_trend.sum()), int((buy_trend & actual_buy_signals).sum())],
+            "破下軌": [int(buy_c1.sum()), int((buy_c1 & actual_buy_signals).sum())],
+            "RSI超賣": [int(buy_c2.sum()), int((buy_c2 & actual_buy_signals).sum())],
+            "爆量": [int(buy_c3.sum()), int((buy_c3 & actual_buy_signals).sum())],
+            "MACD轉強": [int(buy_c4.sum()), int((buy_c4 & actual_buy_signals).sum())],
+            "底背離": [int(buy_c5.sum()), int((buy_c5 & actual_buy_signals).sum())],
+            "🌟突破BBI": [int(buy_c6.sum()), int((buy_c6 & actual_buy_signals).sum())],
+            "🔥昨日法人同買": [int(buy_c7.sum()), int((buy_c7 & actual_buy_signals).sum())],
+            "📈DMI趨勢成型": [int(buy_c8.sum()), int((buy_c8 & actual_buy_signals).sum())],
+            "💎結構底背離": [int(buy_c9.sum()), int((buy_c9 & actual_buy_signals).sum())],
+            
+            "BBI空頭趨勢": [int(sell_trend.sum()), int((sell_trend & actual_sell_signals).sum())],
+            "頂上軌":[int(sell_c1.sum()),int((sell_c1 & actual_sell_signals).sum())],
+            "RSI超買":[int(sell_c2.sum()),int((sell_c2 & actual_sell_signals).sum())],
+            "爆量":[int(sell_c3.sum()),int((sell_c3 & actual_sell_signals).sum())],
+            "MACD轉弱":[int(sell_c4.sum()),int((sell_c4 & actual_sell_signals).sum())],
+            "頂背離":[int(sell_c5.sum()),int((sell_c5 & actual_sell_signals).sum())],
+            "💀跌破BBI":[int(sell_c6.sum()),int((sell_c6 & actual_sell_signals).sum())],
+            "🧊昨日法人同賣":[int(sell_c7.sum()),int((sell_c7 & actual_sell_signals).sum())],
+            "📉DMI空頭成型":[int(sell_c8.sum()),int((sell_c8 & actual_sell_signals).sum())],
+            "💣結構頂背離":[int(sell_c9.sum()),int((sell_c9 & actual_sell_signals).sum())]
+        }
+
+        # 🌟 補回：取得基本面營收與獲利分數
+        f_data = add_fundamental_filter(ticker, p)
+
         return {
             "Ticker SYMBOL": ticker,
             "最新收盤價": round(current_price, 2),

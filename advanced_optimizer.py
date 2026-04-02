@@ -58,6 +58,10 @@ def get_pareto_frontier(results):
 # 🧠 核心 2：評估函數 (對接您現有的大腦)
 # ==========================================
 def evaluate_params(params, train_dfs, targets):
+    # 🌟 致命 Bug 修復：強制啟動「AI 旁路開關」！
+    # 告訴 screening.py 暫時關閉 AI 勝率預測，否則數百萬次的回測會讓電腦直接死機！
+    params['IS_OPTIMIZING'] = True 
+    
     total_ev = 0.0
     total_winrate = 0.0
     total_return = 0.0 # 🌟 新增：累計報酬率變數
