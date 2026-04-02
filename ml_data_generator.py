@@ -1,15 +1,17 @@
 import pandas as pd
 import yfinance as yf
-from screening import inspect_stock, add_chip_data
-from config import PARAMS
 import os
-from screening import extract_ai_features
+import numpy as np
+
+# 🌟 匯入系統核心晶片
+from screening import inspect_stock, add_chip_data, extract_ai_features
+from config import PARAMS
 
 def generate_ml_dataset(tickers):
-    print("🏭 [兵工廠] 啟動 AI 訓練資料生成器...")
+    print("🏭 [兵工廠] 啟動 AI 雙向訓練資料生成器...")
     ml_dataset = []
     
-    # 🌟 核心修復 1：加入 AI 旁路開關！防止萃取資料時大腦狂轉導致當機！
+    # 🌟 防止萃取資料時大腦狂轉導致當機
     test_params = PARAMS.copy()
     test_params['IS_OPTIMIZING'] = True 
     test_params['TRIGGER_SCORE'] = 2 
@@ -20,12 +22,10 @@ def generate_ml_dataset(tickers):
             data = yf.download(ticker, period="3y", progress=False)
             if data.empty: continue
             
-            # 相容不同版本的 yfinance
             df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
             df = add_chip_data(df, ticker)
             
             result = inspect_stock(ticker, preloaded_df=df, p=test_params)
-            
             if not result or "計算後資料" not in result: continue
             
             computed_df = result['計算後資料']
@@ -33,48 +33,47 @@ def generate_ml_dataset(tickers):
             # 遍歷歷史，保留最後 5 天作為「偷看未來」的視窗
             for i in range(len(computed_df) - 5):
                 row = computed_df.iloc[i]
-                if "LONG" in str(row.get('Golden_Type', '無')):
-                    # 🌟 呼叫統一提取器
-                    features = extract_ai_features(row)
                 setup_tag = str(row.get('Golden_Type', '無'))
-                buy_score = int(row.get('Buy_Score', 0))
+                regime = str(row.get('Regime', '區間盤整'))
                 
-                # 🌟 核心修復 2：只萃取「做多」的訊號，防止空頭訊號污染 AI 學習方向！
-                is_long_signal = ("LONG" in setup_tag) or (buy_score >= 2 and "SHORT" not in setup_tag)
+                # ==========================================
+                # 🎯 核心修復 1：多空雙向全收！只要有陣型就抓進來訓練
+                # ==========================================
+                if setup_tag == "無":
+                    continue
+                    
+                # ==========================================
+                # 🎯 核心修復 2：正確呼叫特徵晶片，保留您的 16 把終極武器！
+                # ==========================================
+                features = extract_ai_features(row)
                 
-                if is_long_signal:
-                    
-                    # 1. 萃取特徵 (Features X)
-                    features = {
-                        "Ticker": ticker,
-                        "Date": computed_df.index[i],
-                        "Regime": row.get('Regime', '未知'),
-                        "Setup": setup_tag,
-                        "RSI": row.get('RSI', 50),
-                        "MACD_Hist": row.get('MACD_Hist', 0),
-                        "BB_Width": (row.get('BB_Upper', 0) - row.get('BB_Lower', 0)) / row.get('MA20', 1) if row.get('MA20', 0) > 0 else 0,
-                        "Volume_Ratio": row.get('Volume', 0) / (row.get('Vol_MA20', 0) + 1),
-                        "ADX": row.get('ADX14', 0),
-                        "Foreign_Net": row.get('Foreign_Net', 0),
-                        "Trust_Net": row.get('Trust_Net', 0)
-                    }
-                    
-                    # 2. 偷看未來定義勝負 (Labels Y)
-                    entry_price = computed_df.iloc[i+1]['Open'] # 隔天開盤進場
-                    future_window = computed_df.iloc[i+1 : i+6] # 觀察未來 5 天
-                    
-                    if future_window.empty or pd.isna(entry_price) or entry_price <= 0: continue
-                    
+                # 將 Meta 資訊補進 features 字典中
+                features['Ticker'] = ticker
+                features['Date'] = computed_df.index[i]
+                features['Regime'] = regime
+                features['Setup'] = setup_tag
+                
+                # 取得未來五天的資料
+                entry_price = computed_df.iloc[i+1]['Open']
+                future_window = computed_df.iloc[i+1 : i+6]
+                
+                if future_window.empty or pd.isna(entry_price) or entry_price <= 0: continue
+                
+                # ==========================================
+                # 🎯 核心修復 3：雙向動態計分系統 (Label_Y)
+                # ==========================================
+                if regime == '趨勢空頭' or "SHORT" in setup_tag:
+                    # 🔴 空軍勝利條件：未來 5 天最低價，跌幅大於 3%
+                    min_low = future_window['Low'].min()
+                    win_condition = (entry_price - min_low) / entry_price > PARAMS.get('SL_MIN_PCT', 0.03)
+                else:
+                    # 🟢 多軍勝利條件：未來 5 天最高價，漲幅大於 3%
                     max_high = future_window['High'].max()
-                    
-                    # 判斷是否獲利超過停損點
                     win_condition = (max_high - entry_price) / entry_price > PARAMS.get('SL_MIN_PCT', 0.03)
-                    features['Label_Y'] = 1 if win_condition else 0
-                    features['Ticker'] = ticker
-                    features['Date'] = computed_df.index[i]
-                    features['Regime'] = row.get('Regime', '未知')
-                    features['Setup'] = setup_tag
-                    ml_dataset.append(features)
+                
+                # 紀錄解答
+                features['Label_Y'] = 1 if win_condition else 0
+                ml_dataset.append(features)
                                    
         except Exception as e:
             print(f"⚠️ {ticker} 萃取失敗: {e}")
@@ -83,7 +82,7 @@ def generate_ml_dataset(tickers):
     if not final_df.empty:
         os.makedirs("data", exist_ok=True) 
         final_df.to_csv("data/ml_training_data.csv", index=False, encoding='utf-8-sig')
-        print(f"\n✅ [兵工廠] 成功萃取 {len(final_df)} 筆戰鬥紀錄，已存為 ml_training_data.csv！")
+        print(f"\n✅ [兵工廠] 成功萃取 {len(final_df)} 筆雙向戰鬥紀錄，已存為 ml_training_data.csv！")
     else:
         print("\n⚠️ 萃取失敗，沒有產生任何有效數據。")
 

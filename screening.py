@@ -28,16 +28,15 @@ DB_CONN_STR = (
 
 
 # ==========================================
-# 🌟 全系統唯一：AI 特徵統一提取晶片
+# 🌟 全系統唯一：AI 特徵統一提取晶片 (雙向全武器滿配版)
 # ==========================================
 def extract_ai_features(row):
     """
-    確保『兵工廠訓練』跟『實戰機台』看到的數值 100% 相同，消滅訓練偏移。
-    輸入 row 為 pandas Series (單日 K 線資料)。
+    確保『兵工廠訓練』跟『實戰機台』看到的數值 100% 相同。
     """
     features = {}
     
-    # 1. 浮動式條件 (連續刻度)
+    # 1. 浮動式連續數值 (基礎環境)
     features['RSI'] = row.get('RSI', 50)
     features['MACD_Hist'] = row.get('MACD_Hist', 0)
     features['ADX'] = row.get('ADX14', 25)
@@ -51,16 +50,29 @@ def extract_ai_features(row):
     features['Foreign_Net'] = row.get('Foreign_Net', 0)
     features['Trust_Net'] = row.get('Trust_Net', 0)
     
-    # 2. 固定式條件 (戰術開關：將 True/False 轉為 1/0)
-    features['C1_破下軌'] = 1 if row.get('buy_c1', False) else 0
-    features['C2_RSI超賣'] = 1 if row.get('buy_c2', False) else 0
-    features['C3_爆量'] = 1 if row.get('buy_c3', False) else 0
-    features['C4_MACD轉強'] = 1 if row.get('buy_c4', False) else 0
-    features['C5_底背離'] = 1 if row.get('buy_c5', False) else 0
-    features['C6_突破BBI'] = 1 if row.get('buy_c6', False) else 0
-    features['C7_法人同買'] = 1 if row.get('buy_c7', False) else 0
-    features['C8_DMI成型'] = 1 if row.get('buy_c8', False) else 0
-    features['C9_結構背離'] = 1 if row.get('buy_c9', False) else 0
+    # ==========================================
+    # 2. 🟢 多方戰術開關 (做多市場語言)
+    # ==========================================
+    features['Buy_RSI_Oversold_超賣'] = int(row.get('buy_c2', 0))
+    features['Buy_Vol_Spike_爆量'] = int(row.get('buy_c3', 0))
+    features['Buy_MACD_Strong_轉強'] = int(row.get('buy_c4', 0))
+    features['Buy_Price_Div_底背離'] = int(row.get('buy_c5', 0))
+    features['Buy_BBI_Breakout_突破BBI'] = int(row.get('buy_c6', 0))
+    features['Buy_Smart_Money_法人同買'] = int(row.get('buy_c7', 0))
+    features['Buy_DMI_Trend_多頭成型'] = int(row.get('buy_c8', 0))
+    features['Buy_Chip_Div_結構底背離'] = int(row.get('buy_c9', 0))
+    
+    # ==========================================
+    # 3. 🔴 空方戰術開關 (放空市場語言)
+    # ==========================================
+    features['Sell_RSI_Overbought_超買'] = int(row.get('sell_c2', 0))
+    features['Sell_Vol_Spike_爆量下殺'] = int(row.get('sell_c3', 0))
+    features['Sell_MACD_Weak_轉弱'] = int(row.get('sell_c4', 0))
+    features['Sell_Price_Div_頂背離'] = int(row.get('sell_c5', 0))
+    features['Sell_BBI_Breakdown_跌破BBI'] = int(row.get('sell_c6', 0))
+    features['Sell_Smart_Money_法人同賣'] = int(row.get('sell_c7', 0))
+    features['Sell_DMI_Trend_空頭成型'] = int(row.get('sell_c8', 0))
+    features['Sell_Chip_Div_結構頂背離'] = int(row.get('sell_c9', 0))
     
     return features
 # ==========================================
@@ -361,43 +373,47 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_c9_base = detect_divergence(df['High'].values, df['Total_Net'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.5) if p.get('USE_DIVERGENCE_CHIPS', True) else _F
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
 
+        # 👇 🌟 新增這段：把物理開關正式焊死進 DataFrame，讓 AI 晶片抓得到！
         # ==========================================
-        # 🚀 階段 2：市場語言 (Market Language)
-        # 核心精神：將生硬的物理指標 (c1~c9) 翻譯為具有戰略意義的人類語言
+        df['buy_c1'] = buy_c1; df['buy_c2'] = buy_c2; df['buy_c3'] = buy_c3
+        df['buy_c4'] = buy_c4; df['buy_c5'] = buy_c5; df['buy_c6'] = buy_c6
+        df['buy_c7'] = buy_c7; df['buy_c8'] = buy_c8; df['buy_c9'] = buy_c9
+        
+        df['sell_c1'] = sell_c1; df['sell_c2'] = sell_c2; df['sell_c3'] = sell_c3
+        df['sell_c4'] = sell_c4; df['sell_c5'] = sell_c5; df['sell_c6'] = sell_c6
+        df['sell_c7'] = sell_c7; df['sell_c8'] = sell_c8; df['sell_c9'] = sell_c9
+       # ==========================================
+        # 🚀 階段 2：市場語言 (Market Language) - 直接寫入 DataFrame
         # ==========================================
         is_bull_regime = (df['Regime'] == '趨勢多頭')
         is_bear_regime = (df['Regime'] == '趨勢空頭')
         is_ranging = (df['Regime'] == '區間盤整')
 
-        # 🟢 多方語言開關
-        buy_vol_spike = buy_c3 | buy_c3.shift(1)       # 語言：是否爆量？
-        buy_smart_money = buy_c7 | buy_c7.shift(1)     # 語言：主力是否進駐？
-        buy_price_break = buy_c6                       # 語言：是否帶量突破均線？
-        buy_oversold = buy_c1 & buy_c2                 # 語言：是否跌破下軌且嚴重超賣？
-        buy_chip_diverge = buy_c9 & buy_c4 & buy_trend # 語言：籌碼是否出現底背離？
+        # 🟢 多方語言：直接生成 df 欄位，供給 AI 特徵晶片讀取！
+        df['buy_vol_spike'] = buy_c3 | buy_c3.shift(1)       
+        df['buy_smart_money'] = buy_c7 | buy_c7.shift(1)     
+        df['buy_price_break'] = buy_c6                       
+        df['buy_oversold'] = buy_c1 & buy_c2                 
+        df['buy_chip_diverge'] = buy_c9 & buy_c4 & buy_trend 
 
-        # 🔴 空方語言開關
-        sell_vol_spike = sell_c3 | sell_c3.shift(1)
-        sell_smart_money = sell_c7 | sell_c7.shift(1)
-        sell_price_breakdown = sell_c6
-        sell_overbought = sell_c1 & sell_c2
-        sell_chip_diverge = sell_c9 & sell_c4 & sell_trend
+        # 🔴 空方語言
+        df['sell_vol_spike'] = sell_c3 | sell_c3.shift(1)
+        df['sell_smart_money'] = sell_c7 | sell_c7.shift(1)
+        df['sell_price_breakdown'] = sell_c6
+        df['sell_overbought'] = sell_c1 & sell_c2
+        df['sell_chip_diverge'] = sell_c9 & sell_c4 & sell_trend
 
         # ==========================================
-        # 🚀 階段 3：訊號陣型組合 (Setup / Features)
+        # 🚀 階段 3：訊號陣型組合 (Setup)
         # ==========================================
-        # 1. 動能突破陣型 (爆量 + 突破 + 主力)
-        setup_breakout_long = (buy_smart_money.astype(int) + buy_vol_spike.astype(int) + buy_price_break.astype(int) >= 2) & (is_bull_regime | is_ranging)
-        setup_breakout_short = (sell_smart_money.astype(int) + sell_vol_spike.astype(int) + sell_price_breakdown.astype(int) >= 2) & (is_bear_regime | is_ranging)
-        
-        # 2. 超跌反彈陣型 (超賣 + 盤整)
-        setup_reversal_long = buy_oversold & is_ranging
-        setup_reversal_short = sell_overbought & is_ranging
-        
-        # 3. 籌碼潛伏陣型 (背離 + 趨勢)
-        setup_chip_long = buy_chip_diverge & (is_ranging | is_bear_regime)
-        setup_chip_short = sell_chip_diverge & (is_ranging | is_bull_regime)
+        # 直接使用剛寫入 df 的語言特徵來組合陣型
+        setup_breakout_long = (df['buy_smart_money'].astype(int) + df['buy_vol_spike'].astype(int) + df['buy_price_break'].astype(int) >= 2) & (is_bull_regime | is_ranging)
+        setup_reversal_long = df['buy_oversold'] & is_ranging
+        setup_chip_long = df['buy_chip_diverge'] & (is_ranging | is_bear_regime)
 
+        setup_breakout_short = (df['sell_smart_money'].astype(int) + df['sell_vol_spike'].astype(int) + df['sell_price_breakdown'].astype(int) >= 2) & (is_bear_regime | is_ranging)
+        setup_reversal_short = df['sell_overbought'] & is_ranging
+        setup_chip_short = df['sell_chip_diverge'] & (is_ranging | is_bull_regime)
         # ==========================================
         # 🚀 階段 4：扣板機觸發 (Trigger) 與 輸出訊號 (Signal)
         # ==========================================
@@ -769,29 +785,31 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         actual_buy_signals = df['Buy_Score'] >= p['TRIGGER_SCORE']
         actual_sell_signals = df['Sell_Score'] >= p['TRIGGER_SCORE']
         
+        # ==========================================
+        # 5. 提取狀態與升級版儀表板輸出
+        # ==========================================
+        latest_row = df.iloc[-1]
+        current_price = latest_row['Close']
+        buy_score = int(latest_row['Buy_Score'])
+        sell_score = int(latest_row['Sell_Score'])
+        
+        actual_buy_signals = df['Buy_Score'] >= p['TRIGGER_SCORE']
+        actual_sell_signals = df['Sell_Score'] >= p['TRIGGER_SCORE']
+        
+        # 🌟 升級版：使用高階市場語言輸出觸發明細
         buy_details = []
-        if buy_trend.iloc[-1]: buy_details.append(f"BBI多頭趨勢(歷{int((buy_trend & actual_buy_signals).sum())}次)")
-        if buy_c1.iloc[-1]: buy_details.append(f"破下軌(歷{int((buy_c1 & actual_buy_signals).sum())}次)")
-        if buy_c2.iloc[-1]: buy_details.append(f"RSI超賣(歷{int((buy_c2 & actual_buy_signals).sum())}次)")
-        if buy_c3.iloc[-1]: buy_details.append(f"爆量(歷{int((buy_c3 & actual_buy_signals).sum())}次)")
-        if buy_c4.iloc[-1]: buy_details.append(f"MACD轉強(歷{int((buy_c4 & actual_buy_signals).sum())}次)")
-        if buy_c5.iloc[-1]: buy_details.append(f"底背離(歷{int((buy_c5 & actual_buy_signals).sum())}次)")
-        if buy_c6.iloc[-1]: buy_details.append(f"🌟突破BBI(歷{int((buy_c6 & actual_buy_signals).sum())}次)") 
-        if buy_c7.iloc[-1]: buy_details.append(f"🔥昨日法人同買(歷{int((buy_c7 & actual_buy_signals).sum())}次)") 
-        if buy_c8.iloc[-1]: buy_details.append(f"📈DMI趨勢成型(歷{int((buy_c8 & actual_buy_signals).sum())}次)")
-        if buy_c9.iloc[-1]: buy_details.append(f"💎結構底背離(歷{int((buy_c9 & actual_buy_signals).sum())}次)")
+        if latest_row['buy_vol_spike']: buy_details.append("🔥爆量發動")
+        if latest_row['buy_smart_money']: buy_details.append("🐋主力進駐")
+        if latest_row['buy_price_break']: buy_details.append("📈突破均線")
+        if latest_row['buy_oversold']: buy_details.append("🩸極度超賣")
+        if latest_row['buy_chip_diverge']: buy_details.append("💎籌碼底背離")
         
         sell_details = []
-        if sell_trend.iloc[-1]: sell_details.append(f"BBI空頭趨勢(歷{int((sell_trend & actual_sell_signals).sum())}次)")
-        if sell_c1.iloc[-1]: sell_details.append(f"頂上軌(歷{int((sell_c1 & actual_sell_signals).sum())}次)")
-        if sell_c2.iloc[-1]: sell_details.append(f"RSI超買(歷{int((sell_c2 & actual_sell_signals).sum())}次)")
-        if sell_c3.iloc[-1]: sell_details.append(f"爆量(歷{int((sell_c3 & actual_sell_signals).sum())}次)")
-        if sell_c4.iloc[-1]: sell_details.append(f"MACD轉弱(歷{int((sell_c4 & actual_sell_signals).sum())}次)")
-        if sell_c5.iloc[-1]: sell_details.append(f"頂背離(歷{int((sell_c5 & actual_sell_signals).sum())}次)")
-        if sell_c6.iloc[-1]: sell_details.append(f"💀跌破BBI(歷{int((sell_c6 & actual_sell_signals).sum())}次)") 
-        if sell_c7.iloc[-1]: sell_details.append(f"🧊昨日法人同賣(歷{int((sell_c7 & actual_sell_signals).sum())}次)") 
-        if sell_c8.iloc[-1]: sell_details.append(f"📉DMI空頭成型(歷{int((sell_c8 & actual_sell_signals).sum())}次)")
-        if sell_c9.iloc[-1]: sell_details.append(f"💣結構頂背離(歷{int((sell_c9 & actual_sell_signals).sum())}次)")
+        if latest_row['sell_vol_spike']: sell_details.append("🧊爆量下殺")
+        if latest_row['sell_smart_money']: sell_details.append("💀主力倒貨")
+        if latest_row['sell_price_breakdown']: sell_details.append("📉跌破均線")
+        if latest_row['sell_overbought']: sell_details.append("🔥極度超買")
+        if latest_row['sell_chip_diverge']: sell_details.append("💣籌碼頂背離")
         
         # ==========================================
         # 🎯 雷達兵：四大艦隊陣型判定與狙擊發動

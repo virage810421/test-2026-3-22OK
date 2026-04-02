@@ -2,69 +2,67 @@ import pandas as pd
 import os
 import joblib
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report # 🌟 高級裝備 1：詳細戰報
-from feature_selector import auto_select_best_features # 🌟 高級裝備 2：精選引擎
 
-def train_regime_models():
-    print("🧠 [訓練中心] 準備啟動 AI 模型訓練...")
-    
-    # 🌟 1. 啟動精選引擎，獲取黃金指標組合 (正式呼叫！)
-    best_features = auto_select_best_features("data/ml_training_data.csv")
-    if not best_features:
-        print("❌ 無法獲取精選特徵，訓練中止。")
-        return
-    
-    try:
-        df = pd.read_csv("data/ml_training_data.csv")
-    except FileNotFoundError:
-        print("❌ 找不到訓練資料 ml_training_data.csv，請先執行兵工廠。")
+def train_models():
+    print("🧠 [精神時光屋] 啟動 AI 三核心大腦鍛造程序...")
+
+    # 1. 讀取兵工廠剛剛印好的課本
+    dataset_path = "data/ml_training_data.csv"
+    if not os.path.exists(dataset_path):
+        print(f"❌ 找不到訓練教材 ({dataset_path})！請先執行兵工廠。")
         return
 
-    # 填補缺失值
-    df.fillna(0, inplace=True)
-    
-    # 定義要分開訓練的市場環境
+    df = pd.read_csv(dataset_path)
+    os.makedirs("models", exist_ok=True)
+
+    # 2. 定義什麼是「考題(X)」，什麼是「答案(Y)」與「非作答區(Meta)」
+    # 把不能讓 AI 偷看的答案與文字標籤排除掉
+    drop_cols = ['Ticker', 'Date', 'Setup', 'Regime', 'Label_Y']
+    feature_cols = [c for c in df.columns if c not in drop_cols]
+
+    # 🌟 把您那 16 把終極武器的「清單」存起來，讓前線實戰機台對齊！
+    joblib.dump(feature_cols, "models/selected_features.pkl")
+    print(f"📦 已鎖定 {len(feature_cols)} 項戰術特徵，雙向武器庫已全數上線！")
+
+    # 3. 🌟 核心升級：因應不同的市場環境，鍛造三顆獨立大腦！
     regimes = ['趨勢多頭', '區間盤整', '趨勢空頭']
 
     for regime in regimes:
-        print(f"\n" + "="*50)
-        print(f"⚔️ 開始訓練【{regime}】專用 AI 模型...")
+        print(f"\n⏳ 正在萃取並訓練【{regime}】專屬大腦...")
         
-        # 篩選出該環境的專屬戰鬥紀錄
+        # 只挑出該市場環境的考卷給對應的大腦寫
         regime_df = df[df['Regime'] == regime]
-        
-        if len(regime_df) < 50:
-            print(f"⚠️ {regime} 樣本數過少 ({len(regime_df)}筆)，跳過訓練。請收集更多數據。")
+
+        if len(regime_df) < 20: # 樣本數防呆
+            print(f"⚠️ {regime} 的戰鬥數據過少 ({len(regime_df)}筆)，暫無法訓練此大腦。")
             continue
 
-        # 🌟 2. AI 訓練時，只看精選過後的黃金指標 (X)
-        X = regime_df[best_features]
+        X = regime_df[feature_cols]
         y = regime_df['Label_Y']
 
-        # 切分 80% 作為訓練教材，20% 作為期末考盲測
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-        # 建立隨機森林指揮官 (設定 500 棵決策樹，深度限制 5 層防止死背答案)
-        clf = RandomForestClassifier(n_estimators=500, max_depth=5, random_state=42, n_jobs=-1)
-        clf.fit(X_train, y_train)
-
-        # 🌟 3. 考試與產生詳細戰報
-        accuracy = clf.score(X_test, y_test)
-        print(f"🎯 {regime} 模型基礎預測準確度: {accuracy*100:.1f}%\n")
+        # 🤖 演算法：隨機森林特種部隊 
+        # class_weight='balanced' 可以防止 AI 因為常常輸而產生偏見
+        model = RandomForestClassifier(
+            n_estimators=200, 
+            max_depth=7, 
+            random_state=42, 
+            class_weight='balanced'
+        )
         
-        print("📊 [深度戰報] 模型對『贏(1)』與『輸(0)』的判斷力分析：")
-        y_pred = clf.predict(X_test)
-        # 這裡會印出 Precision (看對的機率) 與 Recall (抓出飆股的機率)
-        print(classification_report(y_test, y_pred, zero_division=0)) 
-        
-        # 4. 儲存模型 (打包成武器檔)
-        os.makedirs("models", exist_ok=True)
-        model_filename = f"models/model_{regime}.pkl" 
-        joblib.dump(clf, model_filename)
-        print(f"💾 模型已保存為: {model_filename}")
+        # 進行高壓訓練
+        model.fit(X, y)
 
-    print("\n✅ [訓練中心] 報告長官！所有環境模型皆已訓練並打包完畢！")
+        # 將訓練好的大腦晶片存入軍火庫
+        model_path = f"models/model_{regime}.pkl"
+        joblib.dump(model, model_path)
+        
+        # 內部準確率測試 (看 AI 吸收了多少)
+        score = model.score(X, y)
+        print(f"✅ {regime} 大腦鍛造完成！(內部記憶準確率: {score:.2%})")
+
+    print("\n🎉 精神時光屋結訓！所有 AI 大腦均已就位！")
 
 if __name__ == "__main__":
-    train_regime_models()
+    import warnings
+    warnings.filterwarnings('ignore') # 關閉煩人的警告
+    train_models()
