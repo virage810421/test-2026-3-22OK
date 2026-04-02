@@ -28,7 +28,43 @@ DB_CONN_STR = (
 )
 
 
-
+# ==========================================
+# 🚀 智慧快取下載器 (Smart Cache Engine)
+# ==========================================
+def smart_download(ticker, period="1y"):
+    """
+    一天只抓一次 API，其餘時間秒讀快取！斷網時自動讀取舊檔防當機。
+    """
+    os.makedirs("data/kline_cache", exist_ok=True)
+    cache_file = f"data/kline_cache/{ticker}_{period}.csv"
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    
+    # 1. 檢查是否有今日最新的快取
+    if os.path.exists(cache_file):
+        file_mtime = datetime.fromtimestamp(os.path.getmtime(cache_file)).strftime('%Y-%m-%d')
+        if file_mtime == today_str:
+            # 命中快取！直接讀取本地檔案，節省 API 呼叫 (0 消耗！)
+            return pd.read_csv(cache_file, index_col=0, parse_dates=True)
+            
+    # 2. 如果沒有快取或已過期，則向 API 請求新資料
+    try:
+        data = yf.download(ticker, period=period, progress=False)
+        if data.empty: 
+            return pd.DataFrame()
+            
+        # 處理 yfinance 版本差異
+        df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
+        
+        # 寫入快取檔案
+        df.to_csv(cache_file)
+        return df
+    except Exception as e:
+        print(f"⚠️ {ticker} 網路下載失敗: {e}")
+        # 如果斷網，嘗試讀取舊快取頂著用
+        if os.path.exists(cache_file):
+            print(f"♻️ 啟用備用方案：讀取 {ticker} 舊有快取資料。")
+            return pd.read_csv(cache_file, index_col=0, parse_dates=True)
+        return pd.DataFrame()
 # ==========================================
 # 🌟 全系統唯一：AI 特徵統一提取晶片 (雙向全武器滿配版)
 # ==========================================
@@ -85,43 +121,7 @@ def extract_ai_features(row):
     
     return features
 
-# ==========================================
-# 🚀 智慧快取下載器 (Smart Cache Engine)
-# ==========================================
-def smart_download(ticker, period="1y"):
-    """
-    一天只抓一次 API，其餘時間秒讀快取！斷網時自動讀取舊檔防當機。
-    """
-    os.makedirs("data/kline_cache", exist_ok=True)
-    cache_file = f"data/kline_cache/{ticker}_{period}.csv"
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    
-    # 1. 檢查是否有今日最新的快取
-    if os.path.exists(cache_file):
-        file_mtime = datetime.fromtimestamp(os.path.getmtime(cache_file)).strftime('%Y-%m-%d')
-        if file_mtime == today_str:
-            # 命中快取！直接讀取本地檔案，節省 API 呼叫 (0 消耗！)
-            return pd.read_csv(cache_file, index_col=0, parse_dates=True)
-            
-    # 2. 如果沒有快取或已過期，則向 API 請求新資料
-    try:
-        data = yf.download(ticker, period=period, progress=False)
-        if data.empty: 
-            return pd.DataFrame()
-            
-        # 處理 yfinance 版本差異
-        df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
-        
-        # 寫入快取檔案
-        df.to_csv(cache_file)
-        return df
-    except Exception as e:
-        print(f"⚠️ {ticker} 網路下載失敗: {e}")
-        # 如果斷網，嘗試讀取舊快取頂著用
-        if os.path.exists(cache_file):
-            print(f"♻️ 啟用備用方案：讀取 {ticker} 舊有快取資料。")
-            return pd.read_csv(cache_file, index_col=0, parse_dates=True)
-        return pd.DataFrame()
+
 # ==========================================
 # 🔌 籌碼資料外掛模組 (本地 SQL 直連版 - 零 API 消耗)
 # ==========================================
