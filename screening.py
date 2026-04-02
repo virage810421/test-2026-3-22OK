@@ -36,6 +36,13 @@ def extract_ai_features(row):
     """
     features = {}
     
+    # 🌟 補丁：加入分母防呆
+    ma20 = row.get('MA20', 0)
+    features['BB_Width'] = (row.get('BB_Upper', 0) - row.get('BB_Lower', 0)) / (ma20 + 0.001) if ma20 != 0 else 0
+    
+    vol_ma20 = row.get('Vol_MA20', 0)
+    # 🌟 補丁：確保 Volume_Ratio 不會因為 vol_ma20 為 0 而崩潰
+    features['Volume_Ratio'] = row.get('Volume', 0) / (vol_ma20 + 0.001) if vol_ma20 != 0 else 1
     # 1. 浮動式連續數值 (基礎環境)
     features['RSI'] = row.get('RSI', 50)
     features['MACD_Hist'] = row.get('MACD_Hist', 0)

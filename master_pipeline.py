@@ -103,6 +103,11 @@ def get_recent_winrate():
             total = stats["total"].sum()
             if total > 0:
                 return wins / total
+        else:
+            # 🌟 補丁：如果沒有檔案，自動生一個空的給系統讀，避免斷鏈
+            df_init = pd.DataFrame([{"ticker": "INIT", "wins": 0, "total": 0}])
+            df_init.to_csv("trade_stats.csv", index=False)
+            return 0.5
     except Exception as e:
         log(f"⚠️ 無法讀取歷史勝率，預設回傳 0.5 穩態值 ({e})")
         
@@ -200,6 +205,15 @@ def generate_advanced_report(data_dict, ai_models):
         if regime in ai_models and ai_models[regime] is not None:
             features_dict = extract_ai_features(latest_row)
             X_input = pd.DataFrame([features_dict])
+            
+            # 🌟 核心補丁：讀取訓練時的欄位清單，確保順序 100% 一致
+            feature_list_path = "models/selected_features.pkl"
+            if os.path.exists(feature_list_path):
+                selected_features = joblib.load(feature_list_path)
+                # 只保留訓練時有的欄位，並依照訓練時的順序排列
+                X_input = X_input.reindex(columns=selected_features).fillna(0)
+            
+            
             try:
                 proba = ai_models[regime].predict_proba(X_input)[0][1]
             except:
