@@ -7,3 +7,6 @@ try:
     print(model)
 except Exception as e:
     print(f"joblib 載入也失敗了: {e}")
+
+
+    

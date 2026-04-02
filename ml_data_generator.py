@@ -9,6 +9,12 @@ from config import PARAMS
 
 def generate_ml_dataset(tickers):
     print("🏭 [兵工廠] 啟動 AI 雙向訓練資料生成器...")
+    
+    # 🌟 終極縫合：開工前強制銷毀舊課本！確保 AI 學到的絕對是今天的最新資料！
+    if os.path.exists("data/ml_training_data.csv"):
+        os.remove("data/ml_training_data.csv")
+        print("🗑️ 已銷毀昨日舊有訓練資料，確保數據絕對純淨。")
+        
     ml_dataset = []
     
     # 🌟 防止萃取資料時大腦狂轉導致當機
@@ -59,18 +65,28 @@ def generate_ml_dataset(tickers):
                 
                 if future_window.empty or pd.isna(entry_price) or entry_price <= 0: continue
                 
+                # 替換 ml_data_generator.py 中的雙向動態計分系統
                 # ==========================================
-                # 🎯 核心修復 3：雙向動態計分系統 (Label_Y)
+                # 🎯 核心修復 3：雙向動態計分系統 (包含嚴格停損檢驗！)
                 # ==========================================
-                if regime == '趨勢空頭' or "SHORT" in setup_tag:
-                    # 🔴 空軍勝利條件：未來 5 天最低價，跌幅大於 3%
-                    min_low = future_window['Low'].min()
-                    win_condition = (entry_price - min_low) / entry_price > PARAMS.get('SL_MIN_PCT', 0.03)
-                else:
-                    # 🟢 多軍勝利條件：未來 5 天最高價，漲幅大於 3%
-                    max_high = future_window['High'].max()
-                    win_condition = (max_high - entry_price) / entry_price > PARAMS.get('SL_MIN_PCT', 0.03)
+                sl_pct = PARAMS.get('SL_MIN_PCT', 0.03)
                 
+                if regime == '趨勢空頭' or "SHORT" in setup_tag:
+                    # 🔴 空軍：未來 5 天最高價如果先觸發停損，直接判輸
+                    max_high = future_window['High'].max()
+                    if (max_high - entry_price) / entry_price > sl_pct:
+                        win_condition = False
+                    else:
+                        min_low = future_window['Low'].min()
+                        win_condition = (entry_price - min_low) / entry_price > sl_pct
+                else:
+                    # 🟢 多軍：未來 5 天最低價如果先觸發停損，直接判輸
+                    min_low = future_window['Low'].min()
+                    if (entry_price - min_low) / entry_price > sl_pct:
+                        win_condition = False
+                    else:
+                        max_high = future_window['High'].max()
+                        win_condition = (max_high - entry_price) / entry_price > sl_pct
                 # 紀錄解答
                 features['Label_Y'] = 1 if win_condition else 0
                 ml_dataset.append(features)

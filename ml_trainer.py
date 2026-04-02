@@ -37,8 +37,19 @@ def train_models():
             print(f"⚠️ {regime} 的戰鬥數據過少 ({len(regime_df)}筆)，暫無法訓練此大腦。")
             continue
 
-        X = regime_df[feature_cols]
+        # 插入在 ml_trainer.py 大約第 37 行 (X 和 y 定義之後)
+        X = regime_df[feature_cols].copy()
         y = regime_df['Label_Y']
+
+        # 🌟 終極縫合：清洗 NaN 與 無限大 (Infinity)，防止 AI 訓練崩潰！
+        import numpy as np # 確保檔案最上方有 import numpy as np
+        X = X.replace([np.inf, -np.inf], np.nan) # 把無限大轉成空值
+        X = X.fillna(0) # 把所有空值補 0 (中性數值)
+
+        # 🌟 防呆鎖：確保該環境的考卷有勝有負，否則 AI 會無法分類
+        if len(y.unique()) < 2:
+            print(f"⚠️ {regime} 考卷結果過於單一 (全勝或全敗)，AI 無法學習差異，跳過訓練！")
+            continue
 
         # 🤖 演算法：隨機森林特種部隊 
         # class_weight='balanced' 可以防止 AI 因為常常輸而產生偏見

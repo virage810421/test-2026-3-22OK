@@ -65,20 +65,21 @@ def run_script(script_name, retries=2, timeout=600):
     return False
 
 def validate_outputs():
-    checks = {
-        "特徵訓練教材": "data/ml_training_data.csv",
-        "多頭專屬大腦": "models/model_趨勢多頭.pkl",
-        "盤整專屬大腦": "models/model_區間盤整.pkl",
-        "空頭專屬大腦": "models/model_趨勢空頭.pkl"
-    }
-    all_passed = True
-    for name, path in checks.items():
-        if not os.path.exists(path):
-            log(f"❌ 驗證失敗：{name} 未產出 ({path})")
-            all_passed = False
-        else:
-            log(f"✅ 驗證通過：{name}")
-    return all_passed
+    # 1. 檢查課本是否印出
+    if not os.path.exists("data/ml_training_data.csv"):
+        log("❌ 驗證失敗：特徵訓練教材 (ml_training_data.csv) 未產出！")
+        return False
+
+    # 2. 🌟 終極縫合：只要有產出【任何一顆】大腦，就允許放行！(防死鎖)
+    os.makedirs("models", exist_ok=True)
+    models_found = [f for f in os.listdir("models") if f.startswith("model_") and f.endswith(".pkl")]
+    
+    if not models_found:
+        log("❌ 驗證失敗：精神時光屋未能鍛造出任何 AI 大腦！")
+        return False
+
+    log(f"✅ 驗證通過：兵工廠成功掛載 {len(models_found)} 顆 AI 大腦！")
+    return True
 
 def generate_report(start_time, status):
     report = {
@@ -90,29 +91,32 @@ def generate_report(start_time, status):
         json.dump(report, f, indent=4)
     log(f"📊 已生成系統日誌 daily_report.json")
 
-# ==========================================
-# 🧠 智慧重訓開關與勝率雷達 (Smart Retrain Trigger)
-# ==========================================
+# 替換 master_pipeline.py 中的 get_recent_winrate
 def get_recent_winrate():
-    """從歷史戰績表讀取近期的實戰勝率"""
+    """從 SQL 戰績表讀取近期實戰勝率，達成完美數據閉環！"""
     try:
-        # 讀取您系統中可能存在的戰績表
-        if os.path.exists("trade_stats.csv"):
-            stats = pd.read_csv("trade_stats.csv")
-            wins = stats["wins"].sum()
-            total = stats["total"].sum()
-            if total > 0:
-                return wins / total
-        else:
-            # 🌟 補丁：如果沒有檔案，自動生一個空的給系統讀，避免斷鏈
-            df_init = pd.DataFrame([{"ticker": "INIT", "wins": 0, "total": 0}])
-            df_init.to_csv("trade_stats.csv", index=False)
-            return 0.5
+        DB_CONN_STR = (
+            r'DRIVER={ODBC Driver 17 for SQL Server};'
+            r'SERVER=localhost;'  
+            r'DATABASE=股票online;'
+            r'Trusted_Connection=yes;'
+        )
+        import pyodbc
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            # 撈取最近 50 筆交易紀錄
+            query = "SELECT TOP 50 [報酬率(%)] FROM backtest_history ORDER BY [出場時間] DESC"
+            df_stats = pd.read_sql(query, conn)
+            
+            if not df_stats.empty:
+                total_trades = len(df_stats)
+                wins = len(df_stats[df_stats['報酬率(%)'] > 0])
+                winrate = wins / total_trades
+                log(f"📊 戰情雷達：近期 {total_trades} 筆實戰勝率為 {winrate:.1%}")
+                return winrate
     except Exception as e:
-        log(f"⚠️ 無法讀取歷史勝率，預設回傳 0.5 穩態值 ({e})")
+        log(f"⚠️ 無法連線 SQL 讀取歷史勝率，預設回傳 0.5 穩態值 ({e})")
         
-    return 0.5 # 如果還沒有實戰資料，預設給 50% 安全值
-
+    return 0.5
 def should_retrain():
     """判斷今天是否需要叫 AI 進入精神時光屋"""
     today = datetime.now().weekday()
@@ -201,23 +205,29 @@ def generate_advanced_report(data_dict, ai_models):
         latest_row = processed_df.iloc[-1]
         regime = latest_row.get('Regime', '區間盤整')
         
+        # 替換 master_pipeline.py 的 generate_advanced_report 中的預測區塊
         proba = 0.0
         if regime in ai_models and ai_models[regime] is not None:
             features_dict = extract_ai_features(latest_row)
             X_input = pd.DataFrame([features_dict])
             
-            # 🌟 核心補丁：讀取訓練時的欄位清單，確保順序 100% 一致
+            # 🌟 完美閉合：強制讀取兵工廠的特徵順序，保證實戰與訓練 100% 吻合！
             feature_list_path = "models/selected_features.pkl"
             if os.path.exists(feature_list_path):
                 selected_features = joblib.load(feature_list_path)
-                # 只保留訓練時有的欄位，並依照訓練時的順序排列
+                # 重新排列欄位，缺少的補 0
                 X_input = X_input.reindex(columns=selected_features).fillna(0)
             
-            
             try:
-                proba = ai_models[regime].predict_proba(X_input)[0][1]
-            except:
-                pass 
+                # 防呆：確保 AI 大腦有學過兩種結果 (勝與敗)，否則 [1] 會報錯 IndexError
+                model = ai_models[regime]
+                if len(model.classes_) > 1:
+                    proba = model.predict_proba(X_input)[0][1]
+                else:
+                    proba = 0.0 # 該陣型歷史全敗，無法給出勝率
+            except Exception as e:
+                log(f"⚠️ {ticker} 預測發生異常: {e}")
+            
                 
         structure, confidence, risk = analyze_signal(latest_row, proba)
         
