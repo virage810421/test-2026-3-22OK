@@ -11,6 +11,11 @@ from param_storage import load_all_params
 from strategies import get_active_strategy
 from sector_classifier import get_stock_sector
 from kline_cache import get_smart_klines
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
+warnings.filterwarnings('ignore', category=ResourceWarning)
+warnings.filterwarnings('ignore', category=UserWarning, module='pandas')
+warnings.filterwarnings('ignore', message=".*scikit-learn configuration.*")
 # 啟動時自動讀取 AI 最新優化的 JSON 成果
 AUTO_PARAMS = load_all_params()
 
@@ -352,7 +357,7 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
                     print(f"🛡️ [大盤防禦] 系統遭遇回撤，風險承受度強制縮減為 {CURRENT_MDD_TIER*100:.0f}%")
                 
                 raw_shares = target_risk / (current_price * entry_sl_pct)
-                max_liquidity_shares = (latest_row.get('Vol_MA20', 1000) * 1000) * 0.05
+                max_liquidity_shares = (latest_row.get('Vol_MA20', 1000000) ) * 0.05
                 raw_shares = min(raw_shares, max_liquidity_shares)
                 
                 if raw_shares >= 1000:
@@ -428,7 +433,8 @@ def handle_paper_trade(ticker, current_price, status, ticker_df, result_dict, sy
         setup_tag = positions[0].get('陣型標籤', '傳統訊號') # 讀取進場時的陣型
         
         trend_is_with_me = (is_long and positions[0]['進場趨勢多頭']) or (not is_long and not positions[0]['進場趨勢多頭'])
-        adx_is_strong = latest_row['ADX14'] > PARAMS['ADX_TREND_THRESHOLD']
+        # 修正後
+        adx_is_strong = latest_row['ADX14'] > sys_params.get('ADX_TREND_THRESHOLD', 20)
 
         # ✨ 模組化出場邏輯接管 (幾行程式碼取代原本一大串)
         entry_score = positions[0].get('進場分數', 0)

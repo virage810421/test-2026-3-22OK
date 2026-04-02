@@ -1,7 +1,3 @@
-from pyexpat import features
-import warnings
-warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
-warnings.filterwarnings('ignore', category=ResourceWarning)
 import yfinance as yf
 import pandas as pd
 pd.set_option('future.no_silent_downcasting', True)
@@ -11,8 +7,11 @@ from advanced_chart import draw_chart
 from FinMind.data import DataLoader
 from config import PARAMS
 from strategies import get_active_strategy  # 🌟 讓回測引擎也能呼叫四大艦隊
-
-
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
+warnings.filterwarnings('ignore', category=ResourceWarning)
+warnings.filterwarnings('ignore', category=UserWarning, module='pandas')
+warnings.filterwarnings('ignore', message=".*scikit-learn configuration.*")
 # ==========================================
 # ⚡️ 初始化 DataLoader 與資料庫連線設定
 # ==========================================
@@ -363,97 +362,82 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
 
         # ==========================================
-        # 🌟 第三層：Setup 分流 (將陣型與市場狀態綁定)
+        # 🚀 階段 2：市場語言 (Market Language)
+        # 核心精神：將生硬的物理指標 (c1~c9) 翻譯為具有戰略意義的人類語言
         # ==========================================
-        buy_c3_mem = buy_c3 | buy_c3.shift(1)  
-        buy_c7_mem = buy_c7 | buy_c7.shift(1)  
-        
-        # 1. 突破發動 Setup (只在【趨勢多頭】或【盤整轉多】時允許)
-        breakout_score = (buy_c7_mem.astype(int) + buy_c3_mem.astype(int) + buy_c6.astype(int))
-        valid_breakout = (breakout_score >= 2) & (is_bull_trend | is_ranging) # 3 個條件中滿足 2 個就視為陣型成型
-        
-        # 2. 超跌反彈 Setup (嚴禁在空頭趨勢中接刀，只在盤整區操作)
-        setup_reversal = buy_c1 & buy_c2 & buy_c5 
-        valid_reversal = setup_reversal & is_ranging
-        
-        # 3. 籌碼潛伏 Setup (只在盤整或跌勢末端允許)
-        setup_divergence = buy_c9 & buy_c4 & buy_trend 
-        valid_divergence = setup_divergence & (is_ranging | is_bear_trend)
+        is_bull_regime = (df['Regime'] == '趨勢多頭')
+        is_bear_regime = (df['Regime'] == '趨勢空頭')
+        is_ranging = (df['Regime'] == '區間盤整')
 
-        # -- 空方 Setup --
-        sell_c3_mem = sell_c3 | sell_c3.shift(1)
-        sell_c7_mem = sell_c7 | sell_c7.shift(1)
+        # 🟢 多方語言開關
+        buy_vol_spike = buy_c3 | buy_c3.shift(1)       # 語言：是否爆量？
+        buy_smart_money = buy_c7 | buy_c7.shift(1)     # 語言：主力是否進駐？
+        buy_price_break = buy_c6                       # 語言：是否帶量突破均線？
+        buy_oversold = buy_c1 & buy_c2                 # 語言：是否跌破下軌且嚴重超賣？
+        buy_chip_diverge = buy_c9 & buy_c4 & buy_trend # 語言：籌碼是否出現底背離？
 
-        sell_setup_breakdown = sell_c7_mem & sell_c3_mem & sell_c6 
-        valid_sell_breakdown = sell_setup_breakdown & (is_bear_trend | is_ranging)
-        
-        sell_setup_reversal  = sell_c1 & sell_c2 & sell_c5 
-        valid_sell_reversal = sell_setup_reversal & is_ranging
-        
-        sell_setup_divergence = sell_c9 & sell_c4 & sell_trend 
-        valid_sell_divergence = sell_setup_divergence & (is_ranging | is_bull_trend)
+        # 🔴 空方語言開關
+        sell_vol_spike = sell_c3 | sell_c3.shift(1)
+        sell_smart_money = sell_c7 | sell_c7.shift(1)
+        sell_price_breakdown = sell_c6
+        sell_overbought = sell_c1 & sell_c2
+        sell_chip_diverge = sell_c9 & sell_c4 & sell_trend
 
         # ==========================================
-        # 🌟 第四層：扣板機觸發 (Trigger) + 計分引擎
+        # 🚀 階段 3：訊號陣型組合 (Setup / Features)
         # ==========================================
-        # 昨天的 Setup 背景是否成立？
-        prev_valid_breakout = valid_breakout.shift(1).fillna(False)
-        prev_valid_reversal = valid_reversal.shift(1).fillna(False)
-        prev_valid_divergence = valid_divergence.shift(1).fillna(False)
+        # 1. 動能突破陣型 (爆量 + 突破 + 主力)
+        setup_breakout_long = (buy_smart_money.astype(int) + buy_vol_spike.astype(int) + buy_price_break.astype(int) >= 2) & (is_bull_regime | is_ranging)
+        setup_breakout_short = (sell_smart_money.astype(int) + sell_vol_spike.astype(int) + sell_price_breakdown.astype(int) >= 2) & (is_bear_regime | is_ranging)
+        
+        # 2. 超跌反彈陣型 (超賣 + 盤整)
+        setup_reversal_long = buy_oversold & is_ranging
+        setup_reversal_short = sell_overbought & is_ranging
+        
+        # 3. 籌碼潛伏陣型 (背離 + 趨勢)
+        setup_chip_long = buy_chip_diverge & (is_ranging | is_bear_regime)
+        setup_chip_short = sell_chip_diverge & (is_ranging | is_bull_regime)
 
-        prev_valid_sell_breakdown = valid_sell_breakdown.shift(1).fillna(False)
-        prev_valid_sell_reversal = valid_sell_reversal.shift(1).fillna(False)
-        prev_valid_sell_divergence = valid_sell_divergence.shift(1).fillna(False)
+        # ==========================================
+        # 🚀 階段 4：扣板機觸發 (Trigger) 與 輸出訊號 (Signal)
+        # ==========================================
+        trigger_long = df['Close'] > df['High'].shift(1)  # 今天過昨高，確認發動
+        trigger_short = df['Close'] < df['Low'].shift(1)  # 今天破昨低，確認發動
 
-        # 今天的 Trigger：實質的價格表態確認！
-        trigger_long = df['Close'] > df['High'].shift(1)  # 今天收盤必須大於昨天最高價
-        trigger_short = df['Close'] < df['Low'].shift(1)  # 今天收盤必須小於昨天最低價
+        final_long_breakout = setup_breakout_long.shift(1).fillna(False) & trigger_long
+        final_long_reversal = setup_reversal_long.shift(1).fillna(False) & trigger_long
+        final_long_chip = setup_chip_long.shift(1).fillna(False) & trigger_long
 
-        # 終極訊號：Setup (背景) + Trigger (確認)
-        final_long_breakout = prev_valid_breakout & trigger_long
-        final_long_reversal = prev_valid_reversal & trigger_long
-        final_long_divergence = prev_valid_divergence & trigger_long
+        final_short_breakout = setup_breakout_short.shift(1).fillna(False) & trigger_short
+        final_short_reversal = setup_reversal_short.shift(1).fillna(False) & trigger_short
+        final_short_chip = setup_chip_short.shift(1).fillna(False) & trigger_short
 
-        final_short_breakdown = prev_valid_sell_breakdown & trigger_short
-        final_short_reversal = prev_valid_sell_reversal & trigger_short
-        final_short_divergence = prev_valid_sell_divergence & trigger_short
+        # 🌟 輸出 Golden_Type 供給 ML 特徵晶片與倉位系統使用！
+        if not p.get('ALLOW_LONG', True):
+            final_long_breakout, final_long_reversal, final_long_chip = False, False, False
+        if not p.get('ALLOW_SHORT', True):
+            final_short_breakout, final_short_reversal, final_short_chip = False, False, False
 
-        # A. 傳統累加算分 (保留給非狙擊模式使用)
-        base_buy_score = (buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + 
+        df['Golden_Type'] = np.where(final_long_breakout, "BREAKOUT_LONG", 
+                            np.where(final_long_reversal, "REVERSAL_LONG", 
+                            np.where(final_long_chip, "CHIP_LONG", 
+                            np.where(final_short_breakout, "BREAKOUT_SHORT",
+                            np.where(final_short_reversal, "REVERSAL_SHORT",
+                            np.where(final_short_chip, "CHIP_SHORT", "無"))))))
+
+        # ==========================================
+        # 🚀 階段 4.5：維持戰鬥力儀表板 (保留分數，僅供報表顯示使用)
+        # ==========================================
+        df['Buy_Score'] = (buy_trend.astype(int) + buy_c1.astype(int) + buy_c2.astype(int) + 
                           buy_c3.astype(int) + buy_c4.astype(int) + buy_c5.astype(int) + 
                           buy_c6.astype(int) + buy_c7.astype(int) + buy_c8.astype(int) + buy_c9.astype(int))
         
-        base_sell_score = (sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + 
+        df['Sell_Score'] = (sell_trend.astype(int) + sell_c1.astype(int) + sell_c2.astype(int) + 
                            sell_c3.astype(int) + sell_c4.astype(int) + sell_c5.astype(int) + 
                            sell_c6.astype(int) + sell_c7.astype(int) + sell_c8.astype(int) + sell_c9.astype(int))
-
-        # ==========================================
-        # 🌟 Layer 1 升級：獨立策略模組 (取代舊版分數制)
-        # ==========================================
-        if not p.get('ALLOW_LONG', True):
-            final_long_breakout, final_long_reversal, final_long_divergence = False, False, False
-        if not p.get('ALLOW_SHORT', True):
-            final_short_breakdown, final_short_reversal, final_short_divergence = False, False, False
-
-        # 🌟 同步四大艦隊陣型名稱
-        df['Golden_Type'] = np.where(final_long_breakout, "BREAKOUT_LONG", 
-                            np.where(final_long_reversal, "REVERSAL_LONG", 
-                            np.where(final_long_divergence, "CHIP_LONG", 
-                            np.where(final_short_breakdown, "BREAKOUT_SHORT",
-                            np.where(final_short_reversal, "REVERSAL_SHORT",
-                            np.where(final_short_divergence, "CHIP_SHORT", "無"))))))
-
-        # 2. 分數降級為單純的「強弱顯示標記」，不再決定進場
-        df['Buy_Score'] = base_buy_score
-        df['Sell_Score'] = base_sell_score
         
-
-        # ==========================================
-        # 🌟 訊號標記 (移除幽靈讓點機制，直接記錄觸發當下的收盤價)
-        # ==========================================
         df['Buy_Signal'] = np.where(df['Buy_Score'] >= p['TRIGGER_SCORE'], df['Close'], np.nan)
         df['Sell_Signal'] = np.where(df['Sell_Score'] >= p['TRIGGER_SCORE'], df['Close'], np.nan)
-      
         # ==========================================
         # 4. 啟動回測引擎 (終極模組化架構 + Direction/Position 分離)
         # ==========================================
