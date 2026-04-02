@@ -2,9 +2,8 @@ import pandas as pd
 import yfinance as yf
 import os
 import numpy as np
-
 # 🌟 匯入系統核心晶片
-from screening import inspect_stock, add_chip_data, extract_ai_features
+from screening import inspect_stock, add_chip_data, extract_ai_features, smart_download
 from config import PARAMS
 
 def generate_ml_dataset(tickers):
@@ -25,10 +24,12 @@ def generate_ml_dataset(tickers):
     for ticker in tickers:
         print(f"📡 正在萃取 {ticker} 的歷史特徵與勝負標籤...")
         try:
-            data = yf.download(ticker, period="3y", progress=False)
-            if data.empty: continue
+            # 🌟 終極淨化：直接呼叫智慧快取，它會回傳整理好的 df，不需要再自己處理 data！
+            df = smart_download(ticker, period="3y")
+            if df.empty: 
+                continue
             
-            df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
+            # 直接把整理好的 df 拿去貼籌碼
             df = add_chip_data(df, ticker)
             
             result = inspect_stock(ticker, preloaded_df=df, p=test_params)

@@ -7,11 +7,9 @@ import json
 import pandas as pd
 import yfinance as yf
 import joblib
+# 修改 master_pipeline.py 最上方的這行：
+from screening import add_chip_data, extract_ai_features, inspect_stock, smart_download
 
-# ==========================================
-# 🌟 匯入系統核心晶片、語言工廠與【雷達數學引擎】
-# 注意：下面這行必須要在同一行！
-from screening import add_chip_data, extract_ai_features, inspect_stock
 
 
 # ==========================================
@@ -135,18 +133,13 @@ def should_retrain():
     # 平日且勝率穩定時，不浪費算力重訓
     return False
 
-# ==========================================
-# 🎯 第二部：戰情決策桌 (Decision Desk) 播報系統
-# ==========================================
 def load_market_data(watch_list):
-    log(f"📡 戰情中心：正在下載 {len(watch_list)} 檔標的資料...")
-    batch_data = yf.download(watch_list, period="1y", progress=False)
+    log(f"📡 戰情中心：正在同步 {len(watch_list)} 檔標的資料 (⚡啟用智慧快取)...")
     data_dict = {}
     for ticker in watch_list:
-        if isinstance(batch_data.columns, pd.MultiIndex):
-            df = batch_data.xs(ticker, axis=1, level=1).copy()
-        else:
-            df = batch_data.copy()
+        # 🌟 換成智慧下載器
+        df = smart_download(ticker, period="1y")
+        if df.empty: continue
             
         df.dropna(subset=['Close'], inplace=True)
         if df.empty: continue
@@ -254,11 +247,11 @@ def generate_advanced_report(data_dict, ai_models):
     return pd.DataFrame(results).sort_values("Score", ascending=False)
 
 
-# ==========================================
-# 🚀 總司令啟動區 (Main)
-# ==========================================
 def main():
     start_time = time.time()
+    # 🌟 取得今天是星期幾 (5 是週六，6 是週日)
+    is_weekend = datetime.now().weekday() >= 5
+
     log("\n" + "="*60)
     log("⚙️ HFA 全自動研究與訓練管線 (Auto-MLOps) 啟動")
     log("="*60)
@@ -266,11 +259,14 @@ def main():
     # ==========================================
     # 第一階段：每天必跑的「資料更新」
     # ==========================================
-    log("\n⏳ 階段：資料更新 (爬取最新 K 線與籌碼)")
-    if not run_script("daily_chip_etl.py"):
-        log("🛑 資料庫更新失敗，強制中斷！")
-        generate_report(start_time, "FAILED")
-        return
+    if is_weekend:
+        log("\n⏳ 階段：資料更新 (⚠️ 今日為週末休市，跳過 API 爬蟲，節省資源！)")
+    else:
+        log("\n⏳ 階段：資料更新 (爬取最新 K 線與籌碼)")
+        if not run_script("daily_chip_etl.py"):
+            log("🛑 資料庫更新失敗，強制中斷！")
+            generate_report(start_time, "FAILED")
+            return
 
     # ==========================================
     # 第二階段：智慧分流 (判斷是否重訓，並拔除舊版優化器)
