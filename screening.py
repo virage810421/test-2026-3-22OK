@@ -1,3 +1,7 @@
+from pyexpat import features
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
+warnings.filterwarnings('ignore', category=ResourceWarning)
 import yfinance as yf
 import pandas as pd
 pd.set_option('future.no_silent_downcasting', True)
@@ -22,6 +26,44 @@ DB_CONN_STR = (
     r'Trusted_Connection=yes;'
 )
 
+
+
+# ==========================================
+# 🌟 全系統唯一：AI 特徵統一提取晶片
+# ==========================================
+def extract_ai_features(row):
+    """
+    確保『兵工廠訓練』跟『實戰機台』看到的數值 100% 相同，消滅訓練偏移。
+    輸入 row 為 pandas Series (單日 K 線資料)。
+    """
+    features = {}
+    
+    # 1. 浮動式條件 (連續刻度)
+    features['RSI'] = row.get('RSI', 50)
+    features['MACD_Hist'] = row.get('MACD_Hist', 0)
+    features['ADX'] = row.get('ADX14', 25)
+    
+    ma20 = row.get('MA20', 0)
+    features['BB_Width'] = (row.get('BB_Upper', 0) - row.get('BB_Lower', 0)) / ma20 if ma20 > 0 else 0
+    
+    vol_ma20 = row.get('Vol_MA20', 0)
+    features['Volume_Ratio'] = row.get('Volume', 0) / (vol_ma20 + 1) if vol_ma20 > 0 else 1
+
+    features['Foreign_Net'] = row.get('Foreign_Net', 0)
+    features['Trust_Net'] = row.get('Trust_Net', 0)
+    
+    # 2. 固定式條件 (戰術開關：將 True/False 轉為 1/0)
+    features['C1_破下軌'] = 1 if row.get('buy_c1', False) else 0
+    features['C2_RSI超賣'] = 1 if row.get('buy_c2', False) else 0
+    features['C3_爆量'] = 1 if row.get('buy_c3', False) else 0
+    features['C4_MACD轉強'] = 1 if row.get('buy_c4', False) else 0
+    features['C5_底背離'] = 1 if row.get('buy_c5', False) else 0
+    features['C6_突破BBI'] = 1 if row.get('buy_c6', False) else 0
+    features['C7_法人同買'] = 1 if row.get('buy_c7', False) else 0
+    features['C8_DMI成型'] = 1 if row.get('buy_c8', False) else 0
+    features['C9_結構背離'] = 1 if row.get('buy_c9', False) else 0
+    
+    return features
 # ==========================================
 # 🔌 籌碼資料外掛模組 (本地 SQL 直連版 - 零 API 消耗)
 # ==========================================
@@ -265,11 +307,12 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
                         div_signals[i] = True
             
             return pd.Series(div_signals, index=df.index)
-
+        
         # 🚨 [致命問題 2 修復]：拔除 dropna() 造成的資料洩漏
         # 捨棄原本會把歷史斷層填平的 dropna，改成只切除最前面指標算不出來的 60 天
         df = df.iloc[60:].copy() 
         if df.empty: return None
+        
         
         # ==========================================
         # 🛡️ 基礎防護網 (參數化)

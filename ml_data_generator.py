@@ -3,6 +3,7 @@ import yfinance as yf
 from screening import inspect_stock, add_chip_data
 from config import PARAMS
 import os
+from screening import extract_ai_features
 
 def generate_ml_dataset(tickers):
     print("🏭 [兵工廠] 啟動 AI 訓練資料生成器...")
@@ -30,8 +31,11 @@ def generate_ml_dataset(tickers):
             computed_df = result['計算後資料']
             
             # 遍歷歷史，保留最後 5 天作為「偷看未來」的視窗
-            for i in range(len(computed_df) - 5): 
+            for i in range(len(computed_df) - 5):
                 row = computed_df.iloc[i]
+                if "LONG" in str(row.get('Golden_Type', '無')):
+                    # 🌟 呼叫統一提取器
+                    features = extract_ai_features(row)
                 setup_tag = str(row.get('Golden_Type', '無'))
                 buy_score = int(row.get('Buy_Score', 0))
                 
@@ -66,9 +70,12 @@ def generate_ml_dataset(tickers):
                     # 判斷是否獲利超過停損點
                     win_condition = (max_high - entry_price) / entry_price > PARAMS.get('SL_MIN_PCT', 0.03)
                     features['Label_Y'] = 1 if win_condition else 0
-                    
+                    features['Ticker'] = ticker
+                    features['Date'] = computed_df.index[i]
+                    features['Regime'] = row.get('Regime', '未知')
+                    features['Setup'] = setup_tag
                     ml_dataset.append(features)
-                    
+                                   
         except Exception as e:
             print(f"⚠️ {ticker} 萃取失敗: {e}")
 
