@@ -1006,6 +1006,14 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
     except Exception as e:
         print(f"檢測 {ticker} 時發生錯誤: {e}")
         return None
+        
+    # 🌟 補強 2：加入 finally，保證無論發生什麼錯誤，連線必定關閉！
+    finally:
+        if 'db_conn' in locals() and db_conn is not None:
+            try:
+                db_conn.close()
+            except:
+                pass
 
 # ==========================================
 # 🚀 批次海選發動機 

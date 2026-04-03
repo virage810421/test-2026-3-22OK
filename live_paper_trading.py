@@ -162,16 +162,26 @@ def run_eod_broker():
                 
                 current_cash += (invested + pnl)
                 
+                # ... (前略)
                 if sell_shares == shares:
                     cursor.execute("DELETE FROM active_positions WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?", (ticker, pos['進場時間']))
                 else:
                     cursor.execute("UPDATE active_positions SET [進場股數] = ?, [投入資金] = ?, [停利階段] = 1 WHERE [Ticker SYMBOL] = ?", (shares - sell_shares, pos['投入資金'] - invested, ticker))
                     stock_value += curr_price * (shares - sell_shares)
 
+                # 🌟 補強 1-B：補齊寫入 trade_history 的新版擴充欄位 (繼承自庫存)
                 cursor.execute('''
-                    INSERT INTO trade_history ([Ticker SYMBOL], [方向], [進場時間], [出場時間], [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金])
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (ticker, direction, pos['進場時間'], datetime.now(), entry_price, actual_exit_price, (pnl/invested)*100, pnl, current_cash))
+                    INSERT INTO trade_history (
+                        [Ticker SYMBOL], [方向], [進場時間], [出場時間], 
+                        [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
+                        [進場陣型], [期望值], [風險金額]
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    ticker, direction, pos['進場時間'], datetime.now(), 
+                    entry_price, actual_exit_price, (pnl/invested)*100, pnl, current_cash,
+                    setup_tag, pos.get('期望值', 0.0), pos.get('風險金額', 0.0)
+                ))
                 
                 daily_log.append(f"{exit_msg} {ticker}: 損益 ${pnl:,.0f}")
             else:
@@ -204,13 +214,24 @@ def run_eod_broker():
             
             total_cost = curr_price * shares * (1 + PARAMS['FEE_RATE']*PARAMS['FEE_DISCOUNT'])
             
-            if current_cash >= total_cost:
-                current_cash -= total_cost
+            # ... (前略)
+            if current_cash >= total_cost or PARAMS.get('IGNORE_CASH_LIMIT', False): # 🌟 補強 3: 實裝無限資金開關
+                if not PARAMS.get('IGNORE_CASH_LIMIT', False):
+                    current_cash -= total_cost
                 stock_value += curr_price * shares
+                
+                # 🌟 補強 1-A：補齊寫入 active_positions 的新版擴充欄位
                 cursor.execute('''
-                    INSERT INTO active_positions ([Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], [進場股數], [進場陣型])
-                    VALUES (?, '做多(Long)', ?, ?, ?, ?, ?)
-                ''', (ticker, datetime.now(), curr_price, total_cost, shares, row.get('Structure', 'AI訊號')))
+                    INSERT INTO active_positions (
+                        [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], 
+                        [進場股數], [停利階段], [進場陣型], [期望值], [風險金額]
+                    )
+                    VALUES (?, '做多(Long)', ?, ?, ?, ?, 0, ?, ?, ?)
+                ''', (
+                    ticker, datetime.now(), curr_price, total_cost, 
+                    shares, row.get('Structure', 'AI訊號'), 
+                    row.get('Kelly_Pos', 0.0), total_cost * 0.05 # 簡化預估風險金額
+                ))
                 
                 daily_log.append(f"🟢 建倉 {ticker}: {shares}股 (花費 ${total_cost:,.0f})")
 
