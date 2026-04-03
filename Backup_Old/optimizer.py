@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 
 from screening import inspect_stock, add_chip_data
 from config import PARAMS as BASE_PARAMS
-from kline_cache import get_smart_klines
+from Backup_Old.kline_cache import get_smart_klines
 # ==========================================
 # 🌌 1. 擴充版「參數宇宙」(防過度擬合版)
 # ==========================================

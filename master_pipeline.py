@@ -283,16 +283,40 @@ def generate_advanced_report(data_dict, ai_models):
         # 計算最終綜合決策分
         final_score = (proba * 0.5) + (confidence * 0.3) + (hist_win_rate * 0.2)
 
-        if final_score > 0: 
-            results.append({
-                "Ticker": ticker,
-                "AI_Proba": proba,
-                "Structure": structure,
-                "Risk": risk,
-                "Hist_Win_Rate": hist_win_rate, 
-                "Score": final_score,
-                "Kelly_Pos": kelly_pct # ✨ 這裡寫入的是經過防護網檢驗後的安全倉位
-            })
+        # 🌟 提取這檔股票究竟是買訊還是賣訊
+        status_light = inspection.get("今日系統燈號", "觀望")
+        is_short = "賣訊" in status_light
+        trade_dir = "放空(Short)" if is_short else "做多(Long)"
+
+        # ==========================================
+        # 🔥 終極升級：期望值 (EV) 審查閘門
+        # ==========================================
+        # 假設您的常規武器設定為：停利 6%，停損 3% (您可依據真實參數微調)
+        avg_win_pct = 0.06  
+        avg_loss_pct = 0.03 
+
+        win_rate = proba
+        loss_rate = 1.0 - win_rate
+        # 公式：(勝率 × 賺的幅度) - (敗率 × 賠的幅度)
+        expected_value = (win_rate * avg_win_pct) - (loss_rate * avg_loss_pct)
+
+        # 🌟 嚴格過濾：一定要有方向性，且「期望值必須 > 0」才准寫入決策桌！
+        if final_score > 0 and "觀望" not in status_light:
+            if expected_value > 0:
+                results.append({
+                    "Ticker": ticker,
+                    "Direction": trade_dir, 
+                    "AI_Proba": proba,
+                    "EV": expected_value, # 🎯 寫入真實的期望值
+                    "Structure": structure,
+                    "Risk": risk,
+                    "Hist_Win_Rate": hist_win_rate, 
+                    "Score": final_score,
+                    "Kelly_Pos": kelly_pct
+                })
+            else:
+                # 🛑 物理阻斷：擋下「勝率高但期望值為負」的爛訊號
+                log(f"🛑 [物理阻斷] {ticker} 勝率雖有 {win_rate:.0%}，但期望值為負 ({expected_value:.2%})，長線必虧，取消授權！")
 
     if not results: return pd.DataFrame()
     return pd.DataFrame(results).sort_values("Score", ascending=False)
@@ -435,6 +459,9 @@ def main():
             final_allocation_pct = kelly_pct * global_risk_multiplier
             target_amount = TOTAL_CAPITAL * final_allocation_pct
             
+            # 🚨 補強：將降載後的最終安全倉位，覆寫回 DataFrame 中！這樣存檔給下單機才不會出錯！
+            df_report.loc[i, 'Kelly_Pos'] = final_allocation_pct
+
             log(f"🎯 標的: {row['Ticker']}")
             log(f"   ► AI 勝率預測: {proba:.1%} | 歷史回測勝率: {hist_win:.1%} | 綜合決策分: {row['Score']:.2f}")
             log(f"   ► 戰略結構: {row['Structure']}")

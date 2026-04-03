@@ -171,16 +171,15 @@ def run_eod_broker():
 
                 # 🌟 補強 1-B：補齊寫入 trade_history 的新版擴充欄位 (繼承自庫存)
                 cursor.execute('''
-                    INSERT INTO trade_history (
-                        [Ticker SYMBOL], [方向], [進場時間], [出場時間], 
-                        [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
-                        [進場陣型], [期望值], [風險金額]
+                    INSERT INTO active_positions (
+                        [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], 
+                        [進場股數], [停利階段], [進場陣型], [期望值], [風險金額]
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
                 ''', (
-                    ticker, direction, pos['進場時間'], datetime.now(), 
-                    entry_price, actual_exit_price, (pnl/invested)*100, pnl, current_cash,
-                    setup_tag, pos.get('期望值', 0.0), pos.get('風險金額', 0.0)
+                    ticker, trade_direction, datetime.now(), curr_price, total_cost, 
+                    shares, row.get('Structure', 'AI訊號'), 
+                    row.get('EV', 0.0), total_cost * 0.05  # 🎯 換成正確讀取 'EV'
                 ))
                 
                 daily_log.append(f"{exit_msg} {ticker}: 損益 ${pnl:,.0f}")
@@ -193,14 +192,18 @@ def run_eod_broker():
     try: decisions = pd.read_csv("daily_decision_desk.csv")
     except: decisions = pd.DataFrame()
         
-    TOTAL_CAPITAL = current_cash + stock_value if (current_cash + stock_value) > 0 else 1000000
+    # 🌟 修正 1：將變數名改為小寫以符合規範，並實裝總資金計算
+    total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1000000
     
     if not decisions.empty:
         for _, row in decisions.iterrows():
-            ticker = row['Ticker']
+            ticker = row.get('Ticker', 'Unknown') # 🌟 修正 2：使用 .get 更安全
             kelly_pct = float(row.get('Kelly_Pos', 0))
+            trade_direction = row.get('Direction', '做多(Long)') 
+            
             if kelly_pct <= 0: continue
             
+            # 檢查是否已持倉，避免重複買進
             cursor.execute("SELECT COUNT(*) FROM active_positions WHERE [Ticker SYMBOL] = ?", (ticker,))
             if cursor.fetchone()[0] > 0: continue
                 
@@ -208,33 +211,38 @@ def run_eod_broker():
             if df.empty: continue
             curr_price = df['Close'].iloc[-1]
             
-            shares = int((TOTAL_CAPITAL * kelly_pct) / curr_price)
+            # 🌟 修正 3：計算預計買進股數 (使用修正後的變數名)
+            shares = int((total_nav * kelly_pct) / curr_price)
+            # 台灣股市一張為 1000 股，進行整股換算
             shares = int(shares // 1000) * 1000 if shares >= 1000 else shares
             if shares < 1: continue
             
             total_cost = curr_price * shares * (1 + PARAMS['FEE_RATE']*PARAMS['FEE_DISCOUNT'])
             
-            # ... (前略)
-            if current_cash >= total_cost or PARAMS.get('IGNORE_CASH_LIMIT', False): # 🌟 補強 3: 實裝無限資金開關
+            # 🌟 補強：實裝 config 裡的 IGNORE_CASH_LIMIT 開關
+            can_afford = current_cash >= total_cost or PARAMS.get('IGNORE_CASH_LIMIT', False)
+            
+            if can_afford:
                 if not PARAMS.get('IGNORE_CASH_LIMIT', False):
                     current_cash -= total_cost
+                
                 stock_value += curr_price * shares
                 
-                # 🌟 補強 1-A：補齊寫入 active_positions 的新版擴充欄位
+                # 🌟 補強：將正確的「期望值 (EV)」寫入資料庫，不再塞錯欄位
                 cursor.execute('''
                     INSERT INTO active_positions (
                         [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], 
                         [進場股數], [停利階段], [進場陣型], [期望值], [風險金額]
                     )
-                    VALUES (?, '做多(Long)', ?, ?, ?, ?, 0, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
                 ''', (
-                    ticker, datetime.now(), curr_price, total_cost, 
+                    ticker, trade_direction, datetime.now(), curr_price, total_cost, 
                     shares, row.get('Structure', 'AI訊號'), 
-                    row.get('Kelly_Pos', 0.0), total_cost * 0.05 # 簡化預估風險金額
+                    row.get('EV', 0.0), total_cost * 0.05
                 ))
                 
-                daily_log.append(f"🟢 建倉 {ticker}: {shares}股 (花費 ${total_cost:,.0f})")
-
+                action_icon = "🟢 做多" if "Long" in trade_direction else "🔴 放空"
+                daily_log.append(f"{action_icon} {ticker}: {shares}股 (花費 ${total_cost:,.0f})")
     # ==========================================
     # 📊 階段三：結算與發送 LINE 戰報
     # ==========================================

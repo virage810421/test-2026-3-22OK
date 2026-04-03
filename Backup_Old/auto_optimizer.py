@@ -1,6 +1,6 @@
 import time
 from sector_classifier import get_stock_sector
-from param_storage import save_sector_params
+from Backup_Old.param_storage import save_sector_params
 from config import WATCH_LIST
 
 
@@ -12,10 +12,10 @@ from config import WATCH_LIST
 USE_ADVANCED_BAYES = False
 
 if USE_ADVANCED_BAYES:
-    from advanced_optimizer import run_bayesian_optimization as run_engine
+    from Backup_Old.advanced_optimizer import run_bayesian_optimization as run_engine
     print("🧠 [總部廣播] 工廠已掛載：【貝氏推論大腦 (advanced_optimizer.py)】")
 else:
-    from optimizer import run_walk_forward_optimization as run_engine
+    from Backup_Old.optimizer import run_walk_forward_optimization as run_engine
     print("🧠 [總部廣播] 工廠已掛載：【滾動盲測大腦 (opti1mizer.py)】")
 
 def start_automated_training():
