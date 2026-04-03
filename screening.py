@@ -113,6 +113,19 @@ def extract_ai_features(row):
     features['Sell_Smart_Money_法人同賣'] = int(row.get('sell_c7', 0))
     features['Sell_DMI_Trend_空頭成型'] = int(row.get('sell_c8', 0))
     features['Sell_Chip_Div_結構頂背離'] = int(row.get('sell_c9', 0))
+   
+    # 假突破給 1，假跌破給 -1，正常給 0
+    features['Trap_假突破'] = 1 if row.get('Fake_Breakout', False) else (-1 if row.get('Bear_Trap', False) else 0)
+    
+    # 壓縮與吸籌 (0或1)
+    features['Vol_Squeeze_壓縮'] = int(row.get('Vol_Squeeze', False))
+    features['Absorption_吸籌'] = int(row.get('Absorption', False))
+    
+    # FOMO(散戶追高)給 1，恐慌(散戶人踩人)給 -1，正常給 0
+    features['Emotion_情緒'] = 1 if row.get('FOMO', False) else (-1 if row.get('Panic', False) else 0)
+    
+    # 趨勢持續力 (0~5天)
+    features['Up_Days_5_連漲天數'] = row.get('Up_Days_5', 0)
     
     return features
 
@@ -273,8 +286,10 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df['BB_std'] = df['Close'].rolling(window=p['BB_WINDOW']).std()
         df['BB_Upper'] = df['MA20'] + (df['BB_std'] * p['BB_STD'])
         df['BB_Lower'] = df['MA20'] - (df['BB_std'] * p['BB_STD'])
+        # 🌟 修復：補上這個被遺忘的通道寬度零件，讓第 18 把武器能正常運作！
+        df['BB_Width'] = (df['BB_Upper'] - df['BB_Lower']) / df['MA20']
         df['Vol_MA20'] = df['Volume'].rolling(window=p['VOL_WINDOW']).mean()
-
+        
         # 4. BBI
         bbi_cols = []
         for days in p['BBI_PERIODS']:
@@ -415,6 +430,32 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         sell_c9_base = detect_divergence(df['High'].values, df['Total_Net'].values, df['ATR'].values, is_top=True, distance=5, atr_mult=0.5) if p.get('USE_DIVERGENCE_CHIPS', True) else _F
         sell_c9 = sell_c9_base & (df['Total_Net'] < 0) 
 
+
+        # ==========================================
+        # 🌟 第 17~21 把特種武器擴充 (微結構與情緒)
+        # ==========================================
+        # 17. 假突破/假跌破 (Trap - 無未來函數版：今天確認昨天是假的)
+        prev_breakout_up = df['Close'].shift(1) > df['High'].shift(2)
+        df['Fake_Breakout'] = prev_breakout_up & (df['Close'] < df['Low'].shift(1))
+        
+        prev_breakout_down = df['Close'].shift(1) < df['Low'].shift(2)
+        df['Bear_Trap'] = prev_breakout_down & (df['Close'] > df['High'].shift(1))
+
+        # 18. 波動壓縮艙 (Vol Squeeze - 寬度低於近期平均 80%)
+        df['BB_Width_MA20'] = df['BB_Width'].rolling(20).mean()
+        df['Vol_Squeeze'] = df['BB_Width'] < (df['BB_Width_MA20'] * 0.8)
+
+        # 19. 主力吸籌探測 (Absorption - 爆量但K線實體極短)
+        df['Price_Range_Pct'] = (df['High'] - df['Low']) / df['Close']
+        df['Absorption'] = (df['Volume'] > df['Vol_MA20'] * 1.5) & (df['Price_Range_Pct'] < 0.015)
+
+        # 20. 極端情緒 (FOMO / Panic - 單日暴漲暴跌且爆量)
+        df['Daily_Return'] = df['Close'].pct_change()
+        df['FOMO'] = (df['Daily_Return'] > 0.04) & (df['Volume'] > df['Vol_MA20'] * 1.5)
+        df['Panic'] = (df['Daily_Return'] < -0.04) & (df['Volume'] > df['Vol_MA20'] * 1.5)
+
+        # 21. 趨勢連漲力 (Up Days - 近5日有幾天收紅)
+        df['Up_Days_5'] = (df['Close'] > df['Close'].shift(1)).astype(int).rolling(5).sum()
         # 👇 🌟 新增這段：把物理開關正式焊死進 DataFrame，讓 AI 晶片抓得到！
         # ==========================================
         df['buy_c1'] = buy_c1; df['buy_c2'] = buy_c2; df['buy_c3'] = buy_c3
@@ -791,30 +832,42 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if db_conn:
             db_conn.close()
 
+     
         # ==========================================
-        # 原本只有算勝率跟總報酬，現在加入期望值運算
+        # 🌟 升級：期望值運算與凱利公式 (Kelly Criterion)
         # ==========================================
         total_trades = len(trades)
         if total_trades > 0:
-            # 1. 區分賺錢與賠錢的單子
             win_trades = [p for p in trades if p > 0]
             loss_trades = [p for p in trades if p <= 0]
             
-            # 2. 計算勝率 (小數點格式，用於公式計算)
             win_rate_decimal = len(win_trades) / total_trades
-            win_rate = win_rate_decimal * 100  # 這是顯示用的百分比 (例如 60.0)
+            win_rate = win_rate_decimal * 100  
             
-            # 3. 計算平均賺與平均賠
             avg_win = sum(win_trades) / len(win_trades) if win_trades else 0
-            avg_loss = sum(loss_trades) / len(loss_trades) if loss_trades else 0
+            avg_loss = abs(sum(loss_trades) / len(loss_trades)) if loss_trades else 1 # 取絕對值並防呆
             
-            # 🌟 4. 計算期望值
-            expected_value = (win_rate_decimal * avg_win) + ((1 - win_rate_decimal) * avg_loss)
+            expected_value = (win_rate_decimal * avg_win) - ((1 - win_rate_decimal) * avg_loss)
             total_profit = sum(trades)
+            
+            # 🧠 凱利公式計算：f* = (bp - q) / b = p - (q / b)
+            # p = 勝率, q = 敗率, b = 賠率 (平均獲利 / 平均虧損)
+            reward_risk_ratio = avg_win / avg_loss if avg_loss != 0 else 0
+            
+            if reward_risk_ratio > 0 and expected_value > 0:
+                kelly_fraction = win_rate_decimal - ((1 - win_rate_decimal) / reward_risk_ratio)
+            else:
+                kelly_fraction = 0
+                
+            # 🛡️ 機構級風控：使用半凱利 (Half-Kelly) 降低波動，並強制規定單檔上限為總資金的 30%
+            safe_kelly = max(0, kelly_fraction * 0.5)
+            suggested_position = min(0.30, safe_kelly)
+            
         else:
             win_rate = 0.000
             total_profit = 0.000
-            expected_value = 0.000 # 沒交易紀錄就是 0
+            expected_value = 0.000 
+            suggested_position = 0.000 # 沒戰績就不給建議倉位
 
         # ==========================================
         # 5. 提取狀態
@@ -943,6 +996,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             "系統勝率(%)": f"{win_rate:.3f}",       
             "累計報酬率(%)": f"{total_profit:.3f}", 
             "期望值": round(expected_value, 3),
+            "建議倉位(%)": suggested_position,        # ✨ 新增：輸出凱利建議倉位
             "交易次數": total_trades,                 # ✨ 補上這個！讓 Optimizer 的懲罰機制生效
             "最大虧損(%)": 0,                         # ✨ 補上預設值防呆 (若未來有算 MDD 可替換)
             "診斷數據": diagnostic_data,  
