@@ -7,7 +7,7 @@ import numpy as np
 import pyodbc 
 from advanced_chart import draw_chart
 from FinMind.data import DataLoader
-from config import PARAMS
+from config import PARAMS, WATCH_LIST
 from strategies import get_active_strategy  # 🌟 讓回測引擎也能呼叫四大艦隊
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
@@ -1107,13 +1107,8 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
 # ==========================================
 if __name__ == "__main__":
 
-    test_targets = [
-    # 權值與趨勢
-    "2330.TW", "2454.TW", "2317.TW", "2303.TW", "2308.TW",
-    # AI 伺服器
-    "2382.TW", "3231.TW"
-]
-
+    # 🌟 直接向中央指揮中心 (config.py) 調用全局名單！
+    test_targets = WATCH_LIST
     
     print(f"\n啟動批次分析模式，正在一次性下載 {len(test_targets)} 檔股票資料，請稍候...")
     batch_data = yf.download(test_targets, period="2y", progress=True)

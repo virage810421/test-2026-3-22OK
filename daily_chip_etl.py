@@ -3,30 +3,27 @@ import pyodbc
 from datetime import datetime, timedelta
 from FinMind.data import DataLoader
 import time
+from config import WATCH_LIST  # 🌟 匯入中央名單
 
 def update_daily_chips():
-    # 🌟 新增：假日自動檢查鎖
+    # 🌟 假日自動檢查鎖
     now = datetime.now()
-    if now.weekday() >= 720: # 5 是週六, 6 是週日
+    if now.weekday() >= 5: # 5 是週六, 6 是週日
         print(f"[{now.strftime('%H:%M:%S')}] ☕ 今天是週末（非交易日），自動收集車休息中...")
-        return # 直接結束程式，不浪費 API 額度
+        return 
+        
     print(f"[{datetime.now().strftime('%H:%M:%S')}] > 啟動每日法人籌碼資料收集車...")
     
-    # 你的觀察清單
-    watch_list = [
-        "2330", "2454", "2317", "2303", "2308",
-        "2382", "3231", "6669", "2357", "3034",
-        "2603", "2609", "2615",
-        "2881", "2882", "2891",
-        "1519", "1513", "2618", "2002"
-    ]
+    # 🌟 核心：讀取中央名單，並自動拔除 ".TW" 讓 FinMind 能夠辨識
+    pure_watch_list = [ticker.replace(".TW", "") for ticker in WATCH_LIST]
 
-    # 設定要抓取的天數 (如果是第一次跑，可以抓過去 5 天補齊資料)
+    # 設定要抓取的天數
     days_to_fetch = 5
     start_dt = (datetime.now() - timedelta(days=days_to_fetch)).strftime("%Y-%m-%d")
     
     dl = DataLoader()
     
+    # 🌟 完整還原的資料庫連線字串 (完美閉合)
     DB_CONN_STR = (
         r'DRIVER={ODBC Driver 17 for SQL Server};'
         r'SERVER=localhost;'  
@@ -38,7 +35,7 @@ def update_daily_chips():
         with pyodbc.connect(DB_CONN_STR) as conn:
             cursor = conn.cursor()
             
-            for stock_id in watch_list:
+            for stock_id in pure_watch_list:
                 print(f"📡 正在下載 {stock_id} 的籌碼資料...")
                 
                 try:
