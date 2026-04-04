@@ -433,31 +433,59 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if latest_check['Close'] < p['MIN_PRICE']: return None 
 
        # ==========================================
-        # 🧠 🌟 第一層升級：AI 無監督學習自動辨識市場狀態 (K-Means Regime Clustering)
-        # 讓 AI 自己觀察動能與波動，動態切分出多、空、盤整！
+        # 🧠 🌟 第一層升級：六維市場動態分群 (Adaptive Regime Clustering)
+        # 融合 趨勢 + 動能 + 波動 + 流動性 + 行為 + 結構
         # ==========================================
         from sklearn.cluster import KMeans
+        from sklearn.preprocessing import StandardScaler
         
-        # 1. 準備 AI 要觀察的「環境特徵」 (去除 NaN 以免 AI 當機)
-        regime_features = df[['ADX14', 'BB_Width', 'MACD_Hist']].copy().fillna(0)
+        # 1. 補齊情報中缺少的 3 大高階維度 (流動性、行為、結構)
+        # 流動性 (Liquidity)
+        df['Volume_Ratio'] = df['Volume'] / df['Volume'].rolling(20).mean().replace(0, 1) # 防除以0
+        df['Volume_Spike'] = df['Volume'] > df['Volume'].rolling(20).mean() * 1.5
         
-        # 2. 召喚 K-Means 演算法，強制把市場切分成 3 種截然不同的環境 (Cluster 0, 1, 2)
-        # 使用 n_init='auto' 加速運算， random_state=42 確保每次切分結果一致
+        # 行為 (Behavior)
+        df['Panic_Behavior'] = ((df['Close'].pct_change() < -0.03) & df['Volume_Spike']).astype(int)
+        df['FOMO_Behavior'] = ((df['Close'] > df['High'].shift(1)) & df['Volume_Spike']).astype(int)
+        
+        # 結構 (Structure)
+        df['Breakout_Struct'] = (df['Close'] > df['Close'].rolling(20).max().shift(1)).astype(int)
+        range_width = df['High'].rolling(20).max() - df['Low'].rolling(20).min()
+        df['Consolidation_Struct'] = (range_width < range_width.rolling(50).mean()).astype(int)
+
+        # 2. 挑選六維核心感測器 (連續數值優先，確保 K-Means 不會空間扭曲)
+        regime_cols = [
+            'ADX14',                # 趨勢
+            'MACD_Hist',            # 動能
+            'BB_Width',             # 波動
+            'Volume_Ratio',         # 流動性
+            'Panic_Behavior',       # 行為代表
+            'Breakout_Struct'       # 結構代表
+        ]
+        
+        # 提取資料並填補 NaN (前 60 天因為算不出來均線可能會有 NaN)
+        X_regime = df[regime_cols].copy().fillna(0)
+        
+        # 3. 🛡️ 啟動標準化防護罩 (極度重要！讓 ADX 跟 BB_Width 比例尺相同)
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X_regime)
+
+        # 4. 召喚 K-Means 演算法，將市場自動切分為 3 種生態系
         kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto')
-        df['Cluster'] = kmeans.fit_predict(regime_features)
+        df['Cluster'] = kmeans.fit_predict(X_scaled)
         
-        # 3. AI 雖然分出了 3 群，但它不知道哪群是多頭。我們需要幫它翻譯：
-        # 邏輯：計算這 3 群各自的「平均價格與 BBI 的乖離率」，最高的群組就是多頭，最低的是空頭。
+        # 5. 智慧標籤翻譯：教 AI 認出誰是多頭、誰是空頭
+        # 邏輯：比較這 3 個群組的「平均價格與 BBI 均線的乖離程度」
         df['BBI_Dist'] = df['Close'] - df['BBI']
         cluster_means = df.groupby('Cluster')['BBI_Dist'].mean()
         
-        # 找出群組代號 (排序後，index 0 為最低/空頭，index 2 為最高/多頭)
+        # 排序群組 (index 0 為跌最深的空頭群組，index 2 為漲最高的趨勢多頭群組)
         sorted_clusters = cluster_means.sort_values().index
         bear_cluster = sorted_clusters[0]
         range_cluster = sorted_clusters[1]
         bull_cluster = sorted_clusters[2]
         
-        # 4. 正式貼上 AI 判定的標籤，無縫接軌您的後續系統！
+        # 6. 正式貼上系統公用語標籤，無縫接軌兵工廠！
         df['Regime'] = np.where(df['Cluster'] == bull_cluster, '趨勢多頭',
                        np.where(df['Cluster'] == bear_cluster, '趨勢空頭', '區間盤整'))
         # ==========================================

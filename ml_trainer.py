@@ -98,7 +98,42 @@ def train_models():
 
     df = pd.read_csv(dataset_path)
     os.makedirs("models", exist_ok=True)
-    
+
+    # ==========================================
+    # 🧠 🌟 終極升級：Regime 穩定性檢測 (Drift Check)
+    # ==========================================
+    print("\n🔍 [系統安檢] 啟動 Regime 漂移檢測 (Distribution Drift Check)...")
+    try:
+        # 將資料切分成「前半段(舊歷史)」與「後半段(近期)」
+        half_idx = len(df) // 2
+        past_dist = df['Regime'].iloc[:half_idx].value_counts(normalize=True)
+        recent_dist = df['Regime'].iloc[half_idx:].value_counts(normalize=True)
+        
+        # 對齊 index，避免某些 Regime 在近期沒出現導致計算錯誤
+        all_regimes = list(set(past_dist.index.tolist() + recent_dist.index.tolist()))
+        past_dist = past_dist.reindex(all_regimes).fillna(0)
+        recent_dist = recent_dist.reindex(all_regimes).fillna(0)
+
+        # 計算絕對值差異總和 (Drift Score)
+        drift_score = (past_dist - recent_dist).abs().sum()
+        
+        print(f"   ► 歷史生態分布: 多頭({past_dist.get('趨勢多頭', 0):.1%}) | 空頭({past_dist.get('趨勢空頭', 0):.1%}) | 盤整({past_dist.get('區間盤整', 0):.1%})")
+        print(f"   ► 近期生態分布: 多頭({recent_dist.get('趨勢多頭', 0):.1%}) | 空頭({recent_dist.get('趨勢空頭', 0):.1%}) | 盤整({recent_dist.get('區間盤整', 0):.1%})")
+        print(f"   ► Regime 分布漂移指數 (Drift Score): {drift_score:.3f}")
+
+        # 判斷標準
+        if drift_score < 0.2:
+            print("   ✅ 判定：市場結構極度穩定，完美適合 AI 深度學習！")
+        elif drift_score < 0.4:
+            print("   ⚠️ 判定：市場結構輕微偏移，尚在容許範圍內。")
+        else:
+            print("   🛑 警告：偵測到嚴重 Regime 漂移 (Drift > 0.4)！近期市場生態已發生劇變！")
+            print("   💡 系統建議：請密切關注本次訓練之大腦『獲利一致性』，若過低系統將自動啟動銷毀機制。")
+            
+    except Exception as e:
+        print(f"   ⚠️ 漂移檢測模組異常，跳過檢驗: {e}")
+    # ==========================================
+
     if 'Date' in df.columns:
         df = df.sort_values('Date').reset_index(drop=True)
 
@@ -106,11 +141,10 @@ def train_models():
     drop_cols = ['Ticker', 'Date', 'Setup', 'Regime', 'Label_Y', 'Target_Return']
     all_features = [c for c in df.columns if c not in drop_cols]
 
+
     # ==========================================
     # 🧠 🌟 終極升級：Alpha 記憶特徵池 (永久記憶與動態重鑄)
     # ==========================================
-    import os
-    import joblib
     
     old_features = []
     if os.path.exists("models/selected_features.pkl"):

@@ -153,13 +153,13 @@ if __name__ == "__main__":
     # ==========================================
     try:
         watch_list = get_dynamic_watchlist()
+        if watch_list:
+            generate_ml_dataset(watch_list)
+        else:
+            print("⚠️ SQL 連線成功，但名單內沒有股票代碼，任務中止。")
+            
     except Exception as e:
-        print("🛑 [系統中斷] 無法獲取股票名單，歷史課本印製任務強制取消！請檢查 SQL 連線。")
-        sys.exit(1) # ⚠️ 正確寫法：使用 sys.exit(1) 強制結束程式，不能用 return
-        
-    # 🌟 防呆：如果資料庫抓到了名單，就把它餵給兵工廠！
-    if watch_list:
-        generate_ml_dataset(watch_list)
-    else:
-        print("⚠️ SQL 雖然連線成功，但抓到的名單為空，請確認資料表內有股票代碼。")
+        print(f"🛑 [系統中斷] 無法獲取動態名單，歷史課本印製任務強制取消！")
+        print(f"   原因: {e}")
+        sys.exit(1) # 強制安全停機
     
