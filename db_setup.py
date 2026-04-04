@@ -14,7 +14,8 @@ def setup_tsql_database():
 
     # 🌟 新增：詢問是否刪除籌碼資料
     clear_chips = input("❓ 是否要一併刪除【法人籌碼庫 (daily_chip_data)】？(選 n 可保留已下載的歷史籌碼) (y/n): ")
-
+    # 🌟 再新增：詢問是否刪除基本面資料
+    clear_funds = input("❓ 是否要一併刪除【基本面財報庫 (fundamental_data)】？(選 n 可保留已下載的財報) (y/n): ")
     print("\n🔧 準備連線至 SQL Server 進行建置...")
     
     master_conn_str = (
@@ -48,17 +49,16 @@ def setup_tsql_database():
             'strategy_performance', 'backtest_history', 'account_info'
         ]
         
-        # 💡 根據使用者的選擇，決定是否把 daily_chip_data 加入刪除名單
+        # 💡 根據使用者的選擇，決定是否加入刪除名單
         if clear_chips.lower() == 'y':
             tables_to_drop.append('daily_chip_data')
+        if clear_funds.lower() == 'y':  # 🌟 這裡判斷基本面
+            tables_to_drop.append('fundamental_data')
             
         for table in tables_to_drop:
             cursor.execute(f"IF OBJECT_ID('{table}', 'U') IS NOT NULL DROP TABLE {table}")
             
-        if clear_chips.lower() == 'y':
-            print("🗑️ 舊資料表 (含籌碼庫) 已全數刪除完畢！\n")
-        else:
-            print("🗑️ 交易與帳戶舊資料表已刪除！(✅ 已為您保留 daily_chip_data 籌碼歷史)\n")
+        print("🗑️ 交易與帳戶舊資料表已刪除！(未選擇 Y 的歷史數據庫已為您安全保留)\n")
 
         # ==========================================
         # 🏗️ 建立全新資料表 (包含 ✨ 歸因擴充欄位)
@@ -180,9 +180,28 @@ def setup_tsql_database():
         # 自動給予預設資金
         cursor.execute("INSERT INTO account_info ([帳戶名稱], [可用現金], [最後更新時間]) VALUES ('我的實戰帳戶', 50000000, GETDATE())")
         print("   👉 建立 [account_info] 成功 (已注入預設資金 500,000,000)")
+        # --- 表單 7：基本面資料庫 ---
+        cursor.execute('''
+            IF OBJECT_ID('fundamental_data', 'U') IS NULL
+            BEGIN
+                CREATE TABLE fundamental_data (
+                    [Ticker SYMBOL] VARCHAR(20),
+                    [資料年月] VARCHAR(10),  
+                    [單月營收年增率(%)] DECIMAL(10,2),
+                    [毛利率(%)] DECIMAL(10,2),
+                    [營業利益率(%)] DECIMAL(10,2),
+                    [單季EPS] DECIMAL(10,2),
+                    [ROE(%)] DECIMAL(10,2),
+                    [營業現金流] FLOAT,
+                    [殖利率(%)] DECIMAL(10,2),
+                    [更新時間] DATETIME DEFAULT GETDATE(),
+                    PRIMARY KEY ([Ticker SYMBOL], [資料年月])
+                )
+            END
+        ''')
+        print("   👉 建立/確認 [fundamental_data] 成功 (量化雙引擎核心)")
 
         conn.commit()
-        print("\n✅ 資料庫擴充升級完畢！底層風控容器已準備就緒。")
 
     except Exception as e:
         print(f"\n❌ 發生未知的錯誤: {e}")
