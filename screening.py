@@ -70,63 +70,92 @@ def smart_download(ticker, period="1y"):
 
 def extract_ai_features(row):
     """
-    確保『兵工廠訓練』跟『實戰機台』看到的數值 100% 相同。
+    【機構級 AI 特徵晶片】
+    完美融合 K線地形 (Price Action) 與 籌碼燃料 (Chip Flow)
     """
     features = {}
     
-    # 1. 浮動式連續數值 (基礎環境)
-    ma20 = row.get('MA20', 0)
-    # 🌟 終極防呆：分母加上 0.001 避免除以零
-    features['BB_Width'] = (row.get('BB_Upper', 0) - row.get('BB_Lower', 0)) / (ma20 + 0.001) if ma20 != 0 else 0
+    # ==========================================
+    # ⚔️ 1. K線物理結構 (地形特徵)
+    # 讓 AI 知道這根 K 線長什麼樣子，有沒有避雷針？是不是長紅？
+    # ==========================================
+    close_p = row.get('Close', 1)
+    open_p = row.get('Open', 1)
+    high_p = row.get('High', 1)
+    low_p = row.get('Low', 1)
+    ma20 = row.get('MA20', close_p)
     
+    # K線型態特徵
+    features['K_Body_Pct'] = (close_p - open_p) / open_p  # 實體紅黑K大小 (正為紅，負為黑)
+    features['Upper_Shadow'] = (high_p - max(close_p, open_p)) / close_p # 上影線長度 (判斷壓力)
+    features['Lower_Shadow'] = (min(close_p, open_p) - low_p) / close_p  # 下影線長度 (判斷支撐)
+    features['Dist_to_MA20'] = (close_p - ma20) / (ma20 + 0.0001)        # 均線乖離率 (判斷是否追高)
+    
+    # ==========================================
+    # 🌪️ 2. 動能與波動指標 (風向特徵)
+    # ==========================================
     vol_ma20 = row.get('Vol_MA20', 0)
-    # 🌟 終極防呆：分母加上 0.001 避免除以零
     features['Volume_Ratio'] = row.get('Volume', 0) / (vol_ma20 + 0.001) if vol_ma20 != 0 else 1
-    
+    features['BB_Width'] = row.get('BB_Width', 0)
     features['RSI'] = row.get('RSI', 50)
     features['MACD_Hist'] = row.get('MACD_Hist', 0)
     features['ADX'] = row.get('ADX14', 25)
+    
+    # ==========================================
+    # 💰 3. 法人籌碼動能 (燃料特徵) 🌟 核心升級
+    # 已經轉為「比例」與「天數」，大小股皆通用！
+    # ==========================================
+    features['Foreign_Ratio'] = row.get('Foreign_Ratio', 0)       # 外資買超佔比
+    features['Trust_Ratio'] = row.get('Trust_Ratio', 0)           # 投信買超佔比
+    features['Total_Ratio'] = row.get('Total_Ratio', 0)           # 總法人買超佔比
+    features['Foreign_Consec_Days'] = row.get('Foreign_Consecutive', 0) # 外資連買天數
+    features['Trust_Consec_Days'] = row.get('Trust_Consecutive', 0)     # 投信連買天數
+    
+    # ==========================================
+    # 🚀 4. 戰術陣型開關 (保留您原有的 0 與 1 武器庫)
+    # ==========================================
+    features['Buy_RSI_Oversold'] = int(row.get('buy_c2', 0))
+    features['Buy_Vol_Spike'] = int(row.get('buy_c3', 0))
+    features['Buy_MACD_Strong'] = int(row.get('buy_c4', 0))
+    features['Buy_Price_Div'] = int(row.get('buy_c5', 0))
+    features['Buy_BBI_Breakout'] = int(row.get('buy_c6', 0))
+    features['Buy_Smart_Money'] = int(row.get('buy_c7', 0))
+    features['Buy_DMI_Trend'] = int(row.get('buy_c8', 0))
+    features['Buy_Chip_Div'] = int(row.get('buy_c9', 0))
+    
+    features['Sell_RSI_Overbought'] = int(row.get('sell_c2', 0))
+    features['Sell_Vol_Spike'] = int(row.get('sell_c3', 0))
+    features['Sell_MACD_Weak'] = int(row.get('sell_c4', 0))
+    features['Sell_Price_Div'] = int(row.get('sell_c5', 0))
+    features['Sell_BBI_Breakdown'] = int(row.get('sell_c6', 0))
+    features['Sell_Smart_Money'] = int(row.get('sell_c7', 0))
+    features['Sell_DMI_Trend'] = int(row.get('sell_c8', 0))
+    features['Sell_Chip_Div'] = int(row.get('sell_c9', 0))
+    
+    features['Trap_Signal'] = 1 if row.get('Fake_Breakout', False) else (-1 if row.get('Bear_Trap', False) else 0)
+    features['Vol_Squeeze'] = int(row.get('Vol_Squeeze', False))
+    features['Absorption'] = int(row.get('Absorption', False))
+    
+    # ==========================================
+    # ⚖️ 5. 汽缸活塞戰術 (盤整盤專用：均值回歸 Mean Reversion)
+    # ==========================================
+    # 🎯 MR-1: 彈簧壓縮極限 (多方) - 跌破下軌 + 量縮無恐慌 + 主力未撤退
+    features['MR_Long_Spring'] = 1 if (row.get('Low', 0) < row.get('BB_Lower', 0)) and \
+                                      (row.get('Volume', 0) < row.get('Vol_MA20', 0)) and \
+                                      (row.get('Total_Ratio', 0) >= -0.01) else 0
 
-    features['Foreign_Net'] = row.get('Foreign_Net', 0)
-    features['Trust_Net'] = row.get('Trust_Net', 0)
-    
-    # ==========================================
-    # 2. 🟢 多方戰術開關 (做多市場語言)
-    # ==========================================
-    features['Buy_RSI_Oversold_超賣'] = int(row.get('buy_c2', 0))
-    features['Buy_Vol_Spike_爆量'] = int(row.get('buy_c3', 0))
-    features['Buy_MACD_Strong_轉強'] = int(row.get('buy_c4', 0))
-    features['Buy_Price_Div_底背離'] = int(row.get('buy_c5', 0))
-    features['Buy_BBI_Breakout_突破BBI'] = int(row.get('buy_c6', 0))
-    features['Buy_Smart_Money_法人同買'] = int(row.get('buy_c7', 0))
-    features['Buy_DMI_Trend_多頭成型'] = int(row.get('buy_c8', 0))
-    features['Buy_Chip_Div_結構底背離'] = int(row.get('buy_c9', 0))
-    
-    # ==========================================
-    # 3. 🔴 空方戰術開關 (放空市場語言)
-    # ==========================================
-    features['Sell_RSI_Overbought_超買'] = int(row.get('sell_c2', 0))
-    features['Sell_Vol_Spike_爆量下殺'] = int(row.get('sell_c3', 0))
-    features['Sell_MACD_Weak_轉弱'] = int(row.get('sell_c4', 0))
-    features['Sell_Price_Div_頂背離'] = int(row.get('sell_c5', 0))
-    features['Sell_BBI_Breakdown_跌破BBI'] = int(row.get('sell_c6', 0))
-    features['Sell_Smart_Money_法人同賣'] = int(row.get('sell_c7', 0))
-    features['Sell_DMI_Trend_空頭成型'] = int(row.get('sell_c8', 0))
-    features['Sell_Chip_Div_結構頂背離'] = int(row.get('sell_c9', 0))
-   
-    # 假突破給 1，假跌破給 -1，正常給 0
-    features['Trap_假突破'] = 1 if row.get('Fake_Breakout', False) else (-1 if row.get('Bear_Trap', False) else 0)
-    
-    # 壓縮與吸籌 (0或1)
-    features['Vol_Squeeze_壓縮'] = int(row.get('Vol_Squeeze', False))
-    features['Absorption_吸籌'] = int(row.get('Absorption', False))
-    
-    # FOMO(散戶追高)給 1，恐慌(散戶人踩人)給 -1，正常給 0
-    features['Emotion_情緒'] = 1 if row.get('FOMO', False) else (-1 if row.get('Panic', False) else 0)
-    
-    # 趨勢持續力 (0~5天)
-    features['Up_Days_5_連漲天數'] = row.get('Up_Days_5', 0)
-    
+    # 🎯 MR-2: 汽缸觸頂反轉 (空方) - 刺穿上軌 + 留長上影線(避雷針) + RSI過熱
+    features['MR_Short_Trap'] = 1 if (row.get('High', 0) > row.get('BB_Upper', 0)) and \
+                                     (features.get('Upper_Shadow', 0) > 0.02) and \
+                                     (row.get('RSI', 50) > 65) else 0
+                                     
+    # 🎯 MR-3: 暗中吸籌 (多方) - 價格在底層(RSI超賣) + 法人卻趁機大買(佔比>5%)
+    features['MR_Long_Accumulation'] = 1 if (row.get('RSI', 50) < 35) and \
+                                            (row.get('Total_Ratio', 0) > 0.05) else 0
+
+    # 🎯 MR-4: 拉高出貨 (空方) - 價格在高點(RSI超買) + 法人卻趁機大賣倒貨(佔比<-5%)
+    features['MR_Short_Distribution'] = 1 if (row.get('RSI', 50) > 65) and \
+                                             (row.get('Total_Ratio', 0) < -0.05) else 0
     return features
 
 
@@ -321,7 +350,21 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         # 🌊 升級模組：ATR 動態公差與無未來函數背離 (Rolling Window)
         # ==========================================
         df['ATR'] = df['TR'].ewm(alpha=1/p['DMI_PERIOD'], adjust=False).mean()
+        # ==========================================
+        # 🌟 升級：籌碼特徵正規化與連買天數 (AI 專用)
+        # ==========================================
         df['Total_Net'] = df.get('Foreign_Net', 0) + df.get('Trust_Net', 0) + df.get('Dealers_Net', 0)
+        
+        # 1. 籌碼佔成交量比例 (解決大小型股數值差異過大的問題)
+        safe_vol = df['Volume'].replace(0, 1) # 防禦：避免當天無量除以零
+        df['Foreign_Ratio'] = df.get('Foreign_Net', 0) / safe_vol
+        df['Trust_Ratio'] = df.get('Trust_Net', 0) / safe_vol
+        df['Total_Ratio'] = df['Total_Net'] / safe_vol
+        
+        # 2. 連續買賣超天數 (精準捕捉主力連續動作)
+        # 邏輯：只要大於 0 就累加，一小於等於 0 就歸零重新計算
+        df['Foreign_Consecutive'] = df['Foreign_Net'].groupby((df['Foreign_Net'] <= 0).cumsum()).cumcount()
+        df['Trust_Consecutive'] = df['Trust_Net'].groupby((df['Trust_Net'] <= 0).cumsum()).cumcount()
 
         def detect_divergence(price_series, indicator_series, atr_series, is_top=True, distance=5, atr_mult=1.0, threshold=None):
             """
@@ -389,18 +432,34 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if latest_check['Vol_MA20'] < p['MIN_VOL_MA20']: return None 
         if latest_check['Close'] < p['MIN_PRICE']: return None 
 
+       # ==========================================
+        # 🧠 🌟 第一層升級：AI 無監督學習自動辨識市場狀態 (K-Means Regime Clustering)
+        # 讓 AI 自己觀察動能與波動，動態切分出多、空、盤整！
         # ==========================================
-        # 🌟 第一層：定義市場狀態 (Regime Filter)
-        # 判斷現在的大環境，決定該用什麼戰術
-        # ==========================================
-        adx_strong = df['ADX14'] >= p['ADX_TREND_THRESHOLD']
-        is_bull_trend = (df['Close'] > df['BBI']) & adx_strong
-        is_bear_trend = (df['Close'] < df['BBI']) & adx_strong
-        is_ranging = ~(is_bull_trend | is_bear_trend)
-
-        df['Regime'] = np.where(is_bull_trend, '趨勢多頭', 
-                       np.where(is_bear_trend, '趨勢空頭', '區間盤整'))
-
+        from sklearn.cluster import KMeans
+        
+        # 1. 準備 AI 要觀察的「環境特徵」 (去除 NaN 以免 AI 當機)
+        regime_features = df[['ADX14', 'BB_Width', 'MACD_Hist']].copy().fillna(0)
+        
+        # 2. 召喚 K-Means 演算法，強制把市場切分成 3 種截然不同的環境 (Cluster 0, 1, 2)
+        # 使用 n_init='auto' 加速運算， random_state=42 確保每次切分結果一致
+        kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto')
+        df['Cluster'] = kmeans.fit_predict(regime_features)
+        
+        # 3. AI 雖然分出了 3 群，但它不知道哪群是多頭。我們需要幫它翻譯：
+        # 邏輯：計算這 3 群各自的「平均價格與 BBI 的乖離率」，最高的群組就是多頭，最低的是空頭。
+        df['BBI_Dist'] = df['Close'] - df['BBI']
+        cluster_means = df.groupby('Cluster')['BBI_Dist'].mean()
+        
+        # 找出群組代號 (排序後，index 0 為最低/空頭，index 2 為最高/多頭)
+        sorted_clusters = cluster_means.sort_values().index
+        bear_cluster = sorted_clusters[0]
+        range_cluster = sorted_clusters[1]
+        bull_cluster = sorted_clusters[2]
+        
+        # 4. 正式貼上 AI 判定的標籤，無縫接軌您的後續系統！
+        df['Regime'] = np.where(df['Cluster'] == bull_cluster, '趨勢多頭',
+                       np.where(df['Cluster'] == bear_cluster, '趨勢空頭', '區間盤整'))
         # ==========================================
         # 🌟 第二層：計算基礎條件 (維持底層指標計算)
         # ==========================================

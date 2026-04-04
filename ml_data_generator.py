@@ -6,6 +6,38 @@ import numpy as np
 from screening import inspect_stock, add_chip_data, extract_ai_features, smart_download
 from config import PARAMS
 
+
+def get_dynamic_watchlist():
+    """從 SQL 資料庫動態撈取目前正在監控的股票名單 (歷史課本專用)"""
+    print("📡 啟動動態索敵雷達：正在從 SQL 資料庫獲取監控名單...")
+    try:
+        DB_CONN_STR = (
+            r'DRIVER={ODBC Driver 17 for SQL Server};'
+            r'SERVER=localhost;'  
+            r'DATABASE=股票online;'
+            r'Trusted_Connection=yes;'
+        )
+        import pyodbc
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            cursor = conn.cursor()
+            
+            # ⚠️ 長官請注意：請將這裡的 [您的籌碼資料表名] 換成您真實的 Table 名稱！
+            cursor.execute("SELECT DISTINCT [Ticker SYMBOL] FROM daily_chip_data") 
+            
+            rows = cursor.fetchall()
+            dynamic_list = [row[0] for row in rows if row[0]]
+            
+            if dynamic_list:
+                print(f"✅ 成功鎖定 {len(dynamic_list)} 檔目標，準備印製歷史課本！")
+                return dynamic_list
+            else:
+                raise ValueError("資料庫中找不到任何股票代碼！請檢查資料表是否為空。")
+                
+    except Exception as e:
+        print(f"🛑 致命錯誤：無法連線 SQL 或獲取動態名單！詳細原因: {e}")
+        raise
+
+
 def generate_ml_dataset(tickers):
     print("🏭 [兵工廠] 啟動 AI 雙向訓練資料生成器...")
     
@@ -90,6 +122,16 @@ def generate_ml_dataset(tickers):
                         win_condition = (max_high - entry_price) / entry_price > sl_pct
                 # 紀錄解答
                 features['Label_Y'] = 1 if win_condition else 0
+                
+                # ==========================================
+                # 🎯 核心修復 4：補上「真實報酬率」，讓兵工廠能算期望值！
+                # ==========================================
+                future_close = future_window['Close'].iloc[-1] # 取第 5 天的收盤價
+                if regime == '趨勢空頭' or "SHORT" in setup_tag:
+                    features['Target_Return'] = (entry_price - future_close) / entry_price
+                else:
+                    features['Target_Return'] = (future_close - entry_price) / entry_price
+
                 ml_dataset.append(features)
                                    
         except Exception as e:
@@ -104,5 +146,20 @@ def generate_ml_dataset(tickers):
         print("\n⚠️ 萃取失敗，沒有產生任何有效數據。")
 
 if __name__ == "__main__":
-    training_pool = ["2330.TW", "2317.TW", "2454.TW", "2603.TW", "2881.TW", "3231.TW", "1519.TW", "2002.TW"]
-    generate_ml_dataset(training_pool)
+    import sys  # 🌟 導入系統控制晶片
+    
+    # ==========================================
+    # 🌟 啟動動態索敵 (向 SQL 要名單)
+    # ==========================================
+    try:
+        watch_list = get_dynamic_watchlist()
+    except Exception as e:
+        print("🛑 [系統中斷] 無法獲取股票名單，歷史課本印製任務強制取消！請檢查 SQL 連線。")
+        sys.exit(1) # ⚠️ 正確寫法：使用 sys.exit(1) 強制結束程式，不能用 return
+        
+    # 🌟 防呆：如果資料庫抓到了名單，就把它餵給兵工廠！
+    if watch_list:
+        generate_ml_dataset(watch_list)
+    else:
+        print("⚠️ SQL 雖然連線成功，但抓到的名單為空，請確認資料表內有股票代碼。")
+    

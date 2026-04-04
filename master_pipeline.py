@@ -168,6 +168,38 @@ def should_retrain():
     # 平日且指標健康時，不浪費算力重訓
     return False
 
+def get_dynamic_watchlist():
+    """從 SQL 資料庫動態撈取目前正在監控的股票名單 (嚴格報錯版)"""
+    log("📡 啟動動態索敵雷達：正在從 SQL 資料庫獲取監控名單...")
+    try:
+        DB_CONN_STR = (
+            r'DRIVER={ODBC Driver 17 for SQL Server};'
+            r'SERVER=localhost;'  
+            r'DATABASE=股票online;'
+            r'Trusted_Connection=yes;'
+        )
+        import pyodbc
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            cursor = conn.cursor()
+            
+            # ⚠️ 記得把這裡改成您真實的籌碼資料表名稱
+            cursor.execute("SELECT DISTINCT [Ticker SYMBOL] FROM daily_chip_data") 
+            
+            rows = cursor.fetchall()
+            dynamic_list = [row[0] for row in rows if row[0]]
+            
+            if dynamic_list:
+                log(f"✅ 成功鎖定 {len(dynamic_list)} 檔目標進行掃描！")
+                return dynamic_list
+            else:
+                # 🛑 資料表是空的，主動拋出錯誤！
+                raise ValueError("資料庫中找不到任何股票代碼！請檢查資料表是否為空。")
+                
+    except Exception as e:
+        log(f"🛑 致命錯誤：無法連線 SQL 或獲取動態名單！詳細原因: {e}")
+        # 🌟 把錯誤往上拋，不掩蓋問題
+        raise
+
 def load_market_data(watch_list):
     log(f"📡 戰情中心：正在同步 {len(watch_list)} 檔標的資料 (⚡啟用智慧快取)...")
     data_dict = {}
@@ -222,7 +254,7 @@ def analyze_signal(row, proba):
 
     return structure, confidence, risk
 
-def generate_advanced_report(data_dict, ai_models):
+def generate_advanced_report(data_dict, ai_models, global_risk_multiplier=1.0):
     results = []
     
     # 🌟 修復 2：把特徵名單的讀取移到「迴圈外」，避免讀取硬碟千百次！
@@ -246,8 +278,19 @@ def generate_advanced_report(data_dict, ai_models):
             features_dict = extract_ai_features(latest_row)
             X_input = pd.DataFrame([features_dict])
             
-            # 強制對齊兵工廠的特徵順序
+            # 🌟 補強 1：實戰時動態重建「連擊武器 (Combo Features)」
             if selected_features is not None:
+                # 掃描並即時組合出兵工廠研發的 "_X_" 連擊大招
+                for col in selected_features:
+                    if "_X_" in col:
+                        parts = col.split("_X_")
+                        if len(parts) == 2:
+                            w1, w2 = parts[0], parts[1]
+                            # 如果這兩個單一武器都在，就在實戰中把他們相乘還原連擊
+                            if w1 in X_input.columns and w2 in X_input.columns:
+                                X_input[col] = X_input[w1] * X_input[w2]
+                
+                # 強制對齊順序，並將缺失值補 0
                 X_input = X_input.reindex(columns=selected_features).fillna(0)
             
             try:
@@ -300,6 +343,17 @@ def generate_advanced_report(data_dict, ai_models):
         # 公式：(勝率 × 賺的幅度) - (敗率 × 賠的幅度)
         expected_value = (win_rate * avg_win_pct) - (loss_rate * avg_loss_pct)
 
+        # ==========================================
+        # 🎯 隱藏大招：觸發「黃金狙擊模式」 (重倉授權)
+        # ==========================================
+        is_sniper_mode = False
+        # 條件：物理分數高 + 勝率極高 + 期望值極大
+        if final_score >= 7.0 and proba >= 0.65 and expected_value >= 0.025:
+            is_sniper_mode = True
+            log(f"   🎯 [黃金狙擊啟動] {ticker} 滿足終極重壓條件！勝率 {proba:.0%} | EV {expected_value:.2%}")
+            kelly_pct = min(kelly_pct * 2.0, 0.30) # 資金配比翻倍，但單筆不超過總資金 30%防呆
+            structure = "🎯 [狙擊] " + structure
+
         # 🌟 嚴格過濾：一定要有方向性，且「期望值必須 > 0」才准寫入決策桌！
         if final_score > 0 and "觀望" not in status_light:
             if expected_value > 0:
@@ -312,7 +366,8 @@ def generate_advanced_report(data_dict, ai_models):
                     "Risk": risk,
                     "Hist_Win_Rate": hist_win_rate, 
                     "Score": final_score,
-                    "Kelly_Pos": kelly_pct
+                    "Kelly_Pos": float(kelly_pct) * global_risk_multiplier, # 🎯 加入 float() 防呆並算入風險 
+                    "Raw_Kelly": kelly_pct # 保留原始 AI 建議，供戰後檢討
                 })
             else:
                 # 🛑 物理阻斷：擋下「勝率高但期望值為負」的爛訊號
@@ -438,9 +493,21 @@ def main():
         if os.path.exists(model_path):
             ai_models[regime] = joblib.load(model_path)
 
-    watch_list = ["2330.TW", "2454.TW", "2317.TW", "2382.TW", "3231.TW", "2603.TW", "1519.TW"]
+    # ==========================================
+    # 🌟 啟動動態索敵 (Fail-Fast 機制)
+    # ==========================================
+    try:
+        watch_list = get_dynamic_watchlist()
+    except Exception as e:
+        # 🛑 只要雷達報錯，直接寫入失敗日誌，並「強制中斷」整個管線！
+        log("🛑 [系統中斷] 動態名單獲取失敗，為保護資金安全，今日戰情管線強制關閉，請立即修復資料庫！")
+        generate_report(start_time, "FAILED")
+        return  # 🌟 程式在這裡直接結束，絕對不會往下執行買賣！
+
     data_dict = load_market_data(watch_list)
-    df_report = generate_advanced_report(data_dict, ai_models)
+    data_dict = load_market_data(watch_list)
+    # 🌟 修復：把大盤風險係數傳進去給它用！
+    df_report = generate_advanced_report(data_dict, ai_models, global_risk_multiplier)
 
     if df_report.empty:
         log("📭 今日無符合進場結構之標的。")
@@ -458,9 +525,6 @@ def main():
             # 🌟 終極資金公式：本金 × 個股期望值(凱利) × 大盤天氣係數(風險降載)
             final_allocation_pct = kelly_pct * global_risk_multiplier
             target_amount = TOTAL_CAPITAL * final_allocation_pct
-            
-            # 🚨 補強：將降載後的最終安全倉位，覆寫回 DataFrame 中！這樣存檔給下單機才不會出錯！
-            df_report.loc[i, 'Kelly_Pos'] = final_allocation_pct
 
             log(f"🎯 標的: {row['Ticker']}")
             log(f"   ► AI 勝率預測: {proba:.1%} | 歷史回測勝率: {hist_win:.1%} | 綜合決策分: {row['Score']:.2f}")
