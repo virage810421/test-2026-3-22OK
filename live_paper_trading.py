@@ -1,10 +1,16 @@
+import warnings
+# 🌟 將警告消音器放在最前面
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', message=".*pandas only supports SQLAlchemy.*")
 import pandas as pd
 import pyodbc  
 from datetime import datetime
-import requests  
-from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock
+import requests
+# 🌟 補上 add_chip_data 模組的匯入
+from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
 from config import PARAMS
 from strategies import get_active_strategy
+
 
 # ==========================================
 # ⚙️ 系統環境設定 (總開關)
@@ -24,7 +30,6 @@ DB_CONN_STR = (
 # 📡 戰情通訊官：LINE Bot 推播模組
 # ==========================================
 def send_line_bot_msg(msg):
-    # 🛑 攔截機制：如果是測試模式，印出內容後直接收工，不發 API
     if IS_TEST_MODE:
         print("\n🔇 [測試模式已開啟] 攔截 LINE 發送請求。")
         print("-" * 30)
@@ -32,7 +37,6 @@ def send_line_bot_msg(msg):
         print("-" * 30)
         return  
 
-    # 🌟 確保 Token 中間沒有斷行或隱形空白
     token = "/VY7IKhPqqJ1W6v04s9f8vi8hDbo5W1daaCD2LD3sIki1rWq3wF41uF6mwbKf4UsERhRK68MGn2K1nKRIffEzSZ8OTQgm0VWQ1g3CLTzNB9RZrAJ7py8MtPuzPi5/I9GnkEM69CeX983gFCQPBRx1AdB04t89/1O/w1cDnyilFU="
     user_id = "U5dd01cba7ab960a7bd1a1b6efc43411b" 
 
@@ -89,7 +93,7 @@ def run_eod_broker():
     except: active_df = pd.DataFrame()
         
     stock_value = 0.0
-    daily_log = [] # 🌟 收集今天所有的交易動作，準備發 LINE！
+    daily_log = [] 
 
     # ==========================================
     # 🛡️ 階段一：掃描庫存 (動態停損/停利)
@@ -102,7 +106,6 @@ def run_eod_broker():
             shares = int(pos['進場股數'])
             setup_tag = pos.get('進場陣型', '傳統訊號')
             
-            # 🌟 修正：防範資料庫的 NULL 變成 None 導致 int() 當機
             raw_tp = pos.get('停利階段', 0)
             tp_stage = int(raw_tp) if pd.notna(raw_tp) else 0
             
@@ -110,6 +113,9 @@ def run_eod_broker():
 
             df = smart_download(ticker, period="3mo")
             if df.empty: continue
+            
+            # 🌟 核心修復 1：必須補上籌碼資料，才能給 inspect_stock 裡面的 AI 晶片判斷！
+            df = add_chip_data(df, ticker)
             
             result = inspect_stock(ticker, preloaded_df=df, p=PARAMS)
             if not result or '計算後資料' not in result: continue
@@ -162,25 +168,26 @@ def run_eod_broker():
                 
                 current_cash += (invested + pnl)
                 
-                # ... (前略)
                 if sell_shares == shares:
                     cursor.execute("DELETE FROM active_positions WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?", (ticker, pos['進場時間']))
                 else:
                     cursor.execute("UPDATE active_positions SET [進場股數] = ?, [投入資金] = ?, [停利階段] = 1 WHERE [Ticker SYMBOL] = ?", (shares - sell_shares, pos['投入資金'] - invested, ticker))
                     stock_value += curr_price * (shares - sell_shares)
 
-                # 🌟 補強 1-B：補齊寫入 trade_history 的新版擴充欄位 (繼承自庫存)
-                cursor.execute('''
-                    INSERT INTO active_positions (
-                        [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], 
-                        [進場股數], [停利階段], [進場陣型], [期望值], [風險金額]
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
-                ''', (
-                    ticker, trade_direction, datetime.now(), curr_price, total_cost, 
-                    shares, row.get('Structure', 'AI訊號'), 
-                    row.get('EV', 0.0), total_cost * 0.05  # 🎯 換成正確讀取 'EV'
-                ))
+                # 🌟 致命核彈 Bug 修復 2：正確寫入「歷史戰績表 (trade_history)」，而不是錯誤寫回庫存表
+                try:
+                    cursor.execute('''
+                        INSERT INTO trade_history (
+                            [策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間],
+                            [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金]
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        "實戰自動結算", ticker, direction, pos['進場時間'], datetime.now(),
+                        entry_price, actual_exit_price, (pnl/invested)*100, pnl, current_cash
+                    ))
+                except Exception as e:
+                    print(f"⚠️ {ticker} 寫入歷史戰績表失敗: {e}")
                 
                 daily_log.append(f"{exit_msg} {ticker}: 損益 ${pnl:,.0f}")
             else:
@@ -192,18 +199,16 @@ def run_eod_broker():
     try: decisions = pd.read_csv("daily_decision_desk.csv")
     except: decisions = pd.DataFrame()
         
-    # 🌟 修正 1：將變數名改為小寫以符合規範，並實裝總資金計算
     total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1000000
     
     if not decisions.empty:
         for _, row in decisions.iterrows():
-            ticker = row.get('Ticker', 'Unknown') # 🌟 修正 2：使用 .get 更安全
+            ticker = row.get('Ticker', 'Unknown') 
             kelly_pct = float(row.get('Kelly_Pos', 0))
             trade_direction = row.get('Direction', '做多(Long)') 
             
             if kelly_pct <= 0: continue
             
-            # 檢查是否已持倉，避免重複買進
             cursor.execute("SELECT COUNT(*) FROM active_positions WHERE [Ticker SYMBOL] = ?", (ticker,))
             if cursor.fetchone()[0] > 0: continue
                 
@@ -211,15 +216,12 @@ def run_eod_broker():
             if df.empty: continue
             curr_price = df['Close'].iloc[-1]
             
-            # 🌟 修正 3：計算預計買進股數 (使用修正後的變數名)
             shares = int((total_nav * kelly_pct) / curr_price)
-            # 台灣股市一張為 1000 股，進行整股換算
             shares = int(shares // 1000) * 1000 if shares >= 1000 else shares
             if shares < 1: continue
             
             total_cost = curr_price * shares * (1 + PARAMS['FEE_RATE']*PARAMS['FEE_DISCOUNT'])
             
-            # 🌟 補強：實裝 config 裡的 IGNORE_CASH_LIMIT 開關
             can_afford = current_cash >= total_cost or PARAMS.get('IGNORE_CASH_LIMIT', False)
             
             if can_afford:
@@ -228,7 +230,6 @@ def run_eod_broker():
                 
                 stock_value += curr_price * shares
                 
-                # 🌟 補強：將正確的「期望值 (EV)」寫入資料庫，不再塞錯欄位
                 cursor.execute('''
                     INSERT INTO active_positions (
                         [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金], 
@@ -243,6 +244,7 @@ def run_eod_broker():
                 
                 action_icon = "🟢 做多" if "Long" in trade_direction else "🔴 放空"
                 daily_log.append(f"{action_icon} {ticker}: {shares}股 (花費 ${total_cost:,.0f})")
+                
     # ==========================================
     # 📊 階段三：結算與發送 LINE 戰報
     # ==========================================
@@ -252,7 +254,6 @@ def run_eod_broker():
     
     net_worth = current_cash + stock_value
     
-    # 🌟 組合 LINE 戰情報告文字
     report_text = f"📊 [HFA 系統戰報] {datetime.now().strftime('%Y-%m-%d')}\n"
     report_text += f"💰 總淨值: ${net_worth:,.0f}\n"
     report_text += f"💵 現金: ${current_cash:,.0f} | 📦 股票: ${stock_value:,.0f}\n"
@@ -263,7 +264,7 @@ def run_eod_broker():
         report_text += "💤 今日無任何交易動作，持股續抱。"
 
     print(report_text)
-    send_line_bot_msg(report_text) # 🚀 發射至手機！
+    send_line_bot_msg(report_text) 
 
 if __name__ == "__main__":
     run_eod_broker()
