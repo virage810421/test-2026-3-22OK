@@ -505,7 +505,7 @@ def main():
         return  # 🌟 程式在這裡直接結束，絕對不會往下執行買賣！
 
     data_dict = load_market_data(watch_list)
-    data_dict = load_market_data(watch_list)
+    
     # 🌟 修復：把大盤風險係數傳進去給它用！
     df_report = generate_advanced_report(data_dict, ai_models, global_risk_multiplier)
 
@@ -518,12 +518,11 @@ def main():
         for i, row in df_report.head(10).iterrows():
             proba = row['AI_Proba']
             hist_win = row['Hist_Win_Rate']
-            kelly_pct = row['Kelly_Pos']
             
             strength = "🔥 強烈建議" if row['Score'] >= 0.60 else "⚡ 伺機而動" if row['Score'] >= 0.50 else "🟡 觀望"
 
-            # 🌟 終極資金公式：本金 × 個股期望值(凱利) × 大盤天氣係數(風險降載)
-            final_allocation_pct = kelly_pct * global_risk_multiplier
+            # 🌟 核心修復：因為 df_report 裡面已經降載過了，這裡直接取用 Kelly_Pos 即可，不可重複相乘！
+            final_allocation_pct = row['Kelly_Pos'] 
             target_amount = TOTAL_CAPITAL * final_allocation_pct
 
             log(f"🎯 標的: {row['Ticker']}")

@@ -157,15 +157,18 @@ def train_models():
     # 1. 將今天從課本抓到的新武器，與歷史武器庫合併，並用 set() 消除重複
     all_features = list(set(all_features + old_features))
 
-    # 2. 🛠️ 自動重鑄歷史連擊武器 (防止 DataFrame 找不到欄位而報錯)
+    # 2. 🛠️ 自動重鑄歷史連擊武器 (全面支援雙重與三重以上組合技)
     for feature in all_features:
         if "_X_" in feature and feature not in df.columns:
             parts = feature.split("_X_")
-            # 如果是雙重連擊 (A_X_B)
-            if len(parts) == 2:
-                w1, w2 = parts[0], parts[1]
-                if w1 in df.columns and w2 in df.columns:
-                    df[feature] = df[w1] * df[w2] # 在今天的課本上，動態把 A 乘上 B 恢復這把武器
+            
+            # 檢查組成這把連擊武器的所有零件，今天是不是都在課本裡？
+            if all(p in df.columns for p in parts):
+                # 動態把所有零件乘起來，完美還原這把武器
+                temp_signal = df[parts[0]]
+                for p in parts[1:]:
+                    temp_signal = temp_signal * df[p]
+                df[feature] = temp_signal
                     
     # 3. 最終防線：再次過濾，確保 all_features 裡面的武器真的都在今天的課本裡
     all_features = [f for f in all_features if f in df.columns]
