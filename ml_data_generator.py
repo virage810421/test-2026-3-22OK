@@ -146,7 +146,7 @@ def generate_ml_dataset(tickers):
         print("\n⚠️ 萃取失敗，沒有產生任何有效數據。")
 
 if __name__ == "__main__":
-    import sys  # 🌟 導入系統控制晶片
+    import sys  
     
     # ==========================================
     # 🌟 啟動動態索敵 (向 SQL 要名單)
@@ -161,5 +161,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"🛑 [系統中斷] 無法獲取動態名單，歷史課本印製任務強制取消！")
         print(f"   原因: {e}")
-        sys.exit(1) # 強制安全停機
+        sys.exit(1)
     
