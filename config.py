@@ -128,6 +128,10 @@ FINMIND_API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wNC
 # ==========================================
 # 🎯 終極實戰與訓練觀察清單 (全局統一管理)
 # ==========================================
+
+import os
+import pandas as pd
+
 WATCH_LIST = [
     # 💻 TECH (科技)
     "2330.TW", "2317.TW", "2454.TW", "2382.TW", "2308.TW", "3231.TW",
@@ -142,3 +146,24 @@ WATCH_LIST = [
     # 🔄 CYCLICAL (景氣循環 - 面板/記憶體)
     "2409.TW", "3481.TW", "6116.TW", "2344.TW", "2408.TW", "2337.TW"
 ]
+
+def get_dynamic_watch_list():
+    """
+    智能切換閥：優先讀取海選雷達產出的最新名單，若無則使用備用名單
+    """
+    # 假設您的海選名單存在這個路徑 (請依您的實際檔名修改)
+    target_csv = "data/stock_list_cache_listed.csv" 
+    
+    if os.path.exists(target_csv):
+        try:
+            df = pd.read_csv(target_csv)
+            # 假設 CSV 裡面有一個欄位叫做 'Ticker SYMBOL'
+            if 'Ticker SYMBOL' in df.columns:
+                dynamic_list = df['Ticker SYMBOL'].dropna().unique().tolist()
+                print(f"🎯 [名單樞紐] 成功匯入最新海選名單：共 {len(dynamic_list)} 檔")
+                return dynamic_list
+        except Exception as e:
+            print(f"⚠️ 讀取海選名單失敗，啟動備用名單: {e}")
+            
+    print("⚠️ 找不到海選名單 CSV，啟動預設備用名單。")
+    return WATCH_LIST
