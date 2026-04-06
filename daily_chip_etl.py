@@ -33,40 +33,24 @@ ENABLE_BACKUP_SOURCE = True
 SAVE_EVERY_N_STOCKS = 50
 
 # =========================================================
-# 🔐 FinMind Token (由 config.py 中央保險箱統一控管)
+# 🔐 FinMind Token（由 config.py 中央控管）
 # =========================================================
 try:
     from config import FINMIND_API_TOKEN as API_TOKEN
 except ImportError:
     print("⚠️ 警告：找不到 config.py 或 FINMIND_API_TOKEN！請確認中央設定檔是否正確。")
     API_TOKEN = ""
+
 # =========================================================
 # 🗓️ 台股休市日（可自行往後補）
 # =========================================================
 TW_MARKET_HOLIDAYS = {
-    "2026-01-01",
-    "2026-02-16",
-    "2026-02-17",
-    "2026-02-18",
-    "2026-02-19",
-    "2026-02-20",
-    "2026-02-27",
-    "2026-04-03",
-    "2026-04-06",
-    "2026-05-01",
-    "2026-06-19",
-    "2026-09-25",
-    "2026-10-09",
+    "2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20",
+    "2026-02-27", "2026-04-03", "2026-04-06", "2026-05-01", "2026-06-19", "2026-09-25", "2026-10-09",
 }
 
 CSV_COLUMNS = [
-    "日期",
-    "Ticker SYMBOL",
-    "外資買賣超",
-    "投信買賣超",
-    "自營商買賣超",
-    "三大法人合計",
-    "資料來源"
+    "日期", "Ticker SYMBOL", "外資買賣超", "投信買賣超", "自營商買賣超", "三大法人合計", "資料來源"
 ]
 
 # =========================================================
@@ -88,7 +72,9 @@ def build_session():
     session.headers.update({"User-Agent": "Mozilla/5.0"})
     return session
 
+
 SESSION = build_session()
+
 
 def safe_get_json(url, timeout=20):
     try:
@@ -100,6 +86,7 @@ def safe_get_json(url, timeout=20):
         res = SESSION.get(url, timeout=timeout, verify=False)
         res.raise_for_status()
         return res.json()
+
 
 def safe_get_text(url, timeout=20, encoding=None):
     try:
@@ -113,6 +100,7 @@ def safe_get_text(url, timeout=20, encoding=None):
     if encoding:
         res.encoding = encoding
     return res.text
+
 
 # =========================================================
 # 🗓️ 交易日判斷
@@ -131,6 +119,7 @@ def is_tw_trading_day(date_str: str) -> bool:
 
     return True
 
+
 # =========================================================
 # 📡 股票清單：上市 + 上櫃
 # =========================================================
@@ -145,7 +134,6 @@ def get_official_stock_list():
 
     all_stocks = []
 
-    # 上市
     try:
         twse_data = safe_get_json(twse_url)
         if isinstance(twse_data, list):
@@ -156,7 +144,6 @@ def get_official_stock_list():
     except Exception as e:
         print(f"❌ 上市名單抓取失敗: {e}")
 
-    # 上櫃
     tpex_success = False
     for url in tpex_urls:
         try:
@@ -211,6 +198,7 @@ def get_official_stock_list():
     print("⚠️ 官方名單全部失敗，改用備援清單")
     return ["2330", "2317", "2454"]
 
+
 # =========================================================
 # 🧱 SQL Table 檢查
 # =========================================================
@@ -239,6 +227,7 @@ def ensure_chip_table(cursor):
     for sql in alter_sqls:
         cursor.execute(sql)
 
+
 # =========================================================
 # 📂 CSV 工具
 # =========================================================
@@ -250,7 +239,6 @@ def normalize_date_str(value):
     if not value:
         return None
 
-    # 處理像 2026-04-06 00:00:00
     try:
         dt = pd.to_datetime(value, errors="coerce")
         if pd.notna(dt):
@@ -258,11 +246,11 @@ def normalize_date_str(value):
     except Exception:
         pass
 
-    # 已經是 yyyy-mm-dd
     if len(value) >= 10:
         return value[:10]
 
     return value
+
 
 def normalize_chip_dataframe(df):
     if df is None or df.empty:
@@ -288,6 +276,7 @@ def normalize_chip_dataframe(df):
 
     return df
 
+
 def load_existing_csv():
     if not os.path.exists(CSV_FILENAME):
         print(f"📂 地端 CSV 不存在：{CSV_FILENAME}")
@@ -307,11 +296,13 @@ def load_existing_csv():
         print(f"⚠️ 讀取地端 CSV 失敗，改視為空白檔案：{e}")
         return pd.DataFrame(columns=CSV_COLUMNS)
 
+
 def save_csv(df):
     df = normalize_chip_dataframe(df)
     df = df.drop_duplicates(subset=["日期", "Ticker SYMBOL"]).reset_index(drop=True)
     df.to_csv(CSV_FILENAME, index=False, encoding="utf-8-sig")
     print(f"💾 CSV 已更新：{CSV_FILENAME} | 共 {len(df)} 筆")
+
 
 def flush_new_rows_to_csv(local_csv_df, new_rows, note="批次存檔"):
     if not new_rows:
@@ -327,6 +318,7 @@ def flush_new_rows_to_csv(local_csv_df, new_rows, note="批次存檔"):
     save_csv(merged_df)
     print(f"💾 [{note}] 已批次存檔 {len(temp_df)} 筆新資料")
     return merged_df
+
 
 # =========================================================
 # 🗄️ SQL 既有 Key
@@ -358,6 +350,7 @@ def load_sql_existing_keys():
         print(f"⚠️ 讀取 SQL 既有資料失敗，視為空表：{e}")
         return set()
 
+
 def build_union_key_set(csv_df, sql_keys):
     csv_keys = set()
     if csv_df is not None and not csv_df.empty:
@@ -366,6 +359,7 @@ def build_union_key_set(csv_df, sql_keys):
             for _, r in csv_df.iterrows()
         )
     return csv_keys.union(sql_keys)
+
 
 # =========================================================
 # 🧠 FinMind 初始化
@@ -376,7 +370,6 @@ def init_finmind_loader(api_token: str):
 
     dl = DataLoader()
 
-    # 相容不同版本 FinMind
     try:
         if hasattr(dl, "login_by_token"):
             dl.login_by_token(api_token=api_token)
@@ -388,18 +381,17 @@ def init_finmind_loader(api_token: str):
 
     return dl
 
+
 # =========================================================
 # 🧠 FinMind 來源
 # =========================================================
 def fetch_chip_from_finmind(dl, stock_id, start_dt):
     try:
-        # 常見新版本方法
         chip_df = dl.taiwan_stock_institutional_investors(
             stock_id=stock_id,
             start_date=start_dt
         )
     except TypeError:
-        # 保底相容
         chip_df = dl.taiwan_stock_institutional_investors(
             stock_id=stock_id,
             start_date=start_dt,
@@ -443,11 +435,13 @@ def fetch_chip_from_finmind(dl, stock_id, start_dt):
 
     return rows if rows else None
 
+
 # =========================================================
 # 🛟 官方備援
 # =========================================================
 def roc_year(ad_year):
     return ad_year - 1911
+
 
 def try_parse_csv_text_to_df(text):
     if not text or not text.strip():
@@ -457,14 +451,10 @@ def try_parse_csv_text_to_df(text):
     if not lines:
         return pd.DataFrame()
 
-    # 優先找最可能是真正表頭的列
     header_idx = None
     for i, line in enumerate(lines):
         line_no_space = line.replace(" ", "")
-        if (
-            "證券代號" in line_no_space or
-            "代號" in line_no_space
-        ) and line.count(",") >= 3:
+        if ("證券代號" in line_no_space or "代號" in line_no_space) and line.count(",") >= 3:
             header_idx = i
             break
 
@@ -477,15 +467,15 @@ def try_parse_csv_text_to_df(text):
     if not csv_text.strip():
         return pd.DataFrame()
 
-    for enc in [None]:
-        try:
-            df = pd.read_csv(StringIO(csv_text), engine="python", on_bad_lines="skip")
-            if not df.empty:
-                return df
-        except Exception:
-            pass
+    try:
+        df = pd.read_csv(StringIO(csv_text), engine="python", on_bad_lines="skip")
+        if not df.empty:
+            return df
+    except Exception:
+        pass
 
     return pd.DataFrame()
+
 
 def parse_twse_backup_csv(date_obj):
     date_str = date_obj.strftime("%Y%m%d")
@@ -549,6 +539,7 @@ def parse_twse_backup_csv(date_obj):
     except Exception as e:
         print(f"⚠️ 上市官方備援失敗 {date_obj.strftime('%Y-%m-%d')}: {e}")
         return pd.DataFrame()
+
 
 def parse_tpex_backup_csv(date_obj):
     if not is_tw_trading_day(date_obj.strftime("%Y-%m-%d")):
@@ -621,6 +612,7 @@ def parse_tpex_backup_csv(date_obj):
 
     return pd.DataFrame()
 
+
 def fetch_backup_chip_all_markets(start_dt):
     start_date_obj = datetime.strptime(start_dt, "%Y-%m-%d").date()
     end_date_obj = datetime.now().date()
@@ -655,6 +647,7 @@ def fetch_backup_chip_all_markets(start_dt):
 
     return backup_map
 
+
 def fetch_chip_from_backup(stock_id, need_dates, backup_map):
     rows = []
 
@@ -664,6 +657,7 @@ def fetch_chip_from_backup(stock_id, need_dates, backup_map):
             rows.append(backup_map[key])
 
     return rows if rows else None
+
 
 # =========================================================
 # 📤 SQL UPSERT
@@ -715,8 +709,9 @@ def upsert_chip_rows(cursor, rows):
 
     return count
 
+
 # =========================================================
-# 🧩 單一股票智慧補抓
+# 🚀 智慧同步主流程
 # =========================================================
 def build_target_dates(start_dt):
     start_date_obj = datetime.strptime(start_dt, "%Y-%m-%d").date()
@@ -731,6 +726,7 @@ def build_target_dates(start_dt):
         cur += timedelta(days=1)
 
     return target_dates
+
 
 def fetch_single_stock_smart(dl, stock_id, existing_union_keys, target_dates, backup_map):
     need_dates = set()
@@ -810,9 +806,7 @@ def fetch_single_stock_smart(dl, stock_id, existing_union_keys, target_dates, ba
         )
     }
 
-# =========================================================
-# 🚀 智慧同步主流程
-# =========================================================
+
 def smart_sync_daily_chip():
     now = datetime.now()
 
@@ -979,9 +973,40 @@ def smart_sync_daily_chip():
     print(f"✅ 網路任務成功數：{success_count}")
     print(f"⚠️ 網路任務失敗數：{fail_count}")
 
+
 # =========================================================
 # 🚀 總司令部：全自動智慧排程系統
 # =========================================================
+def run_monthly_revenue_module():
+    """
+    monthly_revenue_simple.py 目前沒有 step3_download_revenue_to_csv / step4_import_revenue_to_sql
+    正確做法是直接呼叫它的 main()。
+    """
+    try:
+        from monthly_revenue_simple import main as monthly_revenue_main
+        monthly_revenue_main()
+        print("✅ 月營收模組執行完成。")
+    except ImportError as e:
+        print(f"⚠️ 找不到營收模組 (monthly_revenue_simple.py) 或匯入失敗：{e}")
+    except Exception as e:
+        print(f"❌ 月營收模組發生異常：{e}")
+
+
+def run_fundamentals_module():
+    """
+    yahoo_csv_to_sql.py 目前主函式是 smart_sync()
+    它會把財報資料寫入 fundamentals_clean。
+    """
+    try:
+        from yahoo_csv_to_sql import smart_sync as yahoo_fundamentals_sync
+        yahoo_fundamentals_sync()
+        print("✅ 季財報模組執行完成。")
+    except ImportError as e:
+        print(f"⚠️ 找不到財報模組 (yahoo_csv_to_sql.py) 或匯入失敗：{e}")
+    except Exception as e:
+        print(f"❌ 季財報模組發生異常：{e}")
+
+
 def main_scheduler():
     print("==========================================================")
     print(f"🚢 [旗艦巨獸] 啟動時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -989,11 +1014,11 @@ def main_scheduler():
 
     now = datetime.now()
 
-    run_daily_chip = now.weekday() < 5
-    run_monthly_revenue = 1 <= now.day <= 12
-    run_fundamentals = now.month in [3, 5, 8, 11] and now.day >= 15
+    should_run_daily_chip = now.weekday() < 5
+    should_run_monthly_revenue = 1 <= now.day <= 12
+    should_run_fundamentals = now.month in [3, 5, 8, 11] and now.day >= 15
 
-    if run_daily_chip:
+    if should_run_daily_chip:
         print("\n🟢 [日更雷達] 今天是交易日，準備啟動【法人籌碼】收集車...")
         try:
             smart_sync_daily_chip()
@@ -1002,31 +1027,22 @@ def main_scheduler():
     else:
         print("\n⚪ [日更雷達] 週末休市，【法人籌碼】馬達休眠中。")
 
-    if run_monthly_revenue:
-        print("\n🟢 [月更雷達] 目前為營收公佈期 (1~12號)，準備啟動【月營收】雙引擎...")
-        try:
-            from monthly_revenue_simple import step3_download_revenue_to_csv, step4_import_revenue_to_sql
-            step3_download_revenue_to_csv()
-            step4_import_revenue_to_sql()
-        except ImportError:
-            print("⚠️ 找不到營收模組 (monthly_revenue_simple.py)，請確認檔案是否放在一起。")
-        except Exception as e:
-            print(f"❌ 月營收模組發生異常：{e}")
+    if should_run_monthly_revenue:
+        print("\n🟢 [月更雷達] 目前為營收公佈期 (1~12號)，準備啟動【月營收】模組...")
+        run_monthly_revenue_module()
     else:
         print(f"\n⚪ [月更雷達] 今天是 {now.day} 號 (非 1~12 號)，【月營收】馬達休眠中。")
 
-    if run_fundamentals:
+    if should_run_fundamentals:
         print("\n🟢 [季更雷達] 目前為財報公佈旺季，準備啟動【季財報】收集車...")
-        try:
-            pass
-        except Exception as e:
-            print(f"❌ 季財報模組發生異常：{e}")
+        run_fundamentals_module()
     else:
         print("\n⚪ [季更雷達] 非財報集中公佈期，【季財報】馬達休眠中。")
 
     print("\n==========================================================")
     print("🏁 全產線自動化排程檢測完畢！")
     print("==========================================================")
+
 
 if __name__ == "__main__":
     main_scheduler()
