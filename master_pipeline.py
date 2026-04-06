@@ -1,57 +1,55 @@
+import json
+import logging
+import os
 import subprocess
 import time
 from datetime import datetime
-import os
-import logging
-import json
-import pandas as pd
-import yfinance as yf
+
 import joblib
+import pandas as pd
+import pyodbc
+import yfinance as yf
+
 from performance import check_strategy_health
-# 修改 master_pipeline.py 最上方的這行：
-from screening import add_chip_data, extract_ai_features, inspect_stock, smart_download
+from screening import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
 
-
-
-# ==========================================
-# 🔥 Logging 設定 (戰情日誌)
-# ==========================================
 logging.basicConfig(
     filename="pipeline.log",
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
+    format="%(asctime)s [%(levelname)s] %(message)s",
 )
+
 
 def log(msg):
     print(msg)
     logging.info(msg)
 
-# ==========================================
-# 🔧 執行腳本（強化版：含重試、超時與 UTF-8 強制防護）
-# ==========================================
-def run_script(script_name, retries=2, timeout=600):
+
+def run_script(script_name, retries=2, timeout=900):
     if not os.path.exists(script_name):
         log(f"⚠️ 找不到 {script_name}，跳過")
         return False
 
-    # 🌟 系統級免疫：強迫子程式使用 UTF-8 編碼，解決 Windows 看不懂 Emoji 的當機問題
     custom_env = os.environ.copy()
     custom_env["PYTHONIOENCODING"] = "utf-8"
 
     for attempt in range(retries + 1):
-        log(f"🚀 執行 {script_name}（第 {attempt+1} 次）")
+        log(f"🚀 執行 {script_name}（第 {attempt + 1} 次）")
         start = time.time()
         try:
             result = subprocess.run(
-                ['python', script_name],
+                ["python", script_name],
                 check=True,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                encoding='utf-8',       # 🌟 強制主程式用 UTF-8 解碼
-                env=custom_env          # 🌟 強制子程式用 UTF-8 輸出
+                encoding="utf-8",
+                env=custom_env,
             )
-            log(result.stdout)
+            if result.stdout:
+                log(result.stdout)
+            if result.stderr:
+                log(result.stderr)
             elapsed = time.time() - start
             log(f"✅ 完成 {script_name}（{elapsed:.1f}s）")
             return True
@@ -59,20 +57,19 @@ def run_script(script_name, retries=2, timeout=600):
             log(f"⏰ Timeout: {script_name} 執行超時！")
         except subprocess.CalledProcessError as e:
             log(f"❌ 錯誤: {script_name} 執行失敗！")
-            log(e.stderr)
-        time.sleep(2) 
+            if e.stderr:
+                log(e.stderr)
+        time.sleep(2)
     return False
 
+
 def validate_outputs():
-    # 1. 檢查課本是否印出
     if not os.path.exists("data/ml_training_data.csv"):
         log("❌ 驗證失敗：特徵訓練教材 (ml_training_data.csv) 未產出！")
         return False
 
-    # 2. 🌟 終極縫合：只要有產出【任何一顆】大腦，就允許放行！(防死鎖)
     os.makedirs("models", exist_ok=True)
     models_found = [f for f in os.listdir("models") if f.startswith("model_") and f.endswith(".pkl")]
-    
     if not models_found:
         log("❌ 驗證失敗：精神時光屋未能鍛造出任何 AI 大腦！")
         return False
@@ -80,365 +77,238 @@ def validate_outputs():
     log(f"✅ 驗證通過：兵工廠成功掛載 {len(models_found)} 顆 AI 大腦！")
     return True
 
+
 def generate_report(start_time, status):
     report = {
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "duration_sec": round(time.time() - start_time, 2),
-        "status": status
+        "status": status,
     }
-    with open("daily_report.json", "w") as f:
-        json.dump(report, f, indent=4)
-    log(f"📊 已生成系統日誌 daily_report.json")
+    with open("daily_report.json", "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=4, ensure_ascii=False)
+    log("📊 已生成系統日誌 daily_report.json")
 
-# ==========================================
-# 🌟 升級版：機構級戰績評估中心 (Profit Factor & MDD)
-# ==========================================
+
 def get_system_performance():
-    """從 SQL 讀取實戰戰績，計算機構級指標：勝率、獲利因子、最大回撤(MDD)"""
     try:
         DB_CONN_STR = (
-            r'DRIVER={ODBC Driver 17 for SQL Server};'
-            r'SERVER=localhost;'  
-            r'DATABASE=股票online;'
-            r'Trusted_Connection=yes;'
+            r"DRIVER={ODBC Driver 17 for SQL Server};"
+            r"SERVER=localhost;"
+            r"DATABASE=股票online;"
+            r"Trusted_Connection=yes;"
         )
-        import pyodbc
         with pyodbc.connect(DB_CONN_STR) as conn:
-            # 撈取最近 100 筆交易紀錄
             query = "SELECT TOP 100 [報酬率(%)], [淨損益金額], [結餘本金] FROM trade_history ORDER BY [出場時間] DESC"
             df_stats = pd.read_sql(query, conn)
-            
+
             if not df_stats.empty:
-                # 把時間倒轉回來 (從舊到新)，才能正確計算資金曲線與回撤
                 df_stats = df_stats.iloc[::-1].reset_index(drop=True)
-                
+
                 total_trades = len(df_stats)
-                wins = len(df_stats[df_stats['報酬率(%)'] > 0])
+                wins = len(df_stats[df_stats["報酬率(%)"] > 0])
                 winrate = wins / total_trades if total_trades > 0 else 0
-                
-                # 💰 計算獲利因子 (Profit Factor = 總賺錢金額 / 總賠錢金額)
-                gross_profit = df_stats[df_stats['淨損益金額'] > 0]['淨損益金額'].sum()
-                gross_loss = abs(df_stats[df_stats['淨損益金額'] < 0]['淨損益金額'].sum())
+
+                gross_profit = df_stats[df_stats["淨損益金額"] > 0]["淨損益金額"].sum()
+                gross_loss = abs(df_stats[df_stats["淨損益金額"] < 0]["淨損益金額"].sum())
                 profit_factor = gross_profit / gross_loss if gross_loss != 0 else 99.9
-                
-                # 📉 計算最大回撤 (Max Drawdown, MDD)
-                if '結餘本金' in df_stats.columns and df_stats['結餘本金'].notna().any():
-                    df_stats['Peak'] = df_stats['結餘本金'].cummax()
-                    df_stats['Drawdown'] = (df_stats['結餘本金'] - df_stats['Peak']) / df_stats['Peak']
-                    mdd = abs(df_stats['Drawdown'].min())
+
+                if "結餘本金" in df_stats.columns and df_stats["結餘本金"].notna().any():
+                    df_stats["Peak"] = df_stats["結餘本金"].cummax()
+                    df_stats["Drawdown"] = (df_stats["結餘本金"] - df_stats["Peak"]) / df_stats["Peak"]
+                    mdd = abs(df_stats["Drawdown"].min())
                 else:
                     mdd = 0.0
 
                 log(f"📊 [系統戰績] 近 {total_trades} 筆 | 勝率: {winrate:.1%} | 獲利因子(PF): {profit_factor:.2f} | 最大回撤(MDD): {mdd:.1%}")
                 return winrate, profit_factor, mdd
-                
     except Exception as e:
         log(f"⚠️ 無法連線 SQL 讀取歷史戰績，預設回傳穩態值 ({e})")
-        
+
     return 0.5, 1.0, 0.0
 
-# ==========================================
-# 🌟 升級版：AI 動態自我修復決策 (Self-Healing MLOps)
-# ==========================================
+
 def should_retrain():
-    """判斷今天是否需要叫 AI 進入精神時光屋"""
     today = datetime.now().weekday()
 
-    # 1. 🗓️ 週日大保養：每週日強制重新訓練大腦
-    if today == 6:  
+    if today == 6:
         log("🗓️ 系統判定：今日為週日，啟動【例行性 AI 大腦重塑】！")
         return True
 
-    # 2. 🚨 提取最新機構級戰績
     recent_winrate, recent_pf, recent_mdd = get_system_performance()
-    
-    # 3. 🛡️ 雙重極限防護網 (勝率或回撤任一破底，立刻重訓)
+
     if recent_winrate < 0.4:
-        log(f"🚨 系統警告：近期勝率跌至 {recent_winrate:.1%} (低於 40%)！大腦可能已失效，啟動【緊急重訓】！")
+        log(f"🚨 系統警告：近期勝率跌至 {recent_winrate:.1%} (低於 40%)！啟動【緊急重訓】！")
         return True
-        
     if recent_mdd > 0.15:
-        log(f"🚨 系統警告：近期資金最大回撤達 {recent_mdd:.1%} (破 15%)！偵測到連續嚴重失血，啟動【防禦性重訓】！")
+        log(f"🚨 系統警告：近期資金最大回撤達 {recent_mdd:.1%} (破 15%)！啟動【防禦性重訓】！")
         return True
-        
     if recent_pf < 0.8 and recent_pf != 0:
-        log(f"⚠️ 系統警告：獲利因子降至 {recent_pf:.2f} (賺不夠賠)！提前啟動【校正性重訓】！")
+        log(f"⚠️ 系統警告：獲利因子降至 {recent_pf:.2f}！啟動【校正性重訓】！")
         return True
 
-    # 平日且指標健康時，不浪費算力重訓
     return False
 
+
 def get_dynamic_watchlist():
-    """從 SQL 資料庫動態撈取目前正在監控的股票名單 (嚴格報錯版)"""
     log("📡 啟動動態索敵雷達：正在從 SQL 資料庫獲取監控名單...")
     try:
         DB_CONN_STR = (
-            r'DRIVER={ODBC Driver 17 for SQL Server};'
-            r'SERVER=localhost;'  
-            r'DATABASE=股票online;'
-            r'Trusted_Connection=yes;'
+            r"DRIVER={ODBC Driver 17 for SQL Server};"
+            r"SERVER=localhost;"
+            r"DATABASE=股票online;"
+            r"Trusted_Connection=yes;"
         )
-        import pyodbc
         with pyodbc.connect(DB_CONN_STR) as conn:
             cursor = conn.cursor()
-            
-            # ⚠️ 記得把這裡改成您真實的籌碼資料表名稱
-            cursor.execute("SELECT DISTINCT [Ticker SYMBOL] FROM daily_chip_data") 
-            
+            cursor.execute("SELECT DISTINCT [Ticker SYMBOL] FROM daily_chip_data")
             rows = cursor.fetchall()
-            dynamic_list = [row[0] for row in rows if row[0]]
-            
+            dynamic_list = [normalize_ticker_symbol(row[0]) for row in rows if row[0]]
+
             if dynamic_list:
                 log(f"✅ 成功鎖定 {len(dynamic_list)} 檔目標進行掃描！")
                 return dynamic_list
-            else:
-                # 🛑 資料表是空的，主動拋出錯誤！
-                raise ValueError("資料庫中找不到任何股票代碼！請檢查資料表是否為空。")
-                
+            raise ValueError("資料庫中找不到任何股票代碼！請檢查資料表是否為空。")
     except Exception as e:
         log(f"🛑 致命錯誤：無法連線 SQL 或獲取動態名單！詳細原因: {e}")
-        # 🌟 把錯誤往上拋，不掩蓋問題
         raise
+
 
 def load_market_data(watch_list):
     log(f"📡 戰情中心：正在同步 {len(watch_list)} 檔標的資料 (⚡啟用智慧快取)...")
     data_dict = {}
     for ticker in watch_list:
-        # 🌟 換成智慧下載器
-        df = smart_download(ticker, period="1y")
-        if df.empty: continue
-            
-        df.dropna(subset=['Close'], inplace=True)
-        if df.empty: continue
-            
+        ticker = normalize_ticker_symbol(ticker)
+        df = smart_download(ticker, period="2y")
+        if df.empty:
+            log(f"⚠️ {ticker} 無 K 線資料，跳過")
+            continue
         df = add_chip_data(df, ticker)
         data_dict[ticker] = df
+    log(f"✅ 已完成 {len(data_dict)} 檔資料載入")
     return data_dict
 
-def analyze_signal(row, proba):
-    features = []
-    regime = row.get('Regime', '區間盤整')
 
-    # 🟢 多方結構解析
-    if regime in ['趨勢多頭', '區間盤整']:
-        if row.get('buy_c6', 0): features.append(("突破均線", 2))
-        if row.get('buy_c3', 0): features.append(("爆量發動", 1.5))
-        if row.get('buy_c2', 0): features.append(("超賣", 1))
-        if row.get('buy_c7', 0): features.append(("主力買", 2))
-        if row.get('buy_c5', 0) or row.get('buy_c9', 0): features.append(("底背離", 2))
-
-    # 🔴 空方結構解析
-    if regime in ['趨勢空頭', '區間盤整']:
-        if row.get('sell_c6', 0): features.append(("跌破均線", 2))
-        if row.get('sell_c3', 0): features.append(("爆量下殺", 1.5))
-        if row.get('sell_c2', 0): features.append(("超買", 1))
-        if row.get('sell_c7', 0): features.append(("主力賣", 2))
-        if row.get('sell_c5', 0) or row.get('sell_c9', 0): features.append(("頂背離", 2))
-
-    total_score = sum(w for _, w in features)
-    # 取前三項最明顯的特徵顯示，避免報表太長
-    structure = " + ".join([f for f, _ in features[:3]]) if features else "無明顯結構"
-    
-    # 信心分數計算
-    confidence = proba * (total_score / 8.5) if total_score > 0 else 0
-
-    # 風險評估
-    if regime == '趨勢空頭' and row.get('buy_c2', 0):
-        risk = "⚠️ 高危(逆勢接刀)"
-    elif regime == '趨勢多頭' and row.get('sell_c2', 0):
-        risk = "⚠️ 高危(逆勢摸頭)"
-    elif row.get('buy_c6', 0) or row.get('sell_c6', 0):
-        risk = "🛡️ 順勢安全"
-    else:
-        risk = "⚡ 盤整震盪"
-
-    return structure, confidence, risk
-
-def generate_advanced_report(data_dict, ai_models, global_risk_multiplier=1.0):
-    results = []
-    
-    # 🌟 修復 2：把特徵名單的讀取移到「迴圈外」，避免讀取硬碟千百次！
-    feature_list_path = "models/selected_features.pkl"
-    selected_features = None
-    if os.path.exists(feature_list_path):
-        import joblib
-        selected_features = joblib.load(feature_list_path)
-        
-    for ticker, raw_df in data_dict.items():
-        inspection = inspect_stock(ticker, preloaded_df=raw_df)
-        if not inspection: 
-            continue 
-            
-        processed_df = inspection["計算後資料"]
-        latest_row = processed_df.iloc[-1]
-        regime = latest_row.get('Regime', '區間盤整')
-        
-        proba = 0.0
-        if regime in ai_models and ai_models[regime] is not None:
-            features_dict = extract_ai_features(latest_row)
-            X_input = pd.DataFrame([features_dict])
-            
-            # 🌟 補強 1：實戰時動態重建「連擊武器 (Combo Features)」
-            if selected_features is not None:
-                # 掃描並即時組合出兵工廠研發的 "_X_" 連擊大招
-                for col in selected_features:
-                    if "_X_" in col:
-                        parts = col.split("_X_")
-                        if len(parts) == 2:
-                            w1, w2 = parts[0], parts[1]
-                            # 如果這兩個單一武器都在，就在實戰中把他們相乘還原連擊
-                            if w1 in X_input.columns and w2 in X_input.columns:
-                                X_input[col] = X_input[w1] * X_input[w2]
-                
-                # 強制對齊順序，並將缺失值補 0
-                X_input = X_input.reindex(columns=selected_features).fillna(0)
-            
-            try:
-                model = ai_models[regime]
-                if len(model.classes_) > 1:
-                    proba = model.predict_proba(X_input)[0][1]
-                else:
-                    proba = 0.0 
-            except Exception as e:
-                log(f"⚠️ {ticker} 預測發生異常: {e}")
-        
-        structure, confidence, risk = analyze_signal(latest_row, proba)
-        
-        try:
-            hist_win_rate = float(inspection.get("系統勝率(%)", 50)) / 100.0
-        except:
-            hist_win_rate = 0.5 
-            
-        # ==========================================
-        # 🌟 修復 1：真正植入「戰術淘汰防護網 (KILL Switch)」
-        # ==========================================
-        setup_tag = inspection.get("陣型標籤", "傳統訊號")
-        health_status, health_msg = check_strategy_health(setup_tag)
-        
-        # 預先抓取凱利資金配比
-        kelly_pct = inspection.get("建議倉位(%)", 0)
-        
-        # 💀 如果戰術被判定失效，強制沒收預算，並竄改風險標籤！
-        if health_status == "KILL":
-            kelly_pct = 0
-            risk = f"💀 戰術失效阻斷 ({health_msg})"
-            
-        # 計算最終綜合決策分
-        final_score = (proba * 0.5) + (confidence * 0.3) + (hist_win_rate * 0.2)
-
-        # 🌟 提取這檔股票究竟是買訊還是賣訊
-        status_light = inspection.get("今日系統燈號", "觀望")
-        is_short = "賣訊" in status_light
-        trade_dir = "放空(Short)" if is_short else "做多(Long)"
-
-        # ==========================================
-        # 🔥 終極升級：期望值 (EV) 審查閘門
-        # ==========================================
-        # 假設您的常規武器設定為：停利 6%，停損 3% (您可依據真實參數微調)
-        avg_win_pct = 0.06  
-        avg_loss_pct = 0.03 
-
-        win_rate = proba
-        loss_rate = 1.0 - win_rate
-        # 公式：(勝率 × 賺的幅度) - (敗率 × 賠的幅度)
-        expected_value = (win_rate * avg_win_pct) - (loss_rate * avg_loss_pct)
-
-        # ==========================================
-        # 🎯 隱藏大招：觸發「黃金狙擊模式」 (重倉授權)
-        # ==========================================
-        is_sniper_mode = False
-        # 條件：物理分數高 + 勝率極高 + 期望值極大
-        if final_score >= 7.0 and proba >= 0.65 and expected_value >= 0.025:
-            is_sniper_mode = True
-            log(f"   🎯 [黃金狙擊啟動] {ticker} 滿足終極重壓條件！勝率 {proba:.0%} | EV {expected_value:.2%}")
-            kelly_pct = min(kelly_pct * 2.0, 0.30) # 資金配比翻倍，但單筆不超過總資金 30%防呆
-            structure = "🎯 [狙擊] " + structure
-
-        # 🌟 嚴格過濾：一定要有方向性，且「期望值必須 > 0」才准寫入決策桌！
-        if final_score > 0 and "觀望" not in status_light:
-            if expected_value > 0:
-                results.append({
-                    "Ticker": ticker,
-                    "Direction": trade_dir, 
-                    "AI_Proba": proba,
-                    "EV": expected_value, # 🎯 寫入真實的期望值
-                    "Structure": structure,
-                    "Risk": risk,
-                    "Hist_Win_Rate": hist_win_rate, 
-                    "Score": final_score,
-                    "Kelly_Pos": float(kelly_pct) * global_risk_multiplier, # 🎯 加入 float() 防呆並算入風險 
-                    "Raw_Kelly": kelly_pct # 保留原始 AI 建議，供戰後檢討
-                })
-            else:
-                # 🛑 物理阻斷：擋下「勝率高但期望值為負」的爛訊號
-                log(f"🛑 [物理阻斷] {ticker} 勝率雖有 {win_rate:.0%}，但期望值為負 ({expected_value:.2%})，長線必虧，取消授權！")
-
-    if not results: return pd.DataFrame()
-    return pd.DataFrame(results).sort_values("Score", ascending=False)
-
-# ==========================================
-# 🌍 終極拼圖：大盤氣候濾網 (Market Climate Filter)
-# ==========================================
 def analyze_market_climate():
-    """分析台灣加權指數 (^TWII) 判定總體系統性風險，並輸出資金降載係數"""
-    log("🌍 啟動大盤氣象雷達 (^TWII) 探測總體系統風險...")
     try:
-        # 抓取大盤資料 (完美利用我們之前寫好的智慧快取)
-        twii_df = smart_download("^TWII", period="1y")
-        if twii_df.empty:
-            return "數據中斷", 1.0
+        twii = yf.download("^TWII", period="6mo", progress=False, auto_adjust=False)
+        if twii.empty:
+            return "未知", 1.0
 
-        twii_df.dropna(subset=['Close'], inplace=True)
-        close = twii_df['Close'].iloc[-1]
-        
-        # 計算月線(20)與季線(60)作為多空生命線
-        ma20 = twii_df['Close'].rolling(20).mean().iloc[-1]
-        ma60 = twii_df['Close'].rolling(60).mean().iloc[-1]
+        if isinstance(twii.columns, pd.MultiIndex):
+            twii = twii.xs("^TWII", axis=1, level=1).copy()
 
-        # 氣候矩陣判定與「系統性資金降載係數」
-        if close > ma20 and close > ma60:
-            climate = "🌞 萬里無雲 (強勢多頭 - 均線之上)"
-            risk_multiplier = 1.0  # 天氣大好，允許 100% 火力全開
-            
-        elif close < ma20 and close < ma60:
-            climate = "⛈️ 狂風暴雨 (強勢空頭 - 均線之下)"
-            risk_multiplier = 0.3  # 空頭崩盤，所有多單預算強制只剩 30%！
-            
-        elif close > ma60 and close < ma20:
-            climate = "⛅ 陰晴不定 (多頭回檔 - 跌破月線)"
-            risk_multiplier = 0.6  # 漲多回檔，資金降載至 60%
-            
+        twii["MA20"] = twii["Close"].rolling(20).mean()
+        twii["MA60"] = twii["Close"].rolling(60).mean()
+
+        latest = twii.iloc[-1]
+        climate = "中性"
+        risk_multiplier = 1.0
+
+        if latest["Close"] > latest["MA20"] > latest["MA60"]:
+            climate = "多頭順風"
+            risk_multiplier = 1.0
+            log("🌤️ 大盤氣候判定：多頭順風，允許標準火力。")
+        elif latest["Close"] < latest["MA20"] < latest["MA60"]:
+            climate = "空頭逆風"
+            risk_multiplier = 0.5
+            log("⛈️ 大盤氣候判定：空頭逆風，系統自動降載 50%。")
         else:
-            climate = "🌫️ 大霧瀰漫 (區間震盪 - 均線糾結)"
-            risk_multiplier = 0.5  # 方向不明，資金減半防雙巴
-
-        log(f"   ► 目前大盤指數: {close:,.0f} 點")
-        log(f"   ► 季線(MA60)防守點: {ma60:,.0f} 點")
-        log(f"   ► 今日氣候判定: {climate}")
-        if risk_multiplier < 1.0:
-            log(f"   🚨 觸發防禦機制：大環境不佳，全軍部位強制降載至 {risk_multiplier * 100:.0f}%")
-        else:
-            log(f"   🚀 大環境極佳：系統未觸發降載，允許全火力推進！")
+            climate = "震盪盤"
+            risk_multiplier = 0.75
+            log("🌫️ 大盤氣候判定：震盪盤，系統保守降載 25%。")
 
         return climate, risk_multiplier
-        
     except Exception as e:
         log(f"⚠️ 大盤探測發生異常: {e}")
         return "未知", 1.0
 
 
+def build_decision_desk(watch_list, market_data, global_risk_multiplier):
+    ai_models = {}
+    selected_features = []
+
+    if os.path.exists("models/selected_features.pkl"):
+        try:
+            selected_features = joblib.load("models/selected_features.pkl")
+        except Exception as e:
+            log(f"⚠️ 特徵檔載入失敗：{e}")
+
+    for regime in ["趨勢多頭", "區間盤整", "趨勢空頭"]:
+        model_path = f"models/model_{regime}.pkl"
+        if os.path.exists(model_path):
+            try:
+                ai_models[regime] = joblib.load(model_path)
+            except Exception as e:
+                log(f"⚠️ {regime} 模型載入失敗：{e}")
+
+    rows = []
+    for ticker in watch_list:
+        if ticker not in market_data:
+            continue
+
+        df = market_data[ticker]
+        result = inspect_stock(ticker, preloaded_df=df)
+        if not result or "計算後資料" not in result:
+            continue
+
+        latest_row = result["計算後資料"].iloc[-1]
+        regime = result.get("Regime", latest_row.get("Regime", "區間盤整"))
+        score = result.get("期望值", 0.0)
+        hist_win = result.get("系統勝率(%)", 50.0) / 100
+
+        setup_tag = result.get("Golden_Type", "無")
+        if setup_tag == "無":
+            continue
+
+        model = ai_models.get(regime)
+        proba = hist_win
+        if model is not None:
+            try:
+                features_dict = extract_ai_features(latest_row)
+                if selected_features:
+                    X_input = pd.DataFrame([{f: features_dict.get(f, 0) for f in selected_features}])
+                else:
+                    X_input = pd.DataFrame([features_dict])
+                proba = float(model.predict_proba(X_input)[0][1])
+            except Exception as e:
+                log(f"⚠️ {ticker} AI 預測失敗，改用歷史勝率: {e}")
+                proba = hist_win
+
+        action = "做多(Long)" if "多" in setup_tag else "做空(Short)"
+        health_status, health_note = check_strategy_health(setup_tag)
+        base_kelly = max(0.0, min(0.2, (proba - 0.5) * 0.4 + max(0, score) * 0.05))
+        final_kelly = 0.0 if health_status == "KILL" else round(base_kelly * global_risk_multiplier, 4)
+
+        rows.append({
+            "Ticker": ticker,
+            "Direction": action,
+            "Regime": regime,
+            "Structure": setup_tag,
+            "AI_Proba": round(proba, 4),
+            "Hist_WinRate": round(hist_win, 4),
+            "EV": round(score, 4),
+            "Kelly_Pos": final_kelly,
+            "Score": round((proba * 0.6 + hist_win * 0.4), 4),
+            "Risk": health_note,
+            "Health": health_status,
+        })
+
+    df_report = pd.DataFrame(rows)
+    if not df_report.empty:
+        df_report.sort_values(["Kelly_Pos", "AI_Proba", "Hist_WinRate"], ascending=False, inplace=True)
+    df_report.to_csv("daily_decision_desk.csv", index=False, encoding="utf-8-sig")
+    log("💾 報告已同步儲存至 daily_decision_desk.csv")
+    return df_report
+
+
 def main():
     start_time = time.time()
-    # 🌟 取得今天是星期幾 (5 是週六，6 是週日)
     is_weekend = datetime.now().weekday() >= 5
 
-    log("\n" + "="*60)
+    log("\n" + "=" * 60)
     log("⚙️ HFA 全自動研究與訓練管線 (Auto-MLOps) 啟動")
-    log("="*60)
+    log("=" * 60)
 
-    # ==========================================
-    # 第一階段：每天必跑的「資料更新」
-    # ==========================================
     if is_weekend:
         log("\n⏳ 階段：資料更新 (⚠️ 今日為週末休市，跳過 API 爬蟲，節省資源！)")
     else:
@@ -448,14 +318,11 @@ def main():
             generate_report(start_time, "FAILED")
             return
 
-    # ==========================================
-    # 第二階段：智慧分流 (判斷是否重訓，並拔除舊版優化器)
-    # ==========================================
     if should_retrain():
         log("\n🧠 智慧決策：啟動兵工廠與精神時光屋 (AI 深度學習模式)")
         training_pipeline = [
-            ("ml_data_generator.py", "特徵生成 (製作 AI 雙向訓練課本)"),
-            ("ml_trainer.py", "模型訓練 (鍛造多空盤整三核心大腦)")
+            ("ml_data_generator.py", "特徵生成"),
+            ("ml_trainer.py", "模型訓練"),
         ]
         for script, desc in training_pipeline:
             log(f"\n⏳ 階段：{desc}")
@@ -463,8 +330,7 @@ def main():
                 log("🛑 AI 訓練發生異常，管線中斷！")
                 generate_report(start_time, "FAILED")
                 return
-                
-        # 驗證新大腦是否順利產出
+
         log("\n🔍 開始嚴格驗證兵工廠輸出結果...")
         if not validate_outputs():
             log("🛑 裝備檢查失敗，請勿執行實戰機台！")
@@ -472,84 +338,52 @@ def main():
             return
     else:
         log("\n⚡ 智慧決策：今日勝率穩定且非大保養日，【跳過 AI 重訓】，直接使用現役大腦！")
-        
-    generate_report(start_time, "SUCCESS")
 
-    # ==========================================
-    # 第三階段：🌟 直接在當前視窗進行戰情播報！
-    # ==========================================
-    log("\n" + "="*70)
+    log("\n" + "=" * 70)
     log(f"📊 {datetime.now().strftime('%Y-%m-%d')} 戰情決策桌生成中...")
-    log("="*70)
+    log("=" * 70)
 
-    # 🌟 啟動大盤氣候濾網，取得環境係數
     climate_status, global_risk_multiplier = analyze_market_climate()
-    log("="*70)
+    log(f"🌍 市場氣候：{climate_status} | 風險倍率：{global_risk_multiplier:.2f}")
 
-    # 載入現役大腦
-    ai_models = {}
-    for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
-        model_path = f"models/model_{regime}.pkl"
-        if os.path.exists(model_path):
-            ai_models[regime] = joblib.load(model_path)
-
-    # ==========================================
-    # 🌟 啟動動態索敵 (Fail-Fast 機制)
-    # ==========================================
     try:
         watch_list = get_dynamic_watchlist()
-    except Exception as e:
-        # 🛑 只要雷達報錯，直接寫入失敗日誌，並「強制中斷」整個管線！
-        log("🛑 [系統中斷] 動態名單獲取失敗，為保護資金安全，今日戰情管線強制關閉，請立即修復資料庫！")
+    except Exception:
         generate_report(start_time, "FAILED")
-        return  # 🌟 程式在這裡直接結束，絕對不會往下執行買賣！
+        return
 
-    data_dict = load_market_data(watch_list)
-    
-    # 🌟 修復：把大盤風險係數傳進去給它用！
-    df_report = generate_advanced_report(data_dict, ai_models, global_risk_multiplier)
+    market_data = load_market_data(watch_list)
+    df_report = build_decision_desk(watch_list, market_data, global_risk_multiplier)
 
-    if df_report.empty:
-        log("📭 今日無符合進場結構之標的。")
-    else:
-        # 設定您的總資金 (例如：5000萬台幣)
-        TOTAL_CAPITAL = 50000000
-        
-        for i, row in df_report.head(10).iterrows():
-            proba = row['AI_Proba']
-            hist_win = row['Hist_Win_Rate']
-            
-            strength = "🔥 強烈建議" if row['Score'] >= 0.60 else "⚡ 伺機而動" if row['Score'] >= 0.50 else "🟡 觀望"
-
-            # 🌟 核心修復：因為 df_report 裡面已經降載過了，這裡直接取用 Kelly_Pos 即可，不可重複相乘！
-            final_allocation_pct = row['Kelly_Pos'] 
+    if not df_report.empty:
+        TOTAL_CAPITAL = 10_000_000
+        for _, row in df_report.head(20).iterrows():
+            final_allocation_pct = row["Kelly_Pos"]
             target_amount = TOTAL_CAPITAL * final_allocation_pct
 
             log(f"🎯 標的: {row['Ticker']}")
-            log(f"   ► AI 勝率預測: {proba:.1%} | 歷史回測勝率: {hist_win:.1%} | 綜合決策分: {row['Score']:.2f}")
+            log(f"   ► AI 勝率預測: {row['AI_Proba']:.1%} | 歷史回測勝率: {row['Hist_WinRate']:.1%} | 綜合決策分: {row['Score']:.2f}")
             log(f"   ► 戰略結構: {row['Structure']}")
             log(f"   ► 風險評估: {row['Risk']}")
-            log(f"   ► 系統判定: {strength}")
             if final_allocation_pct > 0:
                 msg = f"   💰 最終資金指派: 建議配置總資金的 {final_allocation_pct:.1%} (約 ${target_amount:,.0f} 元)"
                 if global_risk_multiplier < 1.0:
-                    msg += f" [⚠️ 已受大盤降載保護]"
+                    msg += " [⚠️ 已受大盤降載保護]"
                 log(msg)
             else:
-                log(f"   💰 資金控管: 數學期望值過低，建議極小資金試單或空手")
+                log("   💰 資金控管: 數學期望值過低，建議極小資金試單或空手")
             log("-" * 50)
-            
-        df_report.to_csv("daily_decision_desk.csv", index=False)
-        log("💾 報告已同步儲存至 daily_decision_desk.csv")
+    else:
+        log("⚠️ 今日沒有合格標的產出。")
 
-    # ==========================================
-    # 🌟 第四階段：執行全自動結算與下單中心
-    # ==========================================
+    generate_report(start_time, "SUCCESS")
+
     if not is_weekend:
         log("\n⏳ 階段：呼叫自動下單機進行帳戶結算與模擬建倉...")
         run_script("live_paper_trading.py")
 
+
 if __name__ == "__main__":
     import warnings
-    warnings.filterwarnings('ignore') 
+    warnings.filterwarnings("ignore")
     main()
