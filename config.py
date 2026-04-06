@@ -121,7 +121,10 @@ FINANCE_PARAMS.update({
     "MIN_RR_RATIO": 1.2,            # 金融股肉不多，風報比要求可稍微降低
     "MDD_LIMIT": 0.10               # 金融股如果回撤 10% 通常代表大盤要崩了，提早熔斷
 })
-
+# ==========================================
+# 🔐 系統核心金鑰區
+# ==========================================
+FINMIND_API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wNC0wNiAxNDo0OTozNyIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMTEwLjI4LjUwLjE4NyJ9.Xf_ioecEyOt6LmILfaF7TVkCPDY8G72y2w9au6zBIAY"
 # ==========================================
 # 🎯 終極實戰與訓練觀察清單 (全局統一管理)
 # ==========================================

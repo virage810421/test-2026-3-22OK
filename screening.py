@@ -7,7 +7,7 @@ import numpy as np
 import pyodbc 
 from advanced_chart import draw_chart
 from FinMind.data import DataLoader
-from config import PARAMS, WATCH_LIST
+from config import PARAMS, WATCH_LIST, FINMIND_API_TOKEN
 from strategies import get_active_strategy  # 🌟 讓回測引擎也能呼叫四大艦隊
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
@@ -17,8 +17,8 @@ warnings.filterwarnings('ignore', message=".*scikit-learn configuration.*")
 # ==========================================
 # ⚡️ 初始化 DataLoader 與資料庫連線設定
 # ==========================================
-API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wNC0wMSAxMDo1MDoyOCIsInVzZXJfaWQiOiJob25kYSIsImlwIjoiMTI1LjIyNC4xNDguMjM2IiwiZXhwIjoxNzc1NjE2NjI4fQ.803KvO4-3l9K0lDcfzAoTGl78i-YUIrBX75useoNq_Q"
-dl = DataLoader(token=API_TOKEN)
+# 🔐 金鑰已交由 config.py 中央安全控管
+dl = DataLoader(token=FINMIND_API_TOKEN)
 
 DB_CONN_STR = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
