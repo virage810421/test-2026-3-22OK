@@ -26,7 +26,7 @@ DB_CONN_STR = (
 TABLE_NAME = "daily_chip_data"
 CSV_FILENAME = "daily_chip_data_backup.csv"
 
-DAYS_TO_FETCH = 10
+DAYS_TO_FETCH = 5
 SKIP_WEEKEND = False
 SLEEP_BETWEEN_STOCKS = 0.8
 ENABLE_BACKUP_SOURCE = True
@@ -1005,11 +1005,11 @@ def main_scheduler():
     if run_monthly_revenue:
         print("\n🟢 [月更雷達] 目前為營收公佈期 (1~12號)，準備啟動【月營收】雙引擎...")
         try:
-            from insert_finmind_revenue import step3_download_revenue_to_csv, step4_import_revenue_to_sql
+            from monthly_revenue_simple import step3_download_revenue_to_csv, step4_import_revenue_to_sql
             step3_download_revenue_to_csv()
             step4_import_revenue_to_sql()
         except ImportError:
-            print("⚠️ 找不到營收模組 (insert_finmind_revenue.py)，請確認檔案是否放在一起。")
+            print("⚠️ 找不到營收模組 (monthly_revenue_simple.py)，請確認檔案是否放在一起。")
         except Exception as e:
             print(f"❌ 月營收模組發生異常：{e}")
     else:

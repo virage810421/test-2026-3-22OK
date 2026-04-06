@@ -20,9 +20,9 @@ DB_CONN_STR = (
     r"Trusted_Connection=yes;"
 )
 
-TABLE_NAME = "stock_revenue_industry_tw"
+TABLE_NAME = "monthly_revenue_simple"
 
-CSV_OUTPUT = "stock_revenue_industry_tw.csv"
+CSV_OUTPUT = "monthly_revenue_simple.csv"
 CSV_STOCK_CACHE = "stock_list_cache_listed.csv"
 
 HEADERS = {

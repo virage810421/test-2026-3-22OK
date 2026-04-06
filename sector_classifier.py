@@ -1,128 +1,130 @@
-import yfinance as yf
-import json
-import os
-import time
+import pyodbc
+import pandas as pd
 
 # =========================================================
-# 快取檔設定
+# ⚙️ 資料庫連線設定
 # =========================================================
-CACHE_FILE = "sector_cache.json"
+DB_CONN_STR = (
+    r"DRIVER={ODBC Driver 17 for SQL Server};"
+    r"SERVER=localhost;"
+    r"DATABASE=股票online;"
+    r"Trusted_Connection=yes;"
+)
+
+# 建立一個記憶體快取，只要啟動時去 SQL 拿一次資料，後續查詢全部 0 秒回傳
+_SQL_SECTOR_CACHE = None
 
 # =========================================================
-# 讀取快取
+# 🎯 核心對照字典 (特殊股票強制覆寫)
 # =========================================================
-def load_cache():
-    if os.path.exists(CACHE_FILE):
-        try:
-            with open(CACHE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"⚠️ 快取檔讀取失敗，將重新建立: {e}")
-            return {}
-    return {}
+# 景氣循環股通常混在光電與半導體中，我們用代號直接強制標記，確保風控獨立
+CYCLICAL_TICKERS = {"2409.TW", "3481.TW", "6116.TW", "2344.TW", "2408.TW", "2337.TW"}
 
-# =========================================================
-# 寫入快取
-# =========================================================
-def save_cache(cache):
+def load_sql_sectors():
+    """從 SQL 讀取官方產業名稱，並轉換為 6 大艦隊標籤"""
+    global _SQL_SECTOR_CACHE
+    
+    # 如果已經載入過，就直接回傳，極大化效能
+    if _SQL_SECTOR_CACHE is not None:
+        return _SQL_SECTOR_CACHE
+
+    _SQL_SECTOR_CACHE = {}
+    
     try:
-        with open(CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump(cache, f, indent=4, ensure_ascii=False)
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            # 撈取不重複的股票與產業名稱
+            sql = """
+                SELECT DISTINCT [Ticker SYMBOL], [產業類別名稱]
+                FROM stock_revenue_industry_tw
+                WHERE [產業類別名稱] IS NOT NULL
+            """
+            df = pd.read_sql(sql, conn)
+
+            for _, row in df.iterrows():
+                ticker = str(row['Ticker SYMBOL']).strip()
+                ind_name = str(row['產業類別名稱']).strip()
+
+                # 🌟 1. 優先判定：特殊景氣循環股強制獨立
+                if ticker in CYCLICAL_TICKERS:
+                    cat = "CYCLICAL"
+                    
+                # 🌟 2. 金融艦隊
+                elif ind_name in ["金融保險業"]:
+                    cat = "FINANCE"
+                    
+                # 🌟 3. 航運艦隊
+                elif ind_name in ["航運業"]:
+                    cat = "SHIPPING"
+                    
+                # 🌟 4. 生技艦隊 (新增！)
+                elif ind_name in ["生技醫療業", "農業科技業"]:
+                    cat = "BIO"
+                    
+                # 🌟 5. 科技艦隊
+                elif ind_name in ["半導體業", "電腦及週邊設備業", "光電業", "通信網路業", 
+                                  "電子零組件業", "電子通路業", "資訊服務業", "其他電子業", "數位雲端"]:
+                    cat = "TECH"
+                    
+                # 🌟 6. 傳產與其他艦隊 (水泥、鋼鐵、電機、食品等...)
+                else:
+                    cat = "OTHERS"
+
+                # 存入記憶體快取
+                _SQL_SECTOR_CACHE[ticker] = cat
+
+        print(f"✅ 成功從 SQL 載入並分類 {len(_SQL_SECTOR_CACHE)} 檔股票產業標籤！")
+
     except Exception as e:
-        print(f"⚠️ 快取檔寫入失敗: {e}")
+        print(f"⚠️ SQL 產業分類讀取失敗: {e}")
+        _SQL_SECTOR_CACHE = {}
+
+    return _SQL_SECTOR_CACHE
 
 # =========================================================
-# 股票產業分類函式
+# 🏷️ 單一查詢函式 (無縫接軌您原本的主程式)
 # =========================================================
 def get_stock_sector(ticker):
     """
-    自動連線查詢股票所屬產業，並進行分類歸檔
-    回傳:
-        TECH / FINANCE / SHIPPING / OTHERS
+    極速版：直接從 SQL 載入的記憶體中查詢分類
     """
-    cache = load_cache()
-
-    # 1. 先查快取
-    if ticker in cache:
-        print(f"📦 使用快取: {ticker} -> {cache[ticker]}")
-        return cache[ticker]
-
-    # 2. 若快取沒有，再查網路
-    try:
-        print(f"🔍 正在網路查詢 {ticker} 的公司業務與所屬產業...")
-        stock = yf.Ticker(ticker)
-        info = stock.info
-
-        sector = str(info.get("sector", "")).strip()
-        industry = str(info.get("industry", "")).strip()
-
-        print(f"   sector   = {sector}")
-        print(f"   industry = {industry}")
-
-        # 3. 分類邏輯
-        if (
-            "Technology" in sector
-            or "Semiconductor" in industry
-            or "Electronic" in industry
-            or "Electronics" in industry
-        ):
-            cat = "TECH"
-
-        elif (
-            "Financial" in sector
-            or "Bank" in industry
-            or "Insurance" in industry
-            or "Capital Markets" in industry
-        ):
-            cat = "FINANCE"
-
-        elif (
-            "Marine Shipping" in industry
-            or "Shipping" in industry
-            or "Transportation" in sector
-            or "Logistics" in industry
-        ):
-            cat = "SHIPPING"
-
-        else:
-            cat = "OTHERS"
-
-        # 4. 寫入快取
-        cache[ticker] = cat
-        save_cache(cache)
-
-        print(f"✅ 分類完成: {ticker} -> {cat}")
-        return cat
-
-    except Exception as e:
-        print(f"⚠️ 無法取得 {ticker} 產業資訊: {e}")
-        return "OTHERS"
+    cache = load_sql_sectors()
+    
+    # 如果 SQL 裡面真的找不到這檔（例如剛上市沒營收的），預設丟去 OTHERS
+    return cache.get(ticker, "OTHERS")
 
 # =========================================================
-# 批量分類函式
+# 🏷️ 批量查詢函式
 # =========================================================
-def classify_tickers(ticker_list, sleep_sec=0.5):
+def classify_tickers(ticker_list, sleep_sec=0):
+    """
+    極速批量查詢（因為是從記憶體讀，完全不需要 sleep 等待了！）
+    """
+    cache = load_sql_sectors()
     result = {}
     for ticker in ticker_list:
-        category = get_stock_sector(ticker)
-        result[ticker] = category
-        time.sleep(sleep_sec)  # 避免查太快被擋
+        result[ticker] = cache.get(ticker, "OTHERS")
     return result
 
 # =========================================================
-# 主程式測試
+# 🚀 裝備測試驗收區
 # =========================================================
 if __name__ == "__main__":
+    print("==================================================")
+    print("啟動極速本地 SQL 貼標機測試...")
+    print("==================================================")
+    
     test_tickers = [
-        "2330.TW",   # 台積電
-        "2317.TW",   # 鴻海
-        "2881.TW",   # 富邦金
-        "2603.TW",   # 長榮
-        "0050.TW"    # ETF，可能會進 OTHERS
+        "2330.TW",   # 台積電 (半導體 -> TECH)
+        "2881.TW",   # 富邦金 (金融保險 -> FINANCE)
+        "2603.TW",   # 長榮 (航運業 -> SHIPPING)
+        "6472.TW",   # 保瑞 (生技醫療 -> BIO)
+        "2409.TW",   # 友達 (強制覆寫 -> CYCLICAL)
+        "2002.TW",   # 中鋼 (鋼鐵工業 -> OTHERS)
     ]
 
+    # 瞬間完成分類
     result = classify_tickers(test_tickers)
 
     print("\n================ 分類結果 ================ ")
     for ticker, category in result.items():
-        print(f"{ticker} -> {category}")
+        print(f"🎯 {ticker.ljust(8)} 👉 歸建【{category}】艦隊")
