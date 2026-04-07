@@ -54,10 +54,6 @@ def normalize_ticker_symbol(ticker: str, default_suffix: str = ".TW") -> str:
 
 
 def smart_download(ticker, period="1y"):
-    """
-    一天只抓一次 API，其餘時間秒讀快取。
-    假日自動讀取週五快取，達成真正的零消耗。
-    """
     ticker = normalize_ticker_symbol(ticker)
     os.makedirs("data/kline_cache", exist_ok=True)
     safe_name = ticker.replace("/", "_")
@@ -125,6 +121,11 @@ def extract_ai_features(row):
     ]:
         features[key] = int(row.get(key, 0))
 
+    features["Weighted_Buy_Score"] = float(row.get("Weighted_Buy_Score", 0))
+    features["Weighted_Sell_Score"] = float(row.get("Weighted_Sell_Score", 0))
+    features["Score_Gap"] = float(row.get("Score_Gap", 0))
+    features["Signal_Conflict"] = int(row.get("Signal_Conflict", 0))
+
     features["Trap_Signal"] = 1 if row.get("Fake_Breakout", False) else (-1 if row.get("Bear_Trap", False) else 0)
     features["Vol_Squeeze"] = int(row.get("Vol_Squeeze", False))
     features["Absorption"] = int(row.get("Absorption", False))
@@ -155,9 +156,6 @@ def extract_ai_features(row):
 
 
 def add_chip_data(df, ticker):
-    """
-    從本地 SQL 讀取籌碼資料。優先查標準 ticker，不到再查另一種尾碼。
-    """
     if df is None or df.empty:
         return pd.DataFrame()
 
@@ -265,10 +263,52 @@ def calculate_pnl(direction, entry_price, exit_price, shares, fee_rate, tax_rate
     return pnl, invested
 
 
+def _get_score_weights(p=PARAMS):
+    return {
+        "c2_rsi": float(p.get("W_C2_RSI", 0.5)),
+        "c3_volume": float(p.get("W_C3_VOLUME", 0.5)),
+        "c4_macd": float(p.get("W_C4_MACD", 1.5)),
+        "c5_boll_reversal": float(p.get("W_C5_BOLL", 0.5)),
+        "c6_bbi": float(p.get("W_C6_BBI", 2.0)),
+        "c7_foreign": float(p.get("W_C7_FOREIGN", 0.7)),
+        "c8_dmi_adx": float(p.get("W_C8_DMI_ADX", 2.0)),
+        "c9_total_ratio": float(p.get("W_C9_TOTAL_RATIO", 0.3)),
+    }
+
+
+def _apply_weighted_scores(df, p=PARAMS):
+    weights = _get_score_weights(p)
+
+    df["Weighted_Buy_Score"] = (
+        df["buy_c2"] * weights["c2_rsi"] +
+        df["buy_c3"] * weights["c3_volume"] +
+        df["buy_c4"] * weights["c4_macd"] +
+        df["buy_c5"] * weights["c5_boll_reversal"] +
+        df["buy_c6"] * weights["c6_bbi"] +
+        df["buy_c7"] * weights["c7_foreign"] +
+        df["buy_c8"] * weights["c8_dmi_adx"] +
+        df["buy_c9"] * weights["c9_total_ratio"]
+    )
+
+    df["Weighted_Sell_Score"] = (
+        df["sell_c2"] * weights["c2_rsi"] +
+        df["sell_c3"] * weights["c3_volume"] +
+        df["sell_c4"] * weights["c4_macd"] +
+        df["sell_c5"] * weights["c5_boll_reversal"] +
+        df["sell_c6"] * weights["c6_bbi"] +
+        df["sell_c7"] * weights["c7_foreign"] +
+        df["sell_c8"] * weights["c8_dmi_adx"] +
+        df["sell_c9"] * weights["c9_total_ratio"]
+    )
+
+    df["Score_Gap"] = df["Weighted_Buy_Score"] - df["Weighted_Sell_Score"]
+    return df
+
+
 def _assign_golden_type(df, trigger_score):
-    trigger = max(2, trigger_score)
-    buy_active = df["Buy_Score"] >= trigger
-    sell_active = df["Sell_Score"] >= trigger
+    trigger = max(2.0, float(trigger_score))
+    buy_active = df["Weighted_Buy_Score"] >= trigger
+    sell_active = df["Weighted_Sell_Score"] >= trigger
 
     df["Signal_Conflict"] = (buy_active & sell_active).astype(int)
     df["Golden_Type"] = "無"
@@ -280,19 +320,14 @@ def _assign_golden_type(df, trigger_score):
     df.loc[long_only, "Golden_Type"] = "多方進場"
     df.loc[short_only, "Golden_Type"] = "空方進場"
 
-    # 雙向同時觸發時，分數高者勝出；同分則視為衝突無效
-    df.loc[both & (df["Buy_Score"] > df["Sell_Score"]), "Golden_Type"] = "多方進場"
-    df.loc[both & (df["Sell_Score"] > df["Buy_Score"]), "Golden_Type"] = "空方進場"
-    df.loc[both & (df["Buy_Score"] == df["Sell_Score"]), "Golden_Type"] = "無"
+    df.loc[both & (df["Weighted_Buy_Score"] > df["Weighted_Sell_Score"]), "Golden_Type"] = "多方進場"
+    df.loc[both & (df["Weighted_Sell_Score"] > df["Weighted_Buy_Score"]), "Golden_Type"] = "空方進場"
+    df.loc[both & (df["Weighted_Buy_Score"] == df["Weighted_Sell_Score"]), "Golden_Type"] = "無"
 
     return df
 
 
 def _compute_realized_signal_stats(df, p=PARAMS, hold_days=5):
-    """
-    以歷史訊號的已實現結果估算勝率 / EV，不再用分數公式硬推。
-    這裡不是完整交易引擎，但至少是根據歷史訊號落地後的真實結果計算。
-    """
     fee_rate = float(p.get("FEE_RATE", 0.001425)) * float(p.get("FEE_DISCOUNT", 1.0))
     tax_rate = float(p.get("TAX_RATE", 0.003))
     min_samples = int(p.get("MIN_SIGNAL_SAMPLE_SIZE", 8))
@@ -310,8 +345,6 @@ def _compute_realized_signal_stats(df, p=PARAMS, hold_days=5):
         }
 
     realized_returns = []
-    entry_dates = []
-
     valid_df = df.copy().reset_index().rename(columns={df.index.name or "index": "TradeDate"})
 
     for i in range(1, len(valid_df) - hold_days):
@@ -327,17 +360,10 @@ def _compute_realized_signal_stats(df, p=PARAMS, hold_days=5):
 
         direction = 1 if setup == "多方進場" else -1
         gross_ret = direction * ((float(exit_close) - float(entry_open)) / float(entry_open))
-
-        if direction == 1:
-            net_ret = gross_ret - (2 * fee_rate + tax_rate)
-        else:
-            net_ret = gross_ret - (2 * fee_rate + tax_rate)
-
+        net_ret = gross_ret - (2 * fee_rate + tax_rate)
         realized_returns.append(float(net_ret * 100.0))
-        entry_dates.append(valid_df.loc[i, "TradeDate"])
 
     sample_size = len(realized_returns)
-
     if sample_size == 0:
         return {
             "系統勝率(%)": 50.0,
@@ -370,7 +396,6 @@ def _compute_realized_signal_stats(df, p=PARAMS, hold_days=5):
 
     safe_kelly = max(0.0, min(0.30, kelly_fraction * 0.5))
 
-    # 樣本太少時做保守收縮，避免剛好幾筆勝率就飆太高
     if sample_size < min_samples:
         shrink = sample_size / float(min_samples)
         win_rate = 50.0 + (win_rate - 50.0) * shrink
@@ -407,7 +432,6 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         if df.empty:
             return None
 
-        # RSI
         delta = df["Close"].diff()
         gain = delta.where(delta > 0, 0)
         loss = -delta.where(delta < 0, 0)
@@ -421,14 +445,12 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df["DZ_Upper"] = df["RSI_MA"] + (df["RSI_STD"] * 1.5)
         df["DZ_Lower"] = df["RSI_MA"] - (df["RSI_STD"] * 1.5)
 
-        # MACD
         df["EMA12"] = df["Close"].ewm(span=p["MACD_FAST"], adjust=False).mean()
         df["EMA26"] = df["Close"].ewm(span=p["MACD_SLOW"], adjust=False).mean()
         df["DIF"] = df["EMA12"] - df["EMA26"]
         df["MACD_Signal"] = df["DIF"].ewm(span=p["MACD_SIGNAL"], adjust=False).mean()
         df["MACD_Hist"] = (df["DIF"] - df["MACD_Signal"]) * 2
 
-        # Bollinger
         df["MA20"] = df["Close"].rolling(window=p["BB_WINDOW"]).mean()
         df["BB_std"] = df["Close"].rolling(window=p["BB_WINDOW"]).std()
         df["BB_Upper"] = df["MA20"] + (df["BB_std"] * p["BB_STD"])
@@ -436,7 +458,6 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df["BB_Width"] = (df["BB_Upper"] - df["BB_Lower"]) / df["MA20"]
         df["Vol_MA20"] = df["Volume"].rolling(window=p["VOL_WINDOW"]).mean()
 
-        # BBI
         bbi_cols = []
         for days in p["BBI_PERIODS"]:
             col_name = f"MA{days}"
@@ -444,7 +465,6 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             bbi_cols.append(df[col_name])
         df["BBI"] = sum(bbi_cols) / len(p["BBI_PERIODS"])
 
-        # DMI / ATR
         high_diff = df["High"].diff()
         low_diff = -df["Low"].diff()
         df["+DM"] = np.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0)
@@ -469,7 +489,7 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df["Foreign_Consecutive"] = df["Foreign_Net"].groupby((df["Foreign_Net"] <= 0).cumsum()).cumcount()
         df["Trust_Consecutive"] = df["Trust_Net"].groupby((df["Trust_Net"] <= 0).cumsum()).cumcount()
 
-        # Signals
+        # 原始條件訊號（保留給 AI 特徵）
         df["buy_c2"] = (df["RSI"] < 35).astype(int)
         df["buy_c3"] = (df["Volume"] > (df["Vol_MA20"] * p.get("VOL_BREAKOUT_MULTIPLIER", 1.1))).astype(int)
         df["buy_c4"] = ((df["MACD_Hist"] > 0) & (df["MACD_Hist"] > df["MACD_Hist"].shift(1))).astype(int)
@@ -488,8 +508,12 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         df["sell_c8"] = ((df["-DI14"] > df["+DI14"]) & (df["ADX14"] > p["ADX_TREND_THRESHOLD"])).astype(int)
         df["sell_c9"] = ((df["Total_Ratio"] < 0) & (df["Total_Ratio"] < df["Total_Ratio"].shift(1))).astype(int)
 
+        # 舊等權分數保留相容
         df["Buy_Score"] = df[[f"buy_c{i}" for i in range(2, 10)]].sum(axis=1)
         df["Sell_Score"] = df[[f"sell_c{i}" for i in range(2, 10)]].sum(axis=1)
+
+        # 新加權分數
+        df = _apply_weighted_scores(df, p=p)
 
         df["Fake_Breakout"] = ((df["High"] > df["BB_Upper"]) & (df["Close"] < df["BB_Upper"])).fillna(False)
         df["Bear_Trap"] = ((df["Low"] < df["BB_Lower"]) & (df["Close"] > df["BB_Lower"])).fillna(False)
@@ -503,18 +527,16 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         choices = ["趨勢多頭", "趨勢空頭"]
         df["Regime"] = np.select(conditions, choices, default="區間盤整")
 
-        df = _assign_golden_type(df, p.get("TRIGGER_SCORE", 1))
+        df = _assign_golden_type(df, p.get("TRIGGER_SCORE", 2))
         latest = df.iloc[-1]
 
         signal_stats = _compute_realized_signal_stats(df, p=p, hold_days=int(p.get("ML_LABEL_HOLD_DAYS", 5)))
         signal_count = int((df["Golden_Type"] != "無").sum())
 
-        signal_confidence = float(
-            max(0.0, min(
-                100.0,
-                50.0 + (float(latest["Buy_Score"]) - float(latest["Sell_Score"])) * 5.0
-            ))
-        )
+        # 新版信心分數：加權分數差值 + 衝突懲罰
+        weighted_gap = float(latest["Score_Gap"])
+        conflict_penalty = 10.0 if int(latest.get("Signal_Conflict", 0)) == 1 else 0.0
+        signal_confidence = float(max(0.0, min(100.0, 50.0 + weighted_gap * 12.0 - conflict_penalty)))
 
         return {
             "Ticker": ticker,
@@ -529,6 +551,9 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
             "Regime": latest["Regime"],
             "Buy_Score": int(latest["Buy_Score"]),
             "Sell_Score": int(latest["Sell_Score"]),
+            "Weighted_Buy_Score": round(float(latest["Weighted_Buy_Score"]), 3),
+            "Weighted_Sell_Score": round(float(latest["Weighted_Sell_Score"]), 3),
+            "Score_Gap": round(float(latest["Score_Gap"]), 3),
             "Golden_Type": latest["Golden_Type"],
             "Signal_Count": signal_count,
             "Signal_Conflict": int(latest.get("Signal_Conflict", 0)),
@@ -556,6 +581,7 @@ if __name__ == "__main__":
             print(
                 f"✅ {ticker} | Regime={result['Regime']} | "
                 f"Win={result['系統勝率(%)']}% | EV={result['期望值']} | "
+                f"WB={result['Weighted_Buy_Score']} | WS={result['Weighted_Sell_Score']} | "
                 f"Samples={result['歷史訊號樣本數']}"
             )
             try:
@@ -565,6 +591,8 @@ if __name__ == "__main__":
                     win_rate=result.get("系統勝率(%)", "N/A"),
                     total_profit=result.get("累計報酬率(%)", "N/A"),
                     expected_value=result.get("期望值", "N/A"),
+                    signal_confidence=result.get("訊號信心分數(%)", "N/A"),
+                    sample_size=result.get("歷史訊號樣本數", "N/A"),
                 )
             except Exception as chart_err:
                 print(f"⚠️ 畫圖失敗：{chart_err}")

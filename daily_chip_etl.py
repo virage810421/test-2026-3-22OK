@@ -28,7 +28,7 @@ TABLE_NAME = "daily_chip_data"
 CSV_FILENAME = "daily_chip_data_backup.csv"
 SCHEDULER_STATE_FILE = "daily_chip_scheduler_state.json"
 
-DAYS_TO_FETCH = 5
+DAYS_TO_FETCH = 10
 SLEEP_BETWEEN_STOCKS = 0.8
 ENABLE_BACKUP_SOURCE = True
 SAVE_EVERY_N_STOCKS = 50

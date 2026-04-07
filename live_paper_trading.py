@@ -1,18 +1,22 @@
 import warnings
-from datetime import datetime
-
-import pandas as pd
-import pyodbc
-import requests
-
-from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
-from config import PARAMS
-from strategies import get_active_strategy
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", message=".*pandas only supports SQLAlchemy.*")
 
+from datetime import datetime
+import requests
+import pandas as pd
+import pyodbc
+
+from config import PARAMS
+from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
+from strategies import get_active_strategy
+
+# ==========================================
+# ⚙️ 系統環境設定
+# ==========================================
 IS_TEST_MODE = True
+
 LINE_BOT_TOKEN = ""
 LINE_USER_ID = ""
 
@@ -22,7 +26,6 @@ DB_CONN_STR = (
     r"DATABASE=股票online;"
     r"Trusted_Connection=yes;"
 )
-
 
 
 def send_line_bot_msg(msg: str):
@@ -58,7 +61,6 @@ def send_line_bot_msg(msg: str):
         print(f"⚠️ LINE 網路發送發生例外錯誤: {e}")
 
 
-
 def get_available_cash(cursor) -> float:
     try:
         cursor.execute("SELECT [可用現金] FROM account_info WHERE [帳戶名稱] = N'我的實戰帳戶'")
@@ -83,6 +85,61 @@ def get_available_cash(cursor) -> float:
     return 5000000.0
 
 
+def _safe_float(x, default=0.0):
+    try:
+        if pd.isna(x):
+            return default
+        return float(x)
+    except Exception:
+        return default
+
+
+def _safe_int(x, default=0):
+    try:
+        if pd.isna(x):
+            return default
+        return int(float(x))
+    except Exception:
+        return default
+
+
+def _build_entry_metrics(row):
+    structure = row.get("Structure", "AI訊號")
+    regime = row.get("Regime", "未知")
+    realized_ev = _safe_float(row.get("Realized_EV", 0.0), 0.0)
+    sample_size = _safe_int(row.get("Sample_Size", 0), 0)
+    ai_proba = _safe_float(row.get("AI_Proba", 0.5), 0.5)
+
+    try:
+        dummy_vol = 0.05
+        trend_is_with_me = "多頭" in str(regime)
+        adx_is_strong = ai_proba >= 0.55
+        active_strategy = get_active_strategy(structure)
+        dynamic_sl, dynamic_tp, _ = active_strategy.get_exit_rules(
+            PARAMS, dummy_vol, trend_is_with_me, adx_is_strong, 0
+        )
+    except Exception:
+        dynamic_sl = float(PARAMS.get("SL_MIN_PCT", 0.03))
+        dynamic_tp = float(PARAMS.get("TP_BASE_PCT", 0.10))
+
+    rr_ratio = (dynamic_tp / dynamic_sl) if dynamic_sl > 0 else 0.0
+
+    risk_budget_ratio = 0.05
+    if sample_size < 8:
+        risk_budget_ratio = 0.03
+    if realized_ev <= 0 or ai_proba < 0.5:
+        risk_budget_ratio = min(risk_budget_ratio, 0.02)
+
+    return {
+        "市場狀態": regime,
+        "進場陣型": structure,
+        "期望值": realized_ev,
+        "預期停損(%)": round(dynamic_sl * 100, 3),
+        "預期停利(%)": round(dynamic_tp * 100, 3),
+        "風報比(RR)": round(rr_ratio, 3),
+        "風險金額比率": risk_budget_ratio,
+    }
+
 
 def run_eod_broker():
     print("\n" + "=" * 60)
@@ -106,6 +163,9 @@ def run_eod_broker():
     stock_value = 0.0
     daily_log = []
 
+    # ==========================================
+    # 🛡️ 階段一：掃描持倉
+    # ==========================================
     if not active_df.empty:
         for _, pos in active_df.iterrows():
             ticker = pos["Ticker SYMBOL"]
@@ -124,6 +184,7 @@ def run_eod_broker():
                 continue
 
             df = add_chip_data(df, ticker)
+
             result = inspect_stock(ticker, preloaded_df=df, p=PARAMS)
             if not result or "計算後資料" not in result:
                 continue
@@ -197,7 +258,7 @@ def run_eod_broker():
                     PARAMS["TAX_RATE"],
                 )
 
-                current_cash += invested + pnl
+                current_cash += (invested + pnl)
 
                 remaining_shares = shares - sell_shares
                 if remaining_shares <= 0:
@@ -256,12 +317,15 @@ def run_eod_broker():
             else:
                 stock_value += curr_price * shares
 
+    # ==========================================
+    # ⚔️ 階段二：執行建倉任務
+    # ==========================================
     try:
         decisions = pd.read_csv("daily_decision_desk.csv")
     except Exception:
         decisions = pd.DataFrame()
 
-    total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1_000_000
+    total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1000000
 
     if not decisions.empty:
         for _, row in decisions.iterrows():
@@ -281,6 +345,7 @@ def run_eod_broker():
                 continue
 
             curr_price = float(df["Close"].iloc[-1])
+
             shares = int((total_nav * kelly_pct) / curr_price)
             shares = int(shares // 1000) * 1000 if shares >= 1000 else shares
             if shares < 1:
@@ -294,6 +359,9 @@ def run_eod_broker():
                     current_cash -= total_cost
 
                 stock_value += curr_price * shares
+
+                entry_metrics = _build_entry_metrics(row)
+                risk_amount = total_cost * entry_metrics["風險金額比率"]
 
                 cursor.execute(
                     """
@@ -311,19 +379,25 @@ def run_eod_broker():
                         curr_price,
                         total_cost,
                         shares,
-                        row.get("Regime", "區間盤整"),
-                        row.get("Structure", "AI訊號"),
-                        row.get("Realized_EV", row.get("EV", 0.0)),
-                        row.get("預期停損(%)", 0.05),
-                        row.get("預期停利(%)", 0.10),
-                        row.get("風報比(RR)", 2.0),
-                        row.get("風險金額", total_cost * 0.05),
+                        entry_metrics["市場狀態"],
+                        entry_metrics["進場陣型"],
+                        entry_metrics["期望值"],
+                        entry_metrics["預期停損(%)"],
+                        entry_metrics["預期停利(%)"],
+                        entry_metrics["風報比(RR)"],
+                        risk_amount,
                     ),
                 )
 
                 action_icon = "🟢 做多" if "Long" in str(trade_direction) else "🔴 放空"
-                daily_log.append(f"{action_icon} {ticker}: {shares}股 (花費 ${total_cost:,.0f})")
+                daily_log.append(
+                    f"{action_icon} {ticker}: {shares}股 "
+                    f"(花費 ${total_cost:,.0f} | EV {entry_metrics['期望值']:.3f} | RR {entry_metrics['風報比(RR)']:.2f})"
+                )
 
+    # ==========================================
+    # 📊 階段三：結算與發送 LINE 戰報
+    # ==========================================
     cursor.execute(
         """
         UPDATE account_info
@@ -332,24 +406,27 @@ def run_eod_broker():
         """,
         (current_cash, datetime.now()),
     )
-
     conn.commit()
+
+    total_equity = current_cash + stock_value
+    report_lines = [
+        "📊【每日實戰帳戶戰報】",
+        f"💰 可用現金：${current_cash:,.0f}",
+        f"📦 持股市值：${stock_value:,.0f}",
+        f"🏦 帳戶總資產：${total_equity:,.0f}",
+        "-" * 20,
+    ]
+    report_lines.extend(daily_log if daily_log else ["✅ 今日無新動作，持倉平穩。"])
+    full_report = "\n".join(report_lines)
+
+    print("\n" + "=" * 60)
+    print(full_report)
+    print("=" * 60)
+
+    send_line_bot_msg(full_report)
+
+    cursor.close()
     conn.close()
-
-    net_worth = current_cash + stock_value
-
-    report_text = f"📊 [HFA 系統戰報] {datetime.now().strftime('%Y-%m-%d')}\n"
-    report_text += f"💰 總淨值: ${net_worth:,.0f}\n"
-    report_text += f"💵 現金: ${current_cash:,.0f} | 📦 股票: ${stock_value:,.0f}\n"
-    report_text += "-" * 20 + "\n"
-
-    if daily_log:
-        report_text += "\n".join(daily_log)
-    else:
-        report_text += "💤 今日無任何交易動作，持股續抱。"
-
-    print(report_text)
-    send_line_bot_msg(report_text)
 
 
 if __name__ == "__main__":
