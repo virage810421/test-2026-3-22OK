@@ -29,7 +29,7 @@ def setup_tsql_database():
     clear_chips = input("❓ 是否要一併刪除【法人籌碼庫 (daily_chip_data)】？(選 n 可保留歷史籌碼) (y/n): ").strip().lower()
     clear_funds = input("❓ 是否要一併刪除【基本面財報庫 (fundamentals_clean)】？(選 n 可保留歷史財報) (y/n): ").strip().lower()
     clear_rev_simple = input("❓ 是否要一併刪除【最新月營收簡表 (monthly_revenue_simple)】？(選 n 可保留) (y/n): ").strip().lower()
-    clear_rev_industry = input("❓ 是否要一併刪除【產業月營收表 (stock_revenue_industry_tw)】？(選 n 可保留) (y/n): ").strip().lower()
+    
 
     print("\n🔧 準備連線至 SQL Server 進行建置...")
 
@@ -65,13 +65,12 @@ def setup_tsql_database():
             tables_to_drop.append("fundamentals_clean")
         if clear_rev_simple == "y":
             tables_to_drop.append("monthly_revenue_simple")
-        if clear_rev_industry == "y":
-            tables_to_drop.append("stock_revenue_industry_tw")
+        
 
         for table in tables_to_drop:
             cursor.execute(f"IF OBJECT_ID(N'dbo.{table}', N'U') IS NOT NULL DROP TABLE dbo.{table}")
 
-        print("🗑️ 指定之舊資料表已刪除完畢！(未選擇 Y 的歷史資料表已保留)\n")
+        print("🗑️ 指定之舊資料表已刪y除完畢！(未選擇 Y 的歷史資料表已保留)\n")
 
         # =========================================================
         # 🏗️ 建立全新資料表
@@ -219,8 +218,9 @@ def setup_tsql_database():
             BEGIN
                 CREATE TABLE dbo.monthly_revenue_simple (
                     [Ticker SYMBOL] VARCHAR(20) NOT NULL,
-                    [公司名稱] NVARCHAR(100) NULL,
-                    [產業類別] NVARCHAR(100) NULL,
+                    [公司名稱] NVARCHAR(50) NULL,
+                    [產業類別名稱] NVARCHAR(50) NULL,
+                    [產業類別] NVARCHAR(50) NULL,
                     [資料年月日] DATE NOT NULL,
                     [單月營收年增率(%)] DECIMAL(18,3) NULL,
                     CONSTRAINT PK_monthly_revenue_simple PRIMARY KEY ([Ticker SYMBOL], [資料年月日])
@@ -228,21 +228,7 @@ def setup_tsql_database():
             END
         """)
 
-        # --- 表 9：產業月營收表 ---
-        cursor.execute("""
-            IF OBJECT_ID(N'dbo.stock_revenue_industry_tw', N'U') IS NULL
-            BEGIN
-                CREATE TABLE dbo.stock_revenue_industry_tw (
-                    [Ticker SYMBOL] NVARCHAR(20) NOT NULL,
-                    [公司名稱] NVARCHAR(100) NULL,
-                    [產業類別] NVARCHAR(100) NULL,
-                    [產業類別名稱] NVARCHAR(100) NULL,
-                    [資料年月日] DATE NOT NULL,
-                    [單月營收年增率(%)] DECIMAL(18,3) NULL,
-                    CONSTRAINT PK_stock_revenue_industry_tw PRIMARY KEY ([Ticker SYMBOL], [資料年月日])
-                )
-            END
-        """)
+    
 
         conn.commit()
         print("\n✅ 資料庫擴充升級完畢！底層風控容器與基本面貨架已全部準備就緒。")

@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import requests
 import urllib3
@@ -6,7 +7,7 @@ import pandas as pd
 import pyodbc
 
 from io import StringIO
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dt_time
 from FinMind.data import DataLoader
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -25,15 +26,26 @@ DB_CONN_STR = (
 
 TABLE_NAME = "daily_chip_data"
 CSV_FILENAME = "daily_chip_data_backup.csv"
+SCHEDULER_STATE_FILE = "daily_chip_scheduler_state.json"
 
 DAYS_TO_FETCH = 5
-SKIP_WEEKEND = False
 SLEEP_BETWEEN_STOCKS = 0.8
 ENABLE_BACKUP_SOURCE = True
 SAVE_EVERY_N_STOCKS = 50
 
+# 月營收 / 財報 本地檔
+MONTHLY_REVENUE_CSV = "monthly_revenue_simple.csv"
+FUNDAMENTALS_CSV = "market_financials_backup_fullspeed.csv"
+
 # =========================================================
-# 🔐 FinMind Token（由 config.py 中央控管）
+# ⏰ 可抓取時間設定
+# =========================================================
+DAILY_CHIP_READY_TIME = dt_time(17, 30)          # 法人籌碼：平日 17:30 後才上網抓
+MONTHLY_REVENUE_READY_TIME = dt_time(18, 30)     # 月營收：每月 1~12 號 18:30 後
+FUNDAMENTALS_READY_TIME = dt_time(19, 30)        # 季財報：3/5/8/11 月 15 號後 19:30 後
+
+# =========================================================
+# 🔐 FinMind Token
 # =========================================================
 try:
     from config import FINMIND_API_TOKEN as API_TOKEN
@@ -42,7 +54,7 @@ except ImportError:
     API_TOKEN = ""
 
 # =========================================================
-# 🗓️ 台股休市日（可自行往後補）
+# 🗓️ 台股休市日
 # =========================================================
 TW_MARKET_HOLIDAYS = {
     "2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20",
@@ -103,6 +115,70 @@ def safe_get_text(url, timeout=20, encoding=None):
 
 
 # =========================================================
+# 🛠️ 共用工具
+# =========================================================
+def today_str():
+    return datetime.now().strftime("%Y-%m-%d")
+
+
+def to_nullable_float(x):
+    try:
+        v = pd.to_numeric(x, errors="coerce")
+        if pd.isna(v):
+            return None
+        return float(v)
+    except Exception:
+        return None
+
+
+def nullable_sum(*values):
+    clean = [v for v in values if v is not None]
+    return sum(clean) if clean else None
+
+
+def load_scheduler_state():
+    if not os.path.exists(SCHEDULER_STATE_FILE):
+        return {}
+    try:
+        with open(SCHEDULER_STATE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_scheduler_state(state: dict):
+    try:
+        with open(SCHEDULER_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"⚠️ 排程狀態檔寫入失敗：{e}")
+
+
+def mark_task_success(task_key: str):
+    state = load_scheduler_state()
+    state[task_key] = today_str()
+    save_scheduler_state(state)
+
+
+def should_run_task_today(task_key: str, ready_time: dt_time, date_ok: bool):
+    now = datetime.now()
+    state = load_scheduler_state()
+    last_success_date = state.get(task_key)
+
+    if not date_ok:
+        return False, "日期條件未達成。"
+
+    if now.time() < ready_time:
+        return False, f"尚未到可抓取時間 {ready_time.strftime('%H:%M')}，目前 {now.strftime('%H:%M')}。"
+
+    if last_success_date == today_str():
+        return False, "今天已成功執行過。"
+
+    return True, "符合條件，可立即補跑。"
+
+
+# =========================================================
 # 🗓️ 交易日判斷
 # =========================================================
 def is_tw_trading_day(date_str: str) -> bool:
@@ -121,7 +197,7 @@ def is_tw_trading_day(date_str: str) -> bool:
 
 
 # =========================================================
-# 📡 股票清單：上市 + 上櫃
+# 📡 股票清單
 # =========================================================
 def get_official_stock_list():
     print("📡 正在向【證交所 / 櫃買中心】請求全市場名單...")
@@ -362,6 +438,102 @@ def build_union_key_set(csv_df, sql_keys):
 
 
 # =========================================================
+# 🚀 開機先補本地檔 → SQL
+# =========================================================
+def reconcile_local_chip_csv_to_sql():
+    print("========================================================")
+    print("🧩 開機先執行：法人籌碼 CSV → SQL 本地補資料")
+    print("========================================================")
+
+    local_csv_df = load_existing_csv()
+    sql_keys = load_sql_existing_keys()
+
+    if local_csv_df.empty:
+        print("📂 法人籌碼本地 CSV 為空，沒有資料可補進 SQL。")
+        return True
+
+    csv_keys = set(
+        (str(r["日期"]).strip(), str(r["Ticker SYMBOL"]).strip())
+        for _, r in local_csv_df.iterrows()
+    )
+    csv_only_keys = csv_keys - sql_keys
+
+    if not csv_only_keys:
+        print("✅ 法人籌碼 CSV 與 SQL 之間沒有待補的舊資料。")
+        return True
+
+    csv_missing_in_sql_df = local_csv_df[
+        local_csv_df.apply(
+            lambda r: (str(r["日期"]).strip(), str(r["Ticker SYMBOL"]).strip()) in csv_only_keys,
+            axis=1
+        )
+    ].copy()
+
+    print(f"📥 發現法人籌碼 CSV 有但 SQL 沒有的資料：{len(csv_missing_in_sql_df)} 筆，先補進 SQL...")
+
+    try:
+        with pyodbc.connect(DB_CONN_STR) as conn:
+            cursor = conn.cursor()
+            ensure_chip_table(cursor)
+            count = upsert_chip_rows(cursor, csv_missing_in_sql_df.to_dict("records"))
+            conn.commit()
+            print(f"🎉 [CSV補SQL] 成功寫入 / 更新 {count} 筆")
+        return True
+    except Exception as e:
+        print(f"❌ [CSV補SQL] 寫入失敗：{e}")
+        return False
+
+
+def reconcile_local_monthly_revenue_csv_to_sql():
+    print("========================================================")
+    print("🧩 開機先執行：月營收 CSV → SQL 本地補資料")
+    print("========================================================")
+
+    if not os.path.exists(MONTHLY_REVENUE_CSV):
+        print(f"📂 月營收本地 CSV 不存在：{MONTHLY_REVENUE_CSV}")
+        return True
+
+    try:
+        from monthly_revenue_simple import write_to_sql
+        df = pd.read_csv(MONTHLY_REVENUE_CSV, encoding="utf-8-sig")
+        df = df.where(pd.notnull(df), None)
+        if df.empty:
+            print("📂 月營收本地 CSV 為空，無需補 SQL。")
+            return True
+
+        write_to_sql(df)
+        print("🎉 月營收本地 CSV 已補進 SQL。")
+        return True
+    except Exception as e:
+        print(f"❌ 月營收本地 CSV 補 SQL 失敗：{e}")
+        return False
+
+
+def reconcile_local_fundamentals_csv_to_sql():
+    print("========================================================")
+    print("🧩 開機先執行：季財報 CSV → SQL 本地補資料")
+    print("========================================================")
+
+    if not os.path.exists(FUNDAMENTALS_CSV):
+        print(f"📂 季財報本地 CSV 不存在：{FUNDAMENTALS_CSV}")
+        return True
+
+    try:
+        from yahoo_csv_to_sql import load_existing_csv, import_df_to_sql
+        df = load_existing_csv()
+        if df is None or df.empty:
+            print("📂 季財報本地 CSV 為空，無需補 SQL。")
+            return True
+
+        import_df_to_sql(df, stage_name="季財報 CSV補SQL")
+        print("🎉 季財報本地 CSV 已補進 SQL。")
+        return True
+    except Exception as e:
+        print(f"❌ 季財報本地 CSV 補 SQL 失敗：{e}")
+        return False
+
+
+# =========================================================
 # 🧠 FinMind 初始化
 # =========================================================
 def init_finmind_loader(api_token: str):
@@ -383,7 +555,7 @@ def init_finmind_loader(api_token: str):
 
 
 # =========================================================
-# 🧠 FinMind 來源
+# 🧠 FinMind 來源（缺值保留 NULL）
 # =========================================================
 def fetch_chip_from_finmind(dl, stock_id, start_dt):
     try:
@@ -403,13 +575,13 @@ def fetch_chip_from_finmind(dl, stock_id, start_dt):
 
     chip_df = chip_df.copy()
     chip_df["date"] = chip_df["date"].astype(str).str[:10]
-    chip_df["buy"] = pd.to_numeric(chip_df["buy"], errors="coerce").fillna(0)
-    chip_df["sell"] = pd.to_numeric(chip_df["sell"], errors="coerce").fillna(0)
+    chip_df["buy"] = pd.to_numeric(chip_df["buy"], errors="coerce")
+    chip_df["sell"] = pd.to_numeric(chip_df["sell"], errors="coerce")
     chip_df["Net"] = chip_df["buy"] - chip_df["sell"]
 
-    foreign = chip_df[chip_df["name"] == "Foreign_Investor"].groupby("date")["Net"].sum()
-    trust = chip_df[chip_df["name"] == "Investment_Trust"].groupby("date")["Net"].sum()
-    dealers = chip_df[chip_df["name"].isin(["Dealer_self", "Dealer_Hedging"])].groupby("date")["Net"].sum()
+    foreign = chip_df[chip_df["name"] == "Foreign_Investor"].groupby("date")["Net"].sum(min_count=1)
+    trust = chip_df[chip_df["name"] == "Investment_Trust"].groupby("date")["Net"].sum(min_count=1)
+    dealers = chip_df[chip_df["name"].isin(["Dealer_self", "Dealer_Hedging"])].groupby("date")["Net"].sum(min_count=1)
 
     rows = []
     dates = sorted(chip_df["date"].dropna().unique())
@@ -418,10 +590,10 @@ def fetch_chip_from_finmind(dl, stock_id, start_dt):
         if not is_tw_trading_day(date_str):
             continue
 
-        f_net = float(foreign.get(date_str, 0))
-        t_net = float(trust.get(date_str, 0))
-        d_net = float(dealers.get(date_str, 0))
-        total_net = f_net + t_net + d_net
+        f_net = to_nullable_float(foreign.get(date_str, None))
+        t_net = to_nullable_float(trust.get(date_str, None))
+        d_net = to_nullable_float(dealers.get(date_str, None))
+        total_net = nullable_sum(f_net, t_net, d_net)
 
         rows.append({
             "日期": date_str,
@@ -437,7 +609,7 @@ def fetch_chip_from_finmind(dl, stock_id, start_dt):
 
 
 # =========================================================
-# 🛟 官方備援
+# 🛟 官方備援（缺值保留 NULL）
 # =========================================================
 def roc_year(ad_year):
     return ad_year - 1911
@@ -528,7 +700,7 @@ def parse_twse_backup_csv(date_obj):
                 .str.replace(",", "", regex=False)
                 .str.replace(" ", "", regex=False)
             )
-            result[col] = pd.to_numeric(result[col], errors="coerce").fillna(0)
+            result[col] = pd.to_numeric(result[col], errors="coerce")
 
         result["stock_id"] = result["stock_id"].astype(str).str.strip()
         result = result[result["stock_id"].str.fullmatch(r"\d{4}", na=False)].copy()
@@ -599,7 +771,7 @@ def parse_tpex_backup_csv(date_obj):
                     .str.replace(",", "", regex=False)
                     .str.replace(" ", "", regex=False)
                 )
-                result[col] = pd.to_numeric(result[col], errors="coerce").fillna(0)
+                result[col] = pd.to_numeric(result[col], errors="coerce")
 
             result["stock_id"] = result["stock_id"].astype(str).str.strip()
             result = result[result["stock_id"].str.fullmatch(r"\d{4}", na=False)].copy()
@@ -633,13 +805,18 @@ def fetch_backup_chip_all_markets(start_dt):
                     date_str = str(row["date"]).strip()
                     suffix = str(row.get("suffix", ".TW")).strip()
 
+                    f_net = to_nullable_float(row["foreign"])
+                    t_net = to_nullable_float(row["trust"])
+                    d_net = to_nullable_float(row["dealer"])
+                    total_net = nullable_sum(f_net, t_net, d_net)
+
                     backup_map[(stock_id, date_str)] = {
                         "日期": date_str,
                         "Ticker SYMBOL": f"{stock_id}{suffix}",
-                        "外資買賣超": float(row["foreign"]),
-                        "投信買賣超": float(row["trust"]),
-                        "自營商買賣超": float(row["dealer"]),
-                        "三大法人合計": float(row["foreign"]) + float(row["trust"]) + float(row["dealer"]),
+                        "外資買賣超": f_net,
+                        "投信買賣超": t_net,
+                        "自營商買賣超": d_net,
+                        "三大法人合計": total_net,
                         "資料來源": "OFFICIAL"
                     }
 
@@ -694,16 +871,11 @@ def upsert_chip_rows(cursor, rows):
     for row in rows:
         date_str = normalize_date_str(row["日期"])
         ticker_symbol = str(row["Ticker SYMBOL"]).strip()
-        f_net = row["外資買賣超"]
-        t_net = row["投信買賣超"]
-        d_net = row["自營商買賣超"]
-        total_net = row["三大法人合計"]
-        source = row["資料來源"]
 
         cursor.execute(sql, (
             date_str, ticker_symbol,
-            f_net, t_net, d_net, total_net, source, date_str, ticker_symbol,
-            date_str, ticker_symbol, f_net, t_net, d_net, total_net, source
+            row["外資買賣超"], row["投信買賣超"], row["自營商買賣超"], row["三大法人合計"], row["資料來源"], date_str, ticker_symbol,
+            date_str, ticker_symbol, row["外資買賣超"], row["投信買賣超"], row["自營商買賣超"], row["三大法人合計"], row["資料來源"]
         ))
         count += 1
 
@@ -711,7 +883,7 @@ def upsert_chip_rows(cursor, rows):
 
 
 # =========================================================
-# 🚀 智慧同步主流程
+# 🚀 法人籌碼：上網抓新資料
 # =========================================================
 def build_target_dates(start_dt):
     start_date_obj = datetime.strptime(start_dt, "%Y-%m-%d").date()
@@ -807,67 +979,27 @@ def fetch_single_stock_smart(dl, stock_id, existing_union_keys, target_dates, ba
     }
 
 
-def smart_sync_daily_chip():
-    now = datetime.now()
-
-    if SKIP_WEEKEND and now.weekday() >= 5:
-        print(f"[{now.strftime('%H:%M:%S')}] ☕ 今天是週末（非交易日），自動收集車休息中...")
-        return
-
+def download_and_sync_new_chip_data():
     print("========================================================")
-    print("🧠 啟動 daily_chip_data 智慧版：先查 SQL / CSV，再補抓缺漏")
+    print("🌐 啟動法人籌碼上網補抓：只處理缺漏新資料")
     print("========================================================")
 
     if not API_TOKEN:
-        print("⚠️ 尚未設定 FINMIND_API_TOKEN，請先設定環境變數後再執行")
-        return
+        print("⚠️ 尚未設定 FINMIND_API_TOKEN，請先設定後再執行")
+        return False
 
     start_dt = (datetime.now() - timedelta(days=DAYS_TO_FETCH)).strftime("%Y-%m-%d")
     target_dates = build_target_dates(start_dt)
 
     if not target_dates:
         print("⚠️ 目前目標區間內沒有交易日，停止執行。")
-        return
+        return False
 
     print(f"📅 目標交易日期區間：{target_dates[0]} ~ {target_dates[-1]}")
     print(f"📆 本次有效交易日數：{len(target_dates)}")
 
     local_csv_df = load_existing_csv()
     sql_keys = load_sql_existing_keys()
-
-    if not local_csv_df.empty:
-        csv_keys = set(
-            (str(r["日期"]).strip(), str(r["Ticker SYMBOL"]).strip())
-            for _, r in local_csv_df.iterrows()
-        )
-        csv_only_keys = csv_keys - sql_keys
-
-        if csv_only_keys:
-            csv_missing_in_sql_df = local_csv_df[
-                local_csv_df.apply(
-                    lambda r: (str(r["日期"]).strip(), str(r["Ticker SYMBOL"]).strip()) in csv_only_keys,
-                    axis=1
-                )
-            ].copy()
-
-            print(f"📥 發現 CSV 有但 SQL 沒有的資料：{len(csv_missing_in_sql_df)} 筆，先補進 SQL...")
-
-            try:
-                with pyodbc.connect(DB_CONN_STR) as conn:
-                    cursor = conn.cursor()
-                    ensure_chip_table(cursor)
-                    count = upsert_chip_rows(cursor, csv_missing_in_sql_df.to_dict("records"))
-                    conn.commit()
-                    print(f"🎉 [CSV補SQL] 成功寫入 / 更新 {count} 筆")
-            except Exception as e:
-                print(f"❌ [CSV補SQL] 寫入失敗：{e}")
-
-            sql_keys = load_sql_existing_keys()
-        else:
-            print("✅ CSV 與 SQL 之間沒有待補的舊資料。")
-    else:
-        print("📂 地端 CSV 為空，略過 CSV 補 SQL。")
-
     union_keys = build_union_key_set(local_csv_df, sql_keys)
     target_stocks = get_official_stock_list()
 
@@ -963,81 +1095,112 @@ def smart_sync_daily_chip():
                 print(f"🎉 [最終補SQL] 成功寫入 / 更新 {count} 筆資料")
         except Exception as e:
             print(f"❌ [最終補SQL] 寫入失敗：{e}")
+            return False
     else:
         print("📭 沒有資料需要補進 SQL。")
 
     print("\n========================================================")
-    print("🎉 daily_chip_data 智慧同步完成")
+    print("🎉 法人籌碼上網補抓完成")
     print("========================================================")
     print(f"📂 地端 CSV 總筆數：{len(final_df)}")
     print(f"✅ 網路任務成功數：{success_count}")
     print(f"⚠️ 網路任務失敗數：{fail_count}")
+    return True
+
+
+# =========================================================
+# 🚀 其他模組：上網抓新資料
+# =========================================================
+def run_monthly_revenue_module():
+    try:
+        from monthly_revenue_simple import main as monthly_revenue_main
+        monthly_revenue_main()
+        print("✅ 月營收模組執行完成。")
+        return True
+    except ImportError as e:
+        print(f"⚠️ 找不到營收模組 (monthly_revenue_simple.py) 或匯入失敗：{e}")
+        return False
+    except Exception as e:
+        print(f"❌ 月營收模組發生異常：{e}")
+        return False
+
+
+def run_fundamentals_module():
+    try:
+        from yahoo_csv_to_sql import smart_sync as yahoo_fundamentals_sync
+        yahoo_fundamentals_sync()
+        print("✅ 季財報模組執行完成。")
+        return True
+    except ImportError as e:
+        print(f"⚠️ 找不到財報模組 (yahoo_csv_to_sql.py) 或匯入失敗：{e}")
+        return False
+    except Exception as e:
+        print(f"❌ 季財報模組發生異常：{e}")
+        return False
 
 
 # =========================================================
 # 🚀 總司令部：全自動智慧排程系統
 # =========================================================
-def run_monthly_revenue_module():
-    """
-    monthly_revenue_simple.py 目前沒有 step3_download_revenue_to_csv / step4_import_revenue_to_sql
-    正確做法是直接呼叫它的 main()。
-    """
-    try:
-        from monthly_revenue_simple import main as monthly_revenue_main
-        monthly_revenue_main()
-        print("✅ 月營收模組執行完成。")
-    except ImportError as e:
-        print(f"⚠️ 找不到營收模組 (monthly_revenue_simple.py) 或匯入失敗：{e}")
-    except Exception as e:
-        print(f"❌ 月營收模組發生異常：{e}")
-
-
-def run_fundamentals_module():
-    """
-    yahoo_csv_to_sql.py 目前主函式是 smart_sync()
-    它會把財報資料寫入 fundamentals_clean。
-    """
-    try:
-        from yahoo_csv_to_sql import smart_sync as yahoo_fundamentals_sync
-        yahoo_fundamentals_sync()
-        print("✅ 季財報模組執行完成。")
-    except ImportError as e:
-        print(f"⚠️ 找不到財報模組 (yahoo_csv_to_sql.py) 或匯入失敗：{e}")
-    except Exception as e:
-        print(f"❌ 季財報模組發生異常：{e}")
-
-
 def main_scheduler():
     print("==========================================================")
     print(f"🚢 [旗艦巨獸] 啟動時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("==========================================================")
 
+    # 0. 開機先補三個本地檔 → SQL
+    reconcile_local_chip_csv_to_sql()
+    reconcile_local_monthly_revenue_csv_to_sql()
+    reconcile_local_fundamentals_csv_to_sql()
+
     now = datetime.now()
 
-    should_run_daily_chip = now.weekday() < 5
-    should_run_monthly_revenue = 1 <= now.day <= 12
-    should_run_fundamentals = now.month in [3, 5, 8, 11] and now.day >= 15
+    # 1. 法人籌碼：平日 + 17:30 後，才上網抓新資料
+    chip_date_ok = now.weekday() < 5
+    should_run_chip, chip_reason = should_run_task_today(
+        task_key="daily_chip",
+        ready_time=DAILY_CHIP_READY_TIME,
+        date_ok=chip_date_ok
+    )
 
-    if should_run_daily_chip:
-        print("\n🟢 [日更雷達] 今天是交易日，準備啟動【法人籌碼】收集車...")
-        try:
-            smart_sync_daily_chip()
-        except Exception as e:
-            print(f"❌ 每日法人籌碼模組失敗：{e}")
+    if should_run_chip:
+        print(f"\n🟢 [日更雷達] 法人籌碼上網補抓：{chip_reason}")
+        ok = download_and_sync_new_chip_data()
+        if ok:
+            mark_task_success("daily_chip")
     else:
-        print("\n⚪ [日更雷達] 週末休市，【法人籌碼】馬達休眠中。")
+        print(f"\n⚪ [日更雷達] 法人籌碼上網補抓：{chip_reason}")
 
-    if should_run_monthly_revenue:
-        print("\n🟢 [月更雷達] 目前為營收公佈期 (1~12號)，準備啟動【月營收】模組...")
-        run_monthly_revenue_module()
+    # 2. 月營收：每月 1~12 號 + 18:30 後
+    revenue_date_ok = 1 <= now.day <= 12
+    should_run_revenue, revenue_reason = should_run_task_today(
+        task_key="monthly_revenue",
+        ready_time=MONTHLY_REVENUE_READY_TIME,
+        date_ok=revenue_date_ok,
+    )
+
+    if should_run_revenue:
+        print(f"\n🟢 [月更雷達] 月營收上網補抓：{revenue_reason}")
+        ok = run_monthly_revenue_module()
+        if ok:
+            mark_task_success("monthly_revenue")
     else:
-        print(f"\n⚪ [月更雷達] 今天是 {now.day} 號 (非 1~12 號)，【月營收】馬達休眠中。")
+        print(f"\n⚪ [月更雷達] 月營收上網補抓：{revenue_reason}")
+
+    # 3. 季財報：3/5/8/11 月且 15 號後 + 19:30 後
+    fundamentals_date_ok = now.month in [3, 5, 8, 11] and now.day >= 15
+    should_run_fundamentals, fundamentals_reason = should_run_task_today(
+        task_key="fundamentals",
+        ready_time=FUNDAMENTALS_READY_TIME,
+        date_ok=fundamentals_date_ok,
+    )
 
     if should_run_fundamentals:
-        print("\n🟢 [季更雷達] 目前為財報公佈旺季，準備啟動【季財報】收集車...")
-        run_fundamentals_module()
+        print(f"\n🟢 [季更雷達] 季財報上網補抓：{fundamentals_reason}")
+        ok = run_fundamentals_module()
+        if ok:
+            mark_task_success("fundamentals")
     else:
-        print("\n⚪ [季更雷達] 非財報集中公佈期，【季財報】馬達休眠中。")
+        print(f"\n⚪ [季更雷達] 季財報上網補抓：{fundamentals_reason}")
 
     print("\n==========================================================")
     print("🏁 全產線自動化排程檢測完畢！")

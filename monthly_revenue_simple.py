@@ -251,45 +251,6 @@ def get_industry_code_and_name(raw_value):
     return code, name
 
 
-# ==========================================
-# SQL Table 檢查
-# ==========================================
-def ensure_table_exists():
-    create_sql = f"""
-    IF OBJECT_ID(N'dbo.{TABLE_NAME}', N'U') IS NULL
-    BEGIN
-        CREATE TABLE dbo.{TABLE_NAME} (
-            [{COL_TICKER}] NVARCHAR(20) NOT NULL,
-            [{COL_COMPANY_NAME}] NVARCHAR(100) NULL,
-            [{COL_INDUSTRY}] NVARCHAR(100) NULL,
-            [{COL_INDUSTRY_NAME}] NVARCHAR(100) NULL,
-            [{COL_YMD}] DATE NOT NULL,
-            [{COL_YOY}] DECIMAL(18,2) NULL
-        )
-    END
-    """
-
-    index_sql = f"""
-    IF NOT EXISTS (
-        SELECT 1
-        FROM sys.indexes
-        WHERE name = 'UX_{TABLE_NAME}_Ticker_YMD'
-          AND object_id = OBJECT_ID(N'dbo.{TABLE_NAME}')
-    )
-    BEGIN
-        CREATE UNIQUE INDEX UX_{TABLE_NAME}_Ticker_YMD
-        ON dbo.{TABLE_NAME} ([{COL_TICKER}], [{COL_YMD}])
-    END
-    """
-
-    with pyodbc.connect(DB_CONN_STR) as conn:
-        cursor = conn.cursor()
-        cursor.execute(create_sql)
-        cursor.execute(index_sql)
-        conn.commit()
-
-    print(f"✅ SQL Table 準備完成：{TABLE_NAME}")
-
 
 # ==========================================
 # 股票主檔
@@ -591,7 +552,7 @@ def main():
     print("📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入")
     print("==========================================================")
 
-    ensure_table_exists()
+    
     df_final = build_final_dataframe()
     write_to_sql(df_final)
 
