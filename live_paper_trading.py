@@ -11,6 +11,7 @@ import pyodbc
 from config import PARAMS
 from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
 from strategies import get_active_strategy
+from sector_classifier import get_stock_sector
 
 # ==========================================
 # ⚙️ 系統環境設定
@@ -103,12 +104,59 @@ def _safe_int(x, default=0):
         return default
 
 
+def _direction_bucket(direction_text: str) -> str:
+    s = str(direction_text)
+    return "SHORT" if ("空" in s or "Short" in s) else "LONG"
+
+
+def _read_active_positions(conn):
+    try:
+        return pd.read_sql("SELECT * FROM active_positions", conn)
+    except Exception:
+        return pd.DataFrame()
+
+
+def _current_portfolio_state(active_df, total_nav):
+    """
+    從目前持倉估算組合曝險狀態，給最終下單審核用。
+    """
+    state = {
+        "total_alloc": 0.0,
+        "sector_alloc": {},
+        "sector_count": {},
+        "direction_alloc": {"LONG": 0.0, "SHORT": 0.0},
+    }
+
+    if active_df is None or active_df.empty or total_nav <= 0:
+        return state
+
+    for _, pos in active_df.iterrows():
+        ticker = str(pos.get("Ticker SYMBOL", "")).strip()
+        invested = _safe_float(pos.get("投入資金", 0.0), 0.0)
+        if invested <= 0:
+            continue
+
+        alloc = invested / total_nav
+        direction = _direction_bucket(pos.get("方向", ""))
+        sector = get_stock_sector(ticker)
+
+        state["total_alloc"] += alloc
+        state["sector_alloc"][sector] = state["sector_alloc"].get(sector, 0.0) + alloc
+        state["sector_count"][sector] = state["sector_count"].get(sector, 0) + 1
+        state["direction_alloc"][direction] = state["direction_alloc"].get(direction, 0.0) + alloc
+
+    return state
+
+
 def _build_entry_metrics(row):
     structure = row.get("Structure", "AI訊號")
     regime = row.get("Regime", "未知")
     realized_ev = _safe_float(row.get("Realized_EV", 0.0), 0.0)
     sample_size = _safe_int(row.get("Sample_Size", 0), 0)
     ai_proba = _safe_float(row.get("AI_Proba", 0.5), 0.5)
+    weighted_buy = _safe_float(row.get("Weighted_Buy_Score", 0.0), 0.0)
+    weighted_sell = _safe_float(row.get("Weighted_Sell_Score", 0.0), 0.0)
+    score_gap = _safe_float(row.get("Score_Gap", 0.0), 0.0)
 
     try:
         dummy_vol = 0.05
@@ -129,6 +177,8 @@ def _build_entry_metrics(row):
         risk_budget_ratio = 0.03
     if realized_ev <= 0 or ai_proba < 0.5:
         risk_budget_ratio = min(risk_budget_ratio, 0.02)
+    if score_gap <= 0:
+        risk_budget_ratio = min(risk_budget_ratio, 0.015)
 
     return {
         "市場狀態": regime,
@@ -138,12 +188,89 @@ def _build_entry_metrics(row):
         "預期停利(%)": round(dynamic_tp * 100, 3),
         "風報比(RR)": round(rr_ratio, 3),
         "風險金額比率": risk_budget_ratio,
+        "Weighted_Buy_Score": weighted_buy,
+        "Weighted_Sell_Score": weighted_sell,
+        "Score_Gap": score_gap,
     }
+
+
+def _passes_signal_gate(row):
+    kelly_pct = _safe_float(row.get("Kelly_Pos", 0.0), 0.0)
+    weighted_buy = _safe_float(row.get("Weighted_Buy_Score", 0.0), 0.0)
+    weighted_sell = _safe_float(row.get("Weighted_Sell_Score", 0.0), 0.0)
+    score_gap = _safe_float(row.get("Score_Gap", 0.0), 0.0)
+    ai_proba = _safe_float(row.get("AI_Proba", 0.0), 0.0)
+    realized_ev = _safe_float(row.get("Realized_EV", 0.0), 0.0)
+    health = str(row.get("Health", "KEEP")).upper()
+
+    if kelly_pct <= 0:
+        return False, "Kelly 倉位為 0"
+    if health == "KILL":
+        return False, "策略健康度阻斷"
+    if realized_ev <= 0:
+        return False, "Realized EV <= 0"
+    if ai_proba < 0.50:
+        return False, "AI 勝率不足"
+    if score_gap <= 0:
+        return False, "加權分數差為負"
+    if weighted_buy < max(2.0, float(PARAMS.get("TRIGGER_SCORE", 2))):
+        return False, "多方加權分數不足"
+    if weighted_sell >= weighted_buy:
+        return False, "空方壓力未解除"
+
+    return True, "通過訊號閘門"
+
+
+def _passes_portfolio_gate(row, total_nav, portfolio_state):
+    """
+    最終下單審核層：
+    依當下 active_positions / 現金 / 產業集中度重新檢查。
+    """
+    if total_nav <= 0:
+        return False, "總資產異常"
+
+    direction = _direction_bucket(row.get("Direction", ""))
+    ticker = str(row.get("Ticker", "")).strip()
+    sector = get_stock_sector(ticker)
+
+    requested_alloc = _safe_float(row.get("Kelly_Pos", 0.0), 0.0)
+
+    max_sector_positions = int(PARAMS.get("PORT_MAX_SECTOR_POSITIONS", 2))
+    max_sector_alloc = float(PARAMS.get("PORT_MAX_SECTOR_ALLOC", 0.35))
+    max_total_alloc = float(PARAMS.get("PORT_MAX_TOTAL_ALLOC", 0.60))
+    max_direction_alloc = float(PARAMS.get("PORT_MAX_DIRECTION_ALLOC", 0.45))
+    max_single_pos = float(PARAMS.get("PORT_MAX_SINGLE_POS", 0.12))
+    min_position = float(PARAMS.get("PORT_MIN_POSITION", 0.01))
+
+    if requested_alloc < min_position:
+        return False, "倉位低於最小門檻"
+
+    if requested_alloc > max_single_pos:
+        return False, "單筆倉位超過上限"
+
+    current_total = portfolio_state["total_alloc"]
+    current_sector_alloc = portfolio_state["sector_alloc"].get(sector, 0.0)
+    current_sector_count = portfolio_state["sector_count"].get(sector, 0)
+    current_direction_alloc = portfolio_state["direction_alloc"].get(direction, 0.0)
+
+    if current_sector_count >= max_sector_positions:
+        return False, f"{sector} 產業持倉數已達上限"
+
+    if current_total + requested_alloc > max_total_alloc:
+        return False, "總配置上限不足"
+
+    if current_sector_alloc + requested_alloc > max_sector_alloc:
+        return False, f"{sector} 產業資金占比將超限"
+
+    if current_direction_alloc + requested_alloc > max_direction_alloc:
+        return False, f"{direction} 方向曝險將超限"
+
+    return True, "通過組合閘門"
 
 
 def run_eod_broker():
     print("\n" + "=" * 60)
-    print("🤖 [自動下單中心] 啟動盤後結算與執行程序...")
+    print("🤖 [自動下單中心] 啟動盤後結算與執行程序（最終審核版）...")
     print("=" * 60)
 
     try:
@@ -154,13 +281,9 @@ def run_eod_broker():
         return
 
     current_cash = get_available_cash(cursor)
+    active_df = _read_active_positions(conn)
 
-    try:
-        active_df = pd.read_sql("SELECT * FROM active_positions", conn)
-    except Exception:
-        active_df = pd.DataFrame()
-
-    stock_value = 0.0
+    stock_value = _safe_float(active_df["投入資金"].sum(), 0.0) if not active_df.empty and "投入資金" in active_df.columns else 0.0
     daily_log = []
 
     # ==========================================
@@ -276,7 +399,6 @@ def run_eod_broker():
                         """,
                         (remaining_shares, remaining_invested, ticker, pos["進場時間"]),
                     )
-                    stock_value += curr_price * remaining_shares
 
                 try:
                     profit_pct = (pnl / invested) * 100 if invested > 0 else 0.0
@@ -314,8 +436,14 @@ def run_eod_broker():
                     print(f"⚠️ {ticker} 寫入歷史戰績表失敗: {e}")
 
                 daily_log.append(f"{exit_msg} {ticker}: 損益 ${pnl:,.0f}")
-            else:
-                stock_value += curr_price * shares
+
+    conn.commit()
+
+    # 重新讀一次持倉狀態，避免平倉後還沿用舊曝險
+    active_df = _read_active_positions(conn)
+    stock_value = _safe_float(active_df["投入資金"].sum(), 0.0) if not active_df.empty and "投入資金" in active_df.columns else 0.0
+    total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1_000_000
+    portfolio_state = _current_portfolio_state(active_df, total_nav)
 
     # ==========================================
     # ⚔️ 階段二：執行建倉任務
@@ -325,23 +453,31 @@ def run_eod_broker():
     except Exception:
         decisions = pd.DataFrame()
 
-    total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1000000
-
     if not decisions.empty:
         for _, row in decisions.iterrows():
             ticker = row.get("Ticker", "Unknown")
-            kelly_pct = float(row.get("Kelly_Pos", 0))
             trade_direction = row.get("Direction", "做多(Long)")
 
-            if kelly_pct <= 0:
+            allow_signal, reason_signal = _passes_signal_gate(row)
+            if not allow_signal:
+                daily_log.append(f"⛔ 略過 {ticker}: {reason_signal}")
                 continue
 
             cursor.execute("SELECT COUNT(*) FROM active_positions WHERE [Ticker SYMBOL] = ?", (ticker,))
             if cursor.fetchone()[0] > 0:
+                daily_log.append(f"⏭️ 略過 {ticker}: 已有持倉")
                 continue
+
+            allow_port, reason_port = _passes_portfolio_gate(row, total_nav, portfolio_state)
+            if not allow_port:
+                daily_log.append(f"⛔ 略過 {ticker}: {reason_port}")
+                continue
+
+            kelly_pct = _safe_float(row.get("Kelly_Pos", 0.0), 0.0)
 
             df = smart_download(ticker, period="5d")
             if df.empty:
+                daily_log.append(f"⚠️ 略過 {ticker}: 無最新價格")
                 continue
 
             curr_price = float(df["Close"].iloc[-1])
@@ -349,51 +485,65 @@ def run_eod_broker():
             shares = int((total_nav * kelly_pct) / curr_price)
             shares = int(shares // 1000) * 1000 if shares >= 1000 else shares
             if shares < 1:
+                daily_log.append(f"⚠️ 略過 {ticker}: 換算股數不足")
                 continue
 
             total_cost = curr_price * shares * (1 + PARAMS["FEE_RATE"] * PARAMS["FEE_DISCOUNT"])
             can_afford = current_cash >= total_cost or PARAMS.get("IGNORE_CASH_LIMIT", False)
 
-            if can_afford:
-                if not PARAMS.get("IGNORE_CASH_LIMIT", False):
-                    current_cash -= total_cost
+            if not can_afford:
+                daily_log.append(f"⛔ 略過 {ticker}: 現金不足")
+                continue
 
-                stock_value += curr_price * shares
+            if not PARAMS.get("IGNORE_CASH_LIMIT", False):
+                current_cash -= total_cost
 
-                entry_metrics = _build_entry_metrics(row)
-                risk_amount = total_cost * entry_metrics["風險金額比率"]
+            entry_metrics = _build_entry_metrics(row)
+            risk_amount = total_cost * entry_metrics["風險金額比率"]
 
-                cursor.execute(
-                    """
-                    INSERT INTO active_positions (
-                        [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金],
-                        [進場股數], [停利階段], [市場狀態], [進場陣型], [期望值],
-                        [預期停損(%)], [預期停利(%)], [風報比(RR)], [風險金額]
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        ticker,
-                        trade_direction,
-                        datetime.now(),
-                        curr_price,
-                        total_cost,
-                        shares,
-                        entry_metrics["市場狀態"],
-                        entry_metrics["進場陣型"],
-                        entry_metrics["期望值"],
-                        entry_metrics["預期停損(%)"],
-                        entry_metrics["預期停利(%)"],
-                        entry_metrics["風報比(RR)"],
-                        risk_amount,
-                    ),
+            cursor.execute(
+                """
+                INSERT INTO active_positions (
+                    [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金],
+                    [進場股數], [停利階段], [市場狀態], [進場陣型], [期望值],
+                    [預期停損(%)], [預期停利(%)], [風報比(RR)], [風險金額]
                 )
+                VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ticker,
+                    trade_direction,
+                    datetime.now(),
+                    curr_price,
+                    total_cost,
+                    shares,
+                    entry_metrics["市場狀態"],
+                    entry_metrics["進場陣型"],
+                    entry_metrics["期望值"],
+                    entry_metrics["預期停損(%)"],
+                    entry_metrics["預期停利(%)"],
+                    entry_metrics["風報比(RR)"],
+                    risk_amount,
+                ),
+            )
+            conn.commit()
 
-                action_icon = "🟢 做多" if "Long" in str(trade_direction) else "🔴 放空"
-                daily_log.append(
-                    f"{action_icon} {ticker}: {shares}股 "
-                    f"(花費 ${total_cost:,.0f} | EV {entry_metrics['期望值']:.3f} | RR {entry_metrics['風報比(RR)']:.2f})"
-                )
+            # 立刻更新組合狀態，避免同一輪連續下單超限
+            sector = get_stock_sector(ticker)
+            direction_bucket = _direction_bucket(trade_direction)
+            alloc = total_cost / total_nav if total_nav > 0 else 0.0
+            portfolio_state["total_alloc"] += alloc
+            portfolio_state["sector_alloc"][sector] = portfolio_state["sector_alloc"].get(sector, 0.0) + alloc
+            portfolio_state["sector_count"][sector] = portfolio_state["sector_count"].get(sector, 0) + 1
+            portfolio_state["direction_alloc"][direction_bucket] = portfolio_state["direction_alloc"].get(direction_bucket, 0.0) + alloc
+
+            action_icon = "🟢 做多" if "Long" in str(trade_direction) else "🔴 放空"
+            daily_log.append(
+                f"{action_icon} {ticker}: {shares}股 "
+                f"(花費 ${total_cost:,.0f} | EV {entry_metrics['期望值']:.3f} | "
+                f"WB {entry_metrics['Weighted_Buy_Score']:.2f} | "
+                f"WS {entry_metrics['Weighted_Sell_Score']:.2f} | Gap {entry_metrics['Score_Gap']:.2f})"
+            )
 
     # ==========================================
     # 📊 階段三：結算與發送 LINE 戰報
@@ -408,11 +558,14 @@ def run_eod_broker():
     )
     conn.commit()
 
-    total_equity = current_cash + stock_value
+    final_active_df = _read_active_positions(conn)
+    final_stock_value = _safe_float(final_active_df["投入資金"].sum(), 0.0) if not final_active_df.empty and "投入資金" in final_active_df.columns else 0.0
+    total_equity = current_cash + final_stock_value
+
     report_lines = [
         "📊【每日實戰帳戶戰報】",
         f"💰 可用現金：${current_cash:,.0f}",
-        f"📦 持股市值：${stock_value:,.0f}",
+        f"📦 持股市值：${final_stock_value:,.0f}",
         f"🏦 帳戶總資產：${total_equity:,.0f}",
         "-" * 20,
     ]

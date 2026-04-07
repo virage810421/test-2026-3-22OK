@@ -107,3 +107,13 @@ def get_dynamic_watch_list():
             if ticker not in merged:
                 merged.append(ticker)
     return merged
+
+
+
+# ---- Portfolio Risk Layer ----
+PARAMS["PORT_MAX_SECTOR_POSITIONS"] = 2
+PARAMS["PORT_MAX_SECTOR_ALLOC"] = 0.35
+PARAMS["PORT_MAX_TOTAL_ALLOC"] = 0.60
+PARAMS["PORT_MAX_DIRECTION_ALLOC"] = 0.45
+PARAMS["PORT_MAX_SINGLE_POS"] = 0.12
+PARAMS["PORT_MIN_POSITION"] = 0.01

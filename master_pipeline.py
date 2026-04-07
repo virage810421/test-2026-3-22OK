@@ -13,6 +13,8 @@ import yfinance as yf
 from performance import check_strategy_health, get_strategy_ev
 from fundamental_screener import get_vip_stock_pool
 from screening import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
+from portfolio_risk import apply_portfolio_risk
+from system_guard import run_system_guard
 
 logging.basicConfig(
     filename="pipeline.log",
@@ -307,6 +309,10 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
         sample_size = int(result.get("歷史訊號樣本數", 0))
         kelly_signal = float(result.get("Kelly建議倉位", 0.0))
 
+        weighted_buy = float(result.get("Weighted_Buy_Score", latest_row.get("Weighted_Buy_Score", 0.0)))
+        weighted_sell = float(result.get("Weighted_Sell_Score", latest_row.get("Weighted_Sell_Score", 0.0)))
+        score_gap = float(result.get("Score_Gap", latest_row.get("Score_Gap", 0.0)))
+
         ai_proba = _predict_ai_proba(latest_row, regime, hist_win, ai_models, selected_features, ticker)
         action = "做多(Long)" if "多" in setup_tag else "做空(Short)"
 
@@ -316,13 +322,15 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
         sample_boost = min(1.0, sample_size / 20.0)
         ev_norm = max(-0.05, min(0.10, realized_ev / 100.0))
         strategy_ev_norm = max(-0.05, min(0.10, realized_strategy_ev / 100.0))
+        gap_norm = max(-0.20, min(0.20, score_gap / 10.0))
 
         base_score = (
-            ai_proba * 0.45 +
-            hist_win * 0.20 +
-            signal_conf * 0.15 +
-            max(0.0, ev_norm) * 1.20 +
-            max(0.0, strategy_ev_norm) * 1.00 +
+            ai_proba * 0.38 +
+            hist_win * 0.16 +
+            signal_conf * 0.14 +
+            max(0.0, ev_norm) * 1.10 +
+            max(0.0, strategy_ev_norm) * 0.90 +
+            max(0.0, gap_norm) * 0.70 +
             sample_boost * 0.05
         )
 
@@ -335,6 +343,8 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
         if ai_proba < 0.50 or realized_ev <= 0:
             base_kelly *= 0.25
         if sample_size < 8:
+            base_kelly *= 0.5
+        if score_gap <= 0:
             base_kelly *= 0.5
 
         final_kelly = 0.0 if health_status == "KILL" else round(base_kelly * global_risk_multiplier, 4)
@@ -350,6 +360,11 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
             "Strategy_EV_SQL": round(realized_strategy_ev, 4),
             "Signal_Confidence": round(signal_conf, 4),
             "Sample_Size": sample_size,
+            "Buy_Score": int(result.get("Buy_Score", 0)),
+            "Sell_Score": int(result.get("Sell_Score", 0)),
+            "Weighted_Buy_Score": round(weighted_buy, 3),
+            "Weighted_Sell_Score": round(weighted_sell, 3),
+            "Score_Gap": round(score_gap, 3),
             "Kelly_Pos": final_kelly,
             "Score": round(base_score, 4),
             "Risk": health_note,
@@ -357,14 +372,19 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
         })
 
     df_report = pd.DataFrame(rows)
-    if not df_report.empty:
-        df_report.sort_values(
-            ["Kelly_Pos", "Score", "AI_Proba", "Hist_WinRate", "Sample_Size"],
-            ascending=False,
-            inplace=True
-        )
+    if df_report.empty:
+        df_report.to_csv("daily_decision_desk.csv", index=False, encoding="utf-8-sig")
+        return df_report
+
+    df_report.sort_values(
+        ["Kelly_Pos", "Score", "Score_Gap", "AI_Proba", "Hist_WinRate", "Sample_Size"],
+        ascending=False,
+        inplace=True
+    )
+    pre_risk = df_report.copy()
+    df_report = apply_portfolio_risk(df_report)
+    pre_risk.to_csv("daily_decision_desk_prerisk.csv", index=False, encoding="utf-8-sig")
     df_report.to_csv("daily_decision_desk.csv", index=False, encoding="utf-8-sig")
-    log("💾 報告已同步儲存至 daily_decision_desk.csv")
     return df_report
 
 
@@ -373,42 +393,32 @@ def main():
     is_weekend = datetime.now().weekday() >= 5
 
     log("\n" + "=" * 60)
-    log("⚙️ HFA 全自動研究與訓練管線 (Auto-MLOps) 啟動")
+    log("⚙️ HFA 全自動研究與訓練管線 (Self-Guarded) 啟動")
     log("=" * 60)
 
     if is_weekend:
-        log("\n⏳ 階段：資料更新 (⚠️ 今日為週末休市，跳過 API 爬蟲，節省資源！)")
+        log("\n⏳ 階段：資料更新 (⚠️ 今日為週末休市，跳過 API 爬蟲)")
     else:
-        log("\n⏳ 階段：資料更新 (爬取最新 K 線與籌碼)")
+        log("\n⏳ 階段：資料更新")
         if not run_script("daily_chip_etl.py"):
             log("🛑 資料庫更新失敗，強制中斷！")
             generate_report(start_time, "FAILED")
             return
 
     if should_retrain():
-        log("\n🧠 智慧決策：啟動兵工廠與精神時光屋 (AI 深度學習模式)")
-        training_pipeline = [
-            ("ml_data_generator.py", "特徵生成"),
-            ("ml_trainer.py", "模型訓練"),
-        ]
-        for script, desc in training_pipeline:
+        log("\n🧠 階段：重訓 AI 模型")
+        for script, desc in [("ml_data_generator.py", "特徵生成"), ("ml_trainer.py", "模型訓練")]:
             log(f"\n⏳ 階段：{desc}")
             if not run_script(script):
-                log("🛑 AI 訓練發生異常，管線中斷！")
+                log("🛑 AI 訓練異常，管線中斷！")
                 generate_report(start_time, "FAILED")
                 return
-
-        log("\n🔍 開始嚴格驗證兵工廠輸出結果...")
         if not validate_outputs():
-            log("🛑 裝備檢查失敗，請勿執行實戰機台！")
+            log("🛑 模型驗證失敗")
             generate_report(start_time, "INVALID")
             return
     else:
-        log("\n⚡ 智慧決策：今日勝率穩定且非大保養日，【跳過 AI 重訓】，直接使用現役大腦！")
-
-    log("\n" + "=" * 70)
-    log(f"📊 {datetime.now().strftime('%Y-%m-%d')} 戰情決策桌生成中...")
-    log("=" * 70)
+        log("\n⚡ 今日跳過 AI 重訓，使用現役模型")
 
     climate_status, global_risk_multiplier = analyze_market_climate()
     log(f"🌍 市場氣候：{climate_status} | 風險倍率：{global_risk_multiplier:.2f}")
@@ -422,36 +432,46 @@ def main():
     market_data = load_market_data(watch_list)
     df_report = build_decision_desk(watch_list, market_data, global_risk_multiplier)
 
-    if not df_report.empty:
-        TOTAL_CAPITAL = 10_000_000
-        for _, row in df_report.head(20).iterrows():
-            final_allocation_pct = row["Kelly_Pos"]
-            target_amount = TOTAL_CAPITAL * final_allocation_pct
-
-            log(f"🎯 標的: {row['Ticker']}")
-            log(
-                f"   ► AI勝率: {row['AI_Proba']:.1%} | 歷史勝率: {row['Hist_WinRate']:.1%} | "
-                f"RealizedEV: {row['Realized_EV']:.3f} | SQL策略EV: {row['Strategy_EV_SQL']:.3f} | "
-                f"樣本數: {int(row['Sample_Size'])} | 綜合分: {row['Score']:.3f}"
-            )
-            log(f"   ► 戰略結構: {row['Structure']} | 市場狀態: {row['Regime']}")
-            log(f"   ► 風險評估: {row['Risk']}")
-            if final_allocation_pct > 0:
-                msg = f"   💰 最終資金指派: 建議配置總資金的 {final_allocation_pct:.1%} (約 ${target_amount:,.0f} 元)"
-                if global_risk_multiplier < 1.0:
-                    msg += " [⚠️ 已受大盤降載保護]"
-                log(msg)
-            else:
-                log("   💰 資金控管: 期望值 / 勝率 / 風控條件不足，建議極小資金試單或空手")
-            log("-" * 60)
-    else:
+    if df_report.empty:
         log("⚠️ 今日沒有合格標的產出。")
+        generate_report(start_time, "SUCCESS")
+        return
+
+    # 關鍵升級：生成決策桌後立刻做系統自我保護檢查
+    guard_payload = run_system_guard()
+    overall = guard_payload.get("overall", "OK")
+    block_builds = bool(guard_payload.get("block_new_positions", False))
+
+    log(f"🩺 系統守門員狀態：{overall}")
+    for alert in guard_payload.get("alerts", []):
+        log(f"🚨 告警：{alert}")
+
+    TOTAL_CAPITAL = 10_000_000
+    for _, row in df_report.head(20).iterrows():
+        final_allocation_pct = row["Kelly_Pos"]
+        target_amount = TOTAL_CAPITAL * final_allocation_pct
+        log(f"🎯 標的: {row['Ticker']}")
+        log(
+            f"   ► AI勝率: {row['AI_Proba']:.1%} | 歷史勝率: {row['Hist_WinRate']:.1%} | "
+            f"RealizedEV: {row['Realized_EV']:.3f} | 樣本數: {int(row['Sample_Size'])}"
+        )
+        log(
+            f"   ► 加權燈號: WB={row['Weighted_Buy_Score']:.2f} | "
+            f"WS={row['Weighted_Sell_Score']:.2f} | Gap={row['Score_Gap']:.2f} | 綜合分: {row['Score']:.3f}"
+        )
+        if final_allocation_pct > 0:
+            log(f"   💰 建議配置總資金的 {final_allocation_pct:.1%} (約 ${target_amount:,.0f})")
+        else:
+            log("   💰 建議空手")
 
     generate_report(start_time, "SUCCESS")
 
     if not is_weekend:
-        log("\n⏳ 階段：呼叫自動下單機進行帳戶結算與模擬建倉...")
-        run_script("live_paper_trading.py")
+        if block_builds:
+            log("🛡️ 系統守門員已阻止當日建倉，略過 live_paper_trading.py")
+        else:
+            log("\n⏳ 階段：呼叫自動下單機進行帳戶結算與模擬建倉...")
+            run_script("live_paper_trading.py")
 
 
 if __name__ == "__main__":

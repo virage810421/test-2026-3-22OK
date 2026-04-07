@@ -1,5 +1,7 @@
 import itertools
+import json
 import os
+from datetime import datetime
 
 import joblib
 import numpy as np
@@ -7,12 +9,17 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import TimeSeriesSplit
 
+from config import PARAMS
+from model_governance import (
+    create_version_tag,
+    get_best_version_entry,
+    promote_best_version,
+    restore_version,
+    snapshot_current_models,
+)
 
-# ==========================================
-# 🧩 模組 1：Alpha 武器海關審查
-# ==========================================
+
 def evaluate_alpha_full(signal, future_return):
-    """檢驗單一把武器的期望值與穩定性"""
     df = pd.DataFrame({
         "signal": pd.to_numeric(signal, errors="coerce"),
         "ret": pd.to_numeric(future_return, errors="coerce"),
@@ -49,11 +56,9 @@ def evaluate_alpha_full(signal, future_return):
     }
 
 
-# ==========================================
-# 🧩 模組 2：Walk-Forward 壓力測試模組（報酬導向）
-# ==========================================
-def walk_forward_analysis(X, y, target_return):
-    tscv = TimeSeriesSplit(n_splits=5)
+def walk_forward_analysis(X, y, target_return, p=PARAMS):
+    splits = int(p.get("WF_SPLITS", 5))
+    tscv = TimeSeriesSplit(n_splits=splits)
     results = []
 
     for train_idx, test_idx in tscv.split(X):
@@ -65,8 +70,8 @@ def walk_forward_analysis(X, y, target_return):
             continue
 
         model = RandomForestClassifier(
-            n_estimators=100,
-            max_depth=5,
+            n_estimators=int(p.get("MODEL_N_ESTIMATORS", 100)),
+            max_depth=int(p.get("MODEL_MAX_DEPTH", 5)),
             random_state=42,
             class_weight="balanced",
         )
@@ -74,7 +79,6 @@ def walk_forward_analysis(X, y, target_return):
         pred = model.predict(X_test)
         pred_proba = model.predict_proba(X_test)[:, 1]
 
-        # 只在 pred=1 時視為進場，否則報酬=0
         strategy_returns = np.where(pred == 1, ret_test.values, 0.0)
 
         hit_rate = float(np.mean(strategy_returns > 0))
@@ -84,12 +88,7 @@ def walk_forward_analysis(X, y, target_return):
         gross_profit = strategy_returns[strategy_returns > 0].sum() if np.any(strategy_returns > 0) else 0.0
         gross_loss = abs(strategy_returns[strategy_returns < 0].sum()) if np.any(strategy_returns < 0) else 0.0
         profit_factor = float(gross_profit / gross_loss) if gross_loss > 0 else 99.9
-
-        if np.std(strategy_returns) > 0:
-            sharpe_like = float(np.mean(strategy_returns) / np.std(strategy_returns))
-        else:
-            sharpe_like = 0.0
-
+        sharpe_like = float(np.mean(strategy_returns) / np.std(strategy_returns)) if np.std(strategy_returns) > 0 else 0.0
         coverage = float(np.mean(pred == 1))
 
         results.append({
@@ -129,48 +128,25 @@ def evaluate_stability(results):
     }
 
 
-# ==========================================
-# 🧠 主幹：AI 大腦鍛造程序
-# ==========================================
 def train_models():
-    print("🧠 [精神時光屋] 啟動 AI 兵工廠（報酬導向強化版）...")
+    print("🧠 [精神時光屋] 啟動 AI 兵工廠（版本治理版）...")
 
     dataset_path = "data/ml_training_data.csv"
     if not os.path.exists(dataset_path):
         print(f"❌ 找不到訓練教材 ({dataset_path})！")
         return
 
+    # 先備份現役模型
+    pretrain_version = create_version_tag("pretrain")
+    snapshot_current_models(pretrain_version, note="重訓前自動備份")
+    print(f"📦 已自動備份重訓前現役模型：{pretrain_version}")
+
     df = pd.read_csv(dataset_path)
     os.makedirs("models", exist_ok=True)
-
-    print("\n🔍 [系統安檢] 啟動 Regime 漂移檢測 (Distribution Drift Check)...")
-    try:
-        half_idx = len(df) // 2
-        past_dist = df["Regime"].iloc[:half_idx].value_counts(normalize=True)
-        recent_dist = df["Regime"].iloc[half_idx:].value_counts(normalize=True)
-
-        all_regimes = list(set(past_dist.index.tolist() + recent_dist.index.tolist()))
-        past_dist = past_dist.reindex(all_regimes).fillna(0)
-        recent_dist = recent_dist.reindex(all_regimes).fillna(0)
-
-        drift_score = (past_dist - recent_dist).abs().sum()
-
-        print(
-            f"   ► 歷史生態分布: 多頭({past_dist.get('趨勢多頭', 0):.1%}) | "
-            f"空頭({past_dist.get('趨勢空頭', 0):.1%}) | 盤整({past_dist.get('區間盤整', 0):.1%})"
-        )
-        print(
-            f"   ► 近期生態分布: 多頭({recent_dist.get('趨勢多頭', 0):.1%}) | "
-            f"空頭({recent_dist.get('趨勢空頭', 0):.1%}) | 盤整({recent_dist.get('區間盤整', 0):.1%})"
-        )
-        print(f"   ► Regime 分布漂移指數 (Drift Score): {drift_score:.3f}")
-    except Exception as e:
-        print(f"   ⚠️ 漂移檢測模組異常，跳過檢驗: {e}")
 
     if "Date" in df.columns:
         df = df.sort_values("Date").reset_index(drop=True)
 
-    # 清理關鍵欄位
     if "Target_Return" in df.columns:
         df["Target_Return"] = pd.to_numeric(df["Target_Return"], errors="coerce").fillna(0.0)
     else:
@@ -183,13 +159,11 @@ def train_models():
     if os.path.exists("models/selected_features.pkl"):
         try:
             old_features = joblib.load("models/selected_features.pkl")
-            print(f"📦 [記憶讀取] 找到舊背包，發現 {len(old_features)} 把歷史精銳武器。")
-        except Exception as e:
-            print(f"⚠️ [記憶讀取] 無法解析舊背包，將以全新狀態啟動: {e}")
+        except Exception:
+            old_features = []
 
     all_features = list(dict.fromkeys(all_features + old_features))
 
-    # 自動重鑄歷史組合武器
     for feature in all_features:
         if "_X_" in feature and feature not in df.columns:
             parts = feature.split("_X_")
@@ -200,10 +174,8 @@ def train_models():
                 df[feature] = temp_signal
 
     all_features = [f for f in all_features if f in df.columns]
-    print(f"⚔️ [軍火庫整編] 新舊武器庫整編完畢，今日送審武器總數：{len(all_features)} 把。")
 
     future_return = pd.to_numeric(df["Target_Return"], errors="coerce").fillna(0)
-    print(f"\n🕵️‍♂️ [海關審查] 正在檢驗 {len(all_features)} 把候選武器的期望值...")
     qualified_features = []
 
     for col in all_features:
@@ -218,22 +190,13 @@ def train_models():
 
         if result["expectancy"] > 0 and result["consistency"] >= 0.50:
             qualified_features.append(col)
-            print(f"   ✅ [保留] {col}: EV={result['expectancy']:.3f} | 穩定度={result['consistency']:.0%}")
-        else:
-            print(f"   🗑️ [銷毀] {col}: EV為負或不穩定 (EV={result['expectancy']:.3f})")
 
     if not qualified_features:
-        print("⚠️ 沒有任何武器通過嚴格審查！系統強制保留所有武器以維持運作。")
         qualified_features = all_features.copy()
 
-    # ==========================================
-    # 🔥 連擊武器研發中心
-    # ==========================================
-    print(f"\n⚔️ 啟動連擊武器研發：正在測試 {len(qualified_features)} 把及格武器的交叉組合...")
     combo_features = []
-
-    # 限制候選數量，避免組合爆炸
-    seed_features = qualified_features[:12]
+    seed_limit = int(PARAMS.get("MODEL_SEED_FEATURE_LIMIT", 12))
+    seed_features = qualified_features[:seed_limit]
 
     for r in [2, 3]:
         for combo_tuple in itertools.combinations(seed_features, r):
@@ -255,28 +218,22 @@ def train_models():
             if result["expectancy"] > 0 and result["consistency"] >= 0.60:
                 df[combo_name] = combo_signal
                 combo_features.append(combo_name)
-                print(f"   🔥 [最強連擊] {combo_name}: EV={result['expectancy']:.3f} | 穩定={result['consistency']:.0%}")
 
     qualified_features = list(dict.fromkeys(qualified_features + combo_features))
-    print(f"📦 連擊研發完畢！額外新增了 {len(combo_features)} 把組合技武器。")
-
     joblib.dump(qualified_features, "models/selected_features.pkl")
-    print(f"\n📦 特徵審查完畢！已將 {len(qualified_features)} 把精銳武器裝載至戰術背包！")
 
     regimes = ["趨勢多頭", "區間盤整", "趨勢空頭"]
+    metrics_by_regime = {}
 
     for regime in regimes:
-        print("\n" + "=" * 50)
-        print(f"⏳ 正在使用精銳武器，訓練【{regime}】專屬大腦...")
-
         regime_df = df[df["Regime"] == regime].copy()
-        if len(regime_df) < 50:
-            print("⚠️ 數據過少，跳過。")
+        if len(regime_df) < int(PARAMS.get("MODEL_MIN_REGIME_SAMPLES", 50)):
+            metrics_by_regime[regime] = {"status": "SKIP", "reason": "樣本不足"}
             continue
 
         safe_features = [f for f in qualified_features if f in regime_df.columns]
         if not safe_features:
-            print("⚠️ 當前 Regime 沒有可用特徵，跳過。")
+            metrics_by_regime[regime] = {"status": "SKIP", "reason": "無可用特徵"}
             continue
 
         X = regime_df[safe_features].copy()
@@ -285,17 +242,12 @@ def train_models():
 
         X = X.replace([np.inf, -np.inf], np.nan).fillna(0)
         if len(pd.Series(y).unique()) < 2:
-            print("⚠️ 標籤只有單一類別，跳過。")
+            metrics_by_regime[regime] = {"status": "SKIP", "reason": "標籤單一"}
             continue
 
         wf_results = walk_forward_analysis(X, y, target_return)
         stability = evaluate_stability(wf_results)
-        print(
-            f"   ► [大腦品管] 平均期望報酬: {stability['ret_mean']:.4f} | "
-            f"獲利一致性: {stability['consistency']:.1%} | "
-            f"PF: {stability['pf_mean']:.2f} | "
-            f"SharpeLike: {stability['sharpe_mean']:.2f}"
-        )
+        metrics_by_regime[regime] = {"status": "EVAL", **stability}
 
         model_path = f"models/model_{regime}.pkl"
         if (
@@ -303,21 +255,59 @@ def train_models():
             and stability["consistency"] >= 0.60
             and stability["pf_mean"] >= 1.05
         ):
-            print("   ✅ 檢驗合格！進行最終鍛造...")
             model = RandomForestClassifier(
-                n_estimators=200,
-                max_depth=7,
+                n_estimators=int(PARAMS.get("MODEL_N_ESTIMATORS", 200)),
+                max_depth=int(PARAMS.get("MODEL_MAX_DEPTH", 7)),
                 random_state=42,
                 class_weight="balanced",
             )
             model.fit(X, y)
             joblib.dump(model, model_path)
+            metrics_by_regime[regime]["status"] = "SAVE"
         else:
-            print("   🛑 檢驗失敗！大腦不穩定，銷毀！")
             if os.path.exists(model_path):
                 os.remove(model_path)
+            metrics_by_regime[regime]["status"] = "REJECT"
 
-    print("\n🎉 精神時光屋結訓！精英武器與合格大腦均已就位！")
+    # 計算本次總體分數
+    save_metrics = [v for v in metrics_by_regime.values() if v.get("status") == "SAVE"]
+    overall_score = 0.0
+    if save_metrics:
+        overall_score = float(np.mean([
+            v.get("ret_mean", 0.0) * 100 + v.get("pf_mean", 0.0) + v.get("consistency", 0.0) * 10
+            for v in save_metrics
+        ]))
+
+    version_tag = create_version_tag("trained")
+    snapshot_entry = snapshot_current_models(
+        version_tag,
+        metrics={
+            "trained_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "overall_score": round(overall_score, 4),
+            "regimes": metrics_by_regime,
+            "feature_count": len(qualified_features),
+        },
+        note="本次重訓完成快照"
+    )
+
+    print(f"📦 已建立新模型版本：{version_tag}")
+    print(json.dumps(snapshot_entry["metrics"], ensure_ascii=False, indent=2))
+
+    # 與 best version 比較，若更好則升任；否則保留 current 但不升 best
+    best_entry = get_best_version_entry()
+    best_score = -1e18
+    if best_entry and isinstance(best_entry.get("metrics"), dict):
+        best_score = float(best_entry["metrics"].get("overall_score", -1e18))
+
+    if overall_score > best_score and len(save_metrics) > 0:
+        promote_best_version(version_tag)
+        print(f"🏆 新版本 {version_tag} 已升任 BEST MODEL")
+    elif len(save_metrics) == 0:
+        # 本次幾乎失敗，直接回退到 pretrain 備份
+        restore_version(pretrain_version)
+        print(f"🛑 本次無任何合格模型，已自動回退到 {pretrain_version}")
+
+    print("🎉 版本治理版訓練完成")
 
 
 if __name__ == "__main__":
