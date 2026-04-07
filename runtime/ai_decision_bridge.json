@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-08 00:52:39",
+  "generated_at": "2026-04-08 01:21:59",
   "bridge": {
     "upstream": [
       "daily_chip_etl.py",

@@ -311,3 +311,96 @@
 [00:52:39] 💓 heartbeat 更新：run_complete
 [00:52:39] 🔓 已釋放 runtime lock
 [00:52:39] 🛑 系統關閉。
+[01:16:43] ============================================================
+[01:16:43] 🚀 啟動 正式交易主控版_v32
+[01:16:43] 🧭 模式：PAPER
+[01:16:43] 🏦 broker_type：paper
+[01:16:43] 🎬 execution_style：TWAP3
+[01:16:43] 🛡️ paper/live safety：ON
+[01:16:43] 📈 目前整體升級進度：85.7%
+[01:16:43] ============================================================
+[01:16:43] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[01:16:43] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_011643.json
+[01:16:43] 💓 heartbeat 更新：boot
+[01:16:43] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[01:16:43] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[01:16:43] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[01:16:43] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[01:16:43] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[01:16:43] 🧠 已輸出 AI manager inspect：C:\test\test-2026-3-22OK\runtime\ai_training_run.json
+[01:16:43] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[01:16:43] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[01:16:43] ✅ SQL Server 連線成功。
+[01:16:43] ✅ execution tables ready.
+[01:16:43] 🧷 package consistency check 通過
+[01:16:43] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[01:16:43] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[01:16:43] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
+[01:16:43] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:52:39 positions=0
+[01:16:43] 🧪 preflight all_passed=True
+[01:16:43] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[01:16:43] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_011643.csv
+[01:16:43] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[01:16:43] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[01:16:43] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[01:16:43] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[01:16:43] ✅ 讀入訊號：0 筆 | execution_ready=False
+[01:16:43] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=2
+[01:16:43] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[01:16:43] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=1
+[01:16:43] ⛔ Launch Gate 或 Live Safety Gate 阻擋本輪 execution，已跳過送單。
+[01:16:43] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[01:16:43] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[01:16:43] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[01:16:43] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[01:16:43] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_011643.json
+[01:16:43] 💓 heartbeat 更新：run_complete
+[01:16:43] 🔓 已釋放 runtime lock
+[01:16:43] 🛑 系統關閉。
+[01:21:59] ============================================================
+[01:21:59] 🚀 啟動 正式交易主控版_v33
+[01:21:59] 🧭 模式：PAPER
+[01:21:59] 🏦 broker_type：paper
+[01:21:59] 🎬 execution_style：TWAP3
+[01:21:59] 🧾 broker approval gate：ON
+[01:21:59] 📈 目前整體升級進度：86.1%
+[01:21:59] ============================================================
+[01:21:59] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[01:21:59] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_012159.json
+[01:21:59] 💓 heartbeat 更新：boot
+[01:21:59] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[01:21:59] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[01:21:59] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[01:21:59] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[01:21:59] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[01:21:59] 🧠 已輸出 AI manager inspect：C:\test\test-2026-3-22OK\runtime\ai_training_run.json
+[01:21:59] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[01:21:59] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[01:22:00] ✅ SQL Server 連線成功。
+[01:22:00] ✅ execution tables ready.
+[01:22:00] 🧷 package consistency check 通過
+[01:22:00] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[01:22:00] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[01:22:00] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
+[01:22:00] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 01:16:43 positions=0
+[01:22:00] 🧪 preflight all_passed=True
+[01:22:00] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[01:22:00] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_012200.csv
+[01:22:00] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[01:22:00] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[01:22:00] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[01:22:00] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[01:22:00] ✅ 讀入訊號：0 筆 | execution_ready=False
+[01:22:00] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=2
+[01:22:00] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[01:22:00] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=1
+[01:22:00] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[01:22:00] ⛔ Launch Gate / Live Safety Gate / Broker Approval Gate 阻擋本輪 execution，已跳過送單。
+[01:22:00] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[01:22:00] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[01:22:00] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[01:22:00] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[01:22:00] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_012200.json
+[01:22:00] 💓 heartbeat 更新：run_complete
+[01:22:00] 🔓 已釋放 runtime lock
+[01:22:00] 🛑 系統關閉。

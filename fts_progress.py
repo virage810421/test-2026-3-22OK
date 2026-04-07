@@ -4,16 +4,16 @@ class ProgressTracker:
         self.modules = {
             "ETL資料層": 85,
             "AI訓練層": 89,
-            "研究/選股層": 80,
-            "決策輸出層": 85,
+            "研究/選股層": 86,
+            "決策輸出層": 87,
             "風控層": 86,
             "模擬執行層": 90,
             "主控整合層": 95,
-            "真券商介面預留": 68,
+            "真券商介面預留": 74,
             "委託狀態機/對帳骨架": 84,
             "恢復機制骨架": 79,
             "測試/驗證框架": 78,
-            "實盤工程化": 77,
+            "實盤工程化": 81,
             "調度安全閘門": 90,
             "失敗重試/補跑策略": 90,
             "任務快照/日誌歸檔": 88,
@@ -22,6 +22,9 @@ class ProgressTracker:
             "發車前驗證閘門": 89,
             "AI訓練掛回/橋接": 91,
             "模型版本治理/選模閘門": 87,
+            "實盤保護層 / paper-live 防呆": 89,
+            "真券商前審批/雙重確認": 86,
+            "研究/選股品質閘門": 88,
         }
 
     def overall_percent(self) -> float:
@@ -49,12 +52,12 @@ class ProgressTracker:
             "module_progress": self.modules,
             "overall_progress_pct": self.overall_percent(),
             "legacy_mapping": self.legacy_mapping(),
-            "interpretation": "v31 補的是模型版本治理與選模閘門，讓 AI 訓練產物能被主控正式檢查，不是只存在 models 目錄裡。",
+            "interpretation": "v34 把研究/選股層從『已掛回』再推到『有正式品質閘門』，開始檢查 research output 是否足以接到 decision/execution。",
         }
 
 class VersionPolicy:
     def summary(self) -> dict:
         return {
-            "recommended_keep": ["formal_trading_system_v30.py", "formal_trading_system_v31.py"],
-            "current_recommended_entry": "formal_trading_system_v31.py",
+            "recommended_keep": ["formal_trading_system_v33.py", "formal_trading_system_v34.py"],
+            "current_recommended_entry": "formal_trading_system_v34.py",
         }

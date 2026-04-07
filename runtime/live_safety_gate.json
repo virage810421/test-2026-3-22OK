@@ -3,19 +3,15 @@
   "system_name": "正式交易主控版_v24",
   "mode": "PAPER",
   "broker_type": "paper",
-  "headline": {
-    "pending_retry": 0,
-    "signals": 0,
-    "filled": 0,
-    "partial": 0,
-    "auto_exit": 0,
-    "positions": 0,
-    "recent_task_logs": 0,
-    "alerts": 1
-  },
-  "alerts": [
+  "paper_live_safe": false,
+  "failures": [
     {
-      "level": "warning",
+      "type": "launch_gate_blocked",
+      "message": "發車前驗證閘門未通過"
+    }
+  ],
+  "warnings": [
+    {
       "type": "zero_signal",
       "message": "本輪有效訊號為 0"
     }

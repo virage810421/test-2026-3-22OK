@@ -21,8 +21,15 @@ from fts_retry_queue import RetryQueueManager
 from fts_dashboard import HealthDashboardBuilder
 from fts_daily_ops import DailyOpsSummaryBuilder
 from fts_gatekeeper import LaunchGatekeeper
+from fts_ai_pipeline import AIPipelineRegistry, AIPipelineInspector, AIDecisionBridge
+from fts_ai_manager import AITrainingManager
+from fts_model_gate import ModelVersionRegistry, ModelSelectionGate
+from fts_live_safety import LiveSafetyGate
+from fts_research_registry import ResearchSelectionRegistry
+from fts_broker_approval import BrokerApprovalGate
+from fts_research_gate import ResearchQualityGate
 
-class FormalTradingSystemV28:
+class FormalTradingSystemV34:
     def __init__(self):
         self.progress_tracker = ProgressTracker()
         self.version_policy = VersionPolicy()
@@ -50,14 +57,24 @@ class FormalTradingSystemV28:
         self.dashboard = HealthDashboardBuilder()
         self.daily_ops = DailyOpsSummaryBuilder()
         self.gatekeeper = LaunchGatekeeper()
+        self.ai_registry = AIPipelineRegistry()
+        self.ai_inspector = AIPipelineInspector()
+        self.ai_bridge = AIDecisionBridge()
+        self.ai_manager = AITrainingManager()
+        self.model_registry = ModelVersionRegistry()
+        self.model_gate = ModelSelectionGate()
+        self.live_safety = LiveSafetyGate()
+        self.research_registry = ResearchSelectionRegistry()
+        self.broker_approval = BrokerApprovalGate()
+        self.research_gate = ResearchQualityGate()
 
     def boot(self):
         log("=" * 60)
-        log(f"🚀 啟動 正式交易主控版_v28")
+        log(f"🚀 啟動 正式交易主控版_v34")
         log(f"🧭 模式：{CONFIG.mode}")
         log(f"🏦 broker_type：{CONFIG.broker_type}")
         log(f"🎬 execution_style：{CONFIG.execution_style}")
-        log(f"🚦 launch gate：ON")
+        log(f"🔎 research quality gate：ON")
         log(f"📈 目前整體升級進度：{self.progress_tracker.overall_percent()}%")
         log("=" * 60)
 
@@ -69,7 +86,13 @@ class FormalTradingSystemV28:
             self.heartbeat.write("boot")
         self.architecture_map.write()
         self.task_registry.write()
-        self.audit.append("boot", {"system_name": CONFIG.system_name, "package_version": getattr(CONFIG, "package_version", "v28")})
+        self.ai_registry_path, self.ai_registry_payload = self.ai_registry.build()
+        self.ai_status_path, self.ai_status = self.ai_inspector.inspect()
+        self.ai_bridge_path, self.ai_bridge_summary = self.ai_bridge.build_summary()
+        self.ai_manager_info = self.ai_manager.inspect()
+        self.model_registry_path, self.model_registry_payload = self.model_registry.build()
+        self.research_registry_path, self.research_registry_payload = self.research_registry.build()
+        self.audit.append("boot", {"system_name": CONFIG.system_name, "package_version": getattr(CONFIG, "package_version", "v34")})
 
         if self.logger.connect():
             self.logger.ensure_tables()
@@ -79,6 +102,9 @@ class FormalTradingSystemV28:
         self.audit.append("package_check", package_check)
         if getattr(CONFIG, "strict_package_consistency", False) and not package_check["passed"]:
             raise RuntimeError(f"套件版本不一致，請整包覆蓋同版檔案: {package_check['issues']}")
+
+        ai_exec = self.ai_manager.maybe_run_training_stage()
+        self.audit.append("ai_training_exec", ai_exec)
 
         retry_before = self.retry_queue.summarize()
         retry_exec = {"executed": [], "failed": [], "skipped": []}
@@ -127,6 +153,12 @@ class FormalTradingSystemV28:
         log(f"✅ 讀入訊號：{len(signals)} 筆 | execution_ready={readiness['execution_ready']}")
         self.audit.append("readiness", readiness)
 
+        self.research_gate_path, research_gate = self.research_gate.evaluate(compat_info, readiness)
+        self.audit.append("research_gate", research_gate)
+
+        self.model_gate_path, model_gate = self.model_gate.evaluate(self.ai_status, readiness)
+        self.audit.append("model_gate", model_gate)
+
         gate = self.gatekeeper.evaluate(
             upstream_status=upstream_status,
             upstream_exec=upstream_exec,
@@ -136,12 +168,18 @@ class FormalTradingSystemV28:
         )
         self.audit.append("launch_gate", gate)
 
+        self.live_safety_path, live_safety = self.live_safety.evaluate(readiness, gate)
+        self.audit.append("live_safety_gate", live_safety)
+
+        self.broker_approval_path, broker_approval = self.broker_approval.evaluate(gate, live_safety)
+        self.audit.append("broker_approval_gate", broker_approval)
+
         accepted, rejected = [], []
         execution_result = {"submitted": 0, "filled": 0, "partially_filled": 0, "rejected": 0, "cancelled": 0, "fills_count": 0, "auto_exit_signals": 0, "reconciliation": {}}
         account = None
         position_rows = []
 
-        if gate.get("go_for_execution", False):
+        if gate.get("go_for_execution", False) and live_safety.get("paper_live_safe", False) and broker_approval.get("go_for_broker_submission", False):
             accepted, rejected = self.risk_gateway.filter_signals(signals)
             log(f"🛡️ 風控通過：{len(accepted)}")
             log(f"🚫 風控擋下：{len(rejected)}")
@@ -162,7 +200,7 @@ class FormalTradingSystemV28:
                 log(f"📌 持倉 {ticker} | qty={pos.qty} | avg={pos.avg_cost} | SL={pos.stop_loss_price} | TP={pos.take_profit_price} | high={pos.highest_price} | partialTP={pos.partial_tp_done} | note={pos.lifecycle_note}")
                 position_rows.append(asdict(pos))
         else:
-            log("⛔ Launch Gate 阻擋本輪 execution，已跳過送單。")
+            log("⛔ Gate 阻擋本輪 execution，已跳過送單。")
             self.audit.append("risk_result", {"accepted": 0, "rejected": 0, "blocked_by_gate": True})
             account = self.broker.get_account_snapshot()
 
@@ -201,7 +239,12 @@ class FormalTradingSystemV28:
             decision_path=decision_path,
             recovery_info=recovery_info,
             stage_results={
+                "research_gate": research_gate,
                 "launch_gate": gate,
+                "live_safety_gate": live_safety,
+                "broker_approval_gate": broker_approval,
+                "model_gate": model_gate,
+                "ai_training_exec": ai_exec,
                 "retry_boot": {"before": retry_before, "retry_exec": retry_exec, "after": retry_after},
                 "upstream_status": upstream_status,
                 "upstream_exec": upstream_exec,
@@ -209,6 +252,16 @@ class FormalTradingSystemV28:
                 "dashboard_path": str(dashboard_path),
                 "daily_ops_summary_path": str(summary_path),
                 "alerts_path": str(alerts_path),
+                "ai_pipeline_registry_path": str(self.ai_registry_path),
+                "ai_pipeline_status_path": str(self.ai_status_path),
+                "ai_decision_bridge_path": str(self.ai_bridge_path),
+                "model_registry_path": str(self.model_registry_path),
+                "model_gate_path": str(self.model_gate_path),
+                "research_registry_path": str(self.research_registry_path),
+                "research_gate_path": str(self.research_gate_path),
+                "live_safety_gate_path": str(self.live_safety_path),
+                "broker_approval_gate_path": str(self.broker_approval_path),
+                "ai_pipeline_status": self.ai_status,
             },
         )
         log(f"📝 執行報告已輸出：{report_path}")
@@ -220,6 +273,10 @@ class FormalTradingSystemV28:
                 "dashboard_path": str(dashboard_path),
                 "daily_ops_summary_path": str(summary_path),
                 "launch_gate_go": gate.get("go_for_execution", False),
+                "model_gate_go": model_gate.get("go_for_model_linkage", False),
+                "live_safety_go": live_safety.get("paper_live_safe", False),
+                "broker_approval_go": broker_approval.get("go_for_broker_submission", False),
+                "research_gate_go": research_gate.get("go_for_decision_linkage", False),
             })
 
     def shutdown(self):
@@ -230,7 +287,7 @@ class FormalTradingSystemV28:
         log("🛑 系統關閉。")
 
 def main():
-    app = FormalTradingSystemV28()
+    app = FormalTradingSystemV34()
     try:
         app.boot()
         app.run()
