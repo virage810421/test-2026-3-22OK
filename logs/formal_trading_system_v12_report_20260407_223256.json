@@ -1,0 +1,137 @@
+{
+  "run_time": "2026-04-07 22:32:56",
+  "system_name": "正式交易主控版_v12",
+  "mode": "PAPER",
+  "broker_type": "paper",
+  "decision_path": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+  "progress_dashboard": {
+    "module_progress": {
+      "ETL資料層": 85,
+      "AI訓練層": 82,
+      "研究/選股層": 80,
+      "決策相容層": 84,
+      "Legacy橋接層": 78,
+      "風控層": 81,
+      "模擬執行層": 85,
+      "主控整合層": 88,
+      "恢復機制骨架": 72,
+      "實盤工程化": 58
+    },
+    "overall_progress_pct": 79.3,
+    "interpretation": "v12 補了 legacy bridge，讓新主控能更安全地接舊入口與舊 decision 輸出。"
+  },
+  "version_policy": {
+    "recommended_keep": [
+      "formal_trading_system_v11.py",
+      "formal_trading_system_v12.py"
+    ],
+    "can_retire_after_validation": [
+      "formal_trading_system_v1.py",
+      "formal_trading_system_v2.py",
+      "formal_trading_system_v3.py",
+      "formal_trading_system_v4.py",
+      "formal_trading_system_v5.py",
+      "formal_trading_system_v6.py",
+      "formal_trading_system_v7.py",
+      "formal_trading_system_v8.py",
+      "formal_trading_system_v9.py",
+      "formal_trading_system_v10.py"
+    ],
+    "current_recommended_entry": "formal_trading_system_v12.py"
+  },
+  "legacy_bridge_info": {
+    "ran": false,
+    "reason": "disabled"
+  },
+  "compat_info": {
+    "normalized": true,
+    "source_columns": [
+      "Ticker",
+      "Direction",
+      "Regime",
+      "Structure",
+      "AI_Proba",
+      "Hist_WinRate",
+      "Heuristic_EV",
+      "Realized_EV",
+      "Kelly_Pos",
+      "Score",
+      "Risk",
+      "Health",
+      "預期停損(%)",
+      "預期停利(%)",
+      "風報比(RR)",
+      "風險金額"
+    ],
+    "normalized_columns": [
+      "Ticker",
+      "Action",
+      "Regime",
+      "Structure",
+      "AI_Proba",
+      "Score",
+      "Kelly_Pos",
+      "Heuristic_EV",
+      "Reference_Price",
+      "Target_Qty"
+    ]
+  },
+  "recovery_info": {
+    "recovered": true,
+    "saved_at": "2026-04-07 22:20:48",
+    "positions_count": 0
+  },
+  "preflight_tests": {
+    "config_check": {
+      "passed": true,
+      "errors": []
+    },
+    "paths_check": {
+      "passed": true,
+      "errors": []
+    },
+    "decision_file_check": {
+      "passed": true,
+      "path": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+      "errors": []
+    },
+    "all_passed": true
+  },
+  "stage_results": {
+    "etl": [],
+    "ai_training": [],
+    "decision_build": []
+  },
+  "execution_readiness": {
+    "total_signals": 0,
+    "buy_count": 0,
+    "sell_count": 0,
+    "with_model_name": 0,
+    "with_regime": 0,
+    "with_expected_return": 0,
+    "execution_ready": false
+  },
+  "accepted_signals": [],
+  "rejected_signals": [],
+  "execution_result": {
+    "submitted": 0,
+    "filled": 0,
+    "partially_filled": 0,
+    "rejected": 0,
+    "cancelled": 0,
+    "fills_count": 0,
+    "reconciliation": {
+      "orders_count": 0,
+      "fills_count": 0,
+      "filled_order_ids": []
+    }
+  },
+  "account_snapshot": {
+    "cash": 3000000.0,
+    "market_value": 0.0,
+    "equity": 3000000.0,
+    "exposure_ratio": 0.0,
+    "updated_at": "2026-04-07 22:32:56"
+  },
+  "positions": []
+}

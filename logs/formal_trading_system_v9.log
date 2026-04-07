@@ -1,0 +1,46 @@
+[21:59:02] ============================================================
+[21:59:02] 🚀 啟動 正式交易主控版_v9
+[21:59:02] 🧭 模式：PAPER
+[21:59:02] 🏦 broker_type：paper
+[21:59:02] 📈 目前整體升級進度：75.1%
+[21:59:02] ============================================================
+[21:59:02] ✅ SQL Server 連線成功。
+[21:59:02] ✅ execution tables ready.
+[21:59:02] 📚 版本保留建議：
+[21:59:02]    - 主入口：formal_trading_system_v9.py
+[21:59:02]    - 建議保留：formal_trading_system_v8.py, formal_trading_system_v9.py
+[21:59:02] 🧪 preflight all_passed=True
+[21:59:02] 🎯 階段四：執行層
+[21:59:02] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[21:59:02] ❌ 系統例外：
+[21:59:02] CSV 缺少必要欄位：action | 現有欄位=['Ticker', 'Direction', 'Regime', 'Structure', 'AI_Proba', 'Hist_WinRate', 'Heuristic_EV', 'Realized_EV', 'Kelly_Pos', 'Score', 'Risk', 'Health', '預期停損(%)', '預期停利(%)', '風報比(RR)', '風險金額']
+[21:59:02] Traceback (most recent call last):
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v9.py", line 167, in main
+    app.run()
+    ~~~~~~~^^
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v9.py", line 55, in run
+    signals = self.signal_loader.load(decision_path)
+  File "c:\test\test-2026-3-22OK\fts_signal.py", line 44, in load
+    raise ValueError(f"CSV 缺少必要欄位：{required} | 現有欄位={cols}")
+ValueError: CSV 缺少必要欄位：action | 現有欄位=['Ticker', 'Direction', 'Regime', 'Structure', 'AI_Proba', 'Hist_WinRate', 'Heuristic_EV', 'Realized_EV', 'Kelly_Pos', 'Score', 'Risk', 'Health', '預期停損(%)', '預期停利(%)', '風報比(RR)', '風險金額']
+
+[22:00:01] ============================================================
+[22:00:01] 🚀 啟動 正式交易主控版_v9
+[22:00:01] 🧭 模式：PAPER
+[22:00:01] 🏦 broker_type：paper
+[22:00:01] 📈 目前整體升級進度：75.1%
+[22:00:01] ============================================================
+[22:00:02] ✅ SQL Server 連線成功。
+[22:00:02] ✅ execution tables ready.
+[22:00:02] 📚 版本保留建議：
+[22:00:02]    - 主入口：formal_trading_system_v9.py
+[22:00:02]    - 建議保留：formal_trading_system_v8.py, formal_trading_system_v9.py
+[22:00:02] 🧪 preflight all_passed=True
+[22:00:02] 🎯 階段四：執行層
+[22:00:02] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[22:00:02] ✅ 讀入訊號：0 筆 | execution_ready=False | with_model_name=0 | with_regime=0
+[22:00:02] 🛡️ 風控通過：0
+[22:00:02] 🚫 風控擋下：0
+[22:00:02] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[22:00:02] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v9_report_20260407_220002.json
+[22:00:02] 🛑 系統關閉。

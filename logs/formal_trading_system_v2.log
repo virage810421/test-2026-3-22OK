@@ -1,0 +1,23 @@
+[20:59:21] ============================================================
+[20:59:21] 🚀 啟動 正式交易主控版_v2
+[20:59:21] 🧭 模式：PAPER
+[20:59:21] ============================================================
+[20:59:21] ✅ SQL Server 連線成功。
+[20:59:21] ✅ execution 表格已就緒。
+[20:59:21] 🎯 階段四：執行層啟動
+[20:59:21] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[20:59:21] ❌ 系統例外：
+[20:59:21] CSV 缺少必要欄位：action | 現有欄位=['Ticker', 'Direction', 'Regime', 'Structure', 'AI_Proba', 'Hist_WinRate', 'Heuristic_EV', 'Realized_EV', 'Kelly_Pos', 'Score', 'Risk', 'Health', '預期停損(%)', '預期停利(%)', '風報比(RR)', '風險金額']
+[20:59:21] Traceback (most recent call last):
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v2.py", line 969, in main
+    system.run_pipeline()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v2.py", line 853, in run_pipeline
+    self.run_execution_phase()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v2.py", line 859, in run_execution_phase
+    signals = self.signal_loader.load(decision_path)
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v2.py", line 563, in load
+    raise ValueError(f"CSV 缺少必要欄位：{required} | 現有欄位={cols}")
+ValueError: CSV 缺少必要欄位：action | 現有欄位=['Ticker', 'Direction', 'Regime', 'Structure', 'AI_Proba', 'Hist_WinRate', 'Heuristic_EV', 'Realized_EV', 'Kelly_Pos', 'Score', 'Risk', 'Health', '預期停損(%)', '預期停利(%)', '風報比(RR)', '風險金額']
+

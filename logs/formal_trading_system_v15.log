@@ -1,0 +1,80 @@
+[23:21:36] ============================================================
+[23:21:36] 🚀 啟動 正式交易主控版_v15
+[23:21:36] 🧭 模式：PAPER
+[23:21:36] 🏦 broker_type：paper
+[23:21:36] 🎬 execution_style：TWAP3
+[23:21:36] 📈 目前整體升級進度：80.9%
+[23:21:36] ============================================================
+[23:21:36] ✅ SQL Server 連線成功。
+[23:21:36] ✅ execution tables ready.
+[23:21:36] 🧷 package consistency check 通過
+[23:21:36] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:17:54 positions=0
+[23:21:36] 🧪 preflight all_passed=True
+[23:21:36] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[23:21:36] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[23:21:36] ✅ 讀入訊號：0 筆 | execution_ready=False
+[23:21:36] 🛡️ 風控通過：0
+[23:21:36] 🚫 風控擋下：0
+[23:21:36] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[23:21:36] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[23:21:36] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[23:21:36] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v15_report_20260407_232136.json
+[23:21:36] 🛑 系統關閉。
+[23:22:08] ============================================================
+[23:22:08] 🚀 啟動 正式交易主控版_v16
+[23:22:08] 🧭 模式：PAPER
+[23:22:08] 🏦 broker_type：paper
+[23:22:08] 🎬 execution_style：TWAP3
+[23:22:08] 🪜 bracket_exit：True
+[23:22:08] 📈 目前整體升級進度：82.0%
+[23:22:08] ============================================================
+[23:22:08] ✅ SQL Server 連線成功。
+[23:22:08] ✅ execution tables ready.
+[23:22:08] 🧷 package consistency check 通過
+[23:22:08] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:21:36 positions=0
+[23:22:08] 🧪 preflight all_passed=True
+[23:22:08] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[23:22:08] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[23:22:08] ✅ 讀入訊號：0 筆 | execution_ready=False
+[23:22:08] 🛡️ 風控通過：0
+[23:22:08] 🚫 風控擋下：0
+[23:22:08] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[23:22:08] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[23:22:08] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[23:22:08] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v15_report_20260407_232208.json
+[23:22:08] 🛑 系統關閉。
+[23:48:20] ============================================================
+[23:48:20] 🚀 啟動 正式交易主控版_v20
+[23:48:20] 🧭 模式：PAPER
+[23:48:20] 🏦 broker_type：paper
+[23:48:20] 🎬 execution_style：TWAP3
+[23:48:20] 📈 目前整體升級進度：84.2%
+[23:48:20] ============================================================
+[23:48:20] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[23:48:20] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260407_234820.json
+[23:48:20] 💓 heartbeat 更新：boot
+[23:48:20] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[23:48:20] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[23:48:20] ✅ SQL Server 連線成功。
+[23:48:20] ✅ execution tables ready.
+[23:48:20] 🧷 package consistency check 通過
+[23:48:20] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[23:48:20] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:22:08 positions=0
+[23:48:20] 🧪 preflight all_passed=True
+[23:48:20] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[23:48:20] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260407_234820.csv
+[23:48:20] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[23:48:20] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[23:48:20] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[23:48:20] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[23:48:20] ✅ 讀入訊號：0 筆 | execution_ready=False
+[23:48:20] 🛡️ 風控通過：0
+[23:48:20] 🚫 風控擋下：0
+[23:48:20] 💓 heartbeat 更新：execution_start
+[23:48:20] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[23:48:20] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[23:48:20] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[23:48:20] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260407_234820.json
+[23:48:20] 💓 heartbeat 更新：run_complete
+[23:48:20] 🔓 已釋放 runtime lock
+[23:48:20] 🛑 系統關閉。

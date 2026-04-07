@@ -1,0 +1,4 @@
+﻿Ticker SYMBOL,Action,Reference_Price,Target_Qty,Score,AI_Confidence,Industry,Strategy_Name,Reason
+2330.TW,BUY,820.0,1000,78.5,0.68,半導體,AI多頭強勢,技術面+基本面+AI信心同步偏多
+2317.TW,BUY,166.0,2000,72.0,0.61,電子代工,基本面改善,產業與營收動能改善
+2454.TW,BUY,1140.0,1000,55.0,0.5,IC設計,分數不足範例,這筆應被風控擋下

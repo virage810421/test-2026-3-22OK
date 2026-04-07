@@ -1,7 +1,7 @@
 IF OBJECT_ID('dbo.execution_orders', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.execution_orders (
-        id INT IDENTITY(1,1) PRIMARY KEY,
+      
         order_id NVARCHAR(50) NOT NULL,
         symbol NVARCHAR(20) NOT NULL,
         side NVARCHAR(20) NOT NULL,
@@ -26,7 +26,7 @@ GO
 IF OBJECT_ID('dbo.execution_fills', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.execution_fills (
-        id INT IDENTITY(1,1) PRIMARY KEY,
+        
         order_id NVARCHAR(50) NOT NULL,
         symbol NVARCHAR(20) NOT NULL,
         side NVARCHAR(20) NOT NULL,
