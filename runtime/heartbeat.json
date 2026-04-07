@@ -1,9 +1,12 @@
 {
-  "system_name": "正式交易主控版_v18",
-  "time": "2026-04-07 23:48:20",
+  "system_name": "正式交易主控版_v24",
+  "time": "2026-04-08 00:52:39",
   "stage": "run_complete",
-  "pid": 32864,
+  "pid": 19640,
   "extra": {
-    "report_path": "C:\\test\\test-2026-3-22OK\\logs\\formal_trading_system_v17_report_20260407_234820.json"
+    "report_path": "C:\\test\\test-2026-3-22OK\\logs\\formal_trading_system_v17_report_20260408_005239.json",
+    "dashboard_path": "C:\\test\\test-2026-3-22OK\\runtime\\health_dashboard.json",
+    "daily_ops_summary_path": "C:\\test\\test-2026-3-22OK\\runtime\\daily_ops_summary.json",
+    "launch_gate_go": false
   }
 }

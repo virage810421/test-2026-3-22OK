@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-07 23:48:20",
+  "generated_at": "2026-04-08 00:52:39",
   "tasks": [
     {
       "stage": "etl",
@@ -51,7 +51,7 @@
     },
     {
       "stage": "decision",
-      "name": "decision_builder",
+      "name": "decision_builder_csv",
       "script": "daily_decision_desk.csv",
       "required": true,
       "enabled": true,

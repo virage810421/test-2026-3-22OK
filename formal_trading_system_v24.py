@@ -14,8 +14,11 @@ from fts_compat import DecisionCompatibilityLayer
 from fts_package_guard import PackageConsistencyGuard
 from fts_runtime_ops import RuntimeLock, HeartbeatWriter, DecisionArchiver, AuditTrail, ConfigSnapshotWriter
 from fts_architecture_map import ArchitectureMapWriter
+from fts_task_registry import TaskRegistry
+from fts_orchestrator import UpstreamOrchestrator
+from fts_retry_queue import RetryQueueManager
 
-class FormalTradingSystemV19:
+class FormalTradingSystemV24:
     def __init__(self):
         self.progress_tracker = ProgressTracker()
         self.version_policy = VersionPolicy()
@@ -37,24 +40,29 @@ class FormalTradingSystemV19:
         self.audit = AuditTrail()
         self.config_snapshot = ConfigSnapshotWriter()
         self.architecture_map = ArchitectureMapWriter()
+        self.task_registry = TaskRegistry()
+        self.orchestrator = UpstreamOrchestrator()
+        self.retry_queue = RetryQueueManager()
 
     def boot(self):
         log("=" * 60)
-        log(f"🚀 啟動 正式交易主控版_v19")
+        log(f"🚀 啟動 正式交易主控版_v24")
         log(f"🧭 模式：{CONFIG.mode}")
         log(f"🏦 broker_type：{CONFIG.broker_type}")
         log(f"🎬 execution_style：{CONFIG.execution_style}")
+        log(f"🔁 enable_auto_retry_on_boot：{getattr(CONFIG, 'enable_auto_retry_on_boot', False)}")
         log(f"📈 目前整體升級進度：{self.progress_tracker.overall_percent()}%")
         log("=" * 60)
 
-        if CONFIG.enable_runtime_lock:
+        if getattr(CONFIG, "enable_runtime_lock", False):
             self.runtime_lock.acquire()
-        if CONFIG.write_config_snapshot:
+        if getattr(CONFIG, "write_config_snapshot", False):
             self.config_snapshot.write()
-        if CONFIG.enable_heartbeat:
+        if getattr(CONFIG, "enable_heartbeat", False):
             self.heartbeat.write("boot")
         self.architecture_map.write()
-        self.audit.append("boot", {"system_name": CONFIG.system_name, "package_version": getattr(CONFIG, "package_version", "v19")})
+        self.task_registry.write()
+        self.audit.append("boot", {"system_name": CONFIG.system_name, "package_version": getattr(CONFIG, "package_version", "v24")})
 
         if self.logger.connect():
             self.logger.ensure_tables()
@@ -62,13 +70,37 @@ class FormalTradingSystemV19:
     def run(self):
         package_check = self.package_guard.run()
         self.audit.append("package_check", package_check)
-        if CONFIG.strict_package_consistency and not package_check["passed"]:
+        if getattr(CONFIG, "strict_package_consistency", False) and not package_check["passed"]:
             raise RuntimeError(f"套件版本不一致，請整包覆蓋同版檔案: {package_check['issues']}")
 
-        recovery_info = self.recovery_manager.recover_if_possible() if CONFIG.enable_state_recovery else {"recovered": False, "reason": "disabled"}
+        retry_before = self.retry_queue.summarize()
+        retry_exec = {"executed": [], "failed": [], "skipped": []}
+        if getattr(CONFIG, "enable_auto_retry_on_boot", False):
+            retryable = self.retry_queue.list_retryable_items()
+            if retryable:
+                log(f"🔁 準備自動補跑 retry queue | retryable={len(retryable)}")
+                retry_exec = self.orchestrator.execute_retry_items(retryable)
+                for row in retry_exec.get("executed", []):
+                    key = f"{row.get('stage')}::{row.get('name')}::{row.get('script')}"
+                    self.retry_queue.mark_success(key)
+        retry_after = self.retry_queue.summarize()
+        self.audit.append("retry_boot", {"before": retry_before, "retry_exec": retry_exec, "after": retry_after})
+
+        registry_summary = self.task_registry.summary()
+        upstream_status = self.orchestrator.check_tasks(registry_summary)
+        self.audit.append("upstream_status", upstream_status)
+
+        upstream_exec = self.orchestrator.execute_tasks(registry_summary)
+        self.audit.append("upstream_exec", upstream_exec)
+
+        self.retry_queue.add_failed_tasks(upstream_exec.get("failed", []))
+        queue_state = self.retry_queue.summarize()
+        self.audit.append("retry_queue", queue_state)
+
+        recovery_info = self.recovery_manager.recover_if_possible() if getattr(CONFIG, "enable_state_recovery", False) else {"recovered": False, "reason": "disabled"}
         self.audit.append("recovery", recovery_info)
 
-        test_results = self.preflight_tests.run() if CONFIG.enable_preflight_tests else {}
+        test_results = self.preflight_tests.run() if getattr(CONFIG, "enable_preflight_tests", False) else {}
         if test_results:
             log(f"🧪 preflight all_passed={test_results['all_passed']}")
             self.audit.append("preflight", test_results)
@@ -76,7 +108,7 @@ class FormalTradingSystemV19:
         decision_path = resolve_decision_csv()
         log(f"📥 載入決策檔：{decision_path}")
         archived = None
-        if CONFIG.archive_decision_input:
+        if getattr(CONFIG, "archive_decision_input", False):
             archived = self.archiver.archive(decision_path)
         self.audit.append("decision_input", {"source": str(decision_path), "archived": str(archived) if archived else None})
 
@@ -95,7 +127,7 @@ class FormalTradingSystemV19:
         for s, reason in rejected[:20]:
             log(f"   - {s.ticker} {s.action} 被拒：{reason}")
 
-        if CONFIG.enable_heartbeat:
+        if getattr(CONFIG, "enable_heartbeat", False):
             self.heartbeat.write("execution_start", {"accepted": len(accepted)})
 
         execution_result = self.execution_engine.execute(accepted)
@@ -128,22 +160,28 @@ class FormalTradingSystemV19:
             positions=self.broker.get_positions(),
             decision_path=decision_path,
             recovery_info=recovery_info,
+            stage_results={
+                "retry_boot": {"before": retry_before, "retry_exec": retry_exec, "after": retry_after},
+                "upstream_status": upstream_status,
+                "upstream_exec": upstream_exec,
+                "retry_queue": queue_state,
+            },
         )
         log(f"📝 執行報告已輸出：{report_path}")
         self.audit.append("report_saved", {"path": str(report_path)})
 
-        if CONFIG.enable_heartbeat:
+        if getattr(CONFIG, "enable_heartbeat", False):
             self.heartbeat.write("run_complete", {"report_path": str(report_path)})
 
     def shutdown(self):
         self.logger.close()
-        if CONFIG.enable_runtime_lock:
+        if getattr(CONFIG, "enable_runtime_lock", False):
             self.runtime_lock.release()
         self.audit.append("shutdown", {"ok": True})
         log("🛑 系統關閉。")
 
 def main():
-    app = FormalTradingSystemV19()
+    app = FormalTradingSystemV24()
     try:
         app.boot()
         app.run()
@@ -155,12 +193,12 @@ def main():
         log(traceback.format_exc())
         try:
             app.audit.append("crash", {"error": str(e)})
-            if CONFIG.enable_heartbeat:
+            if getattr(CONFIG, "enable_heartbeat", False):
                 app.heartbeat.write("crash", {"error": str(e)})
         except Exception:
             pass
         try:
-            if CONFIG.enable_runtime_lock:
+            if getattr(CONFIG, "enable_runtime_lock", False):
                 app.runtime_lock.release()
         except Exception:
             pass

@@ -1,0 +1,197 @@
+{
+  "generated_at": "2026-04-08 00:52:39",
+  "system_name": "正式交易主控版_v24",
+  "mode": "PAPER",
+  "broker_type": "paper",
+  "heartbeat": {
+    "system_name": "正式交易主控版_v24",
+    "time": "2026-04-08 00:52:39",
+    "stage": "boot",
+    "pid": 19640,
+    "extra": {}
+  },
+  "architecture_map": {
+    "etl_entry": "daily_chip_etl.py / monthly_revenue_simple.py / yahoo_csv_to_sql.py",
+    "ai_entry": "ml_data_generator.py / ml_trainer.py / model_governance.py",
+    "research_entry": "你的 research / scoring / decision builder 主程式",
+    "decision_file": "daily_decision_desk.csv",
+    "execution_entry": "formal_trading_system_v19.py",
+    "state_store": "state/engine_state.json",
+    "audit_trail": "runtime/audit_events.jsonl",
+    "runtime_heartbeat": "runtime/heartbeat.json",
+    "notes": "v19 重點是把新主控明確掛回你的原始上游架構，而不是取代它。",
+    "generated_at": "2026-04-08 00:52:39",
+    "system_name": "正式交易主控版_v24"
+  },
+  "task_registry_summary": {
+    "total": 7,
+    "etl": 3,
+    "ai": 3,
+    "decision": 1
+  },
+  "upstream_status": {
+    "ready": [
+      {
+        "stage": "etl",
+        "name": "daily_chip_etl",
+        "script": "daily_chip_etl.py",
+        "exists": true,
+        "required": true,
+        "enabled": true
+      },
+      {
+        "stage": "etl",
+        "name": "monthly_revenue",
+        "script": "monthly_revenue_simple.py",
+        "exists": true,
+        "required": false,
+        "enabled": true
+      },
+      {
+        "stage": "etl",
+        "name": "fundamentals_import",
+        "script": "yahoo_csv_to_sql.py",
+        "exists": true,
+        "required": false,
+        "enabled": true
+      },
+      {
+        "stage": "ai",
+        "name": "ml_data_generator",
+        "script": "ml_data_generator.py",
+        "exists": true,
+        "required": false,
+        "enabled": true
+      },
+      {
+        "stage": "ai",
+        "name": "ml_trainer",
+        "script": "ml_trainer.py",
+        "exists": true,
+        "required": false,
+        "enabled": true
+      },
+      {
+        "stage": "ai",
+        "name": "model_governance",
+        "script": "model_governance.py",
+        "exists": true,
+        "required": false,
+        "enabled": true
+      },
+      {
+        "stage": "decision",
+        "name": "decision_builder_csv",
+        "script": "daily_decision_desk.csv",
+        "exists": true,
+        "required": true,
+        "enabled": true
+      }
+    ],
+    "missing": []
+  },
+  "upstream_exec": {
+    "executed": [],
+    "failed": [],
+    "skipped": [
+      {
+        "status": "skipped",
+        "reason": "etl stage manual enable required",
+        "stage": "etl",
+        "name": "daily_chip_etl",
+        "script": "daily_chip_etl.py",
+        "required": true,
+        "enabled": true,
+        "notes": "法人籌碼/日更資料"
+      },
+      {
+        "status": "skipped",
+        "reason": "etl stage manual enable required",
+        "stage": "etl",
+        "name": "monthly_revenue",
+        "script": "monthly_revenue_simple.py",
+        "required": false,
+        "enabled": true,
+        "notes": "月營收"
+      },
+      {
+        "status": "skipped",
+        "reason": "etl stage manual enable required",
+        "stage": "etl",
+        "name": "fundamentals_import",
+        "script": "yahoo_csv_to_sql.py",
+        "required": false,
+        "enabled": true,
+        "notes": "財報/基本面"
+      },
+      {
+        "status": "skipped",
+        "reason": "ai stage manual enable required",
+        "stage": "ai",
+        "name": "ml_data_generator",
+        "script": "ml_data_generator.py",
+        "required": false,
+        "enabled": true,
+        "notes": "特徵資料集"
+      },
+      {
+        "status": "skipped",
+        "reason": "ai stage manual enable required",
+        "stage": "ai",
+        "name": "ml_trainer",
+        "script": "ml_trainer.py",
+        "required": false,
+        "enabled": true,
+        "notes": "模型訓練"
+      },
+      {
+        "status": "skipped",
+        "reason": "ai stage manual enable required",
+        "stage": "ai",
+        "name": "model_governance",
+        "script": "model_governance.py",
+        "required": false,
+        "enabled": true,
+        "notes": "模型治理"
+      },
+      {
+        "status": "skipped",
+        "reason": "decision stage manual enable required",
+        "stage": "decision",
+        "name": "decision_builder_csv",
+        "script": "daily_decision_desk.csv",
+        "required": true,
+        "enabled": true,
+        "notes": "決策輸出檔"
+      }
+    ]
+  },
+  "retry_queue_summary": {
+    "total": 0,
+    "pending_retry": 0,
+    "resolved": 0
+  },
+  "execution_readiness": {
+    "total_signals": 0,
+    "buy_count": 0,
+    "sell_count": 0,
+    "with_regime": 0,
+    "with_expected_return": 0,
+    "execution_ready": false
+  },
+  "execution_result": {
+    "submitted": 0,
+    "filled": 0,
+    "partially_filled": 0,
+    "rejected": 0,
+    "cancelled": 0,
+    "fills_count": 0,
+    "auto_exit_signals": 0,
+    "reconciliation": {}
+  },
+  "positions_summary": {
+    "count": 0,
+    "tickers": []
+  },
+  "recent_task_logs": []
+}

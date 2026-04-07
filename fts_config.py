@@ -43,8 +43,8 @@ class AppPaths:
 
 @dataclass
 class SystemConfig:
-    system_name: str = "正式交易主控版_v18"
-    package_version: str = "v18"
+    system_name: str = "正式交易主控版_v24"
+    package_version: str = "v24"
     mode: str = "PAPER"
     broker_type: str = "paper"
     starting_cash: float = 3_000_000
@@ -81,13 +81,27 @@ class SystemConfig:
     max_holding_bars: int = 12
     current_bar_index: int = 1
     position_cooldown_bars: int = 1
-    # v18 stability ops
     enable_runtime_lock: bool = True
     enable_heartbeat: bool = True
-    heartbeat_write_seconds: int = 15
     archive_decision_input: bool = True
     write_config_snapshot: bool = True
-    fail_when_zero_signal: bool = False
+    enable_upstream_execution: bool = True
+    fail_on_required_upstream_failure: bool = True
+    run_etl_stage: bool = False
+    run_ai_stage: bool = False
+    run_decision_stage: bool = False
+    upstream_timeout_seconds: int = 3600
+    require_manual_stage_enable: bool = True
+    dry_run_upstream_execution: bool = True
+    require_decision_file_after_decision_stage: bool = True
+    enable_retry_queue: bool = True
+    max_retry_attempts: int = 3
+    auto_retry_failed_optional_tasks: bool = False
+    fail_on_retry_queue_required_items: bool = True
+    # v24 auto-retry
+    enable_auto_retry_on_boot: bool = True
+    auto_retry_required_tasks: bool = False
+    retry_only_same_stage_enabled: bool = True
 
 @dataclass
 class DBConfig:

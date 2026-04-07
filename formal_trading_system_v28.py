@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from dataclasses import asdict
 from fts_config import CONFIG, DB
 from fts_utils import log, resolve_decision_csv
 from fts_progress import ProgressTracker, VersionPolicy
@@ -16,8 +17,12 @@ from fts_runtime_ops import RuntimeLock, HeartbeatWriter, DecisionArchiver, Audi
 from fts_architecture_map import ArchitectureMapWriter
 from fts_task_registry import TaskRegistry
 from fts_orchestrator import UpstreamOrchestrator
+from fts_retry_queue import RetryQueueManager
+from fts_dashboard import HealthDashboardBuilder
+from fts_daily_ops import DailyOpsSummaryBuilder
+from fts_gatekeeper import LaunchGatekeeper
 
-class FormalTradingSystemV20:
+class FormalTradingSystemV28:
     def __init__(self):
         self.progress_tracker = ProgressTracker()
         self.version_policy = VersionPolicy()
@@ -41,13 +46,18 @@ class FormalTradingSystemV20:
         self.architecture_map = ArchitectureMapWriter()
         self.task_registry = TaskRegistry()
         self.orchestrator = UpstreamOrchestrator()
+        self.retry_queue = RetryQueueManager()
+        self.dashboard = HealthDashboardBuilder()
+        self.daily_ops = DailyOpsSummaryBuilder()
+        self.gatekeeper = LaunchGatekeeper()
 
     def boot(self):
         log("=" * 60)
-        log(f"🚀 啟動 正式交易主控版_v20")
+        log(f"🚀 啟動 正式交易主控版_v28")
         log(f"🧭 模式：{CONFIG.mode}")
         log(f"🏦 broker_type：{CONFIG.broker_type}")
         log(f"🎬 execution_style：{CONFIG.execution_style}")
+        log(f"🚦 launch gate：ON")
         log(f"📈 目前整體升級進度：{self.progress_tracker.overall_percent()}%")
         log("=" * 60)
 
@@ -59,7 +69,7 @@ class FormalTradingSystemV20:
             self.heartbeat.write("boot")
         self.architecture_map.write()
         self.task_registry.write()
-        self.audit.append("boot", {"system_name": CONFIG.system_name, "package_version": getattr(CONFIG, "package_version", "v20")})
+        self.audit.append("boot", {"system_name": CONFIG.system_name, "package_version": getattr(CONFIG, "package_version", "v28")})
 
         if self.logger.connect():
             self.logger.ensure_tables()
@@ -70,8 +80,29 @@ class FormalTradingSystemV20:
         if getattr(CONFIG, "strict_package_consistency", False) and not package_check["passed"]:
             raise RuntimeError(f"套件版本不一致，請整包覆蓋同版檔案: {package_check['issues']}")
 
-        upstream_status = self.orchestrator.check_tasks(self.task_registry.summary())
+        retry_before = self.retry_queue.summarize()
+        retry_exec = {"executed": [], "failed": [], "skipped": []}
+        if getattr(CONFIG, "enable_auto_retry_on_boot", False):
+            retryable = self.retry_queue.list_retryable_items()
+            if retryable:
+                log(f"🔁 準備自動補跑 retry queue | retryable={len(retryable)}")
+                retry_exec = self.orchestrator.execute_retry_items(retryable)
+                for row in retry_exec.get("executed", []):
+                    key = f"{row.get('stage')}::{row.get('name')}::{row.get('script')}"
+                    self.retry_queue.mark_success(key)
+        retry_after = self.retry_queue.summarize()
+        self.audit.append("retry_boot", {"before": retry_before, "retry_exec": retry_exec, "after": retry_after})
+
+        registry_summary = self.task_registry.summary()
+        upstream_status = self.orchestrator.check_tasks(registry_summary)
         self.audit.append("upstream_status", upstream_status)
+
+        upstream_exec = self.orchestrator.execute_tasks(registry_summary)
+        self.audit.append("upstream_exec", upstream_exec)
+
+        self.retry_queue.add_failed_tasks(upstream_exec.get("failed", []))
+        queue_state = self.retry_queue.summarize()
+        self.audit.append("retry_queue", queue_state)
 
         recovery_info = self.recovery_manager.recover_if_possible() if getattr(CONFIG, "enable_state_recovery", False) else {"recovered": False, "reason": "disabled"}
         self.audit.append("recovery", recovery_info)
@@ -96,24 +127,57 @@ class FormalTradingSystemV20:
         log(f"✅ 讀入訊號：{len(signals)} 筆 | execution_ready={readiness['execution_ready']}")
         self.audit.append("readiness", readiness)
 
-        accepted, rejected = self.risk_gateway.filter_signals(signals)
-        log(f"🛡️ 風控通過：{len(accepted)}")
-        log(f"🚫 風控擋下：{len(rejected)}")
-        self.audit.append("risk_result", {"accepted": len(accepted), "rejected": len(rejected)})
-        for s, reason in rejected[:20]:
-            log(f"   - {s.ticker} {s.action} 被拒：{reason}")
+        gate = self.gatekeeper.evaluate(
+            upstream_status=upstream_status,
+            upstream_exec=upstream_exec,
+            retry_queue=queue_state,
+            compat_info=compat_info,
+            readiness=readiness,
+        )
+        self.audit.append("launch_gate", gate)
 
-        if getattr(CONFIG, "enable_heartbeat", False):
-            self.heartbeat.write("execution_start", {"accepted": len(accepted)})
+        accepted, rejected = [], []
+        execution_result = {"submitted": 0, "filled": 0, "partially_filled": 0, "rejected": 0, "cancelled": 0, "fills_count": 0, "auto_exit_signals": 0, "reconciliation": {}}
+        account = None
+        position_rows = []
 
-        execution_result = self.execution_engine.execute(accepted)
-        account = self.broker.get_account_snapshot()
-        log(f"💰 帳戶快照 | cash={account.cash:,.0f} | mv={account.market_value:,.0f} | equity={account.equity:,.0f} | exposure={account.exposure_ratio:.2%}")
-        log(f"🎯 執行摘要 | filled={execution_result['filled']} | partial={execution_result['partially_filled']} | auto_exit={execution_result['auto_exit_signals']}")
-        self.audit.append("execution_result", execution_result)
+        if gate.get("go_for_execution", False):
+            accepted, rejected = self.risk_gateway.filter_signals(signals)
+            log(f"🛡️ 風控通過：{len(accepted)}")
+            log(f"🚫 風控擋下：{len(rejected)}")
+            self.audit.append("risk_result", {"accepted": len(accepted), "rejected": len(rejected)})
+            for s, reason in rejected[:20]:
+                log(f"   - {s.ticker} {s.action} 被拒：{reason}")
 
-        for ticker, pos in self.broker.get_positions().items():
-            log(f"📌 持倉 {ticker} | qty={pos.qty} | avg={pos.avg_cost} | SL={pos.stop_loss_price} | TP={pos.take_profit_price} | high={pos.highest_price} | partialTP={pos.partial_tp_done} | note={pos.lifecycle_note}")
+            if getattr(CONFIG, "enable_heartbeat", False):
+                self.heartbeat.write("execution_start", {"accepted": len(accepted)})
+
+            execution_result = self.execution_engine.execute(accepted)
+            account = self.broker.get_account_snapshot()
+            log(f"💰 帳戶快照 | cash={account.cash:,.0f} | mv={account.market_value:,.0f} | equity={account.equity:,.0f} | exposure={account.exposure_ratio:.2%}")
+            log(f"🎯 執行摘要 | filled={execution_result['filled']} | partial={execution_result['partially_filled']} | auto_exit={execution_result['auto_exit_signals']}")
+            self.audit.append("execution_result", execution_result)
+
+            for ticker, pos in self.broker.get_positions().items():
+                log(f"📌 持倉 {ticker} | qty={pos.qty} | avg={pos.avg_cost} | SL={pos.stop_loss_price} | TP={pos.take_profit_price} | high={pos.highest_price} | partialTP={pos.partial_tp_done} | note={pos.lifecycle_note}")
+                position_rows.append(asdict(pos))
+        else:
+            log("⛔ Launch Gate 阻擋本輪 execution，已跳過送單。")
+            self.audit.append("risk_result", {"accepted": 0, "rejected": 0, "blocked_by_gate": True})
+            account = self.broker.get_account_snapshot()
+
+        dashboard_path, dashboard = self.dashboard.build(
+            upstream_status=upstream_status,
+            upstream_exec=upstream_exec,
+            retry_queue=queue_state,
+            readiness=readiness,
+            execution_result=execution_result,
+            positions=position_rows,
+        )
+        self.audit.append("dashboard_saved", {"path": str(dashboard_path)})
+
+        summary_path, alerts_path, daily_summary = self.daily_ops.build(dashboard)
+        self.audit.append("daily_ops_saved", {"summary_path": str(summary_path), "alerts_path": str(alerts_path)})
 
         state_path = self.state_store.save(
             cash=account.cash,
@@ -136,13 +200,27 @@ class FormalTradingSystemV20:
             positions=self.broker.get_positions(),
             decision_path=decision_path,
             recovery_info=recovery_info,
-            stage_results={"upstream_status": upstream_status},
+            stage_results={
+                "launch_gate": gate,
+                "retry_boot": {"before": retry_before, "retry_exec": retry_exec, "after": retry_after},
+                "upstream_status": upstream_status,
+                "upstream_exec": upstream_exec,
+                "retry_queue": queue_state,
+                "dashboard_path": str(dashboard_path),
+                "daily_ops_summary_path": str(summary_path),
+                "alerts_path": str(alerts_path),
+            },
         )
         log(f"📝 執行報告已輸出：{report_path}")
         self.audit.append("report_saved", {"path": str(report_path)})
 
         if getattr(CONFIG, "enable_heartbeat", False):
-            self.heartbeat.write("run_complete", {"report_path": str(report_path)})
+            self.heartbeat.write("run_complete", {
+                "report_path": str(report_path),
+                "dashboard_path": str(dashboard_path),
+                "daily_ops_summary_path": str(summary_path),
+                "launch_gate_go": gate.get("go_for_execution", False),
+            })
 
     def shutdown(self):
         self.logger.close()
@@ -152,7 +230,7 @@ class FormalTradingSystemV20:
         log("🛑 系統關閉。")
 
 def main():
-    app = FormalTradingSystemV20()
+    app = FormalTradingSystemV28()
     try:
         app.boot()
         app.run()

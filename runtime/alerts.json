@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-04-08 00:52:39",
+  "alerts": [
+    {
+      "level": "warning",
+      "type": "zero_signal",
+      "message": "本輪有效訊號為 0"
+    }
+  ]
+}

@@ -78,3 +78,236 @@
 [23:48:20] 💓 heartbeat 更新：run_complete
 [23:48:20] 🔓 已釋放 runtime lock
 [23:48:20] 🛑 系統關閉。
+[23:56:02] ============================================================
+[23:56:02] 🚀 啟動 正式交易主控版_v21
+[23:56:02] 🧭 模式：PAPER
+[23:56:02] 🏦 broker_type：paper
+[23:56:02] 🎬 execution_style：TWAP3
+[23:56:02] 📈 目前整體升級進度：84.6%
+[23:56:02] ============================================================
+[23:56:02] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[23:56:02] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260407_235602.json
+[23:56:02] 💓 heartbeat 更新：boot
+[23:56:02] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[23:56:02] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[23:56:02] ✅ SQL Server 連線成功。
+[23:56:02] ✅ execution tables ready.
+[23:56:02] 🧷 package consistency check 通過
+[23:56:02] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[23:56:02] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[23:56:02] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:48:20 positions=0
+[23:56:02] 🧪 preflight all_passed=True
+[23:56:02] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[23:56:02] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260407_235602.csv
+[23:56:02] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[23:56:02] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[23:56:02] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[23:56:02] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[23:56:02] ✅ 讀入訊號：0 筆 | execution_ready=False
+[23:56:02] 🛡️ 風控通過：0
+[23:56:02] 🚫 風控擋下：0
+[23:56:02] 💓 heartbeat 更新：execution_start
+[23:56:02] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[23:56:02] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[23:56:02] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[23:56:02] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260407_235602.json
+[23:56:02] 💓 heartbeat 更新：run_complete
+[23:56:02] 🔓 已釋放 runtime lock
+[23:56:02] 🛑 系統關閉。
+[00:08:46] ============================================================
+[00:08:46] 🚀 啟動 正式交易主控版_v24
+[00:08:46] 🧭 模式：PAPER
+[00:08:46] 🏦 broker_type：paper
+[00:08:46] 🎬 execution_style：TWAP3
+[00:08:46] 🔁 enable_auto_retry_on_boot：True
+[00:08:46] 📈 目前整體升級進度：85.6%
+[00:08:46] ============================================================
+[00:08:46] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[00:08:46] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_000846.json
+[00:08:46] 💓 heartbeat 更新：boot
+[00:08:46] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[00:08:46] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[00:08:46] ✅ SQL Server 連線成功。
+[00:08:46] ✅ execution tables ready.
+[00:08:46] 🧷 package consistency check 通過
+[00:08:46] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[00:08:46] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[00:08:46] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
+[00:08:46] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:56:02 positions=0
+[00:08:46] 🧪 preflight all_passed=True
+[00:08:46] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[00:08:46] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_000846.csv
+[00:08:46] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[00:08:46] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[00:08:46] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[00:08:46] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[00:08:46] ✅ 讀入訊號：0 筆 | execution_ready=False
+[00:08:46] 🛡️ 風控通過：0
+[00:08:46] 🚫 風控擋下：0
+[00:08:46] 💓 heartbeat 更新：execution_start
+[00:08:46] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[00:08:46] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[00:08:46] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[00:08:46] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_000846.json
+[00:08:46] 💓 heartbeat 更新：run_complete
+[00:08:46] 🔓 已釋放 runtime lock
+[00:08:46] 🛑 系統關閉。
+[00:13:33] ============================================================
+[00:13:33] 🚀 啟動 正式交易主控版_v25
+[00:13:33] 🧭 模式：PAPER
+[00:13:33] 🏦 broker_type：paper
+[00:13:33] 🎬 execution_style：TWAP3
+[00:13:33] 🗃️ task log archive：ON
+[00:13:33] 📈 目前整體升級進度：85.8%
+[00:13:33] ============================================================
+[00:13:33] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[00:13:33] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_001333.json
+[00:13:33] 💓 heartbeat 更新：boot
+[00:13:33] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[00:13:33] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[00:13:33] ✅ SQL Server 連線成功。
+[00:13:33] ✅ execution tables ready.
+[00:13:33] 🧷 package consistency check 通過
+[00:13:33] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[00:13:33] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[00:13:33] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
+[00:13:33] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:08:46 positions=0
+[00:13:33] 🧪 preflight all_passed=True
+[00:13:33] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[00:13:33] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_001333.csv
+[00:13:33] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[00:13:33] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[00:13:33] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[00:13:33] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[00:13:33] ✅ 讀入訊號：0 筆 | execution_ready=False
+[00:13:33] 🛡️ 風控通過：0
+[00:13:33] 🚫 風控擋下：0
+[00:13:33] 💓 heartbeat 更新：execution_start
+[00:13:33] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[00:13:33] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[00:13:33] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[00:13:33] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_001333.json
+[00:13:33] 💓 heartbeat 更新：run_complete
+[00:13:33] 🔓 已釋放 runtime lock
+[00:13:33] 🛑 系統關閉。
+[00:25:21] ============================================================
+[00:25:21] 🚀 啟動 正式交易主控版_v26
+[00:25:21] 🧭 模式：PAPER
+[00:25:21] 🏦 broker_type：paper
+[00:25:21] 🎬 execution_style：TWAP3
+[00:25:21] 📊 health dashboard：ON
+[00:25:21] 📈 目前整體升級進度：86.0%
+[00:25:21] ============================================================
+[00:25:21] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[00:25:21] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_002521.json
+[00:25:21] 💓 heartbeat 更新：boot
+[00:25:21] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[00:25:21] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[00:25:21] ✅ SQL Server 連線成功。
+[00:25:21] ✅ execution tables ready.
+[00:25:21] 🧷 package consistency check 通過
+[00:25:21] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[00:25:21] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[00:25:21] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
+[00:25:21] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:13:33 positions=0
+[00:25:21] 🧪 preflight all_passed=True
+[00:25:21] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[00:25:21] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_002521.csv
+[00:25:21] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[00:25:21] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[00:25:21] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[00:25:21] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[00:25:21] ✅ 讀入訊號：0 筆 | execution_ready=False
+[00:25:21] 🛡️ 風控通過：0
+[00:25:21] 🚫 風控擋下：0
+[00:25:21] 💓 heartbeat 更新：execution_start
+[00:25:21] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[00:25:21] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[00:25:21] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[00:25:21] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[00:25:21] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_002521.json
+[00:25:21] 💓 heartbeat 更新：run_complete
+[00:25:21] 🔓 已釋放 runtime lock
+[00:25:21] 🛑 系統關閉。
+[00:39:28] ============================================================
+[00:39:28] 🚀 啟動 正式交易主控版_v27
+[00:39:28] 🧭 模式：PAPER
+[00:39:28] 🏦 broker_type：paper
+[00:39:28] 🎬 execution_style：TWAP3
+[00:39:28] 🚨 daily ops alerts：ON
+[00:39:28] 📈 目前整體升級進度：86.3%
+[00:39:28] ============================================================
+[00:39:28] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[00:39:28] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_003928.json
+[00:39:28] 💓 heartbeat 更新：boot
+[00:39:29] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[00:39:29] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[00:39:29] ✅ SQL Server 連線成功。
+[00:39:29] ✅ execution tables ready.
+[00:39:29] 🧷 package consistency check 通過
+[00:39:29] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[00:39:29] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[00:39:29] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
+[00:39:29] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:25:21 positions=0
+[00:39:29] 🧪 preflight all_passed=True
+[00:39:29] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[00:39:29] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_003929.csv
+[00:39:29] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[00:39:29] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[00:39:29] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[00:39:29] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[00:39:29] ✅ 讀入訊號：0 筆 | execution_ready=False
+[00:39:29] 🛡️ 風控通過：0
+[00:39:29] 🚫 風控擋下：0
+[00:39:29] 💓 heartbeat 更新：execution_start
+[00:39:29] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[00:39:29] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[00:39:29] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[00:39:29] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[00:39:29] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[00:39:29] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[00:39:29] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_003929.json
+[00:39:29] 💓 heartbeat 更新：run_complete
+[00:39:29] 🔓 已釋放 runtime lock
+[00:39:29] 🛑 系統關閉。
+[00:52:39] ============================================================
+[00:52:39] 🚀 啟動 正式交易主控版_v29
+[00:52:39] 🧭 模式：PAPER
+[00:52:39] 🏦 broker_type：paper
+[00:52:39] 🎬 execution_style：TWAP3
+[00:52:39] 🧠 AI pipeline bridge：ON
+[00:52:39] 📈 目前整體升級進度：86.8%
+[00:52:39] ============================================================
+[00:52:39] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
+[00:52:39] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_005239.json
+[00:52:39] 💓 heartbeat 更新：boot
+[00:52:39] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[00:52:39] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[00:52:39] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[00:52:39] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[00:52:39] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[00:52:39] ✅ SQL Server 連線成功。
+[00:52:39] ✅ execution tables ready.
+[00:52:39] 🧷 package consistency check 通過
+[00:52:39] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[00:52:39] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[00:52:39] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
+[00:52:39] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:39:29 positions=0
+[00:52:39] 🧪 preflight all_passed=True
+[00:52:39] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[00:52:39] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_005239.csv
+[00:52:39] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[00:52:39] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[00:52:39] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[00:52:39] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
+[00:52:39] ✅ 讀入訊號：0 筆 | execution_ready=False
+[00:52:39] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[00:52:39] ⛔ Launch Gate 阻擋本輪 execution，已跳過送單。
+[00:52:39] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[00:52:39] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[00:52:39] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[00:52:39] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[00:52:39] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_005239.json
+[00:52:39] 💓 heartbeat 更新：run_complete
+[00:52:39] 🔓 已釋放 runtime lock
+[00:52:39] 🛑 系統關閉。

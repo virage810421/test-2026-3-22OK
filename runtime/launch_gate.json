@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-04-08 00:52:39",
+  "system_name": "正式交易主控版_v24",
+  "go_for_execution": false,
+  "failures": [
+    {
+      "type": "decision_price_missing",
+      "count": 1,
+      "items": []
+    }
+  ],
+  "warnings": [
+    {
+      "type": "zero_signal",
+      "count": 1,
+      "items": []
+    }
+  ],
+  "summary": {
+    "failure_count": 1,
+    "warning_count": 1,
+    "signal_count": 0
+  }
+}

@@ -23,7 +23,7 @@ class TaskRegistry:
             RegisteredTask("ai", "ml_data_generator", "ml_data_generator.py", required=False, notes="特徵資料集"),
             RegisteredTask("ai", "ml_trainer", "ml_trainer.py", required=False, notes="模型訓練"),
             RegisteredTask("ai", "model_governance", "model_governance.py", required=False, notes="模型治理"),
-            RegisteredTask("decision", "decision_builder", "daily_decision_desk.csv", required=True, notes="決策輸出檔"),
+            RegisteredTask("decision", "decision_builder_csv", "daily_decision_desk.csv", required=True, notes="決策輸出檔"),
         ]
         self.path = PATHS.runtime_dir / "task_registry.json"
 
