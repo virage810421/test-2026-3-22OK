@@ -7,6 +7,7 @@ import pyodbc
 
 from config import PARAMS
 from performance import check_strategy_health, get_strategy_summary
+from alert_manager import AlertManager
 
 DB_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
@@ -264,6 +265,13 @@ def run_system_guard():
     print(format_alert_message(payload))
     print(f"📁 已輸出：{json_path}")
     print(f"📁 已輸出：{csv_path}")
+
+    alert_mgr = AlertManager(
+        line_bot_token=PARAMS.get("ALERT_LINE_BOT_TOKEN", ""),
+        line_user_id=PARAMS.get("ALERT_LINE_USER_ID", ""),
+        is_test_mode=bool(PARAMS.get("ALERT_TEST_MODE", True)),
+    )
+    alert_mgr.maybe_send_guard_alert(payload)
     return payload
 
 
