@@ -8,15 +8,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import TimeSeriesSplit
 
 
-# ==========================================
-# 🧩 模組 1：Alpha 武器海關審查
-# ==========================================
+COST_PER_TRADE = 0.004
+
+
+
 def evaluate_alpha_full(signal, future_return):
     """檢驗單一把武器的期望值與穩定性"""
-    df = pd.DataFrame({
-        "signal": signal,
-        "ret": future_return,
-    }).dropna()
+    df = pd.DataFrame({"signal": signal, "ret": future_return}).dropna()
 
     if len(df) < 30:
         return None
@@ -49,16 +47,15 @@ def evaluate_alpha_full(signal, future_return):
     }
 
 
-# ==========================================
-# 🧩 模組 2：Walk-Forward 壓力測試模組
-# ==========================================
-def walk_forward_analysis(X, y):
+
+def walk_forward_analysis(X, y, target_return, cost_per_trade=COST_PER_TRADE):
     tscv = TimeSeriesSplit(n_splits=5)
     results = []
 
     for train_idx, test_idx in tscv.split(X):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+        ret_test = target_return.iloc[test_idx]
 
         if len(y_train.unique()) < 2 or len(y_test.unique()) < 2:
             continue
@@ -72,30 +69,38 @@ def walk_forward_analysis(X, y):
         model.fit(X_train, y_train)
         pred = model.predict(X_test)
 
-        hit_rate = (pred == y_test).mean()
-        pred_sign = np.where(pred > 0, 1, -1)
-        actual_sign = np.where(y_test > 0, 1, -1)
-        strategy_return = (pred_sign * actual_sign).mean()
+        strategy_returns = np.where(pred == 1, ret_test.values - cost_per_trade, 0.0)
+        hit_rate = float(np.mean(strategy_returns > 0)) if len(strategy_returns) > 0 else 0.0
+        avg_return = float(np.mean(strategy_returns)) if len(strategy_returns) > 0 else 0.0
 
-        results.append({"hit_rate": hit_rate, "return": strategy_return})
+        gains = strategy_returns[strategy_returns > 0].sum()
+        losses = abs(strategy_returns[strategy_returns < 0].sum())
+        profit_factor = float(gains / losses) if losses > 0 else (99.9 if gains > 0 else 0.0)
+
+        results.append({
+            "hit_rate": hit_rate,
+            "return": avg_return,
+            "profit_factor": profit_factor,
+        })
 
     return results
 
 
+
 def evaluate_stability(results):
     if not results:
-        return {"ret_mean": 0, "consistency": 0}
+        return {"ret_mean": 0, "consistency": 0, "pf_mean": 0}
 
     returns = [r["return"] for r in results]
+    pfs = [r.get("profit_factor", 0) for r in results]
     return {
         "ret_mean": float(np.mean(returns)),
         "consistency": float(np.mean([r > 0 for r in returns])),
+        "pf_mean": float(np.mean(pfs)),
     }
 
 
-# ==========================================
-# 🧠 主幹：AI 大腦鍛造程序
-# ==========================================
+
 def train_models():
     print("🧠 [精神時光屋] 啟動 AI 兵工廠 (搭載 Alpha 特徵海關)...")
 
@@ -156,7 +161,6 @@ def train_models():
 
     all_features = list(dict.fromkeys(all_features + old_features))
 
-    # 自動重鑄歷史組合武器
     for feature in all_features:
         if "_X_" in feature and feature not in df.columns:
             parts = feature.split("_X_")
@@ -197,9 +201,6 @@ def train_models():
         print("⚠️ 警告：沒有任何武器通過嚴格審查！系統強制保留所有武器以維持運作。")
         qualified_features = all_features.copy()
 
-    # ==========================================
-    # 🔥 連擊武器研發中心
-    # ==========================================
     print(f"\n⚔️ 啟動連擊武器研發：正在測試 {len(qualified_features)} 把及格武器的交叉組合...")
     combo_features = []
 
@@ -249,15 +250,19 @@ def train_models():
 
         X = regime_df[safe_features].copy()
         y = regime_df["Label_Y"]
+        target_return_regime = pd.to_numeric(regime_df.get("Target_Return", 0), errors="coerce").fillna(0)
 
         X = X.replace([np.inf, -np.inf], np.nan).fillna(0)
         if len(pd.Series(y).unique()) < 2:
             print("⚠️ 標籤只有單一類別，跳過。")
             continue
 
-        wf_results = walk_forward_analysis(X, y)
+        wf_results = walk_forward_analysis(X, y, target_return_regime)
         stability = evaluate_stability(wf_results)
-        print(f"   ► [大腦品管] 平均期望報酬: {stability['ret_mean']:.4f} | 獲利一致性: {stability['consistency']:.1%}")
+        print(
+            f"   ► [大腦品管] 平均期望報酬: {stability['ret_mean']:.4f} | "
+            f"獲利一致性: {stability['consistency']:.1%} | 平均 PF: {stability['pf_mean']:.2f}"
+        )
 
         model_path = f"models/model_{regime}.pkl"
         if stability["ret_mean"] > 0 and stability["consistency"] >= 0.60:

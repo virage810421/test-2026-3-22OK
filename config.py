@@ -147,23 +147,41 @@ WATCH_LIST = [
     "2409.TW", "3481.TW", "6116.TW", "2344.TW", "2408.TW", "2337.TW"
 ]
 
+# ==========================================
+# 💀 破壞性測試對照組 (解決 AI 存活者偏差)
+# ==========================================
+# 故意放入過去幾年長年虧損、或是景氣大起大落的股票
+# 讓 AI 學習「籌碼潰散、均線死亡交叉」的危險長相
+LOSERS_LIST = [
+    "2498.TW", # 宏達電 
+    "3481.TW", # 群創 
+    "2349.TW", # 錸德 
+    "2888.TW"  # 新光金 
+]
+
+# ==========================================
+# 🎯 智能名單樞紐 (提供給全產線呼叫)
+# ==========================================
 def get_dynamic_watch_list():
-    """
-    智能切換閥：優先讀取海選雷達產出的最新名單，若無則使用備用名單
-    """
-    # 假設您的海選名單存在這個路徑 (請依您的實際檔名修改)
-    target_csv = "data/stock_list_cache_listed.csv" 
+  
+    # 這是您 fundamental_screener.py 產出的名單檔案
+    target_csv = "stock_list_cache_listed.csv" 
+    dynamic_list = []
     
     if os.path.exists(target_csv):
         try:
             df = pd.read_csv(target_csv)
-            # 假設 CSV 裡面有一個欄位叫做 'Ticker SYMBOL'
             if 'Ticker SYMBOL' in df.columns:
                 dynamic_list = df['Ticker SYMBOL'].dropna().unique().tolist()
-                print(f"🎯 [名單樞紐] 成功匯入最新海選名單：共 {len(dynamic_list)} 檔")
-                return dynamic_list
+                print(f"🎯 [名單樞紐] 成功匯入海選名單：共 {len(dynamic_list)} 檔")
         except Exception as e:
-            print(f"⚠️ 讀取海選名單失敗，啟動備用名單: {e}")
+            print(f"⚠️ 讀取海選名單失敗: {e}")
             
-    print("⚠️ 找不到海選名單 CSV，啟動預設備用名單。")
-    return WATCH_LIST
+    # 若無檔案或讀取失敗，啟動上方的靜態 WATCH_LIST 備援
+    if not dynamic_list:
+        print("⚠️ 啟動備用靜態名單 WATCH_LIST")
+        dynamic_list = WATCH_LIST.copy()
+
+    # 🌟 混合破壞性測試名單，建立最終作戰名單
+    final_list = list(set(dynamic_list + LOSERS_LIST))
+    return final_list

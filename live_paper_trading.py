@@ -1,23 +1,18 @@
 import warnings
-
-warnings.filterwarnings("ignore", category=UserWarning)
-warnings.filterwarnings("ignore", message=".*pandas only supports SQLAlchemy.*")
+from datetime import datetime
 
 import pandas as pd
 import pyodbc
-from datetime import datetime
 import requests
 
 from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
 from config import PARAMS
 from strategies import get_active_strategy
 
-# ==========================================
-# ⚙️ 系統環境設定
-# ==========================================
-IS_TEST_MODE = True
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", message=".*pandas only supports SQLAlchemy.*")
 
-# 安全起見：請自行填入，不再把真實憑證硬編碼在檔案中
+IS_TEST_MODE = True
 LINE_BOT_TOKEN = ""
 LINE_USER_ID = ""
 
@@ -27,6 +22,7 @@ DB_CONN_STR = (
     r"DATABASE=股票online;"
     r"Trusted_Connection=yes;"
 )
+
 
 
 def send_line_bot_msg(msg: str):
@@ -62,6 +58,7 @@ def send_line_bot_msg(msg: str):
         print(f"⚠️ LINE 網路發送發生例外錯誤: {e}")
 
 
+
 def get_available_cash(cursor) -> float:
     try:
         cursor.execute("SELECT [可用現金] FROM account_info WHERE [帳戶名稱] = N'我的實戰帳戶'")
@@ -86,6 +83,7 @@ def get_available_cash(cursor) -> float:
     return 5000000.0
 
 
+
 def run_eod_broker():
     print("\n" + "=" * 60)
     print("🤖 [自動下單中心] 啟動盤後結算與執行程序...")
@@ -108,9 +106,6 @@ def run_eod_broker():
     stock_value = 0.0
     daily_log = []
 
-    # ==========================================
-    # 🛡️ 階段一：掃描持倉
-    # ==========================================
     if not active_df.empty:
         for _, pos in active_df.iterrows():
             ticker = pos["Ticker SYMBOL"]
@@ -129,7 +124,6 @@ def run_eod_broker():
                 continue
 
             df = add_chip_data(df, ticker)
-
             result = inspect_stock(ticker, preloaded_df=df, p=PARAMS)
             if not result or "計算後資料" not in result:
                 continue
@@ -203,7 +197,7 @@ def run_eod_broker():
                     PARAMS["TAX_RATE"],
                 )
 
-                current_cash += (invested + pnl)
+                current_cash += invested + pnl
 
                 remaining_shares = shares - sell_shares
                 if remaining_shares <= 0:
@@ -262,15 +256,12 @@ def run_eod_broker():
             else:
                 stock_value += curr_price * shares
 
-    # ==========================================
-    # ⚔️ 階段二：執行建倉任務
-    # ==========================================
     try:
         decisions = pd.read_csv("daily_decision_desk.csv")
     except Exception:
         decisions = pd.DataFrame()
 
-    total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1000000
+    total_nav = current_cash + stock_value if (current_cash + stock_value) > 0 else 1_000_000
 
     if not decisions.empty:
         for _, row in decisions.iterrows():
@@ -290,7 +281,6 @@ def run_eod_broker():
                 continue
 
             curr_price = float(df["Close"].iloc[-1])
-
             shares = int((total_nav * kelly_pct) / curr_price)
             shares = int(shares // 1000) * 1000 if shares >= 1000 else shares
             if shares < 1:
@@ -309,9 +299,10 @@ def run_eod_broker():
                     """
                     INSERT INTO active_positions (
                         [Ticker SYMBOL], [方向], [進場時間], [進場價], [投入資金],
-                        [進場股數], [停利階段], [進場陣型], [期望值], [風險金額]
+                        [進場股數], [停利階段], [市場狀態], [進場陣型], [期望值],
+                        [預期停損(%)], [預期停利(%)], [風報比(RR)], [風險金額]
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         ticker,
@@ -320,18 +311,19 @@ def run_eod_broker():
                         curr_price,
                         total_cost,
                         shares,
+                        row.get("Regime", "區間盤整"),
                         row.get("Structure", "AI訊號"),
-                        row.get("EV", 0.0),
-                        total_cost * 0.05,
+                        row.get("Realized_EV", row.get("EV", 0.0)),
+                        row.get("預期停損(%)", 0.05),
+                        row.get("預期停利(%)", 0.10),
+                        row.get("風報比(RR)", 2.0),
+                        row.get("風險金額", total_cost * 0.05),
                     ),
                 )
 
                 action_icon = "🟢 做多" if "Long" in str(trade_direction) else "🔴 放空"
                 daily_log.append(f"{action_icon} {ticker}: {shares}股 (花費 ${total_cost:,.0f})")
 
-    # ==========================================
-    # 📊 階段三：結算與發送 LINE 戰報
-    # ==========================================
     cursor.execute(
         """
         UPDATE account_info

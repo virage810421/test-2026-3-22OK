@@ -197,84 +197,19 @@ def is_tw_trading_day(date_str: str) -> bool:
 
 
 # =========================================================
-# 📡 股票清單
+# 📡 股票清單：對接中央名單樞紐
 # =========================================================
 def get_official_stock_list():
-    print("📡 正在向【證交所 / 櫃買中心】請求全市場名單...")
-
-    twse_url = "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
-    tpex_urls = [
-        "https://www.tpex.org.tw/openapi/v1/t187ap03_O",
-        "https://www.tpex.org.tw/www/zh-tw/regular_emerging/stocks/summary?response=json"
-    ]
-
-    all_stocks = []
-
     try:
-        twse_data = safe_get_json(twse_url)
-        if isinstance(twse_data, list):
-            twse_stocks = [str(item.get("公司代號", "")).strip() for item in twse_data]
-            twse_stocks = [s for s in twse_stocks if len(s) == 4 and s.isdigit()]
-            all_stocks.extend(twse_stocks)
-            print(f"✅ 上市股票：{len(twse_stocks)} 檔")
+        from config import get_dynamic_watch_list
+        target_list = get_dynamic_watch_list()
+        print(f"🎯 從 config.py 讀取混合監控清單：共 {len(target_list)} 檔")
+        
+        # 籌碼 API 通常不需要 .TW/.TWO，做個字串清理後回傳
+        return [str(t).replace(".TW", "").replace(".TWO", "") for t in target_list]
     except Exception as e:
-        print(f"❌ 上市名單抓取失敗: {e}")
-
-    tpex_success = False
-    for url in tpex_urls:
-        try:
-            data = safe_get_json(url)
-            tpex_stocks = []
-
-            if isinstance(data, list):
-                for item in data:
-                    code = str(
-                        item.get("公司代號", "") or
-                        item.get("SecuritiesCompanyCode", "") or
-                        item.get("代號", "")
-                    ).strip()
-                    if len(code) == 4 and code.isdigit():
-                        tpex_stocks.append(code)
-
-            elif isinstance(data, dict):
-                possible_rows = []
-                for key in ["tables", "data", "aaData", "records"]:
-                    if key in data and isinstance(data[key], list):
-                        possible_rows = data[key]
-                        break
-
-                for row in possible_rows:
-                    if isinstance(row, dict):
-                        code = str(
-                            row.get("公司代號", "") or
-                            row.get("SecuritiesCompanyCode", "") or
-                            row.get("代號", "")
-                        ).strip()
-                        if len(code) == 4 and code.isdigit():
-                            tpex_stocks.append(code)
-
-            tpex_stocks = sorted(list(set(tpex_stocks)))
-            if tpex_stocks:
-                all_stocks.extend(tpex_stocks)
-                print(f"✅ 上櫃股票：{len(tpex_stocks)} 檔")
-                tpex_success = True
-                break
-
-        except Exception as e:
-            print(f"⚠️ 上櫃名單來源失敗: {url} | {e}")
-
-    if not tpex_success:
-        print("❌ 上櫃名單抓取失敗")
-
-    pure_stocks = sorted(list(set(all_stocks)))
-    if pure_stocks:
-        print(f"🎯 成功取得全市場股票：{len(pure_stocks)} 檔")
-        return pure_stocks
-
-    print("⚠️ 官方名單全部失敗，改用備援清單")
-    return ["2330", "2317", "2454"]
-
-
+        print(f"⚠️ 無法讀取動態名單，使用極限備援名單: {e}")
+        return ["2330", "2317", "2454"]
 # =========================================================
 # 🧱 SQL Table 檢查
 # =========================================================

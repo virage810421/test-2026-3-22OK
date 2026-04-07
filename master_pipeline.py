@@ -10,7 +10,8 @@ import pandas as pd
 import pyodbc
 import yfinance as yf
 
-from performance import check_strategy_health
+from fundamental_screener import get_vip_stock_pool
+from performance import check_strategy_health, get_strategy_ev
 from screening import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
 
 logging.basicConfig(
@@ -20,9 +21,11 @@ logging.basicConfig(
 )
 
 
+
 def log(msg):
     print(msg)
     logging.info(msg)
+
 
 
 def run_script(script_name, retries=2, timeout=900):
@@ -63,6 +66,7 @@ def run_script(script_name, retries=2, timeout=900):
     return False
 
 
+
 def validate_outputs():
     if not os.path.exists("data/ml_training_data.csv"):
         log("❌ 驗證失敗：特徵訓練教材 (ml_training_data.csv) 未產出！")
@@ -78,6 +82,7 @@ def validate_outputs():
     return True
 
 
+
 def generate_report(start_time, status):
     report = {
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -87,6 +92,7 @@ def generate_report(start_time, status):
     with open("daily_report.json", "w", encoding="utf-8") as f:
         json.dump(report, f, indent=4, ensure_ascii=False)
     log("📊 已生成系統日誌 daily_report.json")
+
 
 
 def get_system_performance():
@@ -127,6 +133,7 @@ def get_system_performance():
     return 0.5, 1.0, 0.0
 
 
+
 def should_retrain():
     today = datetime.now().weekday()
 
@@ -147,6 +154,7 @@ def should_retrain():
         return True
 
     return False
+
 
 
 def get_dynamic_watchlist():
@@ -173,6 +181,31 @@ def get_dynamic_watchlist():
         raise
 
 
+
+def merge_watchlist_with_fundamentals(raw_watch_list):
+    try:
+        vip_pool = get_vip_stock_pool()
+    except Exception as e:
+        log(f"⚠️ 基本面篩選器異常，直接使用原始名單：{e}")
+        return raw_watch_list
+
+    raw_watch_list = [normalize_ticker_symbol(t) for t in raw_watch_list]
+    vip_pool = [normalize_ticker_symbol(t) for t in vip_pool]
+
+    merged = [t for t in raw_watch_list if t in set(vip_pool)]
+    if merged:
+        log(f"✅ 基本面海關過濾完成：原始 {len(raw_watch_list)} 檔 → 合格 {len(merged)} 檔")
+        return merged
+
+    if vip_pool:
+        log("⚠️ 原始名單與基本面名單無交集，改採基本面名單作戰。")
+        return vip_pool
+
+    log("⚠️ 基本面名單為空，退回原始名單。")
+    return raw_watch_list
+
+
+
 def load_market_data(watch_list):
     log(f"📡 戰情中心：正在同步 {len(watch_list)} 檔標的資料 (⚡啟用智慧快取)...")
     data_dict = {}
@@ -186,6 +219,7 @@ def load_market_data(watch_list):
         data_dict[ticker] = df
     log(f"✅ 已完成 {len(data_dict)} 檔資料載入")
     return data_dict
+
 
 
 def analyze_market_climate():
@@ -223,6 +257,7 @@ def analyze_market_climate():
         return "未知", 1.0
 
 
+
 def build_decision_desk(watch_list, market_data, global_risk_multiplier):
     ai_models = {}
     selected_features = []
@@ -253,13 +288,14 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
 
         latest_row = result["計算後資料"].iloc[-1]
         regime = result.get("Regime", latest_row.get("Regime", "區間盤整"))
-        score = result.get("期望值", 0.0)
-        hist_win = result.get("系統勝率(%)", 50.0) / 100
+        heuristic_ev = float(result.get("期望值", 0.0))
+        hist_win = float(result.get("系統勝率(%)", 50.0)) / 100
 
         setup_tag = result.get("Golden_Type", "無")
         if setup_tag == "無":
             continue
 
+        realized_ev = float(get_strategy_ev(setup_tag, regime))
         model = ai_models.get(regime)
         proba = hist_win
         if model is not None:
@@ -276,8 +312,13 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
 
         action = "做多(Long)" if "多" in setup_tag else "做空(Short)"
         health_status, health_note = check_strategy_health(setup_tag)
-        base_kelly = max(0.0, min(0.2, (proba - 0.5) * 0.4 + max(0, score) * 0.05))
+        base_kelly = max(0.0, min(0.2, (proba - 0.5) * 0.4 + max(0, realized_ev) * 0.05))
         final_kelly = 0.0 if health_status == "KILL" else round(base_kelly * global_risk_multiplier, 4)
+
+        expected_sl_pct = 0.05
+        expected_tp_pct = 0.10
+        rr_ratio = round(expected_tp_pct / expected_sl_pct, 2) if expected_sl_pct > 0 else 0.0
+        risk_amount = round(final_kelly * 10_000_000 * expected_sl_pct, 2)
 
         rows.append({
             "Ticker": ticker,
@@ -286,11 +327,16 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
             "Structure": setup_tag,
             "AI_Proba": round(proba, 4),
             "Hist_WinRate": round(hist_win, 4),
-            "EV": round(score, 4),
+            "Heuristic_EV": round(heuristic_ev, 4),
+            "Realized_EV": round(realized_ev, 4),
             "Kelly_Pos": final_kelly,
-            "Score": round((proba * 0.6 + hist_win * 0.4), 4),
+            "Score": round((proba * 0.6 + hist_win * 0.2 + max(0, realized_ev) * 0.2), 4),
             "Risk": health_note,
             "Health": health_status,
+            "預期停損(%)": round(expected_sl_pct, 4),
+            "預期停利(%)": round(expected_tp_pct, 4),
+            "風報比(RR)": rr_ratio,
+            "風險金額": risk_amount,
         })
 
     df_report = pd.DataFrame(rows)
@@ -299,6 +345,7 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
     df_report.to_csv("daily_decision_desk.csv", index=False, encoding="utf-8-sig")
     log("💾 報告已同步儲存至 daily_decision_desk.csv")
     return df_report
+
 
 
 def main():
@@ -347,7 +394,8 @@ def main():
     log(f"🌍 市場氣候：{climate_status} | 風險倍率：{global_risk_multiplier:.2f}")
 
     try:
-        watch_list = get_dynamic_watchlist()
+        raw_watch_list = get_dynamic_watchlist()
+        watch_list = merge_watchlist_with_fundamentals(raw_watch_list)
     except Exception:
         generate_report(start_time, "FAILED")
         return
@@ -362,7 +410,10 @@ def main():
             target_amount = TOTAL_CAPITAL * final_allocation_pct
 
             log(f"🎯 標的: {row['Ticker']}")
-            log(f"   ► AI 勝率預測: {row['AI_Proba']:.1%} | 歷史回測勝率: {row['Hist_WinRate']:.1%} | 綜合決策分: {row['Score']:.2f}")
+            log(
+                f"   ► AI 勝率預測: {row['AI_Proba']:.1%} | 歷史回測勝率: {row['Hist_WinRate']:.1%} | "
+                f"真實 EV: {row['Realized_EV']:.2f} | 綜合決策分: {row['Score']:.2f}"
+            )
             log(f"   ► 戰略結構: {row['Structure']}")
             log(f"   ► 風險評估: {row['Risk']}")
             if final_allocation_pct > 0:

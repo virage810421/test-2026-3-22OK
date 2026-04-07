@@ -119,8 +119,10 @@ def extract_ai_features(row):
     features["Foreign_Consec_Days"] = row.get("Foreign_Consecutive", 0)
     features["Trust_Consec_Days"] = row.get("Trust_Consecutive", 0)
 
-    for key in ["buy_c2", "buy_c3", "buy_c4", "buy_c5", "buy_c6", "buy_c7", "buy_c8", "buy_c9",
-                "sell_c2", "sell_c3", "sell_c4", "sell_c5", "sell_c6", "sell_c7", "sell_c8", "sell_c9"]:
+    for key in [
+        "buy_c2", "buy_c3", "buy_c4", "buy_c5", "buy_c6", "buy_c7", "buy_c8", "buy_c9",
+        "sell_c2", "sell_c3", "sell_c4", "sell_c5", "sell_c6", "sell_c7", "sell_c8", "sell_c9"
+    ]:
         features[key] = int(row.get(key, 0))
 
     features["Trap_Signal"] = 1 if row.get("Fake_Breakout", False) else (-1 if row.get("Bear_Trap", False) else 0)
@@ -160,7 +162,9 @@ def add_chip_data(df, ticker):
         return pd.DataFrame()
 
     ticker = normalize_ticker_symbol(ticker)
-    alternate = ticker[:-3] + ".TWO" if ticker.endswith(".TW") else (ticker[:-4] + ".TW" if ticker.endswith(".TWO") else ticker)
+    alternate = ticker[:-3] + ".TWO" if ticker.endswith(".TW") else (
+        ticker[:-4] + ".TW" if ticker.endswith(".TWO") else ticker
+    )
 
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
@@ -259,6 +263,131 @@ def calculate_pnl(direction, entry_price, exit_price, shares, fee_rate, tax_rate
         exit_cost = exit_price * shares * (1 + fee_rate)
         pnl = entry_value - exit_cost
     return pnl, invested
+
+
+def _assign_golden_type(df, trigger_score):
+    trigger = max(2, trigger_score)
+    buy_active = df["Buy_Score"] >= trigger
+    sell_active = df["Sell_Score"] >= trigger
+
+    df["Signal_Conflict"] = (buy_active & sell_active).astype(int)
+    df["Golden_Type"] = "無"
+
+    long_only = buy_active & (~sell_active)
+    short_only = sell_active & (~buy_active)
+    both = buy_active & sell_active
+
+    df.loc[long_only, "Golden_Type"] = "多方進場"
+    df.loc[short_only, "Golden_Type"] = "空方進場"
+
+    # 雙向同時觸發時，分數高者勝出；同分則視為衝突無效
+    df.loc[both & (df["Buy_Score"] > df["Sell_Score"]), "Golden_Type"] = "多方進場"
+    df.loc[both & (df["Sell_Score"] > df["Buy_Score"]), "Golden_Type"] = "空方進場"
+    df.loc[both & (df["Buy_Score"] == df["Sell_Score"]), "Golden_Type"] = "無"
+
+    return df
+
+
+def _compute_realized_signal_stats(df, p=PARAMS, hold_days=5):
+    """
+    以歷史訊號的已實現結果估算勝率 / EV，不再用分數公式硬推。
+    這裡不是完整交易引擎，但至少是根據歷史訊號落地後的真實結果計算。
+    """
+    fee_rate = float(p.get("FEE_RATE", 0.001425)) * float(p.get("FEE_DISCOUNT", 1.0))
+    tax_rate = float(p.get("TAX_RATE", 0.003))
+    min_samples = int(p.get("MIN_SIGNAL_SAMPLE_SIZE", 8))
+
+    if df is None or df.empty or len(df) <= hold_days + 1:
+        return {
+            "系統勝率(%)": 50.0,
+            "累計報酬率(%)": 0.0,
+            "期望值": 0.0,
+            "平均獲利(%)": 0.0,
+            "平均虧損(%)": 0.0,
+            "歷史訊號樣本數": 0,
+            "Kelly建議倉位": 0.0,
+            "Realized_Signal_Returns": [],
+        }
+
+    realized_returns = []
+    entry_dates = []
+
+    valid_df = df.copy().reset_index().rename(columns={df.index.name or "index": "TradeDate"})
+
+    for i in range(1, len(valid_df) - hold_days):
+        setup = str(valid_df.loc[i - 1, "Golden_Type"]).strip()
+        if setup not in ("多方進場", "空方進場"):
+            continue
+
+        entry_open = valid_df.loc[i, "Open"]
+        exit_close = valid_df.loc[i + hold_days - 1, "Close"]
+
+        if pd.isna(entry_open) or pd.isna(exit_close) or entry_open <= 0:
+            continue
+
+        direction = 1 if setup == "多方進場" else -1
+        gross_ret = direction * ((float(exit_close) - float(entry_open)) / float(entry_open))
+
+        if direction == 1:
+            net_ret = gross_ret - (2 * fee_rate + tax_rate)
+        else:
+            net_ret = gross_ret - (2 * fee_rate + tax_rate)
+
+        realized_returns.append(float(net_ret * 100.0))
+        entry_dates.append(valid_df.loc[i, "TradeDate"])
+
+    sample_size = len(realized_returns)
+
+    if sample_size == 0:
+        return {
+            "系統勝率(%)": 50.0,
+            "累計報酬率(%)": 0.0,
+            "期望值": 0.0,
+            "平均獲利(%)": 0.0,
+            "平均虧損(%)": 0.0,
+            "歷史訊號樣本數": 0,
+            "Kelly建議倉位": 0.0,
+            "Realized_Signal_Returns": [],
+        }
+
+    wins = [r for r in realized_returns if r > 0]
+    losses = [r for r in realized_returns if r <= 0]
+
+    win_rate = (len(wins) / sample_size) * 100.0
+    avg_win = float(np.mean(wins)) if wins else 0.0
+    avg_loss = abs(float(np.mean(losses))) if losses else 0.0
+    expectancy = float(np.mean(realized_returns))
+    total_profit = float(np.sum(realized_returns))
+
+    reward_risk_ratio = (avg_win / avg_loss) if avg_loss > 0 else 0.0
+    p_win = len(wins) / sample_size
+    q_loss = 1 - p_win
+
+    if reward_risk_ratio > 0 and expectancy > 0:
+        kelly_fraction = p_win - (q_loss / reward_risk_ratio)
+    else:
+        kelly_fraction = 0.0
+
+    safe_kelly = max(0.0, min(0.30, kelly_fraction * 0.5))
+
+    # 樣本太少時做保守收縮，避免剛好幾筆勝率就飆太高
+    if sample_size < min_samples:
+        shrink = sample_size / float(min_samples)
+        win_rate = 50.0 + (win_rate - 50.0) * shrink
+        expectancy = expectancy * shrink
+        total_profit = total_profit * shrink
+        safe_kelly = safe_kelly * shrink
+
+    return {
+        "系統勝率(%)": round(win_rate, 2),
+        "累計報酬率(%)": round(total_profit, 2),
+        "期望值": round(expectancy, 4),
+        "平均獲利(%)": round(avg_win, 4),
+        "平均虧損(%)": round(avg_loss, 4),
+        "歷史訊號樣本數": sample_size,
+        "Kelly建議倉位": round(safe_kelly, 4),
+        "Realized_Signal_Returns": realized_returns,
+    }
 
 
 def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
@@ -374,28 +503,35 @@ def inspect_stock(ticker, preloaded_df=None, p=PARAMS):
         choices = ["趨勢多頭", "趨勢空頭"]
         df["Regime"] = np.select(conditions, choices, default="區間盤整")
 
-        df["Golden_Type"] = "無"
-        df.loc[df["Buy_Score"] >= max(2, p.get("TRIGGER_SCORE", 1)), "Golden_Type"] = "多方進場"
-        df.loc[df["Sell_Score"] >= max(2, p.get("TRIGGER_SCORE", 1)), "Golden_Type"] = "空方進場"
-
+        df = _assign_golden_type(df, p.get("TRIGGER_SCORE", 1))
         latest = df.iloc[-1]
 
-        # Simple historical stats
-        signal_count = int(((df["Buy_Score"] >= p.get("TRIGGER_SCORE", 1)) | (df["Sell_Score"] >= p.get("TRIGGER_SCORE", 1))).sum())
-        system_win = float(min(85, max(35, 50 + (latest["Buy_Score"] - latest["Sell_Score"]) * 3)))
-        total_profit = float((df["Close"].pct_change().fillna(0).tail(120).sum()) * 100)
-        expected_value = float((system_win / 100) * 2 - 1)
+        signal_stats = _compute_realized_signal_stats(df, p=p, hold_days=int(p.get("ML_LABEL_HOLD_DAYS", 5)))
+        signal_count = int((df["Golden_Type"] != "無").sum())
+
+        signal_confidence = float(
+            max(0.0, min(
+                100.0,
+                50.0 + (float(latest["Buy_Score"]) - float(latest["Sell_Score"])) * 5.0
+            ))
+        )
 
         return {
             "Ticker": ticker,
-            "系統勝率(%)": round(system_win, 2),
-            "累計報酬率(%)": round(total_profit, 2),
-            "期望值": round(expected_value, 4),
+            "系統勝率(%)": signal_stats["系統勝率(%)"],
+            "累計報酬率(%)": signal_stats["累計報酬率(%)"],
+            "期望值": signal_stats["期望值"],
+            "平均獲利(%)": signal_stats["平均獲利(%)"],
+            "平均虧損(%)": signal_stats["平均虧損(%)"],
+            "Kelly建議倉位": signal_stats["Kelly建議倉位"],
+            "歷史訊號樣本數": signal_stats["歷史訊號樣本數"],
+            "訊號信心分數(%)": round(signal_confidence, 2),
             "Regime": latest["Regime"],
             "Buy_Score": int(latest["Buy_Score"]),
             "Sell_Score": int(latest["Sell_Score"]),
             "Golden_Type": latest["Golden_Type"],
             "Signal_Count": signal_count,
+            "Signal_Conflict": int(latest.get("Signal_Conflict", 0)),
             "計算後資料": df,
         }
 
@@ -419,7 +555,8 @@ if __name__ == "__main__":
         if result and "計算後資料" in result:
             print(
                 f"✅ {ticker} | Regime={result['Regime']} | "
-                f"Win={result['系統勝率(%)']}% | EV={result['期望值']}"
+                f"Win={result['系統勝率(%)']}% | EV={result['期望值']} | "
+                f"Samples={result['歷史訊號樣本數']}"
             )
             try:
                 draw_chart(
