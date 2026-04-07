@@ -1,3 +1,5 @@
+import os
+import sys
 import pyodbc
 
 MASTER_CONN_STR = (
@@ -13,6 +15,31 @@ TARGET_CONN_STR = (
     r"DATABASE=股票online;"
     r"Trusted_Connection=yes;"
 )
+
+
+# =========================================================
+# 工具函式
+# =========================================================
+def log(msg):
+    print(msg)
+
+
+def get_arg_value(flag_name: str, default=None):
+    for i, arg in enumerate(sys.argv):
+        if arg == flag_name and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    return default
+
+
+def has_flag(flag_name: str) -> bool:
+    return flag_name in sys.argv
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return str(val).strip().lower() in ("1", "true", "yes", "y", "on")
 
 
 def ensure_table(cursor, table_name, create_sql):
@@ -31,10 +58,13 @@ def ensure_column(cursor, table_name, col_name, col_sql_type):
     )
 
 
+# =========================================================
+# 核心 schema 管理
+# =========================================================
 def ensure_core_tables(cursor):
-    # =========================================================
-    # 表 1：歷史交易總帳
-    # =========================================================
+    # -----------------------------------------------------
+    # trade_history
+    # -----------------------------------------------------
     ensure_table(cursor, "trade_history", """
         CREATE TABLE dbo.trade_history (
             [策略名稱] NVARCHAR(50) NULL,
@@ -79,9 +109,9 @@ def ensure_core_tables(cursor):
     for col, typ in trade_history_columns.items():
         ensure_column(cursor, "trade_history", col, typ)
 
-    # =========================================================
-    # 表 2：目前持倉工作區
-    # =========================================================
+    # -----------------------------------------------------
+    # active_positions
+    # -----------------------------------------------------
     ensure_table(cursor, "active_positions", """
         CREATE TABLE dbo.active_positions (
             [Ticker SYMBOL] VARCHAR(20) NOT NULL,
@@ -120,9 +150,9 @@ def ensure_core_tables(cursor):
     for col, typ in active_positions_columns.items():
         ensure_column(cursor, "active_positions", col, typ)
 
-    # =========================================================
-    # 表 3：每日法人籌碼庫
-    # =========================================================
+    # -----------------------------------------------------
+    # daily_chip_data
+    # -----------------------------------------------------
     ensure_table(cursor, "daily_chip_data", """
         CREATE TABLE dbo.daily_chip_data (
             [日期] DATE NOT NULL,
@@ -150,9 +180,9 @@ def ensure_core_tables(cursor):
     for col, typ in chip_columns.items():
         ensure_column(cursor, "daily_chip_data", col, typ)
 
-    # =========================================================
-    # 表 4：季財報資料庫
-    # =========================================================
+    # -----------------------------------------------------
+    # fundamentals_clean
+    # -----------------------------------------------------
     ensure_table(cursor, "fundamentals_clean", """
         CREATE TABLE dbo.fundamentals_clean (
             [Ticker SYMBOL] VARCHAR(20) NOT NULL,
@@ -187,9 +217,9 @@ def ensure_core_tables(cursor):
     for col, typ in fundamentals_columns.items():
         ensure_column(cursor, "fundamentals_clean", col, typ)
 
-    # =========================================================
-    # 表 5：月營收資料庫
-    # =========================================================
+    # -----------------------------------------------------
+    # monthly_revenue_simple
+    # -----------------------------------------------------
     ensure_table(cursor, "monthly_revenue_simple", """
         CREATE TABLE dbo.monthly_revenue_simple (
             [Ticker SYMBOL] NVARCHAR(20) NOT NULL,
@@ -214,9 +244,9 @@ def ensure_core_tables(cursor):
     for col, typ in revenue_columns.items():
         ensure_column(cursor, "monthly_revenue_simple", col, typ)
 
-    # =========================================================
-    # 表 6：帳戶資訊
-    # =========================================================
+    # -----------------------------------------------------
+    # account_info
+    # -----------------------------------------------------
     ensure_table(cursor, "account_info", """
         CREATE TABLE dbo.account_info (
             [帳戶名稱] NVARCHAR(50) NOT NULL,
@@ -234,63 +264,100 @@ def ensure_core_tables(cursor):
         ensure_column(cursor, "account_info", col, typ)
 
 
+# =========================================================
+# 操作模式
+# =========================================================
+def ensure_database_exists():
+    with pyodbc.connect(MASTER_CONN_STR, autocommit=True) as master_conn:
+        cursor = master_conn.cursor()
+        cursor.execute("""
+            IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N'股票online')
+            BEGIN
+                CREATE DATABASE 股票online;
+            END
+        """)
+
+
+def drop_known_tables(cursor):
+    tables_to_drop = [
+        "trade_history",
+        "active_positions",
+        "strategy_performance",
+        "backtest_history",
+        "account_info",
+        "daily_chip_data",
+        "fundamentals_clean",
+        "monthly_revenue_simple",
+    ]
+    for table in tables_to_drop:
+        cursor.execute(f"IF OBJECT_ID(N'dbo.{table}', N'U') IS NOT NULL DROP TABLE dbo.{table}")
+
+
+def parse_mode():
+    """
+    支援 3 種方式指定模式：
+    1. 命令列：
+       python db_setup.py --mode upgrade
+       python db_setup.py --mode reset --yes
+    2. 環境變數：
+       DB_SETUP_MODE=upgrade
+       DB_SETUP_MODE=reset
+       DB_SETUP_CONFIRM_RESET=true
+    3. 無參數預設：
+       upgrade（安全模式）
+    """
+    cli_mode = get_arg_value("--mode")
+    env_mode = os.getenv("DB_SETUP_MODE")
+    mode = (cli_mode or env_mode or "upgrade").strip().lower()
+
+    if mode not in ("upgrade", "reset"):
+        raise ValueError("mode 只能是 upgrade 或 reset")
+
+    auto_yes = has_flag("--yes") or env_bool("DB_SETUP_CONFIRM_RESET", False)
+    return mode, auto_yes
+
+
 def setup_tsql_database():
-    print("========================================================")
-    print("💣 【資料庫核彈級重置 / 補欄位升級雙模式】")
-    print("⚠️ 可選擇全新建立，或僅補齊缺少欄位。")
-    print("========================================================")
+    log("========================================================")
+    log("🛠️ db_setup 自動化版本啟動")
+    log("模式支援：upgrade / reset")
+    log("預設：upgrade（安全補欄模式）")
+    log("========================================================")
 
-    mode = input("請選模式：1=全庫重置重建 | 2=只補欄位升級 (1/2): ").strip()
-
+    mode, auto_yes = parse_mode()
     conn = None
+
     try:
-        with pyodbc.connect(MASTER_CONN_STR, autocommit=True) as master_conn:
-            cursor = master_conn.cursor()
-            cursor.execute("""
-                IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N'股票online')
-                BEGIN
-                    CREATE DATABASE 股票online;
-                END
-            """)
+        ensure_database_exists()
 
         conn = pyodbc.connect(TARGET_CONN_STR)
         cursor = conn.cursor()
 
-        if mode == "1":
-            confirm = input("🚀 確定要執行「全庫刪除並升級新架構」嗎？(y/n): ").strip().lower()
-            if confirm != "y":
-                print("🛑 已安全取消作業。")
-                return
+        if mode == "reset":
+            if not auto_yes:
+                raise RuntimeError(
+                    "reset 模式需要明確確認。請加 --yes 或設定 DB_SETUP_CONFIRM_RESET=true"
+                )
+            log("🚨 reset 模式啟動：準備刪除既有核心資料表...")
+            drop_known_tables(cursor)
+            log("🗑️ 舊資料表已刪除")
 
-            tables_to_drop = [
-                "trade_history",
-                "active_positions",
-                "strategy_performance",
-                "backtest_history",
-                "account_info",
-                "daily_chip_data",
-                "fundamentals_clean",
-                "monthly_revenue_simple",
-            ]
-
-            for table in tables_to_drop:
-                cursor.execute(f"IF OBJECT_ID(N'dbo.{table}', N'U') IS NOT NULL DROP TABLE dbo.{table}")
-
-            print("🗑️ 舊資料表已刪除，準備重建...")
-
-        print("🔧 開始檢查 / 建立核心資料表與欄位...")
+        log("🔧 開始檢查 / 建立核心資料表與欄位...")
         ensure_core_tables(cursor)
         conn.commit()
 
-        print("✅ 資料表與欄位檢查完成！")
-        print("   - 缺少的表已建立")
-        print("   - 缺少的欄位已補齊")
-        print("   - 之後各支程式可直接 INSERT / UPDATE")
+        log("✅ 資料表與欄位檢查完成")
+        log(f"   模式：{mode}")
+        if mode == "upgrade":
+            log("   動作：保留資料 + 補齊缺表 / 缺欄")
+        else:
+            log("   動作：重建核心表 + 補齊欄位")
 
     except Exception as e:
-        print(f"❌ db_setup 發生錯誤：{e}")
+        log(f"❌ db_setup 發生錯誤：{e}")
         if conn:
             conn.rollback()
+        raise
     finally:
         if conn:
             conn.close()

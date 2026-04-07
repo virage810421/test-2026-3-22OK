@@ -1,0 +1,5 @@
+
+# ---- Alert / Guard ----
+PARAMS["ALERT_TEST_MODE"] = True
+PARAMS["ALERT_LINE_BOT_TOKEN"] = ""
+PARAMS["ALERT_LINE_USER_ID"] = ""
