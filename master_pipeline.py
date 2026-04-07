@@ -14,6 +14,7 @@ from fundamental_screener import get_vip_stock_pool
 from performance import check_strategy_health, get_strategy_ev
 from screening import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
 
+
 logging.basicConfig(
     filename="pipeline.log",
     level=logging.INFO,
@@ -64,6 +65,9 @@ def run_script(script_name, retries=2, timeout=900):
                 log(e.stderr)
         time.sleep(2)
     return False
+
+
+
 
 
 
