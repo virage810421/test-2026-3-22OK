@@ -1,38 +1,147 @@
 {
-  "generated_at": "2026-04-08 05:56:17",
-  "module_version": "v68",
-  "summary": {
-    "package_maturity": "24/24 modules >=95",
-    "true_execution_ready": "low",
-    "live_ready": false,
-    "completion_excluding_real_broker_pct": 76,
-    "training_dataset_exists": false,
-    "training_models_count": 0,
-    "price_rows_ready": 1,
-    "qty_rows_ready": 0,
-    "market_rule_passed_rows": 0,
-    "modules_95_plus": 24,
-    "modules_total": 24,
-    "local_universe_count": 1058,
-    "auto_price_scan_sources": 1
+  "completion_gap_report": {
+    "generated_from": [
+      "upgrade_truth_report.json",
+      "live_readiness_gate.json",
+      "training_orchestrator.json",
+      "decision_execution_bridge.json",
+      "real_api_readiness.json"
+    ],
+    "headline": {
+      "completion_excluding_real_broker_pct": 0,
+      "remaining_major_blocks_excluding_real_broker": 3,
+      "real_broker_binding_present": false
+    },
+    "completed_excluding_real_broker": [
+      "24/24 架構模組達 95+",
+      "舊核心已納管進主控",
+      "live readiness gate / TW market rules / execution bridge 已建立"
+    ],
+    "remaining_excluding_real_broker": [
+      "AI訓練資料與模型產物未落地",
+      "決策價格/股數/台股規則 payload 未閉環",
+      "Paper execution 端到端尚未放行"
+    ],
+    "detailed_flags": {
+      "training_ready": false,
+      "execution_payload_ready": false,
+      "paper_execution_ready": false,
+      "live_ready": false,
+      "real_api_live_bound": false
+    },
+    "real_api_is_separate_track": {
+      "already_reserved": [],
+      "still_missing": []
+    },
+    "status": "completion_gap_mapped"
   },
-  "remaining_hard_gaps": [
-    "AI訓練資料與模型產物未落地",
-    "決策價格/股數/台股規則 payload 未閉環",
-    "Paper execution 端到端尚未放行"
-  ],
-  "next_priority": [
-    "補齊 last_price_snapshot.csv 或在決策輸出直接寫入 Close/Reference_Price",
-    "補齊 training_data 與模型 artifact 產出",
-    "接入真券商登入/下單/查單/成交 callback",
-    "建立 broker reject code -> internal reject classifier 映射"
-  ],
-  "artifacts": {
-    "training_bootstrap_recipe": "/mnt/data/fts_upgrade_100/runtime/training_bootstrap_recipe.json",
-    "training_input_manifest": "/mnt/data/fts_upgrade_100/runtime/training_input_manifest.json",
-    "training_bootstrap_universe": "/mnt/data/fts_upgrade_100/data/training_bootstrap_universe.csv",
-    "manual_price_template": "/mnt/data/fts_upgrade_100/data/manual_price_snapshot_template.csv",
-    "auto_price_candidates": "/mnt/data/fts_upgrade_100/data/auto_price_snapshot_candidates.csv",
-    "execution_payload": "/mnt/data/fts_upgrade_100/data/executable_order_payloads.csv"
+  "training_orchestrator": {
+    "generated_at": "2026-04-08 06:32:11",
+    "module_version": "v65",
+    "ai_stage_enabled": false,
+    "dry_run": true,
+    "dataset": {
+      "exists": false,
+      "rows": 0,
+      "columns": [],
+      "feature_count": 0,
+      "label_balance": {},
+      "regime_counts": {},
+      "status": "missing"
+    },
+    "models": {
+      "models_dir_exists": true,
+      "required_files": [
+        {
+          "path": "/mnt/data/fts_upgrade_100/models/selected_features.pkl",
+          "exists": false
+        },
+        {
+          "path": "/mnt/data/fts_upgrade_100/models/model_趨勢多頭.pkl",
+          "exists": false
+        },
+        {
+          "path": "/mnt/data/fts_upgrade_100/models/model_區間盤整.pkl",
+          "exists": false
+        },
+        {
+          "path": "/mnt/data/fts_upgrade_100/models/model_趨勢空頭.pkl",
+          "exists": false
+        }
+      ],
+      "existing_required_count": 0,
+      "all_required_present": false
+    },
+    "actions": [
+      {
+        "stage": "ai",
+        "action": "skip",
+        "reason": "run_ai_stage=False"
+      }
+    ],
+    "go_for_training": false,
+    "go_for_inference": false,
+    "status": "training_governed"
+  },
+  "decision_execution_bridge": {
+    "generated_at": "2026-04-08 06:32:11",
+    "module_version": "v73",
+    "rows_total": 3,
+    "rows_with_price": 0,
+    "rows_with_qty": 0,
+    "rows_market_rule_passed": 0,
+    "rows_market_rule_failed": 3,
+    "price_source_counts": {},
+    "sizing_reason_counts": {
+      "preexisting_qty": 3
+    },
+    "failed_tickers_preview": [
+      "2330.TW",
+      "2471.TW",
+      "2467.TW"
+    ],
+    "missing_price_tickers": [
+      "2330.TW",
+      "2471.TW",
+      "2467.TW"
+    ],
+    "output_path": "/mnt/data/fts_upgrade_100/data/executable_order_payloads.csv",
+    "price_gap_bridge_status": "waiting_for_price_sources",
+    "status": "waiting_for_price_or_qty"
+  },
+  "price_gap_bridge": {
+    "generated_at": "2026-04-08 06:32:11",
+    "module_version": "v73",
+    "scanned_csv_count": 3,
+    "scanned_csv_success_count": 0,
+    "candidate_rows": 0,
+    "required_tickers": 3,
+    "matched_tickers": 0,
+    "missing_tickers": [
+      "2330.TW",
+      "2467.TW",
+      "2471.TW"
+    ],
+    "price_scan_dirs": [
+      "/mnt/data/fts_upgrade_100",
+      "/mnt/data/fts_upgrade_100/data"
+    ],
+    "source_mount_dirs": [],
+    "manual_override_path": "/mnt/data/fts_upgrade_100/data/manual_price_snapshot_overrides.csv",
+    "candidates_path": "/mnt/data/fts_upgrade_100/data/auto_price_snapshot_candidates.csv",
+    "manual_template_path": "/mnt/data/fts_upgrade_100/data/manual_price_snapshot_template.csv",
+    "status": "waiting_for_price_sources"
+  },
+  "config": {
+    "package_version": "v73",
+    "source_mount_dirs": [],
+    "price_scan_dirs": [
+      "/mnt/data/fts_upgrade_100",
+      "/mnt/data/fts_upgrade_100/data"
+    ],
+    "history_scan_dirs": [
+      "/mnt/data/fts_upgrade_100",
+      "/mnt/data/fts_upgrade_100/data"
+    ]
   }
 }

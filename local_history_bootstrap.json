@@ -1,0 +1,120 @@
+{
+  "generated_at": "2026-04-08 06:09:05",
+  "module_version": "v70",
+  "mode": "local_first_optional_online_backfill",
+  "source_files_scanned": 7,
+  "history_like_files_found": 0,
+  "history_rows_normalized": 0,
+  "cache_files_written_from_local": 0,
+  "cache_ticker_count": 0,
+  "cache_tickers_preview": [],
+  "bootstrap_universe_count": 1058,
+  "missing_cache_ticker_count_before_online": 1058,
+  "missing_cache_ticker_count": 1058,
+  "request_list_rows": 1058,
+  "request_list_path": "/mnt/data/fts_upgrade_100/data/kline_cache_request_list.csv",
+  "cache_dir": "/mnt/data/fts_upgrade_100/data/kline_cache",
+  "online_backfill": {
+    "enabled": false,
+    "provider": "yfinance",
+    "requested": 30,
+    "fetched": 0,
+    "written_files": 0,
+    "status": "disabled",
+    "errors_preview": []
+  },
+  "status": "waiting_for_ohlcv_history",
+  "scan_diagnostics_preview": [
+    {
+      "file": "/mnt/data/fts_upgrade_100/daily_chip_data_backup.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "日期",
+        "Ticker SYMBOL",
+        "外資買賣超",
+        "投信買賣超",
+        "自營商買賣超",
+        "三大法人合計",
+        "資料來源"
+      ]
+    },
+    {
+      "file": "/mnt/data/fts_upgrade_100/market_financials_backup_fullspeed.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "資料年月日",
+        "毛利率(%)",
+        "營業利益率(%)",
+        "單季EPS",
+        "ROE(%)",
+        "稅後淨利率(%)",
+        "營業現金流",
+        "預估殖利率(%)",
+        "負債比率(%)",
+        "本業獲利比(%)"
+      ]
+    },
+    {
+      "file": "/mnt/data/fts_upgrade_100/latest_monthly_revenue_simple.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "公司名稱",
+        "產業類別",
+        "資料年月日",
+        "單月營收年增率(%)"
+      ]
+    },
+    {
+      "file": "/mnt/data/fts_upgrade_100/monthly_revenue_simple.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "公司名稱",
+        "產業類別",
+        "產業類別名稱",
+        "資料年月日",
+        "單月營收年增率(%)"
+      ]
+    },
+    {
+      "file": "/mnt/data/fts_upgrade_100/data/last_price_snapshot_template.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker",
+        "Reference_Price"
+      ]
+    },
+    {
+      "file": "/mnt/data/fts_upgrade_100/data/kline_cache_request_list.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker",
+        "Preferred_Period",
+        "Preferred_Interval",
+        "Target_File"
+      ]
+    },
+    {
+      "file": "/mnt/data/fts_upgrade_100/logs/normalized_decision_preview.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker",
+        "Action",
+        "Regime",
+        "Structure",
+        "AI_Proba",
+        "Score",
+        "Kelly_Pos",
+        "Heuristic_EV",
+        "Reference_Price",
+        "Target_Qty",
+        "_has_ticker",
+        "_has_action",
+        "_has_price",
+        "_raw_action"
+      ]
+    }
+  ]
+}

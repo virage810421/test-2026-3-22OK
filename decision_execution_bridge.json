@@ -1,23 +1,26 @@
 {
-  "generated_at": "2026-04-08 05:56:17",
-  "module_version": "v68",
-  "price_snapshot_source": "auto_scan",
-  "price_scan_files": [
-    "/mnt/data/fts_upgrade_100/data/last_price_snapshot_template.csv"
-  ],
-  "auto_price_candidates_path": "/mnt/data/fts_upgrade_100/data/auto_price_snapshot_candidates.csv",
-  "manual_price_template_path": "/mnt/data/fts_upgrade_100/data/manual_price_snapshot_template.csv",
-  "manual_price_template_rows": 2,
+  "generated_at": "2026-04-08 06:32:11",
+  "module_version": "v73",
   "rows_total": 3,
-  "rows_with_price": 1,
+  "rows_with_price": 0,
   "rows_with_qty": 0,
   "rows_market_rule_passed": 0,
   "rows_market_rule_failed": 3,
+  "price_source_counts": {},
+  "sizing_reason_counts": {
+    "preexisting_qty": 3
+  },
   "failed_tickers_preview": [
     "2330.TW",
     "2471.TW",
     "2467.TW"
   ],
+  "missing_price_tickers": [
+    "2330.TW",
+    "2471.TW",
+    "2467.TW"
+  ],
   "output_path": "/mnt/data/fts_upgrade_100/data/executable_order_payloads.csv",
+  "price_gap_bridge_status": "waiting_for_price_sources",
   "status": "waiting_for_price_or_qty"
 }

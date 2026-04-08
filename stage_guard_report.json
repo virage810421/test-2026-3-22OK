@@ -1,0 +1,42 @@
+{
+  "package_version": "v77",
+  "safe_upgrade_mode": true,
+  "continue_on_stage_failure": true,
+  "resume_completed_stages": true,
+  "soft_timeout_seconds": 120,
+  "max_stage_retries": 1,
+  "stages": [
+    {
+      "stage_key": "training_orchestrator",
+      "stage_label": "訓練治理檢查",
+      "status": "ok",
+      "attempt": 1,
+      "elapsed_seconds": 0.001,
+      "soft_timeout_exceeded": false
+    },
+    {
+      "stage_key": "decision_execution_bridge",
+      "stage_label": "決策執行橋接",
+      "status": "ok",
+      "attempt": 1,
+      "elapsed_seconds": 0.069,
+      "soft_timeout_exceeded": false
+    },
+    {
+      "stage_key": "completion_gap_report",
+      "stage_label": "完成度缺口報告",
+      "status": "ok",
+      "attempt": 1,
+      "elapsed_seconds": 0.002,
+      "soft_timeout_exceeded": false
+    },
+    {
+      "stage_key": "progress_full_report",
+      "stage_label": "完整進度報告",
+      "status": "ok",
+      "attempt": 1,
+      "elapsed_seconds": 0.003,
+      "soft_timeout_exceeded": false
+    }
+  ]
+}

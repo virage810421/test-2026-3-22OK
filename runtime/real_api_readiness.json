@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-08 14:09:24",
-  "system_name": "正式交易主控版_v64",
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
   "target": "real_broker_api_and_real_market_binding",
   "completed_now": [
     "broker submission contract defined",

@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-04-08 06:32:11",
+  "module_version": "v73",
+  "scanned_csv_count": 3,
+  "scanned_csv_success_count": 0,
+  "candidate_rows": 0,
+  "required_tickers": 3,
+  "matched_tickers": 0,
+  "missing_tickers": [
+    "2330.TW",
+    "2467.TW",
+    "2471.TW"
+  ],
+  "price_scan_dirs": [
+    "/mnt/data/fts_upgrade_100",
+    "/mnt/data/fts_upgrade_100/data"
+  ],
+  "source_mount_dirs": [],
+  "manual_override_path": "/mnt/data/fts_upgrade_100/data/manual_price_snapshot_overrides.csv",
+  "candidates_path": "/mnt/data/fts_upgrade_100/data/auto_price_snapshot_candidates.csv",
+  "manual_template_path": "/mnt/data/fts_upgrade_100/data/manual_price_snapshot_template.csv",
+  "status": "waiting_for_price_sources"
+}

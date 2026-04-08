@@ -5,15 +5,16 @@ from typing import Dict, Any, List, Tuple
 
 import pandas as pd
 
-from fts_config import PATHS
+from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
 
 
 class LocalHistoryBootstrap:
-    MODULE_VERSION = "v69"
+    MODULE_VERSION = "v70"
 
     def __init__(self):
         self.report_path = PATHS.runtime_dir / "local_history_bootstrap.json"
+        self.recipe_path = PATHS.runtime_dir / "history_backfill_recipe.json"
         self.request_csv_path = PATHS.data_dir / "kline_cache_request_list.csv"
         self.cache_dir = PATHS.data_dir / "kline_cache"
         self.cache_dir.mkdir(exist_ok=True)
@@ -45,7 +46,7 @@ class LocalHistoryBootstrap:
             return pd.DataFrame(), {"file": str(p), "status": "empty_or_unreadable"}
 
         cols = [str(c).strip() for c in df.columns]
-        ticker_col = self._match_col(cols, ["Ticker", "Ticker SYMBOL", "Symbol", "stock_id"], ["ticker"])
+        ticker_col = self._match_col(cols, ["Ticker", "Ticker SYMBOL", "Symbol", "stock_id", "ticker"], ["ticker"])
         date_col = self._match_col(cols, ["Date", "日期", "資料日期", "trade_date"], ["date"])
         open_col = self._match_col(cols, ["Open", "開盤", "open"])
         high_col = self._match_col(cols, ["High", "最高", "high"])
@@ -89,7 +90,7 @@ class LocalHistoryBootstrap:
         out = out.sort_values(["Ticker", "Date"]).drop_duplicates(subset=["Ticker", "Date"], keep="last")
         return out, {"file": str(p), "status": "ok", "rows": int(len(out)), "tickers": int(out["Ticker"].nunique())}
 
-    def _scan_sources(self) -> Tuple[List[Path], List[Dict[str, Any]]]:
+    def _scan_sources(self) -> List[Path]:
         skip = {
             "manual_price_snapshot_template.csv",
             "auto_price_snapshot_candidates.csv",
@@ -111,7 +112,7 @@ class LocalHistoryBootstrap:
                     continue
                 seen.add(rp)
                 candidates.append(p)
-        return candidates, []
+        return candidates
 
     def _write_cache_files(self, history_df: pd.DataFrame) -> Dict[str, Any]:
         if history_df.empty:
@@ -151,15 +152,99 @@ class LocalHistoryBootstrap:
     def _write_request_list(self, missing_tickers: List[str]) -> int:
         req = pd.DataFrame({
             "Ticker": missing_tickers,
-            "Preferred_Period": "3y",
-            "Preferred_Interval": "1d",
+            "Preferred_Period": getattr(CONFIG, "online_history_period", "3y"),
+            "Preferred_Interval": getattr(CONFIG, "online_history_interval", "1d"),
+            "Preferred_Provider": getattr(CONFIG, "online_history_provider", "yfinance"),
             "Target_File": [str(self.cache_dir / f"{t}_ohlcv.csv") for t in missing_tickers],
         })
         req.to_csv(self.request_csv_path, index=False, encoding="utf-8-sig")
         return int(len(req))
 
+    def _try_online_backfill(self, missing_tickers: List[str]) -> Dict[str, Any]:
+        enabled = bool(getattr(CONFIG, "allow_online_history_backfill", False))
+        provider = str(getattr(CONFIG, "online_history_provider", "yfinance"))
+        limit = int(getattr(CONFIG, "online_history_max_tickers_per_run", 30) or 30)
+        result = {
+            "enabled": enabled,
+            "provider": provider,
+            "requested": int(min(len(missing_tickers), limit)),
+            "fetched": 0,
+            "written_files": 0,
+            "status": "disabled",
+            "errors_preview": [],
+        }
+        if not enabled or not missing_tickers:
+            return result
+        if provider.lower() != "yfinance":
+            result["status"] = "unsupported_provider"
+            return result
+        try:
+            import yfinance as yf
+        except Exception as e:
+            result["status"] = "missing_provider_package"
+            result["errors_preview"] = [str(e)]
+            return result
+
+        fetched = 0
+        written = 0
+        errors = []
+        for ticker in missing_tickers[:limit]:
+            try:
+                symbol = ticker if "." in ticker else f"{ticker}.TW"
+                df = yf.download(symbol, period=getattr(CONFIG, "online_history_period", "3y"), interval=getattr(CONFIG, "online_history_interval", "1d"), progress=False, auto_adjust=False)
+                if df is None or df.empty:
+                    alt_symbol = ticker if "." in ticker else f"{ticker}.TWO"
+                    df = yf.download(alt_symbol, period=getattr(CONFIG, "online_history_period", "3y"), interval=getattr(CONFIG, "online_history_interval", "1d"), progress=False, auto_adjust=False)
+                if df is None or df.empty:
+                    errors.append(f"{ticker}:empty_download")
+                    continue
+                if hasattr(df.columns, 'nlevels') and df.columns.nlevels > 1:
+                    df.columns = [c[0] for c in df.columns]
+                cols = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c in df.columns]
+                if len(cols) < 5:
+                    errors.append(f"{ticker}:missing_ohlcv_cols")
+                    continue
+                out = df[cols].reset_index().rename(columns={df.index.name or 'Date': 'Date'})
+                if 'Date' not in out.columns:
+                    out = out.rename(columns={out.columns[0]: 'Date'})
+                out['Date'] = pd.to_datetime(out['Date'], errors='coerce').dt.strftime('%Y-%m-%d')
+                out = out.dropna(subset=['Date', 'Open', 'High', 'Low', 'Close'])
+                if out.empty:
+                    errors.append(f"{ticker}:normalized_empty")
+                    continue
+                out.to_csv(self.cache_dir / f"{ticker}_ohlcv.csv", index=False, encoding='utf-8-sig')
+                fetched += 1
+                written += 1
+            except Exception as e:
+                errors.append(f"{ticker}:{e}")
+        result.update({
+            "fetched": int(fetched),
+            "written_files": int(written),
+            "status": "ok" if written > 0 else "no_downloaded_history",
+            "errors_preview": errors[:15],
+        })
+        return result
+
+    def _write_recipe(self, universe: List[str], missing_tickers: List[str], online_result: Dict[str, Any]) -> Dict[str, Any]:
+        recipe = {
+            "generated_at": now_str(),
+            "module_version": self.MODULE_VERSION,
+            "mode": "local_first_optional_online_backfill",
+            "what_it_means": {
+                "local_history_bootstrap": "先掃描專案內已存在的 OHLCV / K 線 CSV，能吃就轉成 data/kline_cache/*.csv。",
+                "missing_request_list": "如果專案內找不到某些標的的可用 K 線，就把缺的 ticker 列成請求清單，而不是假裝已完成。",
+                "online_backfill": "只有當 allow_online_history_backfill=True 時，才會嘗試用 yfinance 補抓缺的 K 線。預設不開。",
+            },
+            "bootstrap_universe_count": int(len(universe)),
+            "missing_ticker_count": int(len(missing_tickers)),
+            "request_list_path": str(self.request_csv_path),
+            "online_backfill": online_result,
+        }
+        self.recipe_path.write_text(json.dumps(recipe, ensure_ascii=False, indent=2), encoding='utf-8')
+        return recipe
+
     def build(self):
-        candidates, diagnostics = self._scan_sources()
+        candidates = self._scan_sources()
         normalized_frames = []
         scanned = []
         for p in candidates:
@@ -175,28 +260,36 @@ class LocalHistoryBootstrap:
             merged = pd.DataFrame(columns=["Ticker", "Date", "Open", "High", "Low", "Close", "Volume"])
 
         cache_write = self._write_cache_files(merged)
-        cache_tickers = sorted({p.stem.replace("_ohlcv", "") for p in self.cache_dir.glob("*_ohlcv.csv")})
         universe = sorted(set(self._load_bootstrap_universe()) | set(self._load_decision_tickers()))
-        missing_tickers = [t for t in universe if t not in set(cache_tickers)]
-        request_rows = self._write_request_list(missing_tickers)
+        cache_tickers_before = sorted({p.stem.replace("_ohlcv", "") for p in self.cache_dir.glob("*_ohlcv.csv")})
+        missing_before = [t for t in universe if t not in set(cache_tickers_before)]
+        request_rows = self._write_request_list(missing_before)
+        online_result = self._try_online_backfill(missing_before)
+        cache_tickers_after = sorted({p.stem.replace("_ohlcv", "") for p in self.cache_dir.glob("*_ohlcv.csv")})
+        missing_after = [t for t in universe if t not in set(cache_tickers_after)]
+        self._write_request_list(missing_after)
+        recipe = self._write_recipe(universe, missing_after, online_result)
 
         payload = {
             "generated_at": now_str(),
             "module_version": self.MODULE_VERSION,
+            "mode": recipe.get("mode"),
             "source_files_scanned": int(len(candidates)),
             "history_like_files_found": int(sum(1 for x in scanned if x.get("status") == "ok")),
             "history_rows_normalized": int(len(merged)),
-            "cache_files_written": int(cache_write.get("written_files", 0)),
-            "cache_ticker_count": int(len(cache_tickers)),
-            "cache_tickers_preview": cache_tickers[:20],
+            "cache_files_written_from_local": int(cache_write.get("written_files", 0)),
+            "cache_ticker_count": int(len(cache_tickers_after)),
+            "cache_tickers_preview": cache_tickers_after[:20],
             "bootstrap_universe_count": int(len(universe)),
-            "missing_cache_ticker_count": int(len(missing_tickers)),
-            "request_list_rows": int(request_rows),
+            "missing_cache_ticker_count_before_online": int(len(missing_before)),
+            "missing_cache_ticker_count": int(len(missing_after)),
+            "request_list_rows": int(len(missing_after)),
             "request_list_path": str(self.request_csv_path),
             "cache_dir": str(self.cache_dir),
-            "status": "history_cache_ready" if len(cache_tickers) >= 5 else "waiting_for_ohlcv_history",
+            "online_backfill": online_result,
+            "status": "history_cache_ready" if len(cache_tickers_after) >= 5 else "waiting_for_ohlcv_history",
             "scan_diagnostics_preview": scanned[:20],
         }
         self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        log(f"📚 Local history bootstrap：{payload['status']} | cache_tickers={payload['cache_ticker_count']}")
+        log(f"📚 Local history bootstrap：{payload['status']} | cache_tickers={payload['cache_ticker_count']} | online={online_result.get('status')}")
         return self.report_path, payload

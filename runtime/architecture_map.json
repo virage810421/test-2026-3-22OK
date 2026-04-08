@@ -8,6 +8,6 @@
   "audit_trail": "runtime/audit_events.jsonl",
   "runtime_heartbeat": "runtime/heartbeat.json",
   "notes": "v19 重點是把新主控明確掛回你的原始上游架構，而不是取代它。",
-  "generated_at": "2026-04-08 14:09:24",
-  "system_name": "正式交易主控版_v64"
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72"
 }

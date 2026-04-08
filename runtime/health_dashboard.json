@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-04-08 14:09:35",
-  "system_name": "正式交易主控版_v64",
+  "generated_at": "2026-04-08 14:22:40",
+  "system_name": "正式交易主控版_v70",
   "mode": "PAPER",
   "broker_type": "paper",
   "heartbeat": {
-    "system_name": "正式交易主控版_v64",
-    "time": "2026-04-08 14:09:35",
+    "system_name": "正式交易主控版_v70",
+    "time": "2026-04-08 14:22:40",
     "stage": "ok",
-    "pid": 6308,
+    "pid": 4688,
     "extra": {
       "signal_count": 3
     }
@@ -22,8 +22,8 @@
     "audit_trail": "runtime/audit_events.jsonl",
     "runtime_heartbeat": "runtime/heartbeat.json",
     "notes": "v19 重點是把新主控明確掛回你的原始上游架構，而不是取代它。",
-    "generated_at": "2026-04-08 14:09:24",
-    "system_name": "正式交易主控版_v64"
+    "generated_at": "2026-04-08 14:22:31",
+    "system_name": "正式交易主控版_v70"
   },
   "task_registry_summary": {
     "total": 7,

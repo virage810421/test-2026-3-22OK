@@ -12,6 +12,7 @@ class MarketRuleCheck:
     tick_size: float = 0.0
     limit_up: Optional[float] = None
     limit_down: Optional[float] = None
+    lot_mode: str = "board"
 
     def to_dict(self):
         return asdict(self)
@@ -38,12 +39,17 @@ def compute_price_limits(price: float):
 
 
 def is_valid_tick(price: float, tick: float) -> bool:
-    # allow floating point tolerance
     q = round(float(price) / float(tick), 8)
     return abs(q - round(q)) < 1e-6
 
 
-def validate_order_payload(ticker: str, ref_price: float, qty: int, lot_size: int = 1000) -> MarketRuleCheck:
+def validate_order_payload(
+    ticker: str,
+    ref_price: float,
+    qty: int,
+    lot_size: int = 1000,
+    allow_odd_lot: bool = False,
+) -> MarketRuleCheck:
     ref_price = float(ref_price or 0)
     qty = int(qty or 0)
     tick = tick_size_for_price(ref_price) if ref_price > 0 else 0.0
@@ -55,8 +61,11 @@ def validate_order_payload(ticker: str, ref_price: float, qty: int, lot_size: in
         return MarketRuleCheck(ticker=ticker, passed=False, ref_price=ref_price, qty=qty, reason='missing_or_invalid_price', tick_size=tick, limit_up=limit_up, limit_down=limit_down)
     if qty <= 0:
         return MarketRuleCheck(ticker=ticker, passed=False, ref_price=ref_price, qty=qty, reason='missing_or_invalid_qty', tick_size=tick, limit_up=limit_up, limit_down=limit_down)
-    if qty % int(lot_size) != 0:
-        return MarketRuleCheck(ticker=ticker, passed=False, ref_price=ref_price, qty=qty, reason='qty_not_board_lot_multiple', tick_size=tick, limit_up=limit_up, limit_down=limit_down)
     if not is_valid_tick(ref_price, tick):
         return MarketRuleCheck(ticker=ticker, passed=False, ref_price=ref_price, qty=qty, reason='price_not_valid_tick', tick_size=tick, limit_up=limit_up, limit_down=limit_down)
-    return MarketRuleCheck(ticker=ticker, passed=True, ref_price=ref_price, qty=qty, reason='ok', tick_size=tick, limit_up=limit_up, limit_down=limit_down)
+
+    if allow_odd_lot:
+        return MarketRuleCheck(ticker=ticker, passed=True, ref_price=ref_price, qty=qty, reason='ok_odd_lot_allowed', tick_size=tick, limit_up=limit_up, limit_down=limit_down, lot_mode='odd')
+    if qty % int(lot_size) != 0:
+        return MarketRuleCheck(ticker=ticker, passed=False, ref_price=ref_price, qty=qty, reason='qty_not_board_lot_multiple', tick_size=tick, limit_up=limit_up, limit_down=limit_down)
+    return MarketRuleCheck(ticker=ticker, passed=True, ref_price=ref_price, qty=qty, reason='ok', tick_size=tick, limit_up=limit_up, limit_down=limit_down, lot_mode='board')

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-08 14:09:24",
-  "system_name": "正式交易主控版_v64",
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
   "strategy": "parallel_upgrade",
   "principle": "邊升新主控，邊把舊核心本體升到95+，避免外層新、內核舊",
   "upgrade_targets": [

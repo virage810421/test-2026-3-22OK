@@ -545,3 +545,239 @@
 [14:09:35] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
 [14:09:35] 🗂️ 已輸出 run manifest：C:\test\test-2026-3-22OK\runtime\run_manifest.json
 [14:09:35] ✅ v69 主控完成：已補 local history bootstrap / auto price scan / full progress report
+[14:22:31] ============================================================
+[14:22:31] 🚀 啟動 正式交易主控版_v70
+[14:22:31] 🧭 模式：PAPER
+[14:22:31] 🏦 broker_type：paper
+[14:22:31] 🧱 v70 local+online history bootstrap + auto price scan：ON
+[14:22:31] 📈 目前整體升級進度：97.2%
+[14:22:31] ============================================================
+[14:22:31] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_142231.json
+[14:22:31] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[14:22:31] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[14:22:31] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[14:22:31] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[14:22:31] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[14:22:31] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[14:22:31] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[14:22:31] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[14:22:31] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[14:22:31] 🧯 已輸出 training gap report：C:\test\test-2026-3-22OK\runtime\training_gap_report.json
+[14:22:31] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[14:22:31] 🛠️ 已輸出 legacy core upgrade plan：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_plan.json
+[14:22:31] 📋 已輸出 legacy core readiness board：C:\test\test-2026-3-22OK\runtime\legacy_core_readiness_board.json
+[14:22:31] 🌊 已輸出 legacy core upgrade wave：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_wave.json
+[14:22:31] 🌊 已輸出 wave1 core upgrade：C:\test\test-2026-3-22OK\runtime\wave1_core_upgrade.json
+[14:22:31] 📏 已輸出 legacy core metrics：C:\test\test-2026-3-22OK\runtime\legacy_core_metrics.json
+[14:22:31] 📦 已輸出 wave1 contract pack：C:\test\test-2026-3-22OK\runtime\wave1_contract_pack.json
+[14:22:31] 🧱 已輸出 wave1 body upgrade templates：C:\test\test-2026-3-22OK\runtime\wave1_body_upgrade_templates.json
+[14:22:31] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[14:22:31] 🧩 已輸出 decision price bridge plus：C:\test\test-2026-3-22OK\runtime\decision_price_bridge_plus.json
+[14:22:31] 🧭 已輸出 upgrade truth report：C:\test\test-2026-3-22OK\runtime\upgrade_truth_report.json
+[14:22:31] 🔗 已輸出 wave1 io bindings：C:\test\test-2026-3-22OK\runtime\wave1_io_bindings.json
+[14:22:31] ✅ 已輸出 wave1 upgrade checklist：C:\test\test-2026-3-22OK\runtime\wave1_upgrade_checklist.json
+[14:22:31] 🎯 已輸出 target95 scorecard：C:\test\test-2026-3-22OK\runtime\target95_scorecard.json
+[14:22:31] 🛣️ 已輸出 target95 plan：C:\test\test-2026-3-22OK\runtime\target95_plan.json
+[14:22:31] 📚 Local history bootstrap：waiting_for_ohlcv_history | cache_tickers=0 | online=disabled
+[14:22:32] ✅ SQL Server 連線成功。
+[14:22:32] ✅ execution tables ready.
+[14:22:32] 🧷 package consistency check 通過
+[14:22:33] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[14:22:33] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[14:22:33] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=3
+[14:22:40] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:22:40] 🧪 SignalLoader 診斷 | valid=3 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=0 | skip_zero_qty=0 | actions={'SELL': 3}
+[14:22:40] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[14:22:40] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[14:22:40] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=0
+[14:22:40] 🧭 已輸出 stage trace：C:\test\test-2026-3-22OK\runtime\stage_trace.json
+[14:22:40] 🪖 已輸出 console brief：C:\test\test-2026-3-22OK\runtime\console_brief.json
+[14:22:40] 💓 heartbeat 更新：ok
+[14:22:40] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[14:22:40] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[14:22:40] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[14:22:40] 🗂️ 已輸出 run manifest：C:\test\test-2026-3-22OK\runtime\run_manifest.json
+[14:22:40] ✅ v70 主控完成：已補 local+online history bootstrap / auto price scan / full progress report
+[14:29:38] ============================================================
+[14:29:38] 🚀 啟動 正式交易主控版_v66
+[14:29:38] 🧭 模式：PAPER
+[14:29:38] 🏦 broker_type：paper
+[14:29:38] 🧱 v66 completion gap report + training governance + execution payload bridge：ON
+[14:29:38] 📈 目前整體升級進度：97.2%
+[14:29:38] ============================================================
+[14:29:38] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[14:29:38] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[14:29:38] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[14:29:38] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[14:29:38] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[14:29:38] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[14:29:38] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[14:29:38] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[14:29:38] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[14:29:38] 🧯 已輸出 training gap report：C:\test\test-2026-3-22OK\runtime\training_gap_report.json
+[14:29:38] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[14:29:38] 🛠️ 已輸出 legacy core upgrade plan：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_plan.json
+[14:29:38] 📋 已輸出 legacy core readiness board：C:\test\test-2026-3-22OK\runtime\legacy_core_readiness_board.json
+[14:29:38] 🌊 已輸出 legacy core upgrade wave：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_wave.json
+[14:29:38] 🌊 已輸出 wave1 core upgrade：C:\test\test-2026-3-22OK\runtime\wave1_core_upgrade.json
+[14:29:38] 📏 已輸出 legacy core metrics：C:\test\test-2026-3-22OK\runtime\legacy_core_metrics.json
+[14:29:38] 📦 已輸出 wave1 contract pack：C:\test\test-2026-3-22OK\runtime\wave1_contract_pack.json
+[14:29:38] 🧱 已輸出 wave1 body upgrade templates：C:\test\test-2026-3-22OK\runtime\wave1_body_upgrade_templates.json
+[14:29:38] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[14:29:38] 🧩 已輸出 decision price bridge plus：C:\test\test-2026-3-22OK\runtime\decision_price_bridge_plus.json
+[14:29:38] 🧭 已輸出 upgrade truth report：C:\test\test-2026-3-22OK\runtime\upgrade_truth_report.json
+[14:29:38] 🔗 已輸出 wave1 io bindings：C:\test\test-2026-3-22OK\runtime\wave1_io_bindings.json
+[14:29:38] ✅ 已輸出 wave1 upgrade checklist：C:\test\test-2026-3-22OK\runtime\wave1_upgrade_checklist.json
+[14:29:38] 🎯 已輸出 target95 scorecard：C:\test\test-2026-3-22OK\runtime\target95_scorecard.json
+[14:29:38] 🛣️ 已輸出 target95 plan：C:\test\test-2026-3-22OK\runtime\target95_plan.json
+[14:29:38] ✅ SQL Server 連線成功。
+[14:29:38] ✅ execution tables ready.
+[14:29:38] 🧷 package consistency check 通過
+[14:29:41] ============================================================
+[14:29:41] 🚀 啟動 正式交易主控版_v72
+[14:29:41] 🧱 v72 price gap bridge + external price dirs + full progress report：ON
+[14:29:41] ============================================================
+[14:29:41] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:30:25] ============================================================
+[14:30:25] 🚀 啟動 正式交易主控版_v72
+[14:30:25] 🧱 v72 price gap bridge + external price dirs + full progress report：ON
+[14:30:25] ============================================================
+[14:30:25] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:35:41] ============================================================
+[14:35:41] 🚀 啟動 正式交易主控版_v73
+[14:35:41] 🧱 v73 recursive price scan + manual override bridge + mounted source dirs：ON
+[14:35:41] ============================================================
+[14:35:42] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:39:09] ============================================================
+[14:39:09] 🚀 啟動 正式交易主控版_v74
+[14:39:09] 🧱 v74 staged logs + explicit finish summary：ON
+[14:39:09] ============================================================
+[14:39:09] ① 訓練治理檢查開始
+[14:39:09] ① 訓練治理檢查完成
+[14:39:09] ② 決策執行橋接開始
+[14:39:09] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:39:09] ② 決策執行橋接完成
+[14:39:09] ③ 完成度缺口報告開始
+[14:39:09] 🧮 開始計算非券商完成度缺口...
+[14:39:09] 🧮 已輸出完成度缺口報告：C:\test\test-2026-3-22OK\runtime\completion_gap_report.json
+[14:39:09] ③ 完成度缺口報告完成
+[14:39:09] ④ 完整進度報告開始
+[14:39:09] 📝 開始彙整完整進度報告...
+[14:39:10] 📝 已輸出完整進度報告：C:\test\test-2026-3-22OK\runtime\progress_full_report.md
+[14:39:10] ④ 完整進度報告完成
+[14:39:10] ============================================================
+[14:39:10] ✅ 主控執行完畢｜非券商完成度：67%
+[14:39:10] 📦 execution bridge rows_with_price=3 | rows_with_qty=1 | passed=1
+[14:39:10] 🧭 尚餘硬缺口數：1
+[14:39:10] ============================================================
+[14:42:16] ============================================================
+[14:42:16] 🚀 啟動 正式交易主控版_v75
+[14:42:16] 📶 v75 staged progress bar + heartbeat：ON
+[14:42:16] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 系統啟動完成，準備進入 4 個階段
+[14:42:16] ============================================================
+[14:42:16] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 訓練治理檢查｜開始
+[14:42:16] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 訓練治理檢查｜完成，耗時 0s
+[14:42:16] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 決策執行橋接｜開始
+[14:42:17] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:42:17] 📊 [█████████████░░░░░░░░░░░░░]  50% 決策執行橋接｜完成，耗時 0s
+[14:42:17] 📊 [█████████████░░░░░░░░░░░░░]  50% 完成度缺口報告｜開始
+[14:42:17] 🧮 開始計算非券商完成度缺口...
+[14:42:17] 🧮 已輸出完成度缺口報告：C:\test\test-2026-3-22OK\runtime\completion_gap_report.json
+[14:42:17] 📊 [████████████████████░░░░░░]  75% 完成度缺口報告｜完成，耗時 0s
+[14:42:17] 📊 [████████████████████░░░░░░]  75% 完整進度報告｜開始
+[14:42:17] 📝 開始彙整完整進度報告...
+[14:42:17] 📝 已輸出完整進度報告：C:\test\test-2026-3-22OK\runtime\progress_full_report.md
+[14:42:17] 📊 [██████████████████████████] 100% 完整進度報告｜完成，耗時 0s
+[14:42:17] ============================================================
+[14:42:17] ✅ 主控執行完畢｜[██████████████████████████] 100%｜總耗時 0s
+[14:42:17] 📦 execution bridge rows_with_price=3 | rows_with_qty=1 | passed=1
+[14:42:17] 🧭 非券商完成度：67% | 尚餘硬缺口數：1
+[14:42:17] ============================================================
+[14:45:49] ============================================================
+[14:45:49] 🚀 啟動 正式交易主控版_v76
+[14:45:49] 🛡️ v76 safe-upgrade mode + guarded stages + checkpoints：ON
+[14:45:49] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 系統啟動完成，準備進入 4 個階段
+[14:45:49] ============================================================
+[14:45:49] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 訓練治理檢查｜開始
+[14:45:49] 🛡️ StageGuard 進入：訓練治理檢查
+[14:45:49] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 訓練治理檢查｜完成，耗時 0s
+[14:45:49] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 決策執行橋接｜開始
+[14:45:49] 🛡️ StageGuard 進入：決策執行橋接
+[14:45:50] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:45:50] 📊 [█████████████░░░░░░░░░░░░░]  50% 決策執行橋接｜完成，耗時 0s
+[14:45:50] 📊 [█████████████░░░░░░░░░░░░░]  50% 完成度缺口報告｜開始
+[14:45:50] 🛡️ StageGuard 進入：完成度缺口報告
+[14:45:50] 🧮 開始計算非券商完成度缺口...
+[14:45:50] 🧮 已輸出完成度缺口報告：C:\test\test-2026-3-22OK\runtime\completion_gap_report.json
+[14:45:50] 📊 [████████████████████░░░░░░]  75% 完成度缺口報告｜完成，耗時 0s
+[14:45:50] 📊 [████████████████████░░░░░░]  75% 完整進度報告｜開始
+[14:45:50] 🛡️ StageGuard 進入：完整進度報告
+[14:45:50] 📝 開始彙整完整進度報告...
+[14:45:50] 📝 已輸出完整進度報告：C:\test\test-2026-3-22OK\runtime\progress_full_report.md
+[14:45:50] 📊 [██████████████████████████] 100% 完整進度報告｜完成，耗時 0s
+[14:45:50] ============================================================
+[14:45:50] ✅ 主控執行完畢｜[██████████████████████████] 100%｜總耗時 0s
+[14:45:50] 📦 execution bridge rows_with_price=3 | rows_with_qty=1 | passed=1
+[14:45:50] 🧭 非券商完成度：67% | 尚餘硬缺口數：1
+[14:45:50] 🧯 Safe Upgrade：continue_on_stage_failure=True | checkpoint=C:\test\test-2026-3-22OK\state\stage_checkpoints_v76.json
+[14:45:50] ============================================================
+[14:49:32] ============================================================
+[14:49:32] 🚀 啟動 正式交易主控版_v77
+[14:49:32] 🛡️ v77 safe-upgrade++：retry + fallback + resume checkpoint + soft-timeout warn：ON
+[14:49:32] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 系統啟動完成，準備進入 4 個階段
+[14:49:32] ============================================================
+[14:49:32] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 訓練治理檢查｜開始
+[14:49:32] 🛡️ StageGuard 進入：訓練治理檢查（attempt 1/2）
+[14:49:32] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 訓練治理檢查｜完成，耗時 0s
+[14:49:32] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 決策執行橋接｜開始
+[14:49:32] 🛡️ StageGuard 進入：決策執行橋接（attempt 1/2）
+[14:49:33] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:49:33] 📊 [█████████████░░░░░░░░░░░░░]  50% 決策執行橋接｜完成，耗時 0s
+[14:49:33] 📊 [█████████████░░░░░░░░░░░░░]  50% 完成度缺口報告｜開始
+[14:49:33] 🛡️ StageGuard 進入：完成度缺口報告（attempt 1/2）
+[14:49:33] 🧮 開始計算非券商完成度缺口...
+[14:49:33] 🧮 已輸出完成度缺口報告：C:\test\test-2026-3-22OK\runtime\completion_gap_report.json
+[14:49:33] 📊 [████████████████████░░░░░░]  75% 完成度缺口報告｜完成，耗時 0s
+[14:49:33] 📊 [████████████████████░░░░░░]  75% 完整進度報告｜開始
+[14:49:33] 🛡️ StageGuard 進入：完整進度報告（attempt 1/2）
+[14:49:33] 📝 開始彙整完整進度報告...
+[14:49:33] 📝 已輸出完整進度報告：C:\test\test-2026-3-22OK\runtime\progress_full_report.md
+[14:49:33] 📊 [██████████████████████████] 100% 完整進度報告｜完成，耗時 0s
+[14:49:33] ============================================================
+[14:49:33] ✅ 主控執行完畢｜[██████████████████████████] 100%｜總耗時 0s
+[14:49:33] 📦 execution bridge rows_with_price=3 | rows_with_qty=1 | passed=1
+[14:49:33] 🧭 非券商完成度：67% | 尚餘硬缺口數：1
+[14:49:33] 🧯 Safe Upgrade：continue_on_stage_failure=True | resume_completed_stages=True | retries=1
+[14:49:33] 🗂️ manifest=C:\test\test-2026-3-22OK\runtime\run_manifest_v77.json | checkpoint=C:\test\test-2026-3-22OK\state\stage_checkpoints_v77.json
+[14:49:33] ============================================================
+[14:57:59] ============================================================
+[14:57:59] 🚀 啟動 正式交易主控版_v78
+[14:57:59] 📈 v78 non-broker massive upgrade：weighted completion + training bootstrap + paper odd-lot sizing：ON
+[14:57:59] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 系統啟動完成，準備進入 4 個階段
+[14:57:59] ============================================================
+[14:57:59] 📊 [░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% 訓練治理檢查｜開始
+[14:57:59] 🛡️ StageGuard 進入：訓練治理檢查（attempt 1/2）
+[14:57:59] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[14:57:59] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 訓練治理檢查｜完成，耗時 0s
+[14:57:59] 📊 [██████░░░░░░░░░░░░░░░░░░░░]  25% 決策執行橋接｜開始
+[14:57:59] 🛡️ StageGuard 進入：決策執行橋接（attempt 1/2）
+[14:58:00] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:58:00] 📊 [█████████████░░░░░░░░░░░░░]  50% 決策執行橋接｜完成，耗時 0s
+[14:58:00] 📊 [█████████████░░░░░░░░░░░░░]  50% 完成度缺口報告｜開始
+[14:58:00] 🛡️ StageGuard 進入：完成度缺口報告（attempt 1/2）
+[14:58:00] 🧮 開始計算非券商完成度缺口...
+[14:58:00] 🧮 已輸出完成度缺口報告：C:\test\test-2026-3-22OK\runtime\completion_gap_report.json
+[14:58:00] 📊 [████████████████████░░░░░░]  75% 完成度缺口報告｜完成，耗時 0s
+[14:58:00] 📊 [████████████████████░░░░░░]  75% 完整進度報告｜開始
+[14:58:00] 🛡️ StageGuard 進入：完整進度報告（attempt 1/2）
+[14:58:00] 📝 開始彙整完整進度報告...
+[14:58:00] 📝 已輸出完整進度報告：C:\test\test-2026-3-22OK\runtime\progress_full_report.md
+[14:58:00] 📊 [██████████████████████████] 100% 完整進度報告｜完成，耗時 0s
+[14:58:00] ============================================================
+[14:58:00] ✅ 主控執行完畢｜[██████████████████████████] 100%｜總耗時 0s
+[14:58:00] 📦 execution bridge rows_with_price=3 | rows_with_qty=3 | passed=3
+[14:58:00] 🧠 training_readiness=29% | ⚙️ execution_readiness=100%
+[14:58:00] 🧭 非券商完成度：80% | 尚餘硬缺口數：1
+[14:58:00] 🧯 Safe Upgrade：continue_on_stage_failure=True | resume_completed_stages=True | retries=1
+[14:58:00] 🗂️ manifest=C:\test\test-2026-3-22OK\runtime\run_manifest_v78.json | checkpoint=C:\test\test-2026-3-22OK\state\stage_checkpoints_v78.json
+[14:58:00] ============================================================

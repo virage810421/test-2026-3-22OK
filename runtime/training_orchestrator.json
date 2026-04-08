@@ -1,105 +1,51 @@
 {
-  "generated_at": "2026-04-08 14:09:25",
-  "module_version": "v69",
+  "generated_at": "2026-04-08 07:01:16",
+  "module_version": "v79",
   "ai_stage_enabled": false,
   "dry_run": true,
+  "bootstrap": {
+    "bootstrap_source": "/mnt/data/fts_upgrade_100/daily_decision_desk.csv",
+    "registry_written": true,
+    "template_written": true,
+    "bootstrap_plan_written": true,
+    "candidate_feature_count": 8,
+    "bootstrap_plan_rows": 3
+  },
+  "bootstrap_score": 25,
   "dataset": {
     "exists": false,
     "rows": 0,
     "columns": [],
-    "status": "missing_dataset"
+    "feature_count": 0,
+    "label_balance": {},
+    "regime_counts": {},
+    "status": "missing",
+    "readiness_score": 15
   },
   "models": {
-    "required": [
-      "selected_features.pkl",
-      "model_趨勢多頭.pkl",
-      "model_區間盤整.pkl",
-      "model_趨勢空頭.pkl"
+    "models_dir_exists": true,
+    "required_files": [
+      {
+        "path": "/mnt/data/fts_upgrade_100/models/selected_features.pkl",
+        "exists": false
+      },
+      {
+        "path": "/mnt/data/fts_upgrade_100/models/model_趨勢多頭.pkl",
+        "exists": false
+      },
+      {
+        "path": "/mnt/data/fts_upgrade_100/models/model_區間盤整.pkl",
+        "exists": false
+      },
+      {
+        "path": "/mnt/data/fts_upgrade_100/models/model_趨勢空頭.pkl",
+        "exists": false
+      }
     ],
-    "existing": [
-      "selected_features.pkl",
-      "model_區間盤整.pkl",
-      "model_趨勢空頭.pkl"
-    ],
-    "missing": [
-      "model_趨勢多頭.pkl"
-    ],
-    "existing_required_count": 3,
-    "status": "models_incomplete"
+    "existing_required_count": 0,
+    "all_required_present": false,
+    "readiness_score": 5
   },
-  "cache": {
-    "exists": true,
-    "csv_count": 2786,
-    "ticker_count": 1075,
-    "tickers_preview": [
-      "1101.TW",
-      "1102.TW",
-      "1103.TW",
-      "1104.TW",
-      "1108.TW",
-      "1109.TW",
-      "1110.TW",
-      "1201.TW",
-      "1203.TW",
-      "1210.TW",
-      "1213.TW",
-      "1215.TW",
-      "1216.TW",
-      "1217.TW",
-      "1218.TW",
-      "1219.TW",
-      "1220.TW",
-      "1225.TW",
-      "1227.TW",
-      "1229.TW"
-    ],
-    "can_bootstrap_from_cache": true,
-    "local_history_status": "waiting_for_ohlcv_history",
-    "missing_cache_ticker_count": 1058,
-    "request_list_rows": 1058
-  },
-  "input_manifest_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_input_manifest.json",
-  "local_manifest": {
-    "generated_at": "2026-04-08 14:09:25",
-    "module_version": "v69",
-    "sources": {
-      "monthly_revenue_simple.csv": true,
-      "daily_chip_data_backup.csv": true,
-      "market_financials_backup_fullspeed.csv": true
-    },
-    "rows": {
-      "revenue": 1064,
-      "chip": 4374,
-      "fundamentals": 2143,
-      "common_universe": 1058
-    },
-    "universe_csv_path": "C:\\test\\test-2026-3-22OK\\data\\training_bootstrap_universe.csv",
-    "tickers_preview": [
-      "1101.TW",
-      "1102.TW",
-      "1103.TW",
-      "1104.TW",
-      "1108.TW",
-      "1109.TW",
-      "1110.TW",
-      "1201.TW",
-      "1203.TW",
-      "1210.TW",
-      "1215.TW",
-      "1216.TW",
-      "1217.TW",
-      "1218.TW",
-      "1219.TW",
-      "1220.TW",
-      "1225.TW",
-      "1227.TW",
-      "1229.TW",
-      "1231.TW"
-    ],
-    "bootstrap_possible_from_local_tables": true,
-    "blocking_reason": ""
-  },
-  "bootstrap_recipe_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_bootstrap_recipe.json",
   "actions": [
     {
       "stage": "ai",
@@ -107,7 +53,8 @@
       "reason": "run_ai_stage=False"
     }
   ],
+  "training_readiness_pct": 33,
   "go_for_training": false,
-  "go_for_inference": true,
-  "status": "training_governed"
+  "go_for_inference": false,
+  "status": "training_governed_v79"
 }
