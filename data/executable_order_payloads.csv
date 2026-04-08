@@ -1,4 +1,0 @@
-﻿Ticker,Action,Regime,Structure,AI_Proba,Score,Kelly_Pos,Heuristic_EV,Reference_Price,Target_Qty,_has_ticker,_has_action,_has_price,_raw_action,風險金額,預期停損(%),Source,PriceSource,MarketRulePassed,MarketRuleReason,LotMode,SizingReason
-2330.TW,SELL,區間盤整,空方進場,0.5953,0.5392,0.0473,-0.18,1950.0,72,True,True,True,SELL,0.0,0.04,decision:normalized_decision_output.csv,,True,ok_odd_lot_allowed,odd,paper_odd_lot_min_of_risk_cap
-2471.TW,SELL,趨勢空頭,空方進場,0.5302,0.4881,0.0278,-0.3,52.0,1000,True,True,True,SELL,0.0,0.04,decision:normalized_decision_output.csv,,True,ok,board,strict_min_of_risk_cap
-2467.TW,SELL,趨勢多頭,空方進場,0.53,0.524,0.0278,0.06,449.0,185,True,True,True,SELL,0.0,0.04,decision:normalized_decision_output.csv,,True,ok_odd_lot_allowed,odd,paper_odd_lot_min_of_risk_cap

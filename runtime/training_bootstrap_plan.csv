@@ -1,4 +1,0 @@
-﻿Ticker,Bootstrap_Status,Regime,Structure,Direction,AI_Proba,Heuristic_EV,Realized_EV,Kelly_Pos,Score,風險金額
-2330.TW,needs_kline_and_labels,區間盤整,空方進場,做空(Short),0.5953,-0.18,0.5,0.0473,0.5392,23650.0
-2471.TW,needs_kline_and_labels,趨勢空頭,空方進場,做空(Short),0.5302,-0.3,0.5,0.0278,0.4881,13900.0
-2467.TW,needs_kline_and_labels,趨勢多頭,空方進場,做空(Short),0.53,0.06,0.5,0.0278,0.524,13900.0
