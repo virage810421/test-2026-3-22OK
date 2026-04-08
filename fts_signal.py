@@ -11,9 +11,9 @@ class SignalLoader:
         action = str(raw_action).strip().upper()
         mapping = {
             "LONG": "BUY", "OPEN_LONG": "BUY", "BUY_SIGNAL": "BUY", "BUY": "BUY",
-            "多": "BUY", "做多": "BUY", "1": "BUY",
+            "多": "BUY", "做多": "BUY", "做多(Long)": "BUY", "多方進場": "BUY", "1": "BUY",
             "EXIT": "SELL", "CLOSE_LONG": "SELL", "SELL_SIGNAL": "SELL", "SELL": "SELL",
-            "SHORT": "SELL", "空": "SELL", "做空": "SELL", "-1": "SELL",
+            "SHORT": "SELL", "做空(SHORT)": "SELL", "做空(Short)": "SELL", "空方進場": "SELL", "空": "SELL", "做空": "SELL", "-1": "SELL",
             "ADD": "BUY", "ADD_ON": "BUY",
         }
         return mapping.get(action, action)

@@ -1,0 +1,3 @@
+﻿Ticker,Reference_Price,Action,Regime,風險金額,預期停損(%),Target_Qty,Lot_Size,Capital_Cap,Suggested_Stop_Price
+2467.TW,0.0,SELL,趨勢多頭,13900.0,0.05,0,1000,300000.0,0.0
+2471.TW,0.0,SELL,趨勢空頭,13900.0,0.05,0,1000,300000.0,0.0

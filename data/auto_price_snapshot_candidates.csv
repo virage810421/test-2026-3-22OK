@@ -1,0 +1,5 @@
+﻿Ticker,Reference_Price,Source_File
+2317.TW,150.0,C:\test\test-2026-3-22OK\data\last_price_snapshot_template.csv
+2330.TW,1950.0,C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+2467.TW,449.0,C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+2471.TW,52.0,C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv

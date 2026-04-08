@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "stages": {
+    "etl": {
+      "inputs": [
+        "TWSE/TPEX/OpenAPI/MOPS/Yahoo/FinMind",
+        "local csv cache",
+        "SQL"
+      ],
+      "outputs": [
+        "local csv",
+        "SQL tables",
+        "feature-ready source data"
+      ]
+    },
+    "ai_training": {
+      "inputs": [
+        "data/ml_training_data.csv",
+        "feature generator",
+        "trainer"
+      ],
+      "outputs": [
+        "models/",
+        "model governance metadata"
+      ]
+    },
+    "decision": {
+      "inputs": [
+        "models",
+        "research outputs",
+        "normalized features"
+      ],
+      "outputs": [
+        "daily_decision_desk.csv"
+      ]
+    },
+    "execution": {
+      "inputs": [
+        "daily_decision_desk.csv",
+        "risk filters",
+        "submission contract"
+      ],
+      "outputs": [
+        "orders",
+        "fills",
+        "state",
+        "reports"
+      ]
+    }
+  },
+  "status": "io_map_ready"
+}

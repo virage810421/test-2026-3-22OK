@@ -1,0 +1,51 @@
+{
+  "generated_from": [
+    "upgrade_truth_report.json",
+    "live_readiness_gate.json",
+    "training_orchestrator.json",
+    "decision_execution_bridge.json",
+    "real_api_readiness.json"
+  ],
+  "headline": {
+    "completion_excluding_real_broker_pct": 67,
+    "remaining_major_blocks_excluding_real_broker": 1,
+    "real_broker_binding_present": false
+  },
+  "completed_excluding_real_broker": [
+    "24/24 架構模組達 95+",
+    "舊核心已納管進主控",
+    "live readiness gate / TW market rules / execution bridge 已建立"
+  ],
+  "remaining_excluding_real_broker": [
+    "AI訓練資料與模型產物未落地"
+  ],
+  "detailed_flags": {
+    "training_ready": false,
+    "execution_payload_ready": true,
+    "paper_execution_ready": true,
+    "live_ready": false,
+    "real_api_live_bound": false
+  },
+  "real_api_is_separate_track": {
+    "already_reserved": [
+      "broker submission contract defined",
+      "callback normalization contract defined",
+      "live approval workflow reserved",
+      "real broker stub reserved",
+      "order payload preview contract defined"
+    ],
+    "still_missing": [
+      "broker authentication and token refresh",
+      "account routing: cash / margin / short-sell",
+      "market session calendar and holiday source",
+      "tick size / price band / odd-lot rules",
+      "broker order id mapping and idempotency key",
+      "real callback receiver and persistence",
+      "partial fill reconciliation against broker ledger",
+      "cancel/replace semantics for each broker",
+      "rate limit and retry policy by endpoint",
+      "live kill-switch and operator confirmation UX"
+    ]
+  },
+  "status": "completion_gap_mapped"
+}

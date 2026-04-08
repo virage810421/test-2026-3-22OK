@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "research_gate": false,
+  "model_gate": true,
+  "launch_gate": false,
+  "live_safety_gate": false,
+  "broker_approval_gate": false,
+  "submission_gate": false,
+  "all_green": false
+}

@@ -2,6 +2,23 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
+import os
+
+
+def _detect_base_dir() -> Path:
+    env_base = os.environ.get("FTS_BASE_DIR", "").strip()
+    candidates = []
+    if env_base:
+        candidates.append(Path(env_base).expanduser())
+    candidates.extend([
+        Path.cwd(),
+        Path(__file__).resolve().parent,
+        Path(__file__).resolve().parent.parent,
+    ])
+    for c in candidates:
+        if (c / "daily_decision_desk.csv").exists() or (c / "launcher.py").exists() or (c / "master_pipeline.py").exists():
+            return c
+    return Path(__file__).resolve().parent
 
 @dataclass
 class AppPaths:
@@ -43,8 +60,8 @@ class AppPaths:
 
 @dataclass
 class SystemConfig:
-    system_name: str = "正式交易主控版_v24"
-    package_version: str = "v24"
+    system_name: str = "正式交易主控版_v64"
+    package_version: str = "v64"
     mode: str = "PAPER"
     broker_type: str = "paper"
     starting_cash: float = 3_000_000
@@ -98,10 +115,12 @@ class SystemConfig:
     max_retry_attempts: int = 3
     auto_retry_failed_optional_tasks: bool = False
     fail_on_retry_queue_required_items: bool = True
-    # v24 auto-retry
     enable_auto_retry_on_boot: bool = True
     auto_retry_required_tasks: bool = False
     retry_only_same_stage_enabled: bool = True
+    live_manual_arm: bool = False
+    require_dual_confirmation: bool = True
+    enable_live_kill_switch: bool = True
 
 @dataclass
 class DBConfig:
@@ -110,7 +129,7 @@ class DBConfig:
     database: str = "股票online"
     trusted_connection: str = "yes"
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = _detect_base_dir()
 PATHS = AppPaths.build(BASE_DIR)
 CONFIG = SystemConfig()
 DB = DBConfig()

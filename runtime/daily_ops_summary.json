@@ -1,23 +1,17 @@
 {
-  "generated_at": "2026-04-08 01:22:00",
-  "system_name": "正式交易主控版_v24",
+  "generated_at": "2026-04-08 14:09:35",
+  "system_name": "正式交易主控版_v64",
   "mode": "PAPER",
   "broker_type": "paper",
   "headline": {
     "pending_retry": 0,
-    "signals": 0,
+    "signals": 3,
     "filled": 0,
     "partial": 0,
     "auto_exit": 0,
     "positions": 0,
     "recent_task_logs": 0,
-    "alerts": 1
+    "alerts": 0
   },
-  "alerts": [
-    {
-      "level": "warning",
-      "type": "zero_signal",
-      "message": "本輪有效訊號為 0"
-    }
-  ]
+  "alerts": []
 }

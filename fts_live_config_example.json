@@ -1,0 +1,8 @@
+{
+  "mode": "PAPER",
+  "broker_type": "paper",
+  "live_manual_arm": false,
+  "require_dual_confirmation": true,
+  "enable_live_kill_switch": true,
+  "notes": "切到 LIVE 前，請先補齊 broker_credentials.json 與 last_price_snapshot.csv"
+}

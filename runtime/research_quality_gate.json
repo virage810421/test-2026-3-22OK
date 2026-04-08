@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "go_for_decision_linkage": false,
+  "failures": [
+    {
+      "type": "price_missing",
+      "message": "研究/選股輸出缺少可用 reference price"
+    }
+  ],
+  "warnings": [
+    {
+      "type": "zero_signal_after_research",
+      "message": "研究/選股有輸出，但轉成有效訊號後為 0"
+    }
+  ],
+  "summary": {
+    "row_count": 3,
+    "rows_with_ticker": 3,
+    "rows_with_action": 3,
+    "rows_with_price": 0,
+    "total_signals": 0,
+    "failure_count": 1,
+    "warning_count": 1
+  }
+}

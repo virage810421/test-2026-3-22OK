@@ -1,406 +1,547 @@
-[23:21:36] ============================================================
-[23:21:36] 🚀 啟動 正式交易主控版_v15
-[23:21:36] 🧭 模式：PAPER
-[23:21:36] 🏦 broker_type：paper
-[23:21:36] 🎬 execution_style：TWAP3
-[23:21:36] 📈 目前整體升級進度：80.9%
-[23:21:36] ============================================================
-[23:21:36] ✅ SQL Server 連線成功。
-[23:21:36] ✅ execution tables ready.
-[23:21:36] 🧷 package consistency check 通過
-[23:21:36] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:17:54 positions=0
-[23:21:36] 🧪 preflight all_passed=True
-[23:21:36] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[23:21:36] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[23:21:36] ✅ 讀入訊號：0 筆 | execution_ready=False
-[23:21:36] 🛡️ 風控通過：0
-[23:21:36] 🚫 風控擋下：0
-[23:21:36] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[23:21:36] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[23:21:36] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[23:21:36] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v15_report_20260407_232136.json
-[23:21:36] 🛑 系統關閉。
-[23:22:08] ============================================================
-[23:22:08] 🚀 啟動 正式交易主控版_v16
-[23:22:08] 🧭 模式：PAPER
-[23:22:08] 🏦 broker_type：paper
-[23:22:08] 🎬 execution_style：TWAP3
-[23:22:08] 🪜 bracket_exit：True
-[23:22:08] 📈 目前整體升級進度：82.0%
-[23:22:08] ============================================================
-[23:22:08] ✅ SQL Server 連線成功。
-[23:22:08] ✅ execution tables ready.
-[23:22:08] 🧷 package consistency check 通過
-[23:22:08] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:21:36 positions=0
-[23:22:08] 🧪 preflight all_passed=True
-[23:22:08] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[23:22:08] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[23:22:08] ✅ 讀入訊號：0 筆 | execution_ready=False
-[23:22:08] 🛡️ 風控通過：0
-[23:22:08] 🚫 風控擋下：0
-[23:22:08] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[23:22:08] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[23:22:08] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[23:22:08] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v15_report_20260407_232208.json
-[23:22:08] 🛑 系統關閉。
-[23:48:20] ============================================================
-[23:48:20] 🚀 啟動 正式交易主控版_v20
-[23:48:20] 🧭 模式：PAPER
-[23:48:20] 🏦 broker_type：paper
-[23:48:20] 🎬 execution_style：TWAP3
-[23:48:20] 📈 目前整體升級進度：84.2%
-[23:48:20] ============================================================
-[23:48:20] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[23:48:20] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260407_234820.json
-[23:48:20] 💓 heartbeat 更新：boot
-[23:48:20] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[23:48:20] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[23:48:20] ✅ SQL Server 連線成功。
-[23:48:20] ✅ execution tables ready.
-[23:48:20] 🧷 package consistency check 通過
-[23:48:20] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[23:48:20] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:22:08 positions=0
-[23:48:20] 🧪 preflight all_passed=True
-[23:48:20] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[23:48:20] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260407_234820.csv
-[23:48:20] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[23:48:20] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[23:48:20] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[23:48:20] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[23:48:20] ✅ 讀入訊號：0 筆 | execution_ready=False
-[23:48:20] 🛡️ 風控通過：0
-[23:48:20] 🚫 風控擋下：0
-[23:48:20] 💓 heartbeat 更新：execution_start
-[23:48:20] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[23:48:20] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[23:48:20] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[23:48:20] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260407_234820.json
-[23:48:20] 💓 heartbeat 更新：run_complete
-[23:48:20] 🔓 已釋放 runtime lock
-[23:48:20] 🛑 系統關閉。
-[23:56:02] ============================================================
-[23:56:02] 🚀 啟動 正式交易主控版_v21
-[23:56:02] 🧭 模式：PAPER
-[23:56:02] 🏦 broker_type：paper
-[23:56:02] 🎬 execution_style：TWAP3
-[23:56:02] 📈 目前整體升級進度：84.6%
-[23:56:02] ============================================================
-[23:56:02] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[23:56:02] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260407_235602.json
-[23:56:02] 💓 heartbeat 更新：boot
-[23:56:02] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[23:56:02] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[23:56:02] ✅ SQL Server 連線成功。
-[23:56:02] ✅ execution tables ready.
-[23:56:02] 🧷 package consistency check 通過
-[23:56:02] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[23:56:02] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[23:56:02] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:48:20 positions=0
-[23:56:02] 🧪 preflight all_passed=True
-[23:56:02] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[23:56:02] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260407_235602.csv
-[23:56:02] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[23:56:02] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[23:56:02] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[23:56:02] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[23:56:02] ✅ 讀入訊號：0 筆 | execution_ready=False
-[23:56:02] 🛡️ 風控通過：0
-[23:56:02] 🚫 風控擋下：0
-[23:56:02] 💓 heartbeat 更新：execution_start
-[23:56:02] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[23:56:02] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[23:56:02] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[23:56:02] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260407_235602.json
-[23:56:02] 💓 heartbeat 更新：run_complete
-[23:56:02] 🔓 已釋放 runtime lock
-[23:56:02] 🛑 系統關閉。
-[00:08:46] ============================================================
-[00:08:46] 🚀 啟動 正式交易主控版_v24
-[00:08:46] 🧭 模式：PAPER
-[00:08:46] 🏦 broker_type：paper
-[00:08:46] 🎬 execution_style：TWAP3
-[00:08:46] 🔁 enable_auto_retry_on_boot：True
-[00:08:46] 📈 目前整體升級進度：85.6%
-[00:08:46] ============================================================
-[00:08:46] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[00:08:46] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_000846.json
-[00:08:46] 💓 heartbeat 更新：boot
-[00:08:46] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[00:08:46] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[00:08:46] ✅ SQL Server 連線成功。
-[00:08:46] ✅ execution tables ready.
-[00:08:46] 🧷 package consistency check 通過
-[00:08:46] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[00:08:46] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[00:08:46] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
-[00:08:46] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 23:56:02 positions=0
-[00:08:46] 🧪 preflight all_passed=True
-[00:08:46] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[00:08:46] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_000846.csv
-[00:08:46] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[00:08:46] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[00:08:46] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[00:08:46] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[00:08:46] ✅ 讀入訊號：0 筆 | execution_ready=False
-[00:08:46] 🛡️ 風控通過：0
-[00:08:46] 🚫 風控擋下：0
-[00:08:46] 💓 heartbeat 更新：execution_start
-[00:08:46] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[00:08:46] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[00:08:46] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[00:08:46] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_000846.json
-[00:08:46] 💓 heartbeat 更新：run_complete
-[00:08:46] 🔓 已釋放 runtime lock
-[00:08:46] 🛑 系統關閉。
-[00:13:33] ============================================================
-[00:13:33] 🚀 啟動 正式交易主控版_v25
-[00:13:33] 🧭 模式：PAPER
-[00:13:33] 🏦 broker_type：paper
-[00:13:33] 🎬 execution_style：TWAP3
-[00:13:33] 🗃️ task log archive：ON
-[00:13:33] 📈 目前整體升級進度：85.8%
-[00:13:33] ============================================================
-[00:13:33] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[00:13:33] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_001333.json
-[00:13:33] 💓 heartbeat 更新：boot
-[00:13:33] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[00:13:33] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[00:13:33] ✅ SQL Server 連線成功。
-[00:13:33] ✅ execution tables ready.
-[00:13:33] 🧷 package consistency check 通過
-[00:13:33] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[00:13:33] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[00:13:33] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
-[00:13:33] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:08:46 positions=0
-[00:13:33] 🧪 preflight all_passed=True
-[00:13:33] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[00:13:33] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_001333.csv
-[00:13:33] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[00:13:33] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[00:13:33] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[00:13:33] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[00:13:33] ✅ 讀入訊號：0 筆 | execution_ready=False
-[00:13:33] 🛡️ 風控通過：0
-[00:13:33] 🚫 風控擋下：0
-[00:13:33] 💓 heartbeat 更新：execution_start
-[00:13:33] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[00:13:33] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[00:13:33] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[00:13:33] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_001333.json
-[00:13:33] 💓 heartbeat 更新：run_complete
-[00:13:33] 🔓 已釋放 runtime lock
-[00:13:33] 🛑 系統關閉。
-[00:25:21] ============================================================
-[00:25:21] 🚀 啟動 正式交易主控版_v26
-[00:25:21] 🧭 模式：PAPER
-[00:25:21] 🏦 broker_type：paper
-[00:25:21] 🎬 execution_style：TWAP3
-[00:25:21] 📊 health dashboard：ON
-[00:25:21] 📈 目前整體升級進度：86.0%
-[00:25:21] ============================================================
-[00:25:21] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[00:25:21] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_002521.json
-[00:25:21] 💓 heartbeat 更新：boot
-[00:25:21] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[00:25:21] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[00:25:21] ✅ SQL Server 連線成功。
-[00:25:21] ✅ execution tables ready.
-[00:25:21] 🧷 package consistency check 通過
-[00:25:21] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[00:25:21] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[00:25:21] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
-[00:25:21] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:13:33 positions=0
-[00:25:21] 🧪 preflight all_passed=True
-[00:25:21] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[00:25:21] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_002521.csv
-[00:25:21] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[00:25:21] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[00:25:21] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[00:25:21] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[00:25:21] ✅ 讀入訊號：0 筆 | execution_ready=False
-[00:25:21] 🛡️ 風控通過：0
-[00:25:21] 🚫 風控擋下：0
-[00:25:21] 💓 heartbeat 更新：execution_start
-[00:25:21] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[00:25:21] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[00:25:21] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
-[00:25:21] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[00:25:21] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_002521.json
-[00:25:21] 💓 heartbeat 更新：run_complete
-[00:25:21] 🔓 已釋放 runtime lock
-[00:25:21] 🛑 系統關閉。
-[00:39:28] ============================================================
-[00:39:28] 🚀 啟動 正式交易主控版_v27
-[00:39:28] 🧭 模式：PAPER
-[00:39:28] 🏦 broker_type：paper
-[00:39:28] 🎬 execution_style：TWAP3
-[00:39:28] 🚨 daily ops alerts：ON
-[00:39:28] 📈 目前整體升級進度：86.3%
-[00:39:28] ============================================================
-[00:39:28] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[00:39:28] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_003928.json
-[00:39:28] 💓 heartbeat 更新：boot
-[00:39:29] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[00:39:29] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[00:39:29] ✅ SQL Server 連線成功。
-[00:39:29] ✅ execution tables ready.
-[00:39:29] 🧷 package consistency check 通過
-[00:39:29] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[00:39:29] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[00:39:29] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
-[00:39:29] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:25:21 positions=0
-[00:39:29] 🧪 preflight all_passed=True
-[00:39:29] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[00:39:29] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_003929.csv
-[00:39:29] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[00:39:29] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[00:39:29] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[00:39:29] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[00:39:29] ✅ 讀入訊號：0 筆 | execution_ready=False
-[00:39:29] 🛡️ 風控通過：0
-[00:39:29] 🚫 風控擋下：0
-[00:39:29] 💓 heartbeat 更新：execution_start
-[00:39:29] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
-[00:39:29] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
-[00:39:29] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
-[00:39:29] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
-[00:39:29] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
-[00:39:29] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[00:39:29] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_003929.json
-[00:39:29] 💓 heartbeat 更新：run_complete
-[00:39:29] 🔓 已釋放 runtime lock
-[00:39:29] 🛑 系統關閉。
-[00:52:39] ============================================================
-[00:52:39] 🚀 啟動 正式交易主控版_v29
-[00:52:39] 🧭 模式：PAPER
-[00:52:39] 🏦 broker_type：paper
-[00:52:39] 🎬 execution_style：TWAP3
-[00:52:39] 🧠 AI pipeline bridge：ON
-[00:52:39] 📈 目前整體升級進度：86.8%
-[00:52:39] ============================================================
-[00:52:39] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[00:52:39] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_005239.json
-[00:52:39] 💓 heartbeat 更新：boot
-[00:52:39] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[00:52:39] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[00:52:39] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
-[00:52:39] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
-[00:52:39] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
-[00:52:39] ✅ SQL Server 連線成功。
-[00:52:39] ✅ execution tables ready.
-[00:52:39] 🧷 package consistency check 通過
-[00:52:39] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[00:52:39] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[00:52:39] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
-[00:52:39] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:39:29 positions=0
-[00:52:39] 🧪 preflight all_passed=True
-[00:52:39] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[00:52:39] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_005239.csv
-[00:52:39] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[00:52:39] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[00:52:39] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[00:52:39] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[00:52:39] ✅ 讀入訊號：0 筆 | execution_ready=False
-[00:52:39] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
-[00:52:39] ⛔ Launch Gate 阻擋本輪 execution，已跳過送單。
-[00:52:39] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
-[00:52:39] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
-[00:52:39] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
-[00:52:39] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[00:52:39] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_005239.json
-[00:52:39] 💓 heartbeat 更新：run_complete
-[00:52:39] 🔓 已釋放 runtime lock
-[00:52:39] 🛑 系統關閉。
-[01:16:43] ============================================================
-[01:16:43] 🚀 啟動 正式交易主控版_v32
-[01:16:43] 🧭 模式：PAPER
-[01:16:43] 🏦 broker_type：paper
-[01:16:43] 🎬 execution_style：TWAP3
-[01:16:43] 🛡️ paper/live safety：ON
-[01:16:43] 📈 目前整體升級進度：85.7%
-[01:16:43] ============================================================
-[01:16:43] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[01:16:43] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_011643.json
-[01:16:43] 💓 heartbeat 更新：boot
-[01:16:43] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[01:16:43] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[01:16:43] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
-[01:16:43] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
-[01:16:43] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
-[01:16:43] 🧠 已輸出 AI manager inspect：C:\test\test-2026-3-22OK\runtime\ai_training_run.json
-[01:16:43] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
-[01:16:43] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
-[01:16:43] ✅ SQL Server 連線成功。
-[01:16:43] ✅ execution tables ready.
-[01:16:43] 🧷 package consistency check 通過
-[01:16:43] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[01:16:43] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[01:16:43] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
-[01:16:43] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 00:52:39 positions=0
-[01:16:43] 🧪 preflight all_passed=True
-[01:16:43] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[01:16:43] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_011643.csv
-[01:16:43] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[01:16:43] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[01:16:43] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[01:16:43] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[01:16:43] ✅ 讀入訊號：0 筆 | execution_ready=False
-[01:16:43] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=2
-[01:16:43] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
-[01:16:43] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=1
-[01:16:43] ⛔ Launch Gate 或 Live Safety Gate 阻擋本輪 execution，已跳過送單。
-[01:16:43] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
-[01:16:43] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
-[01:16:43] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
-[01:16:43] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[01:16:43] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_011643.json
-[01:16:43] 💓 heartbeat 更新：run_complete
-[01:16:43] 🔓 已釋放 runtime lock
-[01:16:43] 🛑 系統關閉。
-[01:21:59] ============================================================
-[01:21:59] 🚀 啟動 正式交易主控版_v33
-[01:21:59] 🧭 模式：PAPER
-[01:21:59] 🏦 broker_type：paper
-[01:21:59] 🎬 execution_style：TWAP3
-[01:21:59] 🧾 broker approval gate：ON
-[01:21:59] 📈 目前整體升級進度：86.1%
-[01:21:59] ============================================================
-[01:21:59] 🔒 已建立 runtime lock：C:\test\test-2026-3-22OK\runtime\engine.lock
-[01:21:59] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_012159.json
-[01:21:59] 💓 heartbeat 更新：boot
-[01:21:59] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
-[01:21:59] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
-[01:21:59] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
-[01:21:59] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
-[01:21:59] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
-[01:21:59] 🧠 已輸出 AI manager inspect：C:\test\test-2026-3-22OK\runtime\ai_training_run.json
-[01:21:59] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
-[01:21:59] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
-[01:22:00] ✅ SQL Server 連線成功。
-[01:22:00] ✅ execution tables ready.
-[01:22:00] 🧷 package consistency check 通過
-[01:22:00] 🛰️ 上游任務檢查 | ready=7 | missing=0
-[01:22:00] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
-[01:22:00] 🧯 已更新 retry queue：C:\test\test-2026-3-22OK\runtime\retry_queue.json | total=0
-[01:22:00] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-08 01:16:43 positions=0
-[01:22:00] 🧪 preflight all_passed=True
-[01:22:00] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
-[01:22:00] 🗂️ 已封存 decision input：C:\test\test-2026-3-22OK\runtime\decision_input_20260408_012200.csv
-[01:22:00] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
-[01:22:00] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
-[01:22:00] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
-[01:22:00] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=3 | skip_no_price=0 | skip_zero_qty=0 | actions={'做空(SHORT)': 3}
-[01:22:00] ✅ 讀入訊號：0 筆 | execution_ready=False
-[01:22:00] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=2
-[01:22:00] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
-[01:22:00] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=1
-[01:22:00] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
-[01:22:00] ⛔ Launch Gate / Live Safety Gate / Broker Approval Gate 阻擋本輪 execution，已跳過送單。
-[01:22:00] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
-[01:22:00] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
-[01:22:00] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
-[01:22:00] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
-[01:22:00] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v17_report_20260408_012200.json
-[01:22:00] 💓 heartbeat 更新：run_complete
-[01:22:00] 🔓 已釋放 runtime lock
-[01:22:00] 🛑 系統關閉。
+[04:56:16] ============================================================
+[04:56:16] 🚀 啟動 正式交易主控版_v62
+[04:56:16] 🧭 模式：PAPER
+[04:56:16] 🏦 broker_type：paper
+[04:56:16] 🧱 wave1 body templates + io bindings：ON
+[04:56:16] 📈 目前整體升級進度：97.2%
+[04:56:16] ============================================================
+[04:56:16] 🧾 已輸出 config snapshot：/mnt/data/fts_upgrade_100/runtime/config_snapshot_20260408_045616.json
+[04:56:16] 🗺️ 已輸出 architecture map：/mnt/data/fts_upgrade_100/runtime/architecture_map.json
+[04:56:16] 🧩 已輸出 task registry：/mnt/data/fts_upgrade_100/runtime/task_registry.json
+[04:56:16] 🧠 已輸出 AI pipeline registry：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_registry.json
+[04:56:16] 🧪 已輸出 AI pipeline status：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_status.json
+[04:56:16] 🌉 已輸出 AI decision bridge：/mnt/data/fts_upgrade_100/runtime/ai_decision_bridge.json
+[04:56:16] 🧬 已輸出 model registry：/mnt/data/fts_upgrade_100/runtime/model_registry.json
+[04:56:16] 🔎 已輸出 research selection registry：/mnt/data/fts_upgrade_100/runtime/research_selection_registry.json
+[04:56:16] 🧩 已輸出 interface audit：/mnt/data/fts_upgrade_100/runtime/interface_audit.json
+[04:56:16] 🎓 已輸出 training prod readiness：/mnt/data/fts_upgrade_100/runtime/training_prod_readiness.json
+[04:56:16] 🧯 已輸出 training gap report：/mnt/data/fts_upgrade_100/runtime/training_gap_report.json
+[04:56:16] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_upgrade_100/runtime/trainer_promotion_policy.json
+[04:56:16] 🛠️ 已輸出 legacy core upgrade plan：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_plan.json
+[04:56:16] 📋 已輸出 legacy core readiness board：/mnt/data/fts_upgrade_100/runtime/legacy_core_readiness_board.json
+[04:56:16] 🌊 已輸出 legacy core upgrade wave：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_wave.json
+[04:56:16] 🌊 已輸出 wave1 core upgrade：/mnt/data/fts_upgrade_100/runtime/wave1_core_upgrade.json
+[04:56:16] 📏 已輸出 legacy core metrics：/mnt/data/fts_upgrade_100/runtime/legacy_core_metrics.json
+[04:56:16] 📦 已輸出 wave1 contract pack：/mnt/data/fts_upgrade_100/runtime/wave1_contract_pack.json
+[04:56:16] 🧱 已輸出 wave1 body upgrade templates：/mnt/data/fts_upgrade_100/runtime/wave1_body_upgrade_templates.json
+[04:56:16] 🔗 已輸出 wave1 io bindings：/mnt/data/fts_upgrade_100/runtime/wave1_io_bindings.json
+[04:56:16] ✅ 已輸出 wave1 upgrade checklist：/mnt/data/fts_upgrade_100/runtime/wave1_upgrade_checklist.json
+[04:56:16] 🎯 已輸出 target95 scorecard：/mnt/data/fts_upgrade_100/runtime/target95_scorecard.json
+[04:56:16] 🛣️ 已輸出 target95 plan：/mnt/data/fts_upgrade_100/runtime/target95_plan.json
+[04:56:16] ⚠️ pyodbc 未安裝，SQL Logger 停用。
+[04:56:16] 🧷 package consistency check 通過
+[04:56:16] 🧩 已輸出 normalized decision csv：/mnt/data/fts_upgrade_100/data/normalized_decision_output.csv
+[04:56:16] 🔎 已輸出 normalized 預覽：/mnt/data/fts_upgrade_100/logs/normalized_decision_preview.csv
+[04:56:16] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[04:56:16] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=3 | skip_zero_qty=0 | actions={'SELL': 3}
+[04:56:16] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[04:56:16] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[04:56:16] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[04:56:16] 🧭 已輸出 stage trace：/mnt/data/fts_upgrade_100/runtime/stage_trace.json
+[04:56:16] 🪖 已輸出 console brief：/mnt/data/fts_upgrade_100/runtime/console_brief.json
+[04:56:16] ================= 戰情室摘要 =================
+[04:56:16] AI階段 | enabled=False | dry_run=True | executed=0
+[04:56:16] Decision | rows=3 | signals=0
+[04:56:16] Gates | research=True | model=True | launch=False
+[04:56:16] Gates | live=True | approval=False | submission=False
+[04:56:16] Execution | submitted=0 | filled=0 | partial=0 | rejected=0 | cancelled=0
+[04:56:16] ================================================
+[04:56:16] 📊 已輸出 health dashboard：/mnt/data/fts_upgrade_100/runtime/health_dashboard.json
+[04:56:16] 📝 已輸出 daily ops summary：/mnt/data/fts_upgrade_100/runtime/daily_ops_summary.json
+[04:56:16] 🚨 已輸出 alerts：/mnt/data/fts_upgrade_100/runtime/alerts.json
+[04:56:16] 🗂️ 已輸出 run manifest：/mnt/data/fts_upgrade_100/runtime/run_manifest.json
+[04:56:16] 💓 heartbeat 更新：run_complete
+[04:56:57] ============================================================
+[04:56:57] 🚀 啟動 正式交易主控版_v62
+[04:56:57] 🧭 模式：PAPER
+[04:56:57] 🏦 broker_type：paper
+[04:56:57] 🧱 wave1 body templates + io bindings：ON
+[04:56:57] 📈 目前整體升級進度：97.2%
+[04:56:57] ============================================================
+[04:56:57] 🧾 已輸出 config snapshot：/mnt/data/fts_upgrade_100/runtime/config_snapshot_20260408_045657.json
+[04:56:57] 🗺️ 已輸出 architecture map：/mnt/data/fts_upgrade_100/runtime/architecture_map.json
+[04:56:57] 🧩 已輸出 task registry：/mnt/data/fts_upgrade_100/runtime/task_registry.json
+[04:56:57] 🧠 已輸出 AI pipeline registry：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_registry.json
+[04:56:57] 🧪 已輸出 AI pipeline status：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_status.json
+[04:56:57] 🌉 已輸出 AI decision bridge：/mnt/data/fts_upgrade_100/runtime/ai_decision_bridge.json
+[04:56:57] 🧬 已輸出 model registry：/mnt/data/fts_upgrade_100/runtime/model_registry.json
+[04:56:57] 🔎 已輸出 research selection registry：/mnt/data/fts_upgrade_100/runtime/research_selection_registry.json
+[04:56:57] 🧩 已輸出 interface audit：/mnt/data/fts_upgrade_100/runtime/interface_audit.json
+[04:56:57] 🎓 已輸出 training prod readiness：/mnt/data/fts_upgrade_100/runtime/training_prod_readiness.json
+[04:56:57] 🧯 已輸出 training gap report：/mnt/data/fts_upgrade_100/runtime/training_gap_report.json
+[04:56:57] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_upgrade_100/runtime/trainer_promotion_policy.json
+[04:56:57] 🛠️ 已輸出 legacy core upgrade plan：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_plan.json
+[04:56:57] 📋 已輸出 legacy core readiness board：/mnt/data/fts_upgrade_100/runtime/legacy_core_readiness_board.json
+[04:56:57] 🌊 已輸出 legacy core upgrade wave：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_wave.json
+[04:56:57] 🌊 已輸出 wave1 core upgrade：/mnt/data/fts_upgrade_100/runtime/wave1_core_upgrade.json
+[04:56:57] 📏 已輸出 legacy core metrics：/mnt/data/fts_upgrade_100/runtime/legacy_core_metrics.json
+[04:56:57] 📦 已輸出 wave1 contract pack：/mnt/data/fts_upgrade_100/runtime/wave1_contract_pack.json
+[04:56:57] 🧱 已輸出 wave1 body upgrade templates：/mnt/data/fts_upgrade_100/runtime/wave1_body_upgrade_templates.json
+[04:56:57] 🔗 已輸出 wave1 io bindings：/mnt/data/fts_upgrade_100/runtime/wave1_io_bindings.json
+[04:56:57] ✅ 已輸出 wave1 upgrade checklist：/mnt/data/fts_upgrade_100/runtime/wave1_upgrade_checklist.json
+[04:56:57] 🎯 已輸出 target95 scorecard：/mnt/data/fts_upgrade_100/runtime/target95_scorecard.json
+[04:56:57] 🛣️ 已輸出 target95 plan：/mnt/data/fts_upgrade_100/runtime/target95_plan.json
+[04:56:57] ⚠️ pyodbc 未安裝，SQL Logger 停用。
+[04:56:57] 🧷 package consistency check 通過
+[04:56:57] 🧩 已輸出 normalized decision csv：/mnt/data/fts_upgrade_100/data/normalized_decision_output.csv
+[04:56:57] 🔎 已輸出 normalized 預覽：/mnt/data/fts_upgrade_100/logs/normalized_decision_preview.csv
+[04:56:57] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[04:56:57] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=3 | skip_zero_qty=0 | actions={'SELL': 3}
+[04:56:57] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[04:56:57] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[04:56:57] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[04:56:57] 🧭 已輸出 stage trace：/mnt/data/fts_upgrade_100/runtime/stage_trace.json
+[04:56:57] 🪖 已輸出 console brief：/mnt/data/fts_upgrade_100/runtime/console_brief.json
+[04:56:57] ================= 戰情室摘要 =================
+[04:56:57] AI階段 | enabled=False | dry_run=True | executed=0
+[04:56:57] Decision | rows=3 | signals=0
+[04:56:57] Gates | research=True | model=True | launch=False
+[04:56:57] Gates | live=True | approval=False | submission=False
+[04:56:57] Execution | submitted=0 | filled=0 | partial=0 | rejected=0 | cancelled=0
+[04:56:57] ================================================
+[04:56:57] 📊 已輸出 health dashboard：/mnt/data/fts_upgrade_100/runtime/health_dashboard.json
+[04:56:57] 📝 已輸出 daily ops summary：/mnt/data/fts_upgrade_100/runtime/daily_ops_summary.json
+[04:56:57] 🚨 已輸出 alerts：/mnt/data/fts_upgrade_100/runtime/alerts.json
+[04:56:57] 🗂️ 已輸出 run manifest：/mnt/data/fts_upgrade_100/runtime/run_manifest.json
+[04:56:57] 💓 heartbeat 更新：run_complete
+[05:01:28] ============================================================
+[05:01:28] 🚀 啟動 正式交易主控版_v63
+[05:01:28] 🧭 模式：PAPER
+[05:01:28] 🏦 broker_type：paper
+[05:01:28] 🧱 wave1 body templates + io bindings + real-api-readiness：ON
+[05:01:28] 📈 目前整體升級進度：97.2%
+[05:01:28] ============================================================
+[05:01:28] 🧾 已輸出 config snapshot：/mnt/data/fts_upgrade_100/runtime/config_snapshot_20260408_050128.json
+[05:01:28] 🗺️ 已輸出 architecture map：/mnt/data/fts_upgrade_100/runtime/architecture_map.json
+[05:01:28] 🧩 已輸出 task registry：/mnt/data/fts_upgrade_100/runtime/task_registry.json
+[05:01:28] 🧠 已輸出 AI pipeline registry：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_registry.json
+[05:01:28] 🧪 已輸出 AI pipeline status：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_status.json
+[05:01:28] 🌉 已輸出 AI decision bridge：/mnt/data/fts_upgrade_100/runtime/ai_decision_bridge.json
+[05:01:28] 🧬 已輸出 model registry：/mnt/data/fts_upgrade_100/runtime/model_registry.json
+[05:01:28] 🔎 已輸出 research selection registry：/mnt/data/fts_upgrade_100/runtime/research_selection_registry.json
+[05:01:28] 🧩 已輸出 interface audit：/mnt/data/fts_upgrade_100/runtime/interface_audit.json
+[05:01:28] 🎓 已輸出 training prod readiness：/mnt/data/fts_upgrade_100/runtime/training_prod_readiness.json
+[05:01:28] 🧯 已輸出 training gap report：/mnt/data/fts_upgrade_100/runtime/training_gap_report.json
+[05:01:28] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_upgrade_100/runtime/trainer_promotion_policy.json
+[05:01:28] 🛠️ 已輸出 legacy core upgrade plan：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_plan.json
+[05:01:28] 📋 已輸出 legacy core readiness board：/mnt/data/fts_upgrade_100/runtime/legacy_core_readiness_board.json
+[05:01:28] 🌊 已輸出 legacy core upgrade wave：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_wave.json
+[05:01:28] 🌊 已輸出 wave1 core upgrade：/mnt/data/fts_upgrade_100/runtime/wave1_core_upgrade.json
+[05:01:28] 📏 已輸出 legacy core metrics：/mnt/data/fts_upgrade_100/runtime/legacy_core_metrics.json
+[05:01:28] 📦 已輸出 wave1 contract pack：/mnt/data/fts_upgrade_100/runtime/wave1_contract_pack.json
+[05:01:28] 🧱 已輸出 wave1 body upgrade templates：/mnt/data/fts_upgrade_100/runtime/wave1_body_upgrade_templates.json
+[05:01:28] 🛰️ 已輸出 real api readiness：/mnt/data/fts_upgrade_100/runtime/real_api_readiness.json
+[05:01:28] 🧩 已輸出 decision price bridge plus：/mnt/data/fts_upgrade_100/runtime/decision_price_bridge_plus.json
+[05:01:28] 🧭 已輸出 upgrade truth report：/mnt/data/fts_upgrade_100/runtime/upgrade_truth_report.json
+[05:01:28] 🔗 已輸出 wave1 io bindings：/mnt/data/fts_upgrade_100/runtime/wave1_io_bindings.json
+[05:01:28] ✅ 已輸出 wave1 upgrade checklist：/mnt/data/fts_upgrade_100/runtime/wave1_upgrade_checklist.json
+[05:01:28] 🎯 已輸出 target95 scorecard：/mnt/data/fts_upgrade_100/runtime/target95_scorecard.json
+[05:01:28] 🛣️ 已輸出 target95 plan：/mnt/data/fts_upgrade_100/runtime/target95_plan.json
+[05:01:28] ⚠️ pyodbc 未安裝，SQL Logger 停用。
+[05:01:28] 🧷 package consistency check 通過
+[05:01:28] 🧩 已輸出 normalized decision csv：/mnt/data/fts_upgrade_100/data/normalized_decision_output.csv
+[05:01:28] 🔎 已輸出 normalized 預覽：/mnt/data/fts_upgrade_100/logs/normalized_decision_preview.csv
+[05:01:28] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[05:01:28] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=3 | skip_zero_qty=0 | actions={'SELL': 3}
+[05:01:28] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[05:01:28] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[05:01:28] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[05:01:28] 🧭 已輸出 stage trace：/mnt/data/fts_upgrade_100/runtime/stage_trace.json
+[05:01:28] 🪖 已輸出 console brief：/mnt/data/fts_upgrade_100/runtime/console_brief.json
+[05:01:28] ================= 戰情室摘要 =================
+[05:01:28] AI階段 | enabled=False | dry_run=True | executed=0
+[05:01:28] Decision | rows=3 | signals=0
+[05:01:28] Gates | research=True | model=True | launch=False
+[05:01:28] Gates | live=True | approval=False | submission=False
+[05:01:28] Execution | submitted=0 | filled=0 | partial=0 | rejected=0 | cancelled=0
+[05:01:28] ================================================
+[05:01:28] 📊 已輸出 health dashboard：/mnt/data/fts_upgrade_100/runtime/health_dashboard.json
+[05:01:28] 📝 已輸出 daily ops summary：/mnt/data/fts_upgrade_100/runtime/daily_ops_summary.json
+[05:01:28] 🚨 已輸出 alerts：/mnt/data/fts_upgrade_100/runtime/alerts.json
+[05:01:28] 🗂️ 已輸出 run manifest：/mnt/data/fts_upgrade_100/runtime/run_manifest.json
+[05:01:28] 💓 heartbeat 更新：run_complete
+[05:07:20] ============================================================
+[05:07:20] 🚀 啟動 正式交易主控版_v64
+[05:07:20] 🧭 模式：PAPER
+[05:07:20] 🏦 broker_type：paper
+[05:07:20] 🧱 wave1 body templates + io bindings + real-api-readiness：ON
+[05:07:20] 📈 目前整體升級進度：97.2%
+[05:07:20] ============================================================
+[05:07:20] 🧾 已輸出 config snapshot：/mnt/data/fts_upgrade_100/runtime/config_snapshot_20260408_050720.json
+[05:07:20] 🗺️ 已輸出 architecture map：/mnt/data/fts_upgrade_100/runtime/architecture_map.json
+[05:07:20] 🧩 已輸出 task registry：/mnt/data/fts_upgrade_100/runtime/task_registry.json
+[05:07:20] 🧠 已輸出 AI pipeline registry：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_registry.json
+[05:07:20] 🧪 已輸出 AI pipeline status：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_status.json
+[05:07:20] 🌉 已輸出 AI decision bridge：/mnt/data/fts_upgrade_100/runtime/ai_decision_bridge.json
+[05:07:20] 🧬 已輸出 model registry：/mnt/data/fts_upgrade_100/runtime/model_registry.json
+[05:07:20] 🔎 已輸出 research selection registry：/mnt/data/fts_upgrade_100/runtime/research_selection_registry.json
+[05:07:20] 🧩 已輸出 interface audit：/mnt/data/fts_upgrade_100/runtime/interface_audit.json
+[05:07:20] 🎓 已輸出 training prod readiness：/mnt/data/fts_upgrade_100/runtime/training_prod_readiness.json
+[05:07:20] 🧯 已輸出 training gap report：/mnt/data/fts_upgrade_100/runtime/training_gap_report.json
+[05:07:20] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_upgrade_100/runtime/trainer_promotion_policy.json
+[05:07:20] 🛠️ 已輸出 legacy core upgrade plan：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_plan.json
+[05:07:20] 📋 已輸出 legacy core readiness board：/mnt/data/fts_upgrade_100/runtime/legacy_core_readiness_board.json
+[05:07:20] 🌊 已輸出 legacy core upgrade wave：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_wave.json
+[05:07:20] 🌊 已輸出 wave1 core upgrade：/mnt/data/fts_upgrade_100/runtime/wave1_core_upgrade.json
+[05:07:20] 📏 已輸出 legacy core metrics：/mnt/data/fts_upgrade_100/runtime/legacy_core_metrics.json
+[05:07:20] 📦 已輸出 wave1 contract pack：/mnt/data/fts_upgrade_100/runtime/wave1_contract_pack.json
+[05:07:20] 🧱 已輸出 wave1 body upgrade templates：/mnt/data/fts_upgrade_100/runtime/wave1_body_upgrade_templates.json
+[05:07:20] 🛰️ 已輸出 real api readiness：/mnt/data/fts_upgrade_100/runtime/real_api_readiness.json
+[05:07:20] 🧩 已輸出 decision price bridge plus：/mnt/data/fts_upgrade_100/runtime/decision_price_bridge_plus.json
+[05:07:20] 🧭 已輸出 upgrade truth report：/mnt/data/fts_upgrade_100/runtime/upgrade_truth_report.json
+[05:07:20] 🔗 已輸出 wave1 io bindings：/mnt/data/fts_upgrade_100/runtime/wave1_io_bindings.json
+[05:07:20] ✅ 已輸出 wave1 upgrade checklist：/mnt/data/fts_upgrade_100/runtime/wave1_upgrade_checklist.json
+[05:07:20] 🎯 已輸出 target95 scorecard：/mnt/data/fts_upgrade_100/runtime/target95_scorecard.json
+[05:07:20] 🛣️ 已輸出 target95 plan：/mnt/data/fts_upgrade_100/runtime/target95_plan.json
+[05:07:20] ⚠️ pyodbc 未安裝，SQL Logger 停用。
+[05:07:20] 🧷 package consistency check 通過
+[05:07:20] 🧩 已輸出 normalized decision csv：/mnt/data/fts_upgrade_100/data/normalized_decision_output.csv
+[05:07:20] 🔎 已輸出 normalized 預覽：/mnt/data/fts_upgrade_100/logs/normalized_decision_preview.csv
+[05:07:20] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[05:07:20] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=3 | skip_zero_qty=0 | actions={'SELL': 3}
+[05:07:20] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[05:07:20] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[05:07:20] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[05:07:20] 🧭 已輸出 stage trace：/mnt/data/fts_upgrade_100/runtime/stage_trace.json
+[05:07:20] 🪖 已輸出 console brief：/mnt/data/fts_upgrade_100/runtime/console_brief.json
+[05:07:20] ================= 戰情室摘要 =================
+[05:07:20] AI階段 | enabled=False | dry_run=True | executed=0
+[05:07:20] Decision | rows=3 | signals=0
+[05:07:20] Gates | research=True | model=True | launch=False
+[05:07:20] Gates | live=True | approval=False | submission=False
+[05:07:20] Execution | submitted=0 | filled=0 | partial=0 | rejected=0 | cancelled=0
+[05:07:20] ================================================
+[05:07:20] 📊 已輸出 health dashboard：/mnt/data/fts_upgrade_100/runtime/health_dashboard.json
+[05:07:20] 📝 已輸出 daily ops summary：/mnt/data/fts_upgrade_100/runtime/daily_ops_summary.json
+[05:07:20] 🚨 已輸出 alerts：/mnt/data/fts_upgrade_100/runtime/alerts.json
+[05:07:20] 🗂️ 已輸出 run manifest：/mnt/data/fts_upgrade_100/runtime/run_manifest.json
+[05:07:20] 💓 heartbeat 更新：run_complete
+[05:33:17] ============================================================
+[05:33:17] 🚀 啟動 正式交易主控版_v65
+[05:33:17] 🧭 模式：PAPER
+[05:33:17] 🏦 broker_type：paper
+[05:33:17] 🧱 v65 training governance + execution payload bridge：ON
+[05:33:17] 📈 目前整體升級進度：97.2%
+[05:33:17] ============================================================
+[05:33:17] 🧾 已輸出 config snapshot：/mnt/data/fts_upgrade_100/runtime/config_snapshot_20260408_053317.json
+[05:33:17] 🗺️ 已輸出 architecture map：/mnt/data/fts_upgrade_100/runtime/architecture_map.json
+[05:33:17] 🧩 已輸出 task registry：/mnt/data/fts_upgrade_100/runtime/task_registry.json
+[05:33:17] 🧠 已輸出 AI pipeline registry：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_registry.json
+[05:33:17] 🧪 已輸出 AI pipeline status：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_status.json
+[05:33:17] 🌉 已輸出 AI decision bridge：/mnt/data/fts_upgrade_100/runtime/ai_decision_bridge.json
+[05:33:17] 🧬 已輸出 model registry：/mnt/data/fts_upgrade_100/runtime/model_registry.json
+[05:33:17] 🔎 已輸出 research selection registry：/mnt/data/fts_upgrade_100/runtime/research_selection_registry.json
+[05:33:17] 🧩 已輸出 interface audit：/mnt/data/fts_upgrade_100/runtime/interface_audit.json
+[05:33:17] 🎓 已輸出 training prod readiness：/mnt/data/fts_upgrade_100/runtime/training_prod_readiness.json
+[05:33:17] 🧯 已輸出 training gap report：/mnt/data/fts_upgrade_100/runtime/training_gap_report.json
+[05:33:17] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_upgrade_100/runtime/trainer_promotion_policy.json
+[05:33:17] 🛠️ 已輸出 legacy core upgrade plan：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_plan.json
+[05:33:17] 📋 已輸出 legacy core readiness board：/mnt/data/fts_upgrade_100/runtime/legacy_core_readiness_board.json
+[05:33:17] 🌊 已輸出 legacy core upgrade wave：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_wave.json
+[05:33:17] 🌊 已輸出 wave1 core upgrade：/mnt/data/fts_upgrade_100/runtime/wave1_core_upgrade.json
+[05:33:17] 📏 已輸出 legacy core metrics：/mnt/data/fts_upgrade_100/runtime/legacy_core_metrics.json
+[05:33:17] 📦 已輸出 wave1 contract pack：/mnt/data/fts_upgrade_100/runtime/wave1_contract_pack.json
+[05:33:17] 🧱 已輸出 wave1 body upgrade templates：/mnt/data/fts_upgrade_100/runtime/wave1_body_upgrade_templates.json
+[05:33:17] 🛰️ 已輸出 real api readiness：/mnt/data/fts_upgrade_100/runtime/real_api_readiness.json
+[05:33:17] 🧩 已輸出 decision price bridge plus：/mnt/data/fts_upgrade_100/runtime/decision_price_bridge_plus.json
+[05:33:17] 🧭 已輸出 upgrade truth report：/mnt/data/fts_upgrade_100/runtime/upgrade_truth_report.json
+[05:33:17] 🔗 已輸出 wave1 io bindings：/mnt/data/fts_upgrade_100/runtime/wave1_io_bindings.json
+[05:33:17] ✅ 已輸出 wave1 upgrade checklist：/mnt/data/fts_upgrade_100/runtime/wave1_upgrade_checklist.json
+[05:33:17] 🎯 已輸出 target95 scorecard：/mnt/data/fts_upgrade_100/runtime/target95_scorecard.json
+[05:33:17] 🛣️ 已輸出 target95 plan：/mnt/data/fts_upgrade_100/runtime/target95_plan.json
+[05:33:17] ⚠️ pyodbc 未安裝，SQL Logger 停用。
+[05:33:17] 🧷 package consistency check 通過
+[05:33:17] 🧩 已輸出 normalized decision csv：/mnt/data/fts_upgrade_100/data/normalized_decision_output.csv
+[05:33:17] 🔎 已輸出 normalized 預覽：/mnt/data/fts_upgrade_100/logs/normalized_decision_preview.csv
+[05:33:17] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[05:33:17] 🧩 已輸出 execution bridge：/mnt/data/fts_upgrade_100/runtime/decision_execution_bridge.json
+[05:33:17] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=3 | skip_zero_qty=0 | actions={'SELL': 3}
+[05:33:17] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[05:33:17] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[05:33:17] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[05:33:17] 🧭 已輸出 stage trace：/mnt/data/fts_upgrade_100/runtime/stage_trace.json
+[05:33:17] 🪖 已輸出 console brief：/mnt/data/fts_upgrade_100/runtime/console_brief.json
+[05:33:17] ================= 戰情室摘要 =================
+[05:33:17] AI階段 | enabled=False | dry_run=True | executed=0
+[05:33:17] Decision | rows=3 | signals=0
+[05:33:17] Gates | research=True | model=False | launch=False
+[05:33:17] Gates | live=True | approval=False | submission=False
+[05:33:17] Execution | submitted=0 | filled=0 | partial=0 | rejected=0 | cancelled=0
+[05:33:17] ================================================
+[05:33:17] 📊 已輸出 health dashboard：/mnt/data/fts_upgrade_100/runtime/health_dashboard.json
+[05:33:17] 📝 已輸出 daily ops summary：/mnt/data/fts_upgrade_100/runtime/daily_ops_summary.json
+[05:33:17] 🚨 已輸出 alerts：/mnt/data/fts_upgrade_100/runtime/alerts.json
+[05:33:17] 🗂️ 已輸出 run manifest：/mnt/data/fts_upgrade_100/runtime/run_manifest.json
+[05:33:17] 💓 heartbeat 更新：run_complete
+[05:39:24] ============================================================
+[05:39:24] 🚀 啟動 正式交易主控版_v66
+[05:39:24] 🧭 模式：PAPER
+[05:39:24] 🏦 broker_type：paper
+[05:39:24] 🧱 v66 completion gap report + training governance + execution payload bridge：ON
+[05:39:24] 📈 目前整體升級進度：97.2%
+[05:39:24] ============================================================
+[05:39:24] 🧾 已輸出 config snapshot：/mnt/data/fts_upgrade_100/runtime/config_snapshot_20260408_053924.json
+[05:39:24] 🗺️ 已輸出 architecture map：/mnt/data/fts_upgrade_100/runtime/architecture_map.json
+[05:39:24] 🧩 已輸出 task registry：/mnt/data/fts_upgrade_100/runtime/task_registry.json
+[05:39:24] 🧠 已輸出 AI pipeline registry：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_registry.json
+[05:39:24] 🧪 已輸出 AI pipeline status：/mnt/data/fts_upgrade_100/runtime/ai_pipeline_status.json
+[05:39:24] 🌉 已輸出 AI decision bridge：/mnt/data/fts_upgrade_100/runtime/ai_decision_bridge.json
+[05:39:24] 🧬 已輸出 model registry：/mnt/data/fts_upgrade_100/runtime/model_registry.json
+[05:39:24] 🔎 已輸出 research selection registry：/mnt/data/fts_upgrade_100/runtime/research_selection_registry.json
+[05:39:24] 🧩 已輸出 interface audit：/mnt/data/fts_upgrade_100/runtime/interface_audit.json
+[05:39:24] 🎓 已輸出 training prod readiness：/mnt/data/fts_upgrade_100/runtime/training_prod_readiness.json
+[05:39:24] 🧯 已輸出 training gap report：/mnt/data/fts_upgrade_100/runtime/training_gap_report.json
+[05:39:24] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_upgrade_100/runtime/trainer_promotion_policy.json
+[05:39:24] 🛠️ 已輸出 legacy core upgrade plan：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_plan.json
+[05:39:24] 📋 已輸出 legacy core readiness board：/mnt/data/fts_upgrade_100/runtime/legacy_core_readiness_board.json
+[05:39:24] 🌊 已輸出 legacy core upgrade wave：/mnt/data/fts_upgrade_100/runtime/legacy_core_upgrade_wave.json
+[05:39:24] 🌊 已輸出 wave1 core upgrade：/mnt/data/fts_upgrade_100/runtime/wave1_core_upgrade.json
+[05:39:24] 📏 已輸出 legacy core metrics：/mnt/data/fts_upgrade_100/runtime/legacy_core_metrics.json
+[05:39:24] 📦 已輸出 wave1 contract pack：/mnt/data/fts_upgrade_100/runtime/wave1_contract_pack.json
+[05:39:24] 🧱 已輸出 wave1 body upgrade templates：/mnt/data/fts_upgrade_100/runtime/wave1_body_upgrade_templates.json
+[05:39:24] 🛰️ 已輸出 real api readiness：/mnt/data/fts_upgrade_100/runtime/real_api_readiness.json
+[05:39:24] 🧩 已輸出 decision price bridge plus：/mnt/data/fts_upgrade_100/runtime/decision_price_bridge_plus.json
+[05:39:24] 🧭 已輸出 upgrade truth report：/mnt/data/fts_upgrade_100/runtime/upgrade_truth_report.json
+[05:39:24] 🔗 已輸出 wave1 io bindings：/mnt/data/fts_upgrade_100/runtime/wave1_io_bindings.json
+[05:39:24] ✅ 已輸出 wave1 upgrade checklist：/mnt/data/fts_upgrade_100/runtime/wave1_upgrade_checklist.json
+[05:39:24] 🎯 已輸出 target95 scorecard：/mnt/data/fts_upgrade_100/runtime/target95_scorecard.json
+[05:39:24] 🛣️ 已輸出 target95 plan：/mnt/data/fts_upgrade_100/runtime/target95_plan.json
+[05:39:24] ⚠️ pyodbc 未安裝，SQL Logger 停用。
+[05:39:24] 🧷 package consistency check 通過
+[05:39:24] 🧩 已輸出 normalized decision csv：/mnt/data/fts_upgrade_100/data/normalized_decision_output.csv
+[05:39:24] 🔎 已輸出 normalized 預覽：/mnt/data/fts_upgrade_100/logs/normalized_decision_preview.csv
+[05:39:24] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=0
+[05:39:24] 🧩 已輸出 execution bridge：/mnt/data/fts_upgrade_100/runtime/decision_execution_bridge.json
+[05:39:24] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=3 | skip_zero_qty=0 | actions={'SELL': 3}
+[05:39:24] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[05:39:24] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[05:39:24] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[05:39:24] 🧭 已輸出 stage trace：/mnt/data/fts_upgrade_100/runtime/stage_trace.json
+[05:39:24] 🪖 已輸出 console brief：/mnt/data/fts_upgrade_100/runtime/console_brief.json
+[05:39:24] ================= 戰情室摘要 =================
+[05:39:24] AI階段 | enabled=False | dry_run=True | executed=0
+[05:39:24] Decision | rows=3 | signals=0
+[05:39:24] Gates | research=True | model=False | launch=False
+[05:39:24] Gates | live=True | approval=False | submission=False
+[05:39:24] Execution | submitted=0 | filled=0 | partial=0 | rejected=0 | cancelled=0
+[05:39:24] ================================================
+[05:39:24] 📊 已輸出 health dashboard：/mnt/data/fts_upgrade_100/runtime/health_dashboard.json
+[05:39:24] 📝 已輸出 daily ops summary：/mnt/data/fts_upgrade_100/runtime/daily_ops_summary.json
+[05:39:24] 🚨 已輸出 alerts：/mnt/data/fts_upgrade_100/runtime/alerts.json
+[05:39:24] 🗂️ 已輸出 run manifest：/mnt/data/fts_upgrade_100/runtime/run_manifest.json
+[05:39:24] 💓 heartbeat 更新：run_complete
+[13:48:33] ============================================================
+[13:48:33] 🚀 啟動 正式交易主控版_v66
+[13:48:33] 🧭 模式：PAPER
+[13:48:33] 🏦 broker_type：paper
+[13:48:33] 🧱 v66 completion gap report + training governance + execution payload bridge：ON
+[13:48:33] 📈 目前整體升級進度：97.2%
+[13:48:33] ============================================================
+[13:48:33] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_134833.json
+[13:48:33] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[13:48:33] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[13:48:33] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[13:48:34] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[13:48:34] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[13:48:34] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[13:48:34] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[13:48:34] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[13:48:34] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[13:48:34] 🧯 已輸出 training gap report：C:\test\test-2026-3-22OK\runtime\training_gap_report.json
+[13:48:34] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[13:48:34] 🛠️ 已輸出 legacy core upgrade plan：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_plan.json
+[13:48:34] 📋 已輸出 legacy core readiness board：C:\test\test-2026-3-22OK\runtime\legacy_core_readiness_board.json
+[13:48:34] 🌊 已輸出 legacy core upgrade wave：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_wave.json
+[13:48:34] 🌊 已輸出 wave1 core upgrade：C:\test\test-2026-3-22OK\runtime\wave1_core_upgrade.json
+[13:48:34] 📏 已輸出 legacy core metrics：C:\test\test-2026-3-22OK\runtime\legacy_core_metrics.json
+[13:48:34] 📦 已輸出 wave1 contract pack：C:\test\test-2026-3-22OK\runtime\wave1_contract_pack.json
+[13:48:34] 🧱 已輸出 wave1 body upgrade templates：C:\test\test-2026-3-22OK\runtime\wave1_body_upgrade_templates.json
+[13:48:34] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[13:48:34] 🧩 已輸出 decision price bridge plus：C:\test\test-2026-3-22OK\runtime\decision_price_bridge_plus.json
+[13:48:34] 🧭 已輸出 upgrade truth report：C:\test\test-2026-3-22OK\runtime\upgrade_truth_report.json
+[13:48:34] 🔗 已輸出 wave1 io bindings：C:\test\test-2026-3-22OK\runtime\wave1_io_bindings.json
+[13:48:34] ✅ 已輸出 wave1 upgrade checklist：C:\test\test-2026-3-22OK\runtime\wave1_upgrade_checklist.json
+[13:48:34] 🎯 已輸出 target95 scorecard：C:\test\test-2026-3-22OK\runtime\target95_scorecard.json
+[13:48:34] 🛣️ 已輸出 target95 plan：C:\test\test-2026-3-22OK\runtime\target95_plan.json
+[13:48:34] ✅ SQL Server 連線成功。
+[13:48:34] ✅ execution tables ready.
+[13:48:34] 🧷 package consistency check 通過
+[13:48:35] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[13:48:35] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[13:48:35] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=3
+[13:48:35] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[13:48:35] 🧪 SignalLoader 診斷 | valid=0 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=3 | skip_zero_qty=0 | actions={'SELL': 3}
+[13:48:35] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[13:48:35] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[13:48:35] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=1
+[13:48:35] 🧭 已輸出 stage trace：C:\test\test-2026-3-22OK\runtime\stage_trace.json
+[13:48:35] 🪖 已輸出 console brief：C:\test\test-2026-3-22OK\runtime\console_brief.json
+[13:48:35] ================= 戰情室摘要 =================
+[13:48:35] AI階段 | enabled=False | dry_run=True | executed=0
+[13:48:35] Decision | rows=3 | signals=0
+[13:48:35] Gates | research=True | model=True | launch=True
+[13:48:35] Gates | live=True | approval=False | submission=False
+[13:48:35] Execution | submitted=0 | filled=0 | partial=0 | rejected=0 | cancelled=0
+[13:48:35] ================================================
+[13:48:35] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[13:48:35] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[13:48:35] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[13:48:35] 🗂️ 已輸出 run manifest：C:\test\test-2026-3-22OK\runtime\run_manifest.json
+[13:48:35] 💓 heartbeat 更新：run_complete
+[13:52:35] ============================================================
+[13:52:35] 🚀 啟動 正式交易主控版_v67
+[13:52:35] 🧭 模式：PAPER
+[13:52:35] 🏦 broker_type：paper
+[13:52:35] 🧱 v67 full progress report + training bootstrap recipe + manual price template：ON
+[13:52:35] 📈 目前整體升級進度：97.2%
+[13:52:35] ============================================================
+[13:52:35] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_135235.json
+[13:52:35] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[13:52:35] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[13:52:35] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[13:52:35] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[13:52:35] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[13:52:35] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[13:52:35] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[13:52:35] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[13:52:35] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[13:52:35] 🧯 已輸出 training gap report：C:\test\test-2026-3-22OK\runtime\training_gap_report.json
+[13:52:35] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[13:52:35] 🛠️ 已輸出 legacy core upgrade plan：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_plan.json
+[13:52:35] 📋 已輸出 legacy core readiness board：C:\test\test-2026-3-22OK\runtime\legacy_core_readiness_board.json
+[13:52:35] 🌊 已輸出 legacy core upgrade wave：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_wave.json
+[13:52:35] 🌊 已輸出 wave1 core upgrade：C:\test\test-2026-3-22OK\runtime\wave1_core_upgrade.json
+[13:52:35] 📏 已輸出 legacy core metrics：C:\test\test-2026-3-22OK\runtime\legacy_core_metrics.json
+[13:52:35] 📦 已輸出 wave1 contract pack：C:\test\test-2026-3-22OK\runtime\wave1_contract_pack.json
+[13:52:35] 🧱 已輸出 wave1 body upgrade templates：C:\test\test-2026-3-22OK\runtime\wave1_body_upgrade_templates.json
+[13:52:35] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[13:52:35] 🧩 已輸出 decision price bridge plus：C:\test\test-2026-3-22OK\runtime\decision_price_bridge_plus.json
+[13:52:35] 🧭 已輸出 upgrade truth report：C:\test\test-2026-3-22OK\runtime\upgrade_truth_report.json
+[13:52:35] 🔗 已輸出 wave1 io bindings：C:\test\test-2026-3-22OK\runtime\wave1_io_bindings.json
+[13:52:35] ✅ 已輸出 wave1 upgrade checklist：C:\test\test-2026-3-22OK\runtime\wave1_upgrade_checklist.json
+[13:52:35] 🎯 已輸出 target95 scorecard：C:\test\test-2026-3-22OK\runtime\target95_scorecard.json
+[13:52:35] 🛣️ 已輸出 target95 plan：C:\test\test-2026-3-22OK\runtime\target95_plan.json
+[13:52:35] ✅ SQL Server 連線成功。
+[13:52:35] ✅ execution tables ready.
+[13:52:35] 🧷 package consistency check 通過
+[13:52:36] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[13:52:36] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[13:52:36] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=3
+[13:52:36] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[13:52:36] 🧪 SignalLoader 診斷 | valid=3 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=0 | skip_zero_qty=0 | actions={'SELL': 3}
+[13:52:36] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[13:52:36] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[13:52:36] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=0
+[13:52:36] 🧭 已輸出 stage trace：C:\test\test-2026-3-22OK\runtime\stage_trace.json
+[13:52:36] 🪖 已輸出 console brief：C:\test\test-2026-3-22OK\runtime\console_brief.json
+[13:52:36] 💓 heartbeat 更新：ok
+[13:52:36] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[13:52:36] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[13:52:36] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[13:52:36] 🗂️ 已輸出 run manifest：C:\test\test-2026-3-22OK\runtime\run_manifest.json
+[13:52:36] ✅ v67 主控完成：已補 training bootstrap recipe / manual price template / full progress report
+[14:02:22] ============================================================
+[14:02:22] 🚀 啟動 正式交易主控版_v68
+[14:02:22] 🧭 模式：PAPER
+[14:02:22] 🏦 broker_type：paper
+[14:02:22] 🧱 v68 auto price scan + training input manifest：ON
+[14:02:22] 📈 目前整體升級進度：97.2%
+[14:02:22] ============================================================
+[14:02:22] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_140222.json
+[14:02:22] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[14:02:22] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[14:02:22] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[14:02:22] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[14:02:22] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[14:02:22] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[14:02:22] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[14:02:22] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[14:02:22] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[14:02:22] 🧯 已輸出 training gap report：C:\test\test-2026-3-22OK\runtime\training_gap_report.json
+[14:02:22] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[14:02:22] 🛠️ 已輸出 legacy core upgrade plan：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_plan.json
+[14:02:22] 📋 已輸出 legacy core readiness board：C:\test\test-2026-3-22OK\runtime\legacy_core_readiness_board.json
+[14:02:22] 🌊 已輸出 legacy core upgrade wave：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_wave.json
+[14:02:22] 🌊 已輸出 wave1 core upgrade：C:\test\test-2026-3-22OK\runtime\wave1_core_upgrade.json
+[14:02:22] 📏 已輸出 legacy core metrics：C:\test\test-2026-3-22OK\runtime\legacy_core_metrics.json
+[14:02:22] 📦 已輸出 wave1 contract pack：C:\test\test-2026-3-22OK\runtime\wave1_contract_pack.json
+[14:02:22] 🧱 已輸出 wave1 body upgrade templates：C:\test\test-2026-3-22OK\runtime\wave1_body_upgrade_templates.json
+[14:02:22] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[14:02:22] 🧩 已輸出 decision price bridge plus：C:\test\test-2026-3-22OK\runtime\decision_price_bridge_plus.json
+[14:02:22] 🧭 已輸出 upgrade truth report：C:\test\test-2026-3-22OK\runtime\upgrade_truth_report.json
+[14:02:22] 🔗 已輸出 wave1 io bindings：C:\test\test-2026-3-22OK\runtime\wave1_io_bindings.json
+[14:02:22] ✅ 已輸出 wave1 upgrade checklist：C:\test\test-2026-3-22OK\runtime\wave1_upgrade_checklist.json
+[14:02:22] 🎯 已輸出 target95 scorecard：C:\test\test-2026-3-22OK\runtime\target95_scorecard.json
+[14:02:22] 🛣️ 已輸出 target95 plan：C:\test\test-2026-3-22OK\runtime\target95_plan.json
+[14:02:22] ✅ SQL Server 連線成功。
+[14:02:22] ✅ execution tables ready.
+[14:02:22] 🧷 package consistency check 通過
+[14:02:24] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[14:02:24] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[14:02:24] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=3
+[14:02:37] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:02:37] 🧪 SignalLoader 診斷 | valid=3 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=0 | skip_zero_qty=0 | actions={'SELL': 3}
+[14:02:37] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[14:02:37] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[14:02:37] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=0
+[14:02:37] 🧭 已輸出 stage trace：C:\test\test-2026-3-22OK\runtime\stage_trace.json
+[14:02:37] 🪖 已輸出 console brief：C:\test\test-2026-3-22OK\runtime\console_brief.json
+[14:02:37] 💓 heartbeat 更新：ok
+[14:02:37] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[14:02:37] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[14:02:37] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[14:02:37] 🗂️ 已輸出 run manifest：C:\test\test-2026-3-22OK\runtime\run_manifest.json
+[14:02:37] ✅ v68 主控完成：已補 auto price scan / training input manifest / full progress report
+[14:09:24] ============================================================
+[14:09:24] 🚀 啟動 正式交易主控版_v69
+[14:09:24] 🧭 模式：PAPER
+[14:09:24] 🏦 broker_type：paper
+[14:09:24] 🧱 v69 local history bootstrap + auto price scan：ON
+[14:09:24] 📈 目前整體升級進度：97.2%
+[14:09:24] ============================================================
+[14:09:24] 🧾 已輸出 config snapshot：C:\test\test-2026-3-22OK\runtime\config_snapshot_20260408_140924.json
+[14:09:24] 🗺️ 已輸出 architecture map：C:\test\test-2026-3-22OK\runtime\architecture_map.json
+[14:09:24] 🧩 已輸出 task registry：C:\test\test-2026-3-22OK\runtime\task_registry.json
+[14:09:24] 🧠 已輸出 AI pipeline registry：C:\test\test-2026-3-22OK\runtime\ai_pipeline_registry.json
+[14:09:24] 🧪 已輸出 AI pipeline status：C:\test\test-2026-3-22OK\runtime\ai_pipeline_status.json
+[14:09:24] 🌉 已輸出 AI decision bridge：C:\test\test-2026-3-22OK\runtime\ai_decision_bridge.json
+[14:09:24] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry.json
+[14:09:24] 🔎 已輸出 research selection registry：C:\test\test-2026-3-22OK\runtime\research_selection_registry.json
+[14:09:24] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[14:09:24] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[14:09:24] 🧯 已輸出 training gap report：C:\test\test-2026-3-22OK\runtime\training_gap_report.json
+[14:09:24] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[14:09:24] 🛠️ 已輸出 legacy core upgrade plan：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_plan.json
+[14:09:24] 📋 已輸出 legacy core readiness board：C:\test\test-2026-3-22OK\runtime\legacy_core_readiness_board.json
+[14:09:24] 🌊 已輸出 legacy core upgrade wave：C:\test\test-2026-3-22OK\runtime\legacy_core_upgrade_wave.json
+[14:09:24] 🌊 已輸出 wave1 core upgrade：C:\test\test-2026-3-22OK\runtime\wave1_core_upgrade.json
+[14:09:24] 📏 已輸出 legacy core metrics：C:\test\test-2026-3-22OK\runtime\legacy_core_metrics.json
+[14:09:24] 📦 已輸出 wave1 contract pack：C:\test\test-2026-3-22OK\runtime\wave1_contract_pack.json
+[14:09:24] 🧱 已輸出 wave1 body upgrade templates：C:\test\test-2026-3-22OK\runtime\wave1_body_upgrade_templates.json
+[14:09:24] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[14:09:24] 🧩 已輸出 decision price bridge plus：C:\test\test-2026-3-22OK\runtime\decision_price_bridge_plus.json
+[14:09:24] 🧭 已輸出 upgrade truth report：C:\test\test-2026-3-22OK\runtime\upgrade_truth_report.json
+[14:09:24] 🔗 已輸出 wave1 io bindings：C:\test\test-2026-3-22OK\runtime\wave1_io_bindings.json
+[14:09:24] ✅ 已輸出 wave1 upgrade checklist：C:\test\test-2026-3-22OK\runtime\wave1_upgrade_checklist.json
+[14:09:24] 🎯 已輸出 target95 scorecard：C:\test\test-2026-3-22OK\runtime\target95_scorecard.json
+[14:09:24] 🛣️ 已輸出 target95 plan：C:\test\test-2026-3-22OK\runtime\target95_plan.json
+[14:09:25] 📚 Local history bootstrap：waiting_for_ohlcv_history | cache_tickers=0
+[14:09:25] ✅ SQL Server 連線成功。
+[14:09:25] ✅ execution tables ready.
+[14:09:25] 🧷 package consistency check 通過
+[14:09:26] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[14:09:26] 🔎 已輸出 normalized 預覽：C:\test\test-2026-3-22OK\logs\normalized_decision_preview.csv
+[14:09:26] 🧪 Compatibility 診斷 | rows=3 | ticker=3 | action=3 | price=3
+[14:09:35] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:09:35] 🧪 SignalLoader 診斷 | valid=3 | skip_no_ticker=0 | skip_bad_action=0 | skip_no_price=0 | skip_zero_qty=0 | actions={'SELL': 3}
+[14:09:35] 🛰️ 上游任務檢查 | ready=7 | missing=0
+[14:09:35] 🛠️ 上游調度結果 | executed=0 | failed=0 | skipped=7
+[14:09:35] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=0
+[14:09:35] 🧭 已輸出 stage trace：C:\test\test-2026-3-22OK\runtime\stage_trace.json
+[14:09:35] 🪖 已輸出 console brief：C:\test\test-2026-3-22OK\runtime\console_brief.json
+[14:09:35] 💓 heartbeat 更新：ok
+[14:09:35] 📊 已輸出 health dashboard：C:\test\test-2026-3-22OK\runtime\health_dashboard.json
+[14:09:35] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[14:09:35] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[14:09:35] 🗂️ 已輸出 run manifest：C:\test\test-2026-3-22OK\runtime\run_manifest.json
+[14:09:35] ✅ v69 主控完成：已補 local history bootstrap / auto price scan / full progress report

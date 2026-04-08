@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "current_mode": "PAPER",
+  "current_broker_type": "paper",
+  "policy": {
+    "paper_allowed_directly": true,
+    "live_requires_approval": true,
+    "live_requires_submission_gate": true,
+    "live_requires_launch_gate": true,
+    "live_requires_live_safety_gate": true,
+    "notes": "v37 先把切換規則工程化，尚未真正開放 live 自動送單"
+  }
+}

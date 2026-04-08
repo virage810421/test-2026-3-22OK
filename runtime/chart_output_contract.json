@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "required_fields": [
+    "ticker",
+    "chart_type",
+    "artifact_path_or_id"
+  ],
+  "optional_fields": [
+    "timeframe",
+    "signal_context",
+    "strategy_name",
+    "notes"
+  ],
+  "status": "defined",
+  "notes": "v40 先把圖表輸出契約定義好，後續可再把舊圖表模組逐步遷移到此契約。"
+}

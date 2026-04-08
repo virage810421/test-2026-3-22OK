@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-04-08 14:09:35",
+  "module_version": "v69",
+  "summary": {
+    "package_maturity": "24/24 modules >=95",
+    "true_execution_ready": "medium",
+    "live_ready": false,
+    "completion_excluding_real_broker_pct": 92,
+    "training_dataset_exists": false,
+    "training_models_count": 3,
+    "price_rows_ready": 3,
+    "qty_rows_ready": 1,
+    "market_rule_passed_rows": 1,
+    "modules_95_plus": 24,
+    "modules_total": 24,
+    "local_universe_count": 1058,
+    "auto_price_scan_sources": 4,
+    "history_cache_tickers": 0,
+    "history_missing_tickers": 1058,
+    "history_request_rows": 1058
+  },
+  "remaining_hard_gaps": [
+    "AI訓練資料與模型產物未落地"
+  ],
+  "next_priority": [
+    "補齊 last_price_snapshot.csv 或在決策輸出直接寫入 Close/Reference_Price",
+    "補齊 training_data 與模型 artifact 產出",
+    "接入真券商登入/下單/查單/成交 callback",
+    "建立 broker reject code -> internal reject classifier 映射"
+  ],
+  "artifacts": {
+    "training_bootstrap_recipe": "C:\\test\\test-2026-3-22OK\\runtime\\training_bootstrap_recipe.json",
+    "training_input_manifest": "C:\\test\\test-2026-3-22OK\\runtime\\training_input_manifest.json",
+    "training_bootstrap_universe": "C:\\test\\test-2026-3-22OK\\data\\training_bootstrap_universe.csv",
+    "manual_price_template": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
+    "auto_price_candidates": "C:\\test\\test-2026-3-22OK\\data\\auto_price_snapshot_candidates.csv",
+    "execution_payload": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+    "history_bootstrap_report": "C:\\test\\test-2026-3-22OK\\runtime\\local_history_bootstrap.json",
+    "history_request_list": "C:\\test\\test-2026-3-22OK\\data\\kline_cache_request_list.csv"
+  }
+}

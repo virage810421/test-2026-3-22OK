@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "accepted_count": 0,
+  "risk_rejected_count": 0,
+  "submitted": 0,
+  "filled": 0,
+  "partially_filled": 0,
+  "broker_rejected": 0,
+  "cancelled": 0,
+  "auto_exit_signals": 0,
+  "fills_count": 0,
+  "status": "summary_only"
+}

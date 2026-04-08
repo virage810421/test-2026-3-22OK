@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "summary": {
+    "row_count": 3,
+    "signal_count": 0,
+    "rows_with_ticker": 3,
+    "rows_with_action": 3,
+    "rows_with_price": 0,
+    "issue_count": 2
+  },
+  "issues": [
+    "decision_rows_exist_but_no_signals",
+    "rows_missing_price"
+  ],
+  "all_green": false,
+  "status": "consistency_check_ready"
+}

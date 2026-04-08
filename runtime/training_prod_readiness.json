@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-04-08 14:09:24",
+  "system_name": "正式交易主控版_v64",
+  "summary": {
+    "ready_count": 5,
+    "total_checks": 10,
+    "readiness_ratio": 0.5,
+    "overall_conclusion": "not_live_grade_yet"
+  },
+  "checks": [
+    {
+      "area": "training_data_generation",
+      "ready": true,
+      "level": "bridge_ready"
+    },
+    {
+      "area": "trainer_entrypoint",
+      "ready": true,
+      "level": "bridge_ready"
+    },
+    {
+      "area": "model_artifact_output",
+      "ready": true,
+      "level": "governed"
+    },
+    {
+      "area": "model_version_registry",
+      "ready": true,
+      "level": "governed"
+    },
+    {
+      "area": "training_quality_report",
+      "ready": true,
+      "level": "governed"
+    },
+    {
+      "area": "walk_forward_validation",
+      "ready": false,
+      "level": "not_strong_enough"
+    },
+    {
+      "area": "automatic rollback policy",
+      "ready": false,
+      "level": "not_strong_enough"
+    },
+    {
+      "area": "live shadow evaluation",
+      "ready": false,
+      "level": "not_strong_enough"
+    },
+    {
+      "area": "data drift monitoring",
+      "ready": false,
+      "level": "not_strong_enough"
+    },
+    {
+      "area": "promotion gate for live deployment",
+      "ready": false,
+      "level": "not_strong_enough"
+    }
+  ],
+  "status": "training_readiness_ready"
+}

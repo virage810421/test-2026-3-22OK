@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-08 01:21:59",
+  "generated_at": "2026-04-08 12:28:33",
   "feature_data_script": "C:\\test\\test-2026-3-22OK\\ml_data_generator.py",
   "trainer_script": "C:\\test\\test-2026-3-22OK\\ml_trainer.py",
   "governance_script": "C:\\test\\test-2026-3-22OK\\model_governance.py",

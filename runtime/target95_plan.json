@@ -1,0 +1,84 @@
+{
+  "generated_at": "2026-04-08 14:09:24",
+  "system_name": "正式交易主控版_v64",
+  "priority_plan": [
+    {
+      "module": "AI訓練層",
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap": 0,
+      "next_actions": [
+        "補訓練資料品質檢查",
+        "補模型版本回退 / 升版規則",
+        "補訓練產物一致性驗證"
+      ]
+    },
+    {
+      "module": "ETL資料層",
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap": 0,
+      "next_actions": [
+        "補來源品質檢查與異常資料統計",
+        "補欄位完整率 / 缺值率 / 延遲率監控",
+        "補 ETL 成功/失敗批次明細"
+      ]
+    },
+    {
+      "module": "恢復機制骨架",
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap": 0,
+      "next_actions": [
+        "補 state schema 檢查",
+        "補 crash 後恢復驗證",
+        "補 retry queue 恢復後一致性比對"
+      ]
+    },
+    {
+      "module": "測試/驗證框架",
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap": 0,
+      "next_actions": [
+        "補情境測試矩陣",
+        "補 gate / submission / reconciliation 自動驗證",
+        "補假資料回歸測試"
+      ]
+    },
+    {
+      "module": "真券商介面預留",
+      "current_pct": 97,
+      "target_pct": 95,
+      "gap": 0,
+      "next_actions": [
+        "補 broker adapter 契約細節",
+        "補拒單與回報映射實測",
+        "補 live approval workflow 細節"
+      ]
+    },
+    {
+      "module": "研究/選股層",
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap": 0,
+      "next_actions": [
+        "補 research scoring 說明與品質統計",
+        "補選股輸出版本化",
+        "補 research -> decision 契約更細的覆核"
+      ]
+    },
+    {
+      "module": "風控層",
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap": 0,
+      "next_actions": [
+        "補集中度 / 部位 / 現金緩衝 deeper checks",
+        "補異常價格 / 異常數量保護",
+        "補跨日持倉與退出邏輯檢查"
+      ]
+    }
+  ],
+  "note": "這不是一次升完，而是把逼近 95% 最昂貴的層拆成可執行清單。"
+}

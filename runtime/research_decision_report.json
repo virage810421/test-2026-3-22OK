@@ -1,0 +1,100 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "summary": {
+    "research_rows": 3,
+    "rows_with_ticker": 3,
+    "rows_with_action": 3,
+    "rows_with_price": 0,
+    "signal_count": 0,
+    "go_for_decision_linkage": false,
+    "failure_count": 1,
+    "warning_count": 1
+  },
+  "research_gate": {
+    "generated_at": "2026-04-08 12:28:33",
+    "system_name": "正式交易主控版_v24",
+    "go_for_decision_linkage": false,
+    "failures": [
+      {
+        "type": "price_missing",
+        "message": "研究/選股輸出缺少可用 reference price"
+      }
+    ],
+    "warnings": [
+      {
+        "type": "zero_signal_after_research",
+        "message": "研究/選股有輸出，但轉成有效訊號後為 0"
+      }
+    ],
+    "summary": {
+      "row_count": 3,
+      "rows_with_ticker": 3,
+      "rows_with_action": 3,
+      "rows_with_price": 0,
+      "total_signals": 0,
+      "failure_count": 1,
+      "warning_count": 1
+    }
+  },
+  "compat_info": {
+    "normalized": true,
+    "source_columns": [
+      "Ticker",
+      "Direction",
+      "Regime",
+      "Structure",
+      "AI_Proba",
+      "Hist_WinRate",
+      "Heuristic_EV",
+      "Realized_EV",
+      "Kelly_Pos",
+      "Score",
+      "Risk",
+      "Health",
+      "預期停損(%)",
+      "預期停利(%)",
+      "風報比(RR)",
+      "風險金額"
+    ],
+    "normalized_columns": [
+      "Ticker",
+      "Action",
+      "Regime",
+      "Structure",
+      "AI_Proba",
+      "Score",
+      "Kelly_Pos",
+      "Heuristic_EV",
+      "Reference_Price",
+      "Target_Qty",
+      "_has_ticker",
+      "_has_action",
+      "_has_price",
+      "_raw_action"
+    ],
+    "row_count": 3,
+    "rows_with_ticker": 3,
+    "rows_with_action": 3,
+    "rows_with_price": 0
+  },
+  "readiness": {
+    "total_signals": 0,
+    "buy_count": 0,
+    "sell_count": 0,
+    "with_regime": 0,
+    "with_expected_return": 0,
+    "execution_ready": false
+  },
+  "interpretation": {
+    "what_this_means": [
+      "研究/選股輸出是否足以接到 decision / execution",
+      "資料是否至少具備 ticker/action/price",
+      "是否發生 research 有輸出但 signal 轉換為 0 的情況"
+    ],
+    "next_focus": [
+      "若 failure_count > 0，先修 research 輸出欄位",
+      "若 warning_count > 0，優先檢查 scoring / action mapping / price 欄位"
+    ]
+  }
+}

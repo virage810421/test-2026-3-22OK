@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-04-08 14:09:25",
+  "module_version": "v69",
+  "dataset_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
+  "model_dir": "C:\\test\\test-2026-3-22OK\\models",
+  "steps": [
+    {
+      "step": 1,
+      "title": "檢查本地訓練宇宙",
+      "ready": true,
+      "detail": "月營收/籌碼/基本面至少交集 20 檔，才值得開始本地 bootstrap"
+    },
+    {
+      "step": 2,
+      "title": "準備歷史 K 線快取",
+      "ready": true,
+      "detail": "data/kline_cache 至少 5 檔 CSV，才適合做本地 bootstrap"
+    },
+    {
+      "step": 3,
+      "title": "生成 ml_training_data.csv",
+      "ready": false,
+      "detail": "執行 ml_data_generator.py，確認 Label_Y / Regime / Target_Return 完整"
+    },
+    {
+      "step": 4,
+      "title": "執行 ml_trainer.py",
+      "ready": false,
+      "detail": "資料列數至少 200，才比較像正式訓練而不是暖機"
+    },
+    {
+      "step": 5,
+      "title": "檢查模型產物",
+      "ready": false,
+      "detail": "selected_features.pkl + 三個 regime 模型都要落地"
+    }
+  ],
+  "status": "bootstrap_ready",
+  "request_list_path": "C:\\test\\test-2026-3-22OK\\data\\kline_cache_request_list.csv"
+}

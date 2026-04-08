@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "versioning": {
+    "research_output_version": "v24",
+    "decision_input_rows": 3,
+    "rows_with_ticker": 3,
+    "rows_with_action": 3,
+    "rows_with_price": 0
+  },
+  "required_metadata": [
+    "research_output_version",
+    "generated_at",
+    "decision_input_rows"
+  ],
+  "status": "versioning_defined"
+}

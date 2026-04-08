@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "artifact_policy": {
+    "source_mode": "legacy_bridge_primary",
+    "expected_artifacts": [
+      "advanced_chart output",
+      "research chart png/html artifact",
+      "decision-related chart summary"
+    ],
+    "governance": {
+      "registry_enabled": true,
+      "contract_defined": true,
+      "status": "governed_not_fully_replatformed"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "generated_at": "2026-04-08 14:09:24",
+  "system_name": "正式交易主控版_v64",
+  "contracts": {
+    "daily_chip_etl_contract": {
+      "inputs": [
+        "watchlist/full-market scope",
+        "local csv cache",
+        "sql connection",
+        "finmind/api source"
+      ],
+      "outputs": [
+        "chip csv",
+        "sql sync summary",
+        "etl quality summary"
+      ]
+    },
+    "monthly_revenue_contract": {
+      "inputs": [
+        "mops/openapi source",
+        "publish window config",
+        "local csv/sql state"
+      ],
+      "outputs": [
+        "monthly revenue csv",
+        "sql sync result",
+        "coverage summary"
+      ]
+    },
+    "ml_data_generator_contract": {
+      "inputs": [
+        "etl outputs",
+        "feature config",
+        "labeling config"
+      ],
+      "outputs": [
+        "ml_training_data.csv",
+        "feature summary",
+        "missing value report"
+      ]
+    }
+  },
+  "status": "contract_pack_ready"
+}

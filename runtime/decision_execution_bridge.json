@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-04-08 14:09:35",
+  "module_version": "v68",
+  "price_snapshot_source": "auto_scan",
+  "price_scan_files": [
+    "C:\\test\\test-2026-3-22OK\\auto_price_snapshot_candidates.csv",
+    "C:\\test\\test-2026-3-22OK\\data\\auto_price_snapshot_candidates.csv",
+    "C:\\test\\test-2026-3-22OK\\data\\last_price_snapshot_template.csv",
+    "C:\\test\\test-2026-3-22OK\\logs\\normalized_decision_preview.csv"
+  ],
+  "auto_price_candidates_path": "C:\\test\\test-2026-3-22OK\\data\\auto_price_snapshot_candidates.csv",
+  "manual_price_template_path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
+  "manual_price_template_rows": 0,
+  "rows_total": 3,
+  "rows_with_price": 3,
+  "rows_with_qty": 1,
+  "rows_market_rule_passed": 1,
+  "rows_market_rule_failed": 2,
+  "failed_tickers_preview": [
+    "2330.TW",
+    "2467.TW"
+  ],
+  "output_path": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+  "status": "execution_payload_ready"
+}

@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "checks": {
+    "submitted_vs_filled_consistent": true,
+    "submitted_vs_partial_consistent": true,
+    "submitted_vs_rejected_consistent": true
+  },
+  "execution_result": {
+    "submitted": 0,
+    "filled": 0,
+    "partially_filled": 0,
+    "rejected": 0,
+    "cancelled": 0,
+    "fills_count": 0,
+    "auto_exit_signals": 0,
+    "reconciliation": {}
+  },
+  "status": "reconciliation_skeleton"
+}

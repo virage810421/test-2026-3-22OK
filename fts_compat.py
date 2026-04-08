@@ -4,7 +4,37 @@ from fts_config import PATHS, CONFIG
 from fts_utils import log, safe_float
 
 class DecisionCompatibilityLayer:
-    MODULE_VERSION = "v17"
+    MODULE_VERSION = "v18"
+
+    def _price_lookup(self, ticker):
+        import pandas as pd
+        # 1) local snapshot files if present
+        candidates = [
+            PATHS.base_dir / "last_price_snapshot.csv",
+            PATHS.base_dir / "daily_price_snapshot.csv",
+            PATHS.data_dir / "last_price_snapshot.csv",
+        ]
+        for p in candidates:
+            if p.exists():
+                try:
+                    snap = pd.read_csv(p, encoding="utf-8-sig")
+                    tcol = next((c for c in snap.columns if c.lower() in ("ticker", "ticker symbol", "symbol")), None)
+                    pcol = next((c for c in snap.columns if c.lower() in ("close", "price", "reference_price") or "收盤" in c), None)
+                    if tcol and pcol:
+                        row = snap[snap[tcol].astype(str).str.strip() == str(ticker).strip()]
+                        if not row.empty:
+                            return safe_float(row.iloc[-1][pcol], 0.0)
+                except Exception:
+                    pass
+        # 2) yfinance fallback
+        try:
+            import yfinance as yf
+            hist = yf.Ticker(str(ticker)).history(period="5d", interval="1d", auto_adjust=False)
+            if hist is not None and not hist.empty and "Close" in hist.columns:
+                return safe_float(hist["Close"].dropna().iloc[-1], 0.0)
+        except Exception:
+            pass
+        return 0.0
 
     def normalize(self, csv_path):
         df = pd.read_csv(csv_path, encoding="utf-8-sig")
@@ -22,6 +52,8 @@ class DecisionCompatibilityLayer:
         out["Ticker"] = pick("Ticker", "Ticker SYMBOL", "ticker", "symbol")
         direction = pick("Action", "action", "Direction", "direction", "Signal", "signal")
         out["Action"] = direction.astype(str) if direction is not None else "BUY"
+        if hasattr(out["Action"], "replace"):
+            out["Action"] = out["Action"].replace({"做多(Long)": "BUY", "做空(Short)": "SELL", "多方進場": "BUY", "空方進場": "SELL"})
         out["Regime"] = pick("Regime", "regime")
         out["Structure"] = pick("Structure", "Strategy_Name", "Strategy", "strategy_name")
         out["AI_Proba"] = pick("AI_Proba", "ai_proba", "AI_Confidence", "confidence")
@@ -43,6 +75,10 @@ class DecisionCompatibilityLayer:
 
         # 嘗試把字串價格轉成 float，空值補 0
         out["Reference_Price"] = out["Reference_Price"].apply(lambda x: safe_float(x, 0.0))
+        if "Ticker" in out.columns:
+            miss_price = out["Reference_Price"].astype(float).le(0)
+            if miss_price.any():
+                out.loc[miss_price, "Reference_Price"] = out.loc[miss_price, "Ticker"].apply(self._price_lookup)
         out["Target_Qty"] = out["Target_Qty"].fillna(0)
 
         # 額外診斷欄位

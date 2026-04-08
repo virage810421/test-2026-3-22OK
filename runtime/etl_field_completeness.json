@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "row_count": 3,
+  "field_completeness": {
+    "ticker_ratio": 1.0,
+    "action_ratio": 1.0,
+    "price_ratio": 0.0
+  },
+  "status": "decision-side completeness proxy"
+}

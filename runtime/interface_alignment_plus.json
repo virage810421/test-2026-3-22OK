@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "aligned": {
+    "research_to_decision_contract": true,
+    "decision_to_execution_contract": true,
+    "execution_to_report_contract": true,
+    "execution_to_state_contract": true,
+    "risk_to_submission_contract": true
+  },
+  "partial": {
+    "live_broker_runtime_binding": "partial",
+    "research_renderer_binding": "partial",
+    "model_runtime_selection_feedback": "partial"
+  },
+  "not_done_yet": [
+    "真券商 live adapter 細節尚未完全實接",
+    "研究圖表舊模組仍是部分橋接",
+    "模型運行後的回饋閉環還可再加深"
+  ],
+  "status": "alignment_plus_ready"
+}
