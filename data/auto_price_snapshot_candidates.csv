@@ -1,0 +1,13 @@
+﻿Ticker,Reference_Price,Source
+1519.TW,830.0,last_snapshot
+2002.TW,19.950000762939453,last_snapshot
+2317.TW,201.5,last_snapshot
+2330.TW,1950.0,last_snapshot
+2454.TW,1580.0,last_snapshot
+2603.TW,202.0,last_snapshot
+2881.TW,89.19999694824219,last_snapshot
+3231.TW,131.0,last_snapshot
+3711.TW,383.0,kline_cache:3711.TW_2y.csv
+2471.TW,52.0,kline_cache:2471.TW_2y.csv
+2467.TW,449.0,kline_cache:2467.TW_2y.csv
+8150.TW,60.900001525878906,kline_cache:8150.TW_2y.csv

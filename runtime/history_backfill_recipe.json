@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-04-08 22:00:23",
+  "module_version": "v70",
+  "mode": "local_first_optional_online_backfill",
+  "what_it_means": {
+    "local_history_bootstrap": "先掃描專案內已存在的 OHLCV / K 線 CSV，能吃就轉成 data/kline_cache/*.csv。",
+    "missing_request_list": "如果專案內找不到某些標的的可用 K 線，就把缺的 ticker 列成請求清單，而不是假裝已完成。",
+    "online_backfill": "只有當 allow_online_history_backfill=True 時，才會嘗試用 yfinance 補抓缺的 K 線。預設不開。"
+  },
+  "bootstrap_universe_count": 1,
+  "missing_ticker_count": 1,
+  "request_list_path": "C:\\test\\test-2026-3-22OK\\data\\kline_cache_request_list.csv",
+  "online_backfill": {
+    "enabled": false,
+    "provider": "yfinance",
+    "requested": 1,
+    "fetched": 0,
+    "written_files": 0,
+    "status": "disabled",
+    "errors_preview": []
+  }
+}

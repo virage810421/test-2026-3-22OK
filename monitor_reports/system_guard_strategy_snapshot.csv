@@ -1,0 +1,4 @@
+﻿strategy,health,note,sample_size,win_rate,avg_return,profit_factor
+多方進場,KEEP,樣本數不足 (0/10)，熱身中,0,0.0,0.0,0.0
+空方進場,KEEP,樣本數不足 (0/10)，熱身中,0,0.0,0.0,0.0
+AI訊號,KEEP,樣本數不足 (0/10)，熱身中,0,0.0,0.0,0.0

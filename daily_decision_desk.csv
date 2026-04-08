@@ -1,0 +1,2 @@
+﻿Ticker,Direction,Regime,Structure,AI_Proba,Hist_WinRate,Realized_EV,Strategy_EV_SQL,Signal_Confidence,Sample_Size,Buy_Score,Sell_Score,Weighted_Buy_Score,Weighted_Sell_Score,Score_Gap,Kelly_Pos,Score,Risk,Health,Sector,Direction_Bucket,PreRisk_Kelly,Risk_Adjusted,Target_Amount
+2467.TW,做多(Long),趨勢多頭,多方進場,0.5198,0.5198,0.7401,0.0,0.944,379,4,2,4.7,1.0,3.7,0.0541,0.611,樣本數不足 (0/10)，熱身中,KEEP,TECH,LONG,0.0541,0,541000.0

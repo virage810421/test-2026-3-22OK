@@ -15,6 +15,8 @@ from fundamental_screener import get_vip_stock_pool
 from screening import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
 from portfolio_risk import apply_portfolio_risk
 from system_guard import run_system_guard
+from fts_local_history_bootstrap import LocalHistoryBootstrap
+from fts_price_gap_bridge import PriceGapBridge
 
 logging.basicConfig(
     filename="pipeline.log",
@@ -64,6 +66,34 @@ def run_script(script_name, retries=2, timeout=900):
                 log(e.stderr)
         time.sleep(2)
     return False
+
+
+
+
+def preload_local_bridges(watch_list=None):
+    os.makedirs('data', exist_ok=True)
+    os.makedirs(os.path.join('data', 'kline_cache'), exist_ok=True)
+    last_snapshot = os.path.join('data', 'last_price_snapshot.csv')
+    manual_override = os.path.join('data', 'manual_price_snapshot_overrides.csv')
+    log('🧠 啟動智慧橋接：先補本地歷史與價格快照...')
+    try:
+        _, history_payload = LocalHistoryBootstrap().build()
+        log(f"📚 local history bootstrap：{history_payload.get('status')} | cache={history_payload.get('cache_ticker_count', 0)}")
+    except Exception as e:
+        log(f"⚠️ LocalHistoryBootstrap 執行失敗：{e}")
+    try:
+        tickers = watch_list or []
+        _, bridge_payload = PriceGapBridge().build(tickers)
+        log(f"💹 price gap bridge：{bridge_payload.get('status')} | matched={bridge_payload.get('matched_tickers', 0)} | missing={len(bridge_payload.get('missing_tickers', []))}")
+    except Exception as e:
+        log(f"⚠️ PriceGapBridge 執行失敗：{e}")
+    if not os.path.exists(last_snapshot):
+        pd.DataFrame(columns=['Ticker','Reference_Price','Source']).to_csv(last_snapshot, index=False, encoding='utf-8-sig')
+        log('🧩 已補建 data/last_price_snapshot.csv 空白骨架')
+    if not os.path.exists(manual_override):
+        pd.DataFrame(columns=['Ticker','Reference_Price']).to_csv(manual_override, index=False, encoding='utf-8-sig')
+        log('🧩 已補建 data/manual_price_snapshot_overrides.csv 空白骨架')
+    log(f"🧾 bridge 落地檢查 | last_snapshot={os.path.exists(last_snapshot)} | manual_override={os.path.exists(manual_override)}")
 
 
 def validate_outputs():
@@ -425,6 +455,7 @@ def main():
 
     try:
         watch_list = build_final_watchlist()
+        preload_local_bridges(watch_list)
     except Exception:
         generate_report(start_time, "FAILED")
         return

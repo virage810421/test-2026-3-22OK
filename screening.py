@@ -53,38 +53,116 @@ def normalize_ticker_symbol(ticker: str, default_suffix: str = ".TW") -> str:
     return ticker
 
 
+
+
+def _alt_ticker_symbol(ticker: str) -> str:
+    ticker = normalize_ticker_symbol(ticker)
+    if ticker.endswith('.TW'):
+        return ticker[:-3] + '.TWO'
+    if ticker.endswith('.TWO'):
+        return ticker[:-4] + '.TW'
+    return ticker
+
+
+def _ensure_ohlcv_df(df: pd.DataFrame) -> pd.DataFrame:
+    if df is None or df.empty:
+        return pd.DataFrame()
+    df = df.copy()
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = [c[0] for c in df.columns]
+    if 'Date' not in df.columns:
+        df = df.reset_index()
+        if 'Date' not in df.columns:
+            df.rename(columns={df.columns[0]: 'Date'}, inplace=True)
+    for c in ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']:
+        if c not in df.columns:
+            if c == 'Volume':
+                df[c] = 0
+            else:
+                return pd.DataFrame()
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    for c in ['Open', 'High', 'Low', 'Close', 'Volume']:
+        df[c] = pd.to_numeric(df[c], errors='coerce')
+    df = df.dropna(subset=['Date', 'Open', 'High', 'Low', 'Close'])
+    if df.empty:
+        return pd.DataFrame()
+    df = df.sort_values('Date').drop_duplicates(subset=['Date'], keep='last')
+    return df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']].copy()
+
+
+def _try_read_kline_from_sql(ticker: str, lookback_days: int = 900) -> pd.DataFrame:
+    try:
+        import pyodbc
+        conn_str = (
+            r"DRIVER={ODBC Driver 17 for SQL Server};"
+            r"SERVER=localhost;"
+            r"DATABASE=股票online;"
+            r"Trusted_Connection=yes;"
+        )
+        start_dt = (datetime.now() - timedelta(days=lookback_days)).strftime('%Y-%m-%d')
+        sql = """
+        SELECT [Date], [Open], [High], [Low], [Close], [Volume]
+        FROM daily_price_data
+        WHERE [Ticker SYMBOL] IN (?, ?) AND [Date] >= ?
+        ORDER BY [Date] ASC
+        """
+        with pyodbc.connect(conn_str) as conn:
+            df = pd.read_sql(sql, conn, params=(ticker, _alt_ticker_symbol(ticker), start_dt))
+        return _ensure_ohlcv_df(df)
+    except Exception:
+        return pd.DataFrame()
+
+
 def smart_download(ticker, period="1y"):
     ticker = normalize_ticker_symbol(ticker)
     os.makedirs("data/kline_cache", exist_ok=True)
     safe_name = ticker.replace("/", "_")
     cache_file = f"data/kline_cache/{safe_name}_{period}.csv"
+    alt_cache_file = f"data/kline_cache/{safe_name}_ohlcv.csv"
 
+    # 1) SQL 優先
+    df_sql = _try_read_kline_from_sql(ticker)
+    if not df_sql.empty:
+        try:
+            out = df_sql.set_index('Date')
+            out.to_csv(cache_file)
+            out.to_csv(alt_cache_file)
+            return out
+        except Exception:
+            return df_sql.set_index('Date')
+
+    # 2) 本地快取
     today = datetime.now().date()
     is_weekend = today.weekday() >= 5
+    for local_file in [cache_file, alt_cache_file]:
+        if os.path.exists(local_file):
+            file_mtime_date = datetime.fromtimestamp(os.path.getmtime(local_file)).date()
+            days_diff = (today - file_mtime_date).days
+            if days_diff == 0 or (is_weekend and days_diff <= 3) or local_file.endswith('_ohlcv.csv'):
+                try:
+                    return pd.read_csv(local_file, index_col=0, parse_dates=True)
+                except Exception:
+                    pass
 
-    if os.path.exists(cache_file):
-        file_mtime_date = datetime.fromtimestamp(os.path.getmtime(cache_file)).date()
-        days_diff = (today - file_mtime_date).days
-
-        if days_diff == 0 or (is_weekend and days_diff <= 3):
-            try:
-                return pd.read_csv(cache_file, index_col=0, parse_dates=True)
-            except Exception:
-                pass
-
+    # 3) 網路補抓
     try:
         data = yf.download(ticker, period=period, progress=False, auto_adjust=False)
         if data.empty:
-            return pd.DataFrame()
+            alt_symbol = _alt_ticker_symbol(ticker)
+            data = yf.download(alt_symbol, period=period, progress=False, auto_adjust=False)
+        if data.empty:
+            raise ValueError('empty_download')
 
         df = data.xs(ticker, axis=1, level=1).copy() if isinstance(data.columns, pd.MultiIndex) else data.copy()
         df.to_csv(cache_file)
+        df.to_csv(alt_cache_file)
         return df
     except Exception as e:
         print(f"⚠️ {ticker} 網路下載失敗: {e}")
-        if os.path.exists(cache_file):
-            print(f"♻️ 啟用備用方案：讀取 {ticker} 舊有快取資料。")
-            return pd.read_csv(cache_file, index_col=0, parse_dates=True)
+        for local_file in [cache_file, alt_cache_file]:
+            if os.path.exists(local_file):
+                print(f"♻️ 啟用備用方案：讀取 {ticker} 本地快取資料。")
+                return pd.read_csv(local_file, index_col=0, parse_dates=True)
         return pd.DataFrame()
 
 

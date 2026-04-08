@@ -18,6 +18,7 @@ class LocalHistoryBootstrap:
         self.request_csv_path = PATHS.data_dir / "kline_cache_request_list.csv"
         self.cache_dir = PATHS.data_dir / "kline_cache"
         self.cache_dir.mkdir(exist_ok=True)
+        self.snapshot_path = PATHS.data_dir / "last_price_snapshot.csv"
 
     def _load_csv_safe(self, p: Path) -> pd.DataFrame:
         try:
@@ -225,6 +226,37 @@ class LocalHistoryBootstrap:
         })
         return result
 
+
+
+    def _write_last_snapshot(self) -> int:
+        rows = []
+        for p in sorted(self.cache_dir.glob('*_ohlcv.csv')):
+            try:
+                df = pd.read_csv(p, encoding='utf-8-sig')
+            except Exception:
+                try:
+                    df = pd.read_csv(p)
+                except Exception:
+                    continue
+            if df.empty or 'Close' not in df.columns:
+                continue
+            date_col = 'Date' if 'Date' in df.columns else df.columns[0]
+            close = pd.to_numeric(df['Close'], errors='coerce')
+            valid = df.loc[close > 0].copy()
+            if valid.empty:
+                continue
+            last = valid.iloc[-1]
+            ticker = p.stem.replace('_ohlcv', '')
+            rows.append({
+                'Ticker': ticker,
+                'Reference_Price': float(last['Close']),
+                'Source': f'kline_cache:{p.name}',
+                'Source_Date': str(last.get(date_col, '')),
+            })
+        out = pd.DataFrame(rows, columns=['Ticker','Reference_Price','Source','Source_Date'])
+        out.to_csv(self.snapshot_path, index=False, encoding='utf-8-sig')
+        return int(len(out))
+
     def _write_recipe(self, universe: List[str], missing_tickers: List[str], online_result: Dict[str, Any]) -> Dict[str, Any]:
         recipe = {
             "generated_at": now_str(),
@@ -268,6 +300,7 @@ class LocalHistoryBootstrap:
         cache_tickers_after = sorted({p.stem.replace("_ohlcv", "") for p in self.cache_dir.glob("*_ohlcv.csv")})
         missing_after = [t for t in universe if t not in set(cache_tickers_after)]
         self._write_request_list(missing_after)
+        snapshot_rows = self._write_last_snapshot()
         recipe = self._write_recipe(universe, missing_after, online_result)
 
         payload = {
@@ -287,9 +320,20 @@ class LocalHistoryBootstrap:
             "request_list_path": str(self.request_csv_path),
             "cache_dir": str(self.cache_dir),
             "online_backfill": online_result,
+            "last_price_snapshot_rows": int(snapshot_rows),
+            "last_price_snapshot_path": str(self.snapshot_path),
             "status": "history_cache_ready" if len(cache_tickers_after) >= 5 else "waiting_for_ohlcv_history",
             "scan_diagnostics_preview": scanned[:20],
         }
         self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         log(f"📚 Local history bootstrap：{payload['status']} | cache_tickers={payload['cache_ticker_count']} | online={online_result.get('status')}")
         return self.report_path, payload
+
+
+
+def main():
+    LocalHistoryBootstrap().build()
+
+
+if __name__ == '__main__':
+    main()

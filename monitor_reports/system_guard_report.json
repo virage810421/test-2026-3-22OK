@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-04-08 22:00:24",
+  "overall": "BLOCK",
+  "block_new_positions": true,
+  "alerts": [
+    "模型核心檔案不足，禁止建倉"
+  ],
+  "model_status": {
+    "health": "FAIL",
+    "ok_count": 1,
+    "items": {
+      "selected_features": true,
+      "bull_model": false,
+      "side_model": false,
+      "bear_model": false
+    }
+  },
+  "decision_desk": {
+    "health": "WARN",
+    "rows": 1,
+    "avg_ai_proba": 0.5198,
+    "avg_realized_ev": 0.7401,
+    "avg_score_gap": 3.7,
+    "message": "決策桌標的偏少"
+  },
+  "recent_trades": {
+    "health": "WARN",
+    "sample_size": 0,
+    "win_rate": 0.0,
+    "avg_return": 0.0,
+    "profit_factor": 0.0,
+    "message": "近期無成交"
+  },
+  "strategy_layer": [
+    {
+      "strategy": "多方進場",
+      "health": "KEEP",
+      "note": "樣本數不足 (0/10)，熱身中",
+      "sample_size": 0,
+      "win_rate": 0.0,
+      "avg_return": 0.0,
+      "profit_factor": 0.0
+    },
+    {
+      "strategy": "空方進場",
+      "health": "KEEP",
+      "note": "樣本數不足 (0/10)，熱身中",
+      "sample_size": 0,
+      "win_rate": 0.0,
+      "avg_return": 0.0,
+      "profit_factor": 0.0
+    },
+    {
+      "strategy": "AI訊號",
+      "health": "KEEP",
+      "note": "樣本數不足 (0/10)，熱身中",
+      "sample_size": 0,
+      "win_rate": 0.0,
+      "avg_return": 0.0,
+      "profit_factor": 0.0
+    }
+  ]
+}

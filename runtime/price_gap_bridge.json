@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-04-08 22:00:23",
+  "module_version": "v79",
+  "scanned_csv_count": 16,
+  "scanned_csv_success_count": 3,
+  "candidate_rows": 12,
+  "required_tickers": 5,
+  "matched_tickers": 5,
+  "missing_tickers": [],
+  "price_scan_dirs": [
+    "C:\\test\\test-2026-3-22OK",
+    "C:\\test\\test-2026-3-22OK\\data"
+  ],
+  "source_mount_dirs": [],
+  "last_snapshot_path": "C:\\test\\test-2026-3-22OK\\data\\last_price_snapshot.csv",
+  "last_snapshot_matched_rows": 5,
+  "manual_override_path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_overrides.csv",
+  "manual_override_prefilled_rows": 0,
+  "candidates_path": "C:\\test\\test-2026-3-22OK\\data\\auto_price_snapshot_candidates.csv",
+  "manual_template_path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
+  "status": "price_gap_reduced"
+}
