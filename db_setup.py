@@ -1,6 +1,14 @@
 import os
 import sys
 import pyodbc
+import re
+
+_IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9_]+$")
+
+def _assert_safe_identifier(name: str) -> str:
+    if not _IDENTIFIER_RE.match(str(name)):
+        raise ValueError(f"Unsafe SQL identifier: {name}")
+    return str(name)
 
 MASTER_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
@@ -20,8 +28,17 @@ TARGET_CONN_STR = (
 # =========================================================
 # 工具函式
 # =========================================================
+def safe_print(msg):
+    text = str(msg)
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        enc = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+        print(text.encode(enc, errors='replace').decode(enc, errors='replace'))
+
+
 def log(msg):
-    print(msg)
+    safe_print(msg)
 
 
 def get_arg_value(flag_name: str, default=None):
@@ -43,6 +60,7 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 
 def ensure_table(cursor, table_name, create_sql):
+    table_name = _assert_safe_identifier(table_name)
     cursor.execute(f"""
     IF OBJECT_ID(N'dbo.{table_name}', N'U') IS NULL
     BEGIN
@@ -52,6 +70,7 @@ def ensure_table(cursor, table_name, create_sql):
 
 
 def ensure_column(cursor, table_name, col_name, col_sql_type):
+    table_name = _assert_safe_identifier(table_name)
     cursor.execute(
         f"IF COL_LENGTH('dbo.{table_name}', N'{col_name}') IS NULL "
         f"ALTER TABLE dbo.{table_name} ADD [{col_name}] {col_sql_type}"

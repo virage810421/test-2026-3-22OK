@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09 15:50:27",
+  "generated_at": "2026-04-09 16:14:01",
   "status": "data_cleanup_applied",
   "canonical_daily_decision_desk": "C:\\test\\test-2026-3-22OK\\data\\daily_decision_desk.csv",
   "root_daily_decision_desk_kept_for_compat": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
@@ -11,6 +11,11 @@
     },
     {
       "action": "template_snapshot",
+      "source": "C:\\test\\test-2026-3-22OK\\data\\last_price_snapshot_template.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\templates\\last_price_snapshot_template.csv"
+    },
+    {
+      "action": "template_snapshot",
       "source": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
       "target": "C:\\test\\test-2026-3-22OK\\data\\templates\\manual_price_snapshot_template.csv"
     },
@@ -18,11 +23,6 @@
       "action": "template_snapshot",
       "source": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data_template.csv",
       "target": "C:\\test\\test-2026-3-22OK\\data\\templates\\ml_training_data_template.csv"
-    },
-    {
-      "action": "template_snapshot",
-      "source": "C:\\test\\test-2026-3-22OK\\data\\last_price_snapshot_template.csv",
-      "target": "C:\\test\\test-2026-3-22OK\\data\\templates\\last_price_snapshot_template.csv"
     },
     {
       "action": "audit_copy_suspicious_name",
@@ -41,7 +41,7 @@
       "path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_overrides.csv",
       "exists": true,
       "size": 57,
-      "mtime": 1775719890.833537
+      "mtime": 1775721027.8166437
     },
     {
       "path": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output.csv",

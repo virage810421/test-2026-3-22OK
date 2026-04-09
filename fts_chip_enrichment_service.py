@@ -134,6 +134,55 @@ class ChipEnrichmentService:
             out['Trust_Consecutive'] = (out['Trust_Net'].fillna(0) > 0).astype(int).groupby((out['Trust_Net'].fillna(0) <= 0).astype(int).cumsum()).cumsum()
         return self._zero_fill(out)
 
+
+    def enrich_row(self, ticker: str, row: dict[str, Any]) -> dict[str, Any]:
+        out = dict(row or {})
+        close_val = pd.to_numeric(pd.Series([out.get('Close')]), errors='coerce').iloc[0] if 'Close' in out else pd.NA
+
+        chip_df = self._load_from_csv(ticker)
+        if chip_df.empty:
+            chip_df = self._load_from_sql(ticker)
+
+        if chip_df.empty:
+            for col in ['Foreign_Net', 'Trust_Net', 'Dealers_Net'] + self.RATIO_COLS + self.CONSEC_COLS:
+                out.setdefault(col, 0.0 if 'Ratio' in col else 0)
+            return out
+
+        chip_df = chip_df.sort_index().copy()
+        latest = chip_df.iloc[-1]
+
+        foreign_net = float(pd.to_numeric(pd.Series([latest.get('Foreign_Net', 0)]), errors='coerce').fillna(0).iloc[0])
+        trust_net = float(pd.to_numeric(pd.Series([latest.get('Trust_Net', 0)]), errors='coerce').fillna(0).iloc[0])
+        dealers_net = float(pd.to_numeric(pd.Series([latest.get('Dealers_Net', 0)]), errors='coerce').fillna(0).iloc[0])
+
+        def _consecutive_pos(series: pd.Series) -> int:
+            s = pd.to_numeric(series, errors='coerce').fillna(0)
+            count = 0
+            for v in reversed(s.tolist()):
+                if v > 0:
+                    count += 1
+                else:
+                    break
+            return int(count)
+
+        out['Foreign_Net'] = foreign_net
+        out['Trust_Net'] = trust_net
+        out['Dealers_Net'] = dealers_net
+
+        if pd.notna(close_val) and float(close_val) != 0:
+            close_num = float(close_val)
+            out['Foreign_Ratio'] = foreign_net / close_num
+            out['Trust_Ratio'] = trust_net / close_num
+            out['Total_Ratio'] = (foreign_net + trust_net + dealers_net) / close_num
+        else:
+            out.setdefault('Foreign_Ratio', 0.0)
+            out.setdefault('Trust_Ratio', 0.0)
+            out.setdefault('Total_Ratio', 0.0)
+
+        out['Foreign_Consecutive'] = _consecutive_pos(chip_df.get('Foreign_Net', pd.Series(dtype='float64')))
+        out['Trust_Consecutive'] = _consecutive_pos(chip_df.get('Trust_Net', pd.Series(dtype='float64')))
+        return out
+
     def build_summary(self) -> tuple[Path, dict[str, Any]]:
         demo = pd.DataFrame({'Close': [100.0]}, index=[pd.Timestamp('2026-01-01')])
         enriched = self.add_chip_data(demo, '2330.TW')

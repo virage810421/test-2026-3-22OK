@@ -1,17 +1,45 @@
 {
-  "generated_at": "2026-04-09 15:50:27",
-  "module_version": "v83_training_governance_mainline",
+  "generated_at": "2026-04-09 23:20:13",
+  "module_version": "v83_training_governance_mainline_hardened",
   "system_name": "正式交易主控版_v83_official_main",
   "orchestrator_status": "training_governed_v83",
-  "training_readiness_pct": 78,
+  "training_readiness_pct": 49,
   "backend": {
     "executed": false,
     "status": "summary_only",
-    "entrypoint": "fts_trainer_backend.train_models"
+    "path": null,
+    "report": {}
   },
-  "governance_candidate_version": "candidate_stub_20260409_155027",
+  "training_integrity": {
+    "generated_at": "2026-04-09 23:20:13",
+    "thresholds": {
+      "min_oot_hit_rate": 0.5,
+      "min_oot_profit_factor": 1.0,
+      "max_overfit_gap": 0.15,
+      "max_feature_to_sample_ratio": 0.35
+    },
+    "training_report": {
+      "leakage_guards": {},
+      "out_of_time": {},
+      "overfit_gap": 1.0,
+      "feature_to_sample_ratio": 1.0
+    },
+    "failures": [
+      "feature_selection_not_train_only",
+      "purged_walk_forward_missing",
+      "out_of_time_holdout_missing",
+      "overfit_gap_too_large"
+    ],
+    "warnings": [
+      "oot_hit_rate_soft",
+      "oot_profit_factor_soft",
+      "feature_to_sample_ratio_high"
+    ],
+    "promotion_ready": false,
+    "status": "training_integrity_blocked"
+  },
   "candidate_evaluation": {
-    "generated_at": "2026-04-09 15:50:27",
+    "generated_at": "2026-04-09 23:20:13",
     "system_name": "正式交易主控版_v83_official_main",
     "thresholds": {
       "min_win_rate": 0.5,
@@ -21,79 +49,55 @@
       "max_shadow_return_drift_pct": 0.08
     },
     "metrics": {
-      "win_rate": 0.56,
-      "profit_factor": 1.18,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
       "max_drawdown_pct": 0.08
     },
     "walk_forward": {
-      "score": 78
+      "score": 0.0
     },
     "shadow_result": {
-      "return_drift_pct": 0.03
+      "return_drift_pct": 0.0
     },
-    "artifacts": {
-      "tracked_files": [
-        "selected_features.pkl",
-        "model_趨勢多頭.pkl",
-        "model_區間盤整.pkl",
-        "model_趨勢空頭.pkl"
-      ],
-      "all_present": true,
-      "files": [
-        {
-          "name": "selected_features.pkl",
-          "exists": true,
-          "size_bytes": 13,
-          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-        },
-        {
-          "name": "model_趨勢多頭.pkl",
-          "exists": true,
-          "size_bytes": 13,
-          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-        },
-        {
-          "name": "model_區間盤整.pkl",
-          "exists": true,
-          "size_bytes": 13,
-          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-        },
-        {
-          "name": "model_趨勢空頭.pkl",
-          "exists": true,
-          "size_bytes": 13,
-          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-        }
-      ]
-    },
-    "rollback_version": "pretrain_stub",
-    "go_for_shadow": true,
-    "go_for_promote": true,
-    "failures": [],
+    "failures": [
+      "win_rate_below_threshold",
+      "profit_factor_below_threshold",
+      "walk_forward_not_strong_enough"
+    ],
     "warnings": [],
-    "status": "candidate_ready"
+    "rollback_version": "fallback_stub_20260409_232013",
+    "candidate_ready": false,
+    "status": "candidate_blocked"
   },
   "live_health": {
-    "generated_at": "2026-04-09 15:50:27",
+    "generated_at": "2026-04-09 23:20:13",
     "thresholds": {
       "min_live_win_rate": 0.42,
       "max_consecutive_losses": 5,
       "max_reject_rate": 0.2,
-      "max_fill_slippage_bps": 35
+      "max_fill_slippage_bps": 35,
+      "min_trades_required": 20
     },
     "live_metrics": {
       "win_rate": 0.53,
       "consecutive_losses": 1,
       "reject_rate": 0.02,
-      "avg_slippage_bps": 9.0
+      "avg_slippage_bps": 9.0,
+      "trade_count": 0
     },
+    "trade_count": 0,
+    "sample_gate_passed": false,
+    "warnings": [
+      "sample_too_small_for_winrate_rejectrate_guard"
+    ],
     "rollback_recommended": false,
     "triggers": [],
     "status": "live_health_ok"
   },
-  "merge_status": {
-    "ml_trainer_py": "kept_wrapper_mainline_switched_to_fts_trainer_backend",
-    "model_governance_py": "retained_as_core_service_dispatched_by_mainline"
+  "deep_risks": {
+    "training_governance_overfit_risk": true,
+    "sample_split_guard_ok": false,
+    "feature_selection_train_only": false
   },
   "status": "training_governance_mainline_ready"
 }

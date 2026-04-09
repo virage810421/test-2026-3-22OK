@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09 15:50:27",
+  "generated_at": "2026-04-09 23:20:13",
   "system_name": "正式交易主控版_v83_official_main",
   "thresholds": {
     "min_win_rate": 0.5,
@@ -9,55 +9,23 @@
     "max_shadow_return_drift_pct": 0.08
   },
   "metrics": {
-    "win_rate": 0.56,
-    "profit_factor": 1.18,
+    "win_rate": 0.0,
+    "profit_factor": 0.0,
     "max_drawdown_pct": 0.08
   },
   "walk_forward": {
-    "score": 78
+    "score": 0.0
   },
   "shadow_result": {
-    "return_drift_pct": 0.03
+    "return_drift_pct": 0.0
   },
-  "artifacts": {
-    "tracked_files": [
-      "selected_features.pkl",
-      "model_趨勢多頭.pkl",
-      "model_區間盤整.pkl",
-      "model_趨勢空頭.pkl"
-    ],
-    "all_present": true,
-    "files": [
-      {
-        "name": "selected_features.pkl",
-        "exists": true,
-        "size_bytes": 13,
-        "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-      },
-      {
-        "name": "model_趨勢多頭.pkl",
-        "exists": true,
-        "size_bytes": 13,
-        "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-      },
-      {
-        "name": "model_區間盤整.pkl",
-        "exists": true,
-        "size_bytes": 13,
-        "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-      },
-      {
-        "name": "model_趨勢空頭.pkl",
-        "exists": true,
-        "size_bytes": 13,
-        "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
-      }
-    ]
-  },
-  "rollback_version": "pretrain_stub",
-  "go_for_shadow": true,
-  "go_for_promote": true,
-  "failures": [],
+  "failures": [
+    "win_rate_below_threshold",
+    "profit_factor_below_threshold",
+    "walk_forward_not_strong_enough"
+  ],
   "warnings": [],
-  "status": "candidate_ready"
+  "rollback_version": "fallback_stub_20260409_232013",
+  "candidate_ready": false,
+  "status": "candidate_blocked"
 }

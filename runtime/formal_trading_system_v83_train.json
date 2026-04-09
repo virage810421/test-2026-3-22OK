@@ -1,0 +1,180 @@
+{
+  "generated_at": "2026-04-09 21:22:19",
+  "mode": "train",
+  "module_version": "v83_single_entry_three_modes_final",
+  "outputs": {
+    "train_steps": [
+      {
+        "status": "ok",
+        "script": "ml_data_generator.py",
+        "returncode": 0,
+        "stdout_tail": "",
+        "stderr_tail": "  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))"
+      },
+      {
+        "status": "error",
+        "script": "ml_trainer.py",
+        "returncode": 1,
+        "stdout_tail": "",
+        "stderr_tail": "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 300, in _read\n    parser = TextFileReader(filepath_or_buffer, **kwds)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1645, in __init__\n    self._engine = self._make_engine(f, self.engine)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1922, in _make_engine\n    return mapping[engine](f, **self.options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\c_parser_wrapper.py\", line 95, in __init__\n    self._reader = parsers.TextReader(src, **kwds)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"pandas/_libs/parsers.pyx\", line 575, in pandas._libs.parsers.TextReader.__cinit__\npandas.errors.EmptyDataError: No columns to parse from file"
+      },
+      {
+        "status": "ok",
+        "script": "run_project_completion_audit.py",
+        "returncode": 0,
+        "stdout_tail": "(WindowsPath('C:/test/test-2026-3-22OK/runtime/project_completion_audit.json'), {'module_version': 'v83_project_completion_audit', 'required_modules': {'formal_trading_system_v83_official_main.py': True, 'fts_feature_service.py': True, 'fts_screening_engine.py': True, 'fts_cross_sectional_percentile_service.py': True, 'fts_event_calendar_service.py': True, 'fts_training_data_builder.py': True, 'db_setup_research_plus.py': True, 'fts_sql_feature_snapshot_sync.py': True, 'fts_mainline_linkage.py': True}, 'required_data': {'feature_cross_section_snapshot.csv': True, 'feature_event_calendar.csv': True, 'selected_live_feature_mounts.csv': False}, 'required_runtime': {'feature_stack_audit.json': True, 'cross_sectional_percentile_service.json': True, 'event_calendar_service.json': True, 'project_completion_audit.json': True}, 'task_board': {'主控串聯': '完成', '全市場percentile': '完成', '事件窗精準化': '完成', '特徵掛載': '完成', '訓練資料接新特徵': '完成', '研究層增補table': '完成', '特徵snapshot寫回SQL': '完成'}, 'all_modules_ready': True, 'all_data_ready': False, 'all_runtime_ready': True, 'status': 'project_completion_audit_ready'})",
+        "stderr_tail": ""
+      }
+    ],
+    "training_governance_mainline": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
+      "payload": {
+        "generated_at": "2026-04-09 21:22:19",
+        "module_version": "v83_training_governance_mainline_hardened",
+        "system_name": "正式交易主控版_v83_official_main",
+        "orchestrator_status": "training_governed_v83",
+        "training_readiness_pct": 49,
+        "backend": {
+          "executed": false,
+          "status": "summary_only",
+          "path": null,
+          "report": {}
+        },
+        "training_integrity": {
+          "generated_at": "2026-04-09 21:22:19",
+          "thresholds": {
+            "min_oot_hit_rate": 0.5,
+            "min_oot_profit_factor": 1.0,
+            "max_overfit_gap": 0.15,
+            "max_feature_to_sample_ratio": 0.35
+          },
+          "training_report": {
+            "leakage_guards": {},
+            "out_of_time": {},
+            "overfit_gap": 1.0,
+            "feature_to_sample_ratio": 1.0
+          },
+          "failures": [
+            "feature_selection_not_train_only",
+            "purged_walk_forward_missing",
+            "out_of_time_holdout_missing",
+            "overfit_gap_too_large"
+          ],
+          "warnings": [
+            "oot_hit_rate_soft",
+            "oot_profit_factor_soft",
+            "feature_to_sample_ratio_high"
+          ],
+          "promotion_ready": false,
+          "status": "training_integrity_blocked"
+        },
+        "candidate_evaluation": {
+          "generated_at": "2026-04-09 21:22:19",
+          "system_name": "正式交易主控版_v83_official_main",
+          "thresholds": {
+            "min_win_rate": 0.5,
+            "min_profit_factor": 1.1,
+            "max_drawdown_pct": 0.12,
+            "min_walk_forward_score": 60,
+            "max_shadow_return_drift_pct": 0.08
+          },
+          "metrics": {
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "max_drawdown_pct": 0.08
+          },
+          "walk_forward": {
+            "score": 0.0
+          },
+          "shadow_result": {
+            "return_drift_pct": 0.0
+          },
+          "failures": [
+            "win_rate_below_threshold",
+            "profit_factor_below_threshold",
+            "walk_forward_not_strong_enough"
+          ],
+          "warnings": [],
+          "rollback_version": "fallback_stub_20260409_212219",
+          "candidate_ready": false,
+          "status": "candidate_blocked"
+        },
+        "live_health": {
+          "generated_at": "2026-04-09 21:22:19",
+          "thresholds": {
+            "min_live_win_rate": 0.42,
+            "max_consecutive_losses": 5,
+            "max_reject_rate": 0.2,
+            "max_fill_slippage_bps": 35,
+            "min_trades_required": 20
+          },
+          "live_metrics": {
+            "win_rate": 0.53,
+            "consecutive_losses": 1,
+            "reject_rate": 0.02,
+            "avg_slippage_bps": 9.0,
+            "trade_count": 0
+          },
+          "trade_count": 0,
+          "sample_gate_passed": false,
+          "warnings": [
+            "sample_too_small_for_winrate_rejectrate_guard"
+          ],
+          "rollback_recommended": false,
+          "triggers": [],
+          "status": "live_health_ok"
+        },
+        "deep_risks": {
+          "training_governance_overfit_risk": true,
+          "sample_split_guard_ok": false,
+          "feature_selection_train_only": false
+        },
+        "status": "training_governance_mainline_ready"
+      }
+    },
+    "training_stress_audit": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_stress_audit.json",
+      "payload": {
+        "generated_at": "2026-04-09 21:22:19",
+        "system_name": "正式交易主控版_v83_official_main",
+        "trainer_backend_report_exists": false,
+        "integrity": {
+          "generated_at": "2026-04-09 21:22:19",
+          "thresholds": {
+            "min_oot_hit_rate": 0.5,
+            "min_oot_profit_factor": 1.0,
+            "max_overfit_gap": 0.15,
+            "max_feature_to_sample_ratio": 0.35
+          },
+          "training_report": {
+            "leakage_guards": {},
+            "out_of_time": {},
+            "overfit_gap": 1.0,
+            "feature_to_sample_ratio": 1.0
+          },
+          "failures": [
+            "feature_selection_not_train_only",
+            "purged_walk_forward_missing",
+            "out_of_time_holdout_missing",
+            "overfit_gap_too_large"
+          ],
+          "warnings": [
+            "oot_hit_rate_soft",
+            "oot_profit_factor_soft",
+            "feature_to_sample_ratio_high"
+          ],
+          "promotion_ready": false,
+          "status": "training_integrity_blocked"
+        },
+        "key_findings": {
+          "overfit_gap": 0.0,
+          "oot_hit_rate": 0.0,
+          "oot_profit_factor": 0.0,
+          "feature_to_sample_ratio": 0.0
+        },
+        "status": "training_integrity_blocked"
+      }
+    }
+  },
+  "status": "train_ready"
+}

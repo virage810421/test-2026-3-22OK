@@ -1,0 +1,2126 @@
+{
+  "project_root": "C:\\test\\test-2026-3-22OK",
+  "summary": {
+    "python_files_total": 217,
+    "compile_failures": 0,
+    "core_import_failures": 0,
+    "missing_local_import_edges": 0,
+    "wrapper_linkage_failures": 0
+  },
+  "compile_results": [
+    {
+      "file": "advanced_chart.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "alert_manager.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "broker_base.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "config.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "daily_chip_etl.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "db_logger.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "db_setup.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "db_setup_research_plus.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "event_backtester.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "execution_engine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "formal_trading_system.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "formal_trading_system_v83_official_main.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_ab_diff_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_ab_wave_upgrade.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_ai_manager.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_ai_pipeline.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_ai_quality.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_architecture_map.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_archive_policy.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_backfill_resilience_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_bridge_replacement_plan.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_adapter_contract.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_api_adapter.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_approval.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_callback_norm.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_contract.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_factory.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_interface.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_paper.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_real_stub.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_requirements_contract.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_broker_response.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_callback_event_schema.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_callback_event_store.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_artifact.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_artifact_summary.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_bridge.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_contract.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_decision_bridge.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_interface_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_quality_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chip_enrichment_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_compat.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_completion_gap_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_config.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_console_brief.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_cross_sectional_percentile_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_daily_ops.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_dashboard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_data_cleanup.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_decision_consistency.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_decision_desk_builder.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_decision_execution_bridge.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_decision_price_bridge_plus.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_deep_risk_checks.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_eod_closebook.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_etl_ai_visibility.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_etl_batch_stats.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_etl_daily_chip_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_etl_data_quality_plus.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_etl_field_completeness.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_etl_monthly_revenue_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_etl_quality.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_event_calendar_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_execution.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_execution_callback_flow.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_feature_catalog.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_feature_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_feature_stack_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_file_classification.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_fundamentals_etl_mainline.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_fundamentals_true_backfill.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_gate_summary.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_gatekeeper.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_interface_alignment_plus.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_interface_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_intraday_incident_guard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_kill_switch.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_legacy_bridge_map.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_legacy_core_metrics.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_legacy_core_readiness_board.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_legacy_core_upgrade_plan.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_legacy_core_upgrade_wave.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_legacy_inventory.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_adapter_stub.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_approval_workflow.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_cutover_plan.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_readiness_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_release_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_safety.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_local_history_bootstrap.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_logger.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_mainline_absorption_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_mainline_linkage.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_market_climate_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_market_data_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_market_rules_tw.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_mode_switch.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_model_artifact_checks.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_model_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_models.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_module_fate_map.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_operator_approval.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_orchestrator.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_order_schema.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_order_state_machine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_package_guard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_performance_attribution.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_phase1_upgrade.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_phase2_mock_broker_stage.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_phase3_real_cutover_stage.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_pipeline.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_portfolio_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_position_state_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_prelive_runtime.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_preopen_checklist.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_price_gap_bridge.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_progress.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_progress_full_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_project_completion_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_project_healthcheck.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_project_hygiene.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_real_api_readiness.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_real_broker_adapter_blueprint.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_reconciliation_engine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_reconciliation_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_recovery_consistency.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_recovery_engine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_recovery_validation.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_reject_classifier.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_research_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_research_quality_stats.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_research_registry.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_research_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_research_versioning.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_resilience.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_retry_queue.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_risk.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_risk_gateway.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_risk_limits_plus.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_run_manifest.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_runtime_cleanup.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_runtime_ops.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_runtime_ops_v59_patch.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_screening_detachment_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_screening_engine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_sector_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_signal.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_signal_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_single_core_migration.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_sql_feature_snapshot_sync.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_stage_inputs_outputs.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_stage_trace.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_state.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_state_repair.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_submission_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_submodule_contracts.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_system_guard_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_target95_plan.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_target95_push.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_target95_scorecard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_task_completion_registry.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_task_logs.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_task_registry.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_test_matrix.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_test_scenarios_plus.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_tests.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_trade_message.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_trainer_backend.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_trainer_promotion_policy.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_data_builder.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_gap_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_governance_mainline.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_orchestrator.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_prod_readiness.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_stress_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_unused_candidates.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_upgrade_plan.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_upgrade_runtime.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_upgrade_truth_report.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_utils.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_v83_housekeeping_once.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_validation_suite.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_watchlist_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_wave1_body_upgrade_templates.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_wave1_contract_pack.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_wave1_core_upgrade.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_wave1_io_bindings.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_wave1_upgrade_checklist.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fundamental_screener.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "launcher.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "live_paper_trading.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "master_pipeline.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "ml_data_generator.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "ml_trainer.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "model_governance.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "models\\test_line.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "monitor_center.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "monthly_revenue_simple.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "paper_broker.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "performance.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "portfolio_risk.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "risk_gateway.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "run_backfill_resilience_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "run_full_market_percentile_snapshot.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "run_precise_event_calendar_build.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "run_project_completion_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "run_project_healthcheck.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "run_sync_feature_snapshots_to_sql.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "run_training_stress_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "screening.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "sector_classifier.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "strategies.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "system_guard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "yahoo_csv_to_sql.py",
+      "ok": true,
+      "error": ""
+    }
+  ],
+  "core_import_smoke": [
+    {
+      "module": "formal_trading_system_v83_official_main",
+      "ok": true,
+      "error": "",
+      "seconds": 0.053
+    },
+    {
+      "module": "fts_fundamentals_etl_mainline",
+      "ok": true,
+      "error": "",
+      "seconds": 0.84
+    },
+    {
+      "module": "fts_training_governance_mainline",
+      "ok": true,
+      "error": "",
+      "seconds": 1.488
+    },
+    {
+      "module": "fts_feature_service",
+      "ok": true,
+      "error": "",
+      "seconds": 0.404
+    },
+    {
+      "module": "fts_screening_engine",
+      "ok": true,
+      "error": "",
+      "seconds": 0.731
+    },
+    {
+      "module": "fts_cross_sectional_percentile_service",
+      "ok": true,
+      "error": "",
+      "seconds": 0.679
+    },
+    {
+      "module": "fts_event_calendar_service",
+      "ok": true,
+      "error": "",
+      "seconds": 0.423
+    },
+    {
+      "module": "fts_decision_execution_bridge",
+      "ok": true,
+      "error": "",
+      "seconds": 0.405
+    },
+    {
+      "module": "fts_phase1_upgrade",
+      "ok": true,
+      "error": "",
+      "seconds": 0.424
+    },
+    {
+      "module": "fts_phase2_mock_broker_stage",
+      "ok": true,
+      "error": "",
+      "seconds": 0.428
+    },
+    {
+      "module": "fts_phase3_real_cutover_stage",
+      "ok": true,
+      "error": "",
+      "seconds": 0.528
+    },
+    {
+      "module": "model_governance",
+      "ok": true,
+      "error": "",
+      "seconds": 0.074
+    },
+    {
+      "module": "db_setup",
+      "ok": true,
+      "error": "",
+      "seconds": 0.032
+    }
+  ],
+  "local_imports_by_file": {
+    "advanced_chart.py": [
+      "fts_chart_service"
+    ],
+    "alert_manager.py": [],
+    "broker_base.py": [],
+    "config.py": [],
+    "daily_chip_etl.py": [
+      "fts_etl_daily_chip_service"
+    ],
+    "db_logger.py": [],
+    "db_setup.py": [],
+    "db_setup_research_plus.py": [],
+    "event_backtester.py": [
+      "config",
+      "screening",
+      "strategies"
+    ],
+    "execution_engine.py": [
+      "broker_base",
+      "db_logger",
+      "fts_broker_paper",
+      "paper_broker",
+      "risk_gateway"
+    ],
+    "formal_trading_system.py": [
+      "formal_trading_system_v83_official_main"
+    ],
+    "formal_trading_system_v83_official_main.py": [],
+    "fts_ab_diff_audit.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_ab_wave_upgrade.py": [
+      "fts_ab_diff_audit",
+      "fts_chip_enrichment_service",
+      "fts_config",
+      "fts_decision_desk_builder",
+      "fts_feature_service",
+      "fts_market_climate_service",
+      "fts_market_data_service",
+      "fts_risk_gateway",
+      "fts_screening_engine",
+      "fts_sector_service",
+      "fts_system_guard_service",
+      "fts_tests",
+      "fts_utils",
+      "fts_watchlist_service"
+    ],
+    "fts_ai_manager.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_ai_pipeline.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_ai_quality.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_architecture_map.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_archive_policy.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_backfill_resilience_audit.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_bridge_replacement_plan.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_broker_adapter_contract.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_broker_api_adapter.py": [
+      "fts_config",
+      "fts_real_broker_adapter_blueprint",
+      "fts_utils"
+    ],
+    "fts_broker_approval.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_broker_callback_norm.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_broker_contract.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_broker_factory.py": [
+      "fts_broker_api_adapter",
+      "fts_broker_paper",
+      "fts_broker_real_stub",
+      "fts_config"
+    ],
+    "fts_broker_interface.py": [],
+    "fts_broker_paper.py": [
+      "paper_broker"
+    ],
+    "fts_broker_real_stub.py": [
+      "fts_broker_interface",
+      "fts_callback_event_store",
+      "fts_config",
+      "fts_models",
+      "fts_utils"
+    ],
+    "fts_broker_requirements_contract.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_broker_response.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_callback_event_schema.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_callback_event_store.py": [
+      "fts_callback_event_schema",
+      "fts_prelive_runtime"
+    ],
+    "fts_chart_artifact.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_chart_artifact_summary.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_chart_bridge.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_chart_contract.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_chart_decision_bridge.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_chart_interface_audit.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_chart_quality_gate.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_chart_service.py": [
+      "config"
+    ],
+    "fts_chip_enrichment_service.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_compat.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_completion_gap_report.py": [
+      "fts_utils"
+    ],
+    "fts_config.py": [],
+    "fts_console_brief.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_cross_sectional_percentile_service.py": [
+      "fts_config",
+      "fts_feature_service",
+      "fts_market_data_service",
+      "fts_utils"
+    ],
+    "fts_daily_ops.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_dashboard.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_data_cleanup.py": [],
+    "fts_decision_consistency.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_decision_desk_builder.py": [
+      "fts_config",
+      "fts_market_climate_service",
+      "fts_screening_engine",
+      "fts_signal_gate",
+      "fts_utils",
+      "fts_watchlist_service"
+    ],
+    "fts_decision_execution_bridge.py": [
+      "fts_config",
+      "fts_market_rules_tw",
+      "fts_price_gap_bridge",
+      "fts_utils"
+    ],
+    "fts_decision_price_bridge_plus.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_deep_risk_checks.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_eod_closebook.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_etl_ai_visibility.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_etl_batch_stats.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_etl_daily_chip_service.py": [
+      "config",
+      "monthly_revenue_simple",
+      "yahoo_csv_to_sql"
+    ],
+    "fts_etl_data_quality_plus.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_etl_field_completeness.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_etl_monthly_revenue_service.py": [],
+    "fts_etl_quality.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_event_calendar_service.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_execution.py": [
+      "fts_config",
+      "fts_models",
+      "fts_utils"
+    ],
+    "fts_execution_callback_flow.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_feature_catalog.py": [],
+    "fts_feature_service.py": [
+      "fts_config",
+      "fts_cross_sectional_percentile_service",
+      "fts_event_calendar_service",
+      "fts_feature_catalog",
+      "fts_utils"
+    ],
+    "fts_feature_stack_audit.py": [
+      "fts_config",
+      "fts_cross_sectional_percentile_service",
+      "fts_event_calendar_service",
+      "fts_feature_catalog",
+      "fts_feature_service",
+      "fts_utils"
+    ],
+    "fts_file_classification.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_fundamentals_etl_mainline.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_fundamentals_true_backfill.py": [],
+    "fts_gate_summary.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_gatekeeper.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_interface_alignment_plus.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_interface_audit.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_intraday_incident_guard.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_kill_switch.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_legacy_bridge_map.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_legacy_core_metrics.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_legacy_core_readiness_board.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_legacy_core_upgrade_plan.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_legacy_core_upgrade_wave.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_legacy_inventory.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_live_adapter_stub.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_live_approval_workflow.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_live_cutover_plan.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_live_readiness_gate.py": [
+      "fts_config",
+      "fts_market_rules_tw"
+    ],
+    "fts_live_release_gate.py": [
+      "fts_operator_approval",
+      "fts_prelive_runtime"
+    ],
+    "fts_live_safety.py": [
+      "fts_kill_switch",
+      "fts_market_rules_tw",
+      "fts_upgrade_runtime"
+    ],
+    "fts_local_history_bootstrap.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_logger.py": [
+      "fts_models",
+      "fts_utils"
+    ],
+    "fts_mainline_absorption_report.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_mainline_linkage.py": [
+      "fts_config",
+      "fts_cross_sectional_percentile_service",
+      "fts_event_calendar_service",
+      "fts_feature_stack_audit",
+      "fts_project_completion_audit",
+      "fts_task_completion_registry"
+    ],
+    "fts_market_climate_service.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_market_data_service.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_market_rules_tw.py": [],
+    "fts_mode_switch.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_model_artifact_checks.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_model_gate.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_models.py": [],
+    "fts_module_fate_map.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_operator_approval.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_orchestrator.py": [
+      "fts_config",
+      "fts_task_logs",
+      "fts_utils"
+    ],
+    "fts_order_schema.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_order_state_machine.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_package_guard.py": [
+      "fts_signal",
+      "fts_utils"
+    ],
+    "fts_performance_attribution.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_phase1_upgrade.py": [
+      "fts_config",
+      "fts_decision_execution_bridge",
+      "fts_live_safety",
+      "fts_tests",
+      "fts_trainer_promotion_policy",
+      "fts_training_orchestrator",
+      "fts_training_prod_readiness",
+      "fts_utils"
+    ],
+    "fts_phase2_mock_broker_stage.py": [
+      "fts_broker_real_stub",
+      "fts_callback_event_store",
+      "fts_config",
+      "fts_eod_closebook",
+      "fts_intraday_incident_guard",
+      "fts_models",
+      "fts_preopen_checklist",
+      "fts_reconciliation_engine",
+      "fts_recovery_validation",
+      "fts_retry_queue",
+      "fts_utils"
+    ],
+    "fts_phase3_real_cutover_stage.py": [
+      "fts_broker_api_adapter",
+      "fts_broker_requirements_contract",
+      "fts_config",
+      "fts_live_cutover_plan",
+      "fts_live_release_gate",
+      "fts_operator_approval",
+      "fts_real_broker_adapter_blueprint",
+      "fts_utils"
+    ],
+    "fts_pipeline.py": [],
+    "fts_portfolio_gate.py": [
+      "fts_sector_service",
+      "fts_utils"
+    ],
+    "fts_position_state_service.py": [
+      "fts_sector_service",
+      "fts_utils"
+    ],
+    "fts_prelive_runtime.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_preopen_checklist.py": [
+      "fts_prelive_runtime"
+    ],
+    "fts_price_gap_bridge.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_progress.py": [
+      "fts_config",
+      "fts_target95_push"
+    ],
+    "fts_progress_full_report.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_project_completion_audit.py": [
+      "fts_config"
+    ],
+    "fts_project_healthcheck.py": [],
+    "fts_project_hygiene.py": [],
+    "fts_real_api_readiness.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_real_broker_adapter_blueprint.py": [],
+    "fts_reconciliation_engine.py": [
+      "fts_upgrade_runtime",
+      "fts_utils"
+    ],
+    "fts_reconciliation_report.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_recovery_consistency.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_recovery_engine.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_recovery_validation.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_reject_classifier.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_report.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_research_gate.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_research_quality_stats.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_research_registry.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_research_report.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_research_versioning.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_resilience.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_retry_queue.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_risk.py": [
+      "fts_config"
+    ],
+    "fts_risk_gateway.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_risk_limits_plus.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_run_manifest.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_runtime_cleanup.py": [],
+    "fts_runtime_ops.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_runtime_ops_v59_patch.py": [],
+    "fts_screening_detachment_audit.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_screening_engine.py": [
+      "fts_chip_enrichment_service",
+      "fts_config",
+      "fts_feature_service",
+      "fts_market_data_service",
+      "fts_utils"
+    ],
+    "fts_sector_service.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_signal.py": [
+      "fts_config",
+      "fts_models",
+      "fts_utils"
+    ],
+    "fts_signal_gate.py": [
+      "fts_utils"
+    ],
+    "fts_single_core_migration.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_sql_feature_snapshot_sync.py": [
+      "fts_config"
+    ],
+    "fts_stage_inputs_outputs.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_stage_trace.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_state.py": [
+      "fts_config",
+      "fts_models",
+      "fts_utils"
+    ],
+    "fts_state_repair.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_submission_gate.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_submodule_contracts.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_system_guard_service.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_target95_plan.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_target95_push.py": [],
+    "fts_target95_scorecard.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_task_completion_registry.py": [
+      "fts_config"
+    ],
+    "fts_task_logs.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_task_registry.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_test_matrix.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_test_scenarios_plus.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_tests.py": [
+      "fts_broker_real_stub",
+      "fts_chip_enrichment_service",
+      "fts_config",
+      "fts_decision_desk_builder",
+      "fts_feature_service",
+      "fts_market_climate_service",
+      "fts_market_data_service",
+      "fts_models",
+      "fts_risk_gateway",
+      "fts_screening_detachment_audit",
+      "fts_screening_engine",
+      "fts_sector_service",
+      "fts_system_guard_service",
+      "fts_utils",
+      "fts_watchlist_service"
+    ],
+    "fts_trade_message.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_trainer_backend.py": [
+      "config",
+      "model_governance"
+    ],
+    "fts_trainer_promotion_policy.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_training_data_builder.py": [
+      "config",
+      "fts_chip_enrichment_service",
+      "fts_feature_service",
+      "fts_market_data_service",
+      "fts_screening_engine"
+    ],
+    "fts_training_gap_report.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_training_governance_mainline.py": [
+      "fts_config",
+      "fts_trainer_backend",
+      "fts_training_orchestrator",
+      "fts_utils",
+      "model_governance"
+    ],
+    "fts_training_orchestrator.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_training_prod_readiness.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_training_stress_audit.py": [
+      "fts_config",
+      "fts_utils",
+      "model_governance"
+    ],
+    "fts_unused_candidates.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_upgrade_plan.py": [
+      "fts_upgrade_runtime"
+    ],
+    "fts_upgrade_runtime.py": [
+      "fts_config"
+    ],
+    "fts_upgrade_truth_report.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_utils.py": [
+      "fts_config"
+    ],
+    "fts_v83_housekeeping_once.py": [
+      "fts_data_cleanup",
+      "fts_fundamentals_true_backfill",
+      "fts_project_hygiene",
+      "fts_runtime_cleanup"
+    ],
+    "fts_validation_suite.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_watchlist_service.py": [
+      "config",
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_wave1_body_upgrade_templates.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_wave1_contract_pack.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_wave1_core_upgrade.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_wave1_io_bindings.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_wave1_upgrade_checklist.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fundamental_screener.py": [
+      "config"
+    ],
+    "launcher.py": [],
+    "live_paper_trading.py": [
+      "config",
+      "screening",
+      "sector_classifier",
+      "strategies"
+    ],
+    "master_pipeline.py": [
+      "fundamental_screener",
+      "performance",
+      "portfolio_risk",
+      "screening",
+      "system_guard"
+    ],
+    "ml_data_generator.py": [
+      "fts_training_data_builder"
+    ],
+    "ml_trainer.py": [
+      "fts_trainer_backend"
+    ],
+    "model_governance.py": [
+      "fts_upgrade_runtime"
+    ],
+    "models\\test_line.py": [],
+    "monitor_center.py": [
+      "config",
+      "performance"
+    ],
+    "monthly_revenue_simple.py": [
+      "fts_etl_monthly_revenue_service"
+    ],
+    "paper_broker.py": [
+      "broker_base"
+    ],
+    "performance.py": [
+      "config"
+    ],
+    "portfolio_risk.py": [
+      "config",
+      "sector_classifier"
+    ],
+    "risk_gateway.py": [
+      "broker_base",
+      "paper_broker"
+    ],
+    "run_backfill_resilience_audit.py": [
+      "fts_backfill_resilience_audit"
+    ],
+    "run_full_market_percentile_snapshot.py": [
+      "fts_cross_sectional_percentile_service"
+    ],
+    "run_precise_event_calendar_build.py": [
+      "fts_event_calendar_service"
+    ],
+    "run_project_completion_audit.py": [
+      "fts_project_completion_audit"
+    ],
+    "run_project_healthcheck.py": [
+      "fts_project_healthcheck"
+    ],
+    "run_sync_feature_snapshots_to_sql.py": [
+      "fts_sql_feature_snapshot_sync"
+    ],
+    "run_training_stress_audit.py": [
+      "fts_training_stress_audit"
+    ],
+    "screening.py": [
+      "fts_chip_enrichment_service",
+      "fts_feature_service",
+      "fts_market_data_service",
+      "fts_screening_engine"
+    ],
+    "sector_classifier.py": [],
+    "strategies.py": [
+      "screening"
+    ],
+    "system_guard.py": [
+      "alert_manager",
+      "config",
+      "performance"
+    ],
+    "yahoo_csv_to_sql.py": []
+  },
+  "missing_local_imports_by_file": {},
+  "wrapper_linkage": {
+    "advanced_chart.py": {
+      "wrapper_exists": true,
+      "service_exists": true,
+      "linked_ok": true
+    },
+    "daily_chip_etl.py": {
+      "wrapper_exists": true,
+      "service_exists": true,
+      "linked_ok": true
+    },
+    "monthly_revenue_simple.py": {
+      "wrapper_exists": true,
+      "service_exists": true,
+      "linked_ok": true
+    },
+    "ml_data_generator.py": {
+      "wrapper_exists": true,
+      "service_exists": true,
+      "linked_ok": true
+    },
+    "ml_trainer.py": {
+      "wrapper_exists": true,
+      "service_exists": true,
+      "linked_ok": true
+    },
+    "screening.py": {
+      "wrapper_exists": true,
+      "service_exists": true,
+      "linked_ok": true
+    }
+  },
+  "single_entry_readiness": {
+    "expected_files": {
+      "formal_trading_system_v83_official_main.py": true,
+      "db_setup_research_plus.py": true,
+      "run_full_market_percentile_snapshot.py": true,
+      "run_precise_event_calendar_build.py": true,
+      "run_sync_feature_snapshots_to_sql.py": true,
+      "ml_data_generator.py": true,
+      "ml_trainer.py": true
+    },
+    "required_dirs": {
+      "data": true,
+      "runtime": true,
+      "models": true,
+      "state": true,
+      "logs": true
+    }
+  },
+  "db_setup_audit": {
+    "present_files": [
+      "db_setup.py",
+      "db_setup_research_plus.py"
+    ],
+    "core_table_names": {
+      "fundamentals_clean": true,
+      "monthly_revenue_simple": true,
+      "daily_chip_data": true,
+      "execution_orders": false,
+      "execution_fills": false,
+      "execution_account_snapshot": false,
+      "execution_positions_snapshot": false,
+      "feature_cross_section_snapshot": true,
+      "feature_event_calendar": true,
+      "live_feature_mount": true
+    },
+    "all_core_tables_declared": false
+  },
+  "runtime_presence": {
+    "runtime_dir_exists": true,
+    "required_runtime_json": {
+      "formal_trading_system_v83_official_main.json": true,
+      "training_orchestrator.json": true,
+      "training_governance_mainline.json": true
+    }
+  },
+  "deep_runs": [
+    {
+      "args": [
+        "formal_trading_system_v83_official_main.py"
+      ],
+      "ok": false,
+      "seconds": 0.069,
+      "stdout_tail": "[21:18:19] ========================================================================\n",
+      "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 234, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 219, in main\n    _run_mode_daily()\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 108, in _run_mode_daily\n    log('\\U0001f680 啟動 正式交易主控版_v83_official_main')\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 24, in log\n    print(f'[{now_str()[11:19]}] {msg}')\nUnicodeEncodeError: 'cp950' codec can't encode character '\\U0001f680' in position 11: illegal multibyte sequence\n",
+      "returncode": 1
+    },
+    {
+      "args": [
+        "formal_trading_system_v83_official_main.py",
+        "--train"
+      ],
+      "ok": false,
+      "seconds": 0.073,
+      "stdout_tail": "[21:18:19] ========================================================================\n",
+      "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 234, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 217, in main\n    _run_mode_train()\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 175, in _run_mode_train\n    log('\\U0001f680 啟動 正式交易主控版_v83_official_main')\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 24, in log\n    print(f'[{now_str()[11:19]}] {msg}')\nUnicodeEncodeError: 'cp950' codec can't encode character '\\U0001f680' in position 11: illegal multibyte sequence\n",
+      "returncode": 1
+    }
+  ]
+}

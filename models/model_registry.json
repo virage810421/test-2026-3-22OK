@@ -1,0 +1,48 @@
+{
+  "versions": [
+    {
+      "version": "pretrain_20260409_212217",
+      "timestamp": "2026-04-09 21:22:17",
+      "files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "artifacts": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        }
+      ],
+      "metrics": {},
+      "note": "重訓前自動備份（防過擬合版）",
+      "status": "snapshot"
+    }
+  ],
+  "current_version": "pretrain_20260409_212217",
+  "best_version": null,
+  "last_candidate_version": null,
+  "last_shadow_version": null,
+  "active_deployment": null
+}

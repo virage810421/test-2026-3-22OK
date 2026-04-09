@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-04-09 23:20:13",
+  "system_name": "正式交易主控版_v83_official_main",
+  "trainer_backend_report_exists": false,
+  "integrity": {
+    "generated_at": "2026-04-09 23:20:13",
+    "thresholds": {
+      "min_oot_hit_rate": 0.5,
+      "min_oot_profit_factor": 1.0,
+      "max_overfit_gap": 0.15,
+      "max_feature_to_sample_ratio": 0.35
+    },
+    "training_report": {
+      "leakage_guards": {},
+      "out_of_time": {},
+      "overfit_gap": 1.0,
+      "feature_to_sample_ratio": 1.0
+    },
+    "failures": [
+      "feature_selection_not_train_only",
+      "purged_walk_forward_missing",
+      "out_of_time_holdout_missing",
+      "overfit_gap_too_large"
+    ],
+    "warnings": [
+      "oot_hit_rate_soft",
+      "oot_profit_factor_soft",
+      "feature_to_sample_ratio_high"
+    ],
+    "promotion_ready": false,
+    "status": "training_integrity_blocked"
+  },
+  "key_findings": {
+    "overfit_gap": 0.0,
+    "oot_hit_rate": 0.0,
+    "oot_profit_factor": 0.0,
+    "feature_to_sample_ratio": 0.0
+  },
+  "status": "training_integrity_blocked"
+}

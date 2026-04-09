@@ -1,0 +1,8 @@
+{
+  "cross": "C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
+  "event": "C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
+  "feature_stack": "C:\\test\\test-2026-3-22OK\\runtime\\feature_stack_audit.json",
+  "task_registry": "C:\\test\\test-2026-3-22OK\\runtime\\task_completion_registry.json",
+  "project_audit": "C:\\test\\test-2026-3-22OK\\runtime\\project_completion_audit.json",
+  "status": "mainline_linkage_ready"
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09 15:50:27",
+  "generated_at": "2026-04-09 23:20:14",
   "system_name": "正式交易主控版_v83_official_main",
   "summary": {
     "local_orders": 3,
@@ -11,6 +11,7 @@
     "order_mismatch_count": 0,
     "fill_mismatch_count": 0,
     "position_mismatch_count": 0,
+    "corporate_action_suspect_count": 0,
     "orphan_broker_orders": 0,
     "orphan_broker_fills": 0,
     "cash_matched": true,
@@ -28,7 +29,9 @@
   "order_mismatches": [],
   "fill_mismatches": [],
   "position_mismatches": [],
+  "corporate_action_suspects": [],
   "orphan_broker_orders": [],
   "orphan_broker_fills": [],
+  "repair_actions": [],
   "status": "reconciliation_green"
 }

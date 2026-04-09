@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # =========================================================
 # ⚙️ 基本設定
@@ -26,6 +25,7 @@ TABLE_NAME = 'fundamentals_clean'
 ENABLE_DIVIDEND_YIELD = True
 
 # 🌟 智慧版下載設定
+ALLOW_INSECURE_SSL_FALLBACK = os.getenv("ALLOW_INSECURE_SSL_FALLBACK", "0").strip().lower() in ("1", "true", "yes", "y", "on")
 MAX_WORKERS = 2
 REQUEST_TIMEOUT = 20
 SLEEP_BETWEEN_TASKS = 1.5
@@ -79,8 +79,11 @@ def safe_get_json(url, timeout=REQUEST_TIMEOUT):
         res.raise_for_status()
         return res.json()
     except requests.exceptions.SSLError as e:
-        print(f"  ⚠️ SSL 驗證失敗，改用容錯模式重試: {url}")
+        if not ALLOW_INSECURE_SSL_FALLBACK:
+            raise Exception(f"SSL 驗證失敗，且未開啟 ALLOW_INSECURE_SSL_FALLBACK: {url} | {e}") from e
+        print(f"  ⚠️ SSL 驗證失敗，已明確允許 insecure fallback，重試: {url}")
         try:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             res = session.get(url, timeout=timeout, verify=False)
             res.raise_for_status()
             return res.json()

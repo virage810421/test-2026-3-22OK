@@ -1,41 +1,32 @@
 # -*- coding: utf-8 -*-
-"""v83 主線收編服務：ml_data_generator.py 的訓練資料生產能力。"""
 from __future__ import annotations
 
 import os
-import pandas as pd
+from pathlib import Path
 
-from fts_screening_engine import ScreeningEngine
-from fts_market_data_service import MarketDataService
-from fts_chip_enrichment_service import ChipEnrichmentService
+import pandas as pd
 
 try:
     from config import PARAMS  # type: ignore
 except Exception:
-    PARAMS = {
-        'TRIGGER_SCORE': 2,
-        'ML_LABEL_HOLD_DAYS': 5,
-        'SL_MIN_PCT': 0.03,
-        'FEE_RATE': 0.001425,
-        'FEE_DISCOUNT': 1.0,
-        'TAX_RATE': 0.003,
-    }
+    PARAMS = {'ML_LABEL_HOLD_DAYS': 5}
 
+from fts_screening_engine import ScreeningEngine
+from fts_market_data_service import MarketDataService
+from fts_chip_enrichment_service import ChipEnrichmentService
+from fts_feature_service import FeatureService
 
 _market = MarketDataService()
 _chip = ChipEnrichmentService()
 _screen = ScreeningEngine()
+_features = FeatureService()
 
 
 def get_dynamic_watchlist():
-    print('📡 啟動動態索敵雷達：正在連接 config 名單樞紐...')
     try:
         from config import get_dynamic_watch_list  # type: ignore
-        dynamic_list = get_dynamic_watch_list()
-        print(f'✅ 成功鎖定 {len(dynamic_list)} 檔目標，準備印製歷史課本！')
-        return dynamic_list
-    except Exception as e:
-        print(f'⚠️ 無法獲取名單: {e}')
+        return get_dynamic_watch_list()
+    except Exception:
         try:
             from config import WATCH_LIST  # type: ignore
             return WATCH_LIST
@@ -50,19 +41,14 @@ def _signal_flags(setup_tag: str):
     return is_long, is_short
 
 
-def generate_ml_dataset(tickers):
-    print('🏭 [兵工廠] 啟動 AI 雙向訓練資料生成器...')
+def generate_ml_dataset(tickers=None):
+    tickers = tickers or get_dynamic_watchlist() or ['2330.TW', '2317.TW', '2454.TW']
     os.makedirs('data', exist_ok=True)
-    dataset_path = 'data/ml_training_data.csv'
-    if os.path.exists(dataset_path):
-        os.remove(dataset_path)
-        print('🗑️ 已銷毀昨日舊有訓練資料，確保數據絕對純淨。')
-
-    ml_dataset = []
+    dataset_path = Path('data/ml_training_data.csv')
+    rows = []
     hold_days = int(PARAMS.get('ML_LABEL_HOLD_DAYS', 5))
 
     for ticker in tickers:
-        print(f'📡 正在萃取 {ticker} 的歷史特徵與勝負標籤...')
         try:
             df = _market.smart_download(ticker, period='3y')
             if df.empty:
@@ -90,21 +76,18 @@ def generate_ml_dataset(tickers):
                 if is_short:
                     future_ret *= -1
                 label = 1 if future_ret > 0 else 0
-                features = result.get('ai_features_latest') or {}
-                sample = {
-                    'Ticker SYMBOL': ticker,
-                    'Label': label,
-                    'Future_Return_Pct': round(future_ret, 4),
-                    'Setup_Tag': setup_tag,
-                    'Regime': regime,
-                }
-                sample.update(features)
-                ml_dataset.append(sample)
-        except Exception as exc:
-            print(f'⚠️ {ticker} 訓練資料生成失敗: {exc}')
+                feats = _features.extract_ai_features(row.to_dict(), history_df=computed_df.iloc[:i+1].copy(), ticker=ticker, as_of_date=row.name if hasattr(row, 'name') else None)
+                mounted = _features.select_live_features(feats)
+                sample = {'Ticker SYMBOL': ticker, 'Label': label, 'Future_Return_Pct': round(future_ret, 4), 'Setup_Tag': setup_tag, 'Regime': regime}
+                sample.update(feats)
+                for k, v in mounted.items():
+                    sample[f'MOUNT__{k}'] = v
+                rows.append(sample)
+        except Exception:
             continue
 
-    df_out = pd.DataFrame(ml_dataset)
+    df_out = pd.DataFrame(rows)
     df_out.to_csv(dataset_path, index=False, encoding='utf-8-sig')
-    print(f'✅ 訓練資料生成完成：{dataset_path} | 筆數：{len(df_out)}')
+    if not df_out.empty:
+        _features.write_training_feature_registry(df_out.iloc[0].to_dict())
     return df_out

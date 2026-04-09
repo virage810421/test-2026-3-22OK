@@ -1,0 +1,38 @@
+{
+  "module_version": "v83_project_completion_audit",
+  "required_modules": {
+    "formal_trading_system_v83_official_main.py": true,
+    "fts_feature_service.py": true,
+    "fts_screening_engine.py": true,
+    "fts_cross_sectional_percentile_service.py": true,
+    "fts_event_calendar_service.py": true,
+    "fts_training_data_builder.py": true,
+    "db_setup_research_plus.py": true,
+    "fts_sql_feature_snapshot_sync.py": true,
+    "fts_mainline_linkage.py": true
+  },
+  "required_data": {
+    "feature_cross_section_snapshot.csv": true,
+    "feature_event_calendar.csv": true,
+    "selected_live_feature_mounts.csv": true
+  },
+  "required_runtime": {
+    "feature_stack_audit.json": true,
+    "cross_sectional_percentile_service.json": true,
+    "event_calendar_service.json": true,
+    "project_completion_audit.json": true
+  },
+  "task_board": {
+    "主控串聯": "完成",
+    "全市場percentile": "完成",
+    "事件窗精準化": "完成",
+    "特徵掛載": "完成",
+    "訓練資料接新特徵": "完成",
+    "研究層增補table": "完成",
+    "特徵snapshot寫回SQL": "完成"
+  },
+  "all_modules_ready": true,
+  "all_data_ready": true,
+  "all_runtime_ready": true,
+  "status": "project_completion_audit_ready"
+}

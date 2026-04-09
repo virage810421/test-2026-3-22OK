@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+import sys
 import pandas as pd
 from fts_config import PATHS, CONFIG
 import threading
@@ -11,9 +12,17 @@ def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def _safe_console_write(line: str) -> None:
+    try:
+        print(line, flush=True)
+    except UnicodeEncodeError:
+        enc = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+        print(line.encode(enc, errors='replace').decode(enc, errors='replace'), flush=True)
+
+
 def log(msg: str) -> None:
     line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
-    print(line, flush=True)
+    _safe_console_write(line)
     with open(PATHS.log_dir / "formal_trading_system_v15.log", "a", encoding="utf-8") as f:
         f.write(line + "\n")
 

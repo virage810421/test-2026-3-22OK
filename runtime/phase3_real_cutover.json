@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09 15:50:28",
+  "generated_at": "2026-04-09 23:20:14",
   "module_version": "v83_phase3_adapter_ready",
   "contract_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_requirements_contract.json",
   "approval_path": "C:\\test\\test-2026-3-22OK\\runtime\\operator_approval_registry.json",
@@ -42,7 +42,7 @@
   "broker_adapter_config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
   "broker_adapter_probe_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_probe.json",
   "broker_adapter_probe": {
-    "generated_at": "2026-04-09 15:50:28",
+    "generated_at": "2026-04-09 23:20:14",
     "module_version": "v83_configurable_broker_adapter",
     "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
     "template_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_config.template.json",

@@ -1,63 +1,964 @@
 {
-  "generated_at": "2026-04-09 15:50:28",
-  "module_version": "v83_official_main_hardening_cleanup",
-  "system_name": "正式交易主控版_v83_official_main",
-  "maintenance_outputs": {
-    "project_hygiene": "C:\\test\\test-2026-3-22OK\\runtime\\project_hygiene.json",
-    "runtime_cleanup": "C:\\test\\test-2026-3-22OK\\runtime\\runtime_cleanup.json",
-    "data_cleanup": "C:\\test\\test-2026-3-22OK\\runtime\\data_cleanup.json",
-    "fundamentals_true_backfill": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_true_backfill.json"
-  },
-  "mainline_outputs": {
-    "fundamentals_etl_mainline": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
-    "training_governance_mainline": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
-    "phase1": "C:\\test\\test-2026-3-22OK\\runtime\\phase1_upgrade.json",
-    "phase2": "C:\\test\\test-2026-3-22OK\\runtime\\phase2_mock_real_broker.json",
-    "phase3": "C:\\test\\test-2026-3-22OK\\runtime\\phase3_real_cutover.json",
-    "file_classification": "C:\\test\\test-2026-3-22OK\\runtime\\file_classification.json"
-  },
-  "completed_upgrades": [
-    "Step1：主入口收口完成（舊主控移入 archive/versions，建立 formal_trading_system.py）",
-    "Step2：runtime 清理完成（歷史快照/舊版報告/錯誤檔分流）",
-    "Step3：data 清理完成（decision 檔統一、模板快照、可疑小檔稽核）",
-    "Step4：fundamentals 真資料補強完成（seed 覆蓋小檔/缺檔）",
-    "Fundamentals ETL 主線就緒",
-    "Training Governance 主線就緒",
-    "Phase1：pre-live 就緒",
-    "Phase2：mock-real-broker 就緒",
-    "Phase3：真券商 adapter-ready"
-  ],
-  "cleanup_completion": {
-    "step1_main_entry": {
-      "status": "project_hygiene_applied",
-      "complete_for_scope": true
+  "generated_at": "2026-04-09 23:20:14",
+  "mode": "daily",
+  "module_version": "v83_bootstrap_auto_selected_live_feature_mount_hotfix",
+  "outputs": {
+    "fundamentals_etl_mainline": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:12",
+        "module_version": "v83_fundamentals_etl_mainline_builtin",
+        "system_name": "正式交易主控版_v83_official_main",
+        "mode": "local_sync_only",
+        "csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+        "csv_template_created": false,
+        "config_template_path": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_config.template.json",
+        "discovered_backups": [
+          {
+            "path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+            "rows": 2143,
+            "columns": [
+              "Ticker SYMBOL",
+              "資料年月日",
+              "毛利率(%)",
+              "營業利益率(%)",
+              "單季EPS",
+              "ROE(%)",
+              "稅後淨利率(%)",
+              "營業現金流",
+              "預估殖利率(%)",
+              "負債比率(%)",
+              "本業獲利比(%)"
+            ]
+          }
+        ],
+        "merged_rows": 2143,
+        "saved_csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+        "sql_status": {
+          "sql_import_attempted": true,
+          "sql_imported_rows": 0,
+          "sql_error": "('42000', '[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]內送表格式資料流 (TDS) 遠端程序呼叫 (RPC) 通訊協定資料流不正確。參數 8 (\"\"): 提供的值不是資料類型 float 的有效執行個體。請檢查無效值的來源資料。例如，無效值是具有小數位數大於有效位數的 numeric 類型資料。 (8023) (SQLExecDirectW)')"
+        },
+        "legacy_dependency_removed": true,
+        "legacy_compat_script_present": true,
+        "network_fetch_available": true,
+        "network_fetch_enabled": false,
+        "auto_outputs": [
+          "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+          "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_config.template.json",
+          "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json"
+        ],
+        "status": "fundamentals_etl_mainline_ready"
+      }
     },
-    "step2_runtime": {
-      "status": "runtime_cleanup_applied",
-      "complete_for_scope": true
+    "training_governance_mainline": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:13",
+        "module_version": "v83_training_governance_mainline_hardened",
+        "system_name": "正式交易主控版_v83_official_main",
+        "orchestrator_status": "training_governed_v83",
+        "training_readiness_pct": 49,
+        "backend": {
+          "executed": false,
+          "status": "summary_only",
+          "path": null,
+          "report": {}
+        },
+        "training_integrity": {
+          "generated_at": "2026-04-09 23:20:13",
+          "thresholds": {
+            "min_oot_hit_rate": 0.5,
+            "min_oot_profit_factor": 1.0,
+            "max_overfit_gap": 0.15,
+            "max_feature_to_sample_ratio": 0.35
+          },
+          "training_report": {
+            "leakage_guards": {},
+            "out_of_time": {},
+            "overfit_gap": 1.0,
+            "feature_to_sample_ratio": 1.0
+          },
+          "failures": [
+            "feature_selection_not_train_only",
+            "purged_walk_forward_missing",
+            "out_of_time_holdout_missing",
+            "overfit_gap_too_large"
+          ],
+          "warnings": [
+            "oot_hit_rate_soft",
+            "oot_profit_factor_soft",
+            "feature_to_sample_ratio_high"
+          ],
+          "promotion_ready": false,
+          "status": "training_integrity_blocked"
+        },
+        "candidate_evaluation": {
+          "generated_at": "2026-04-09 23:20:13",
+          "system_name": "正式交易主控版_v83_official_main",
+          "thresholds": {
+            "min_win_rate": 0.5,
+            "min_profit_factor": 1.1,
+            "max_drawdown_pct": 0.12,
+            "min_walk_forward_score": 60,
+            "max_shadow_return_drift_pct": 0.08
+          },
+          "metrics": {
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "max_drawdown_pct": 0.08
+          },
+          "walk_forward": {
+            "score": 0.0
+          },
+          "shadow_result": {
+            "return_drift_pct": 0.0
+          },
+          "failures": [
+            "win_rate_below_threshold",
+            "profit_factor_below_threshold",
+            "walk_forward_not_strong_enough"
+          ],
+          "warnings": [],
+          "rollback_version": "fallback_stub_20260409_232013",
+          "candidate_ready": false,
+          "status": "candidate_blocked"
+        },
+        "live_health": {
+          "generated_at": "2026-04-09 23:20:13",
+          "thresholds": {
+            "min_live_win_rate": 0.42,
+            "max_consecutive_losses": 5,
+            "max_reject_rate": 0.2,
+            "max_fill_slippage_bps": 35,
+            "min_trades_required": 20
+          },
+          "live_metrics": {
+            "win_rate": 0.53,
+            "consecutive_losses": 1,
+            "reject_rate": 0.02,
+            "avg_slippage_bps": 9.0,
+            "trade_count": 0
+          },
+          "trade_count": 0,
+          "sample_gate_passed": false,
+          "warnings": [
+            "sample_too_small_for_winrate_rejectrate_guard"
+          ],
+          "rollback_recommended": false,
+          "triggers": [],
+          "status": "live_health_ok"
+        },
+        "deep_risks": {
+          "training_governance_overfit_risk": true,
+          "sample_split_guard_ok": false,
+          "feature_selection_train_only": false
+        },
+        "status": "training_governance_mainline_ready"
+      }
     },
-    "step3_data": {
-      "status": "data_cleanup_applied",
-      "complete_for_scope": true
+    "training_stress_audit": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_stress_audit.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:13",
+        "system_name": "正式交易主控版_v83_official_main",
+        "trainer_backend_report_exists": false,
+        "integrity": {
+          "generated_at": "2026-04-09 23:20:13",
+          "thresholds": {
+            "min_oot_hit_rate": 0.5,
+            "min_oot_profit_factor": 1.0,
+            "max_overfit_gap": 0.15,
+            "max_feature_to_sample_ratio": 0.35
+          },
+          "training_report": {
+            "leakage_guards": {},
+            "out_of_time": {},
+            "overfit_gap": 1.0,
+            "feature_to_sample_ratio": 1.0
+          },
+          "failures": [
+            "feature_selection_not_train_only",
+            "purged_walk_forward_missing",
+            "out_of_time_holdout_missing",
+            "overfit_gap_too_large"
+          ],
+          "warnings": [
+            "oot_hit_rate_soft",
+            "oot_profit_factor_soft",
+            "feature_to_sample_ratio_high"
+          ],
+          "promotion_ready": false,
+          "status": "training_integrity_blocked"
+        },
+        "key_findings": {
+          "overfit_gap": 0.0,
+          "oot_hit_rate": 0.0,
+          "oot_profit_factor": 0.0,
+          "feature_to_sample_ratio": 0.0
+        },
+        "status": "training_integrity_blocked"
+      }
     },
-    "step4_fundamentals_true_data": {
-      "status": "fundamentals_true_backfill_applied",
-      "complete_for_scope": true
+    "backfill_resilience_audit": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\backfill_resilience_audit.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:13",
+        "system_name": "正式交易主控版_v83_official_main",
+        "backfill_report_exists": true,
+        "reconciliation_report_exists": true,
+        "stale_streams": [],
+        "corporate_action_suspects": 0,
+        "repair_actions": [],
+        "status": "resilience_ok"
+      }
+    },
+    "feature_stack_audit": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_stack_audit.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:13",
+        "module_version": "v83_feature_stack_audit_hotfix_compat",
+        "bucket_count": 14,
+        "feature_buckets": {
+          "price_action": 7,
+          "tradeability": 7,
+          "volatility": 9,
+          "momentum": 3,
+          "trend": 1,
+          "chip_flow": 8,
+          "signal_score": 3,
+          "risk": 1,
+          "pattern": 1,
+          "mean_reversion": 4,
+          "cross_sectional": 4,
+          "fundamentals": 2,
+          "events": 13,
+          "interaction": 2
+        },
+        "selected_features_present": false,
+        "selected_feature_count": 0,
+        "selected_features_sample": [],
+        "priority_new_features_20": [
+          "ATR14",
+          "ATR_Pct",
+          "ATR_Pctl_252",
+          "RealizedVol_20",
+          "RealizedVol_60",
+          "Gap_Pct",
+          "Overnight_Return",
+          "Intraday_Return",
+          "Turnover_Proxy",
+          "ADV20_Proxy",
+          "DollarVol20_Proxy",
+          "Volume_Z20",
+          "Return_Z20",
+          "RS_vs_Market_20",
+          "RS_vs_Sector_20",
+          "Revenue_YoY_Rank",
+          "Chip_Total_Ratio_Rank",
+          "Event_Days_Since_Revenue",
+          "Earnings_Window_Flag",
+          "Regime_TrendStrength_X_ScoreGap"
+        ],
+        "percentile_backed_feature_count": 11,
+        "precise_event_feature_count": 13,
+        "official_percentile_mode": true,
+        "precise_event_calendar_mode": true,
+        "live_mount_path": "C:\\test\\test-2026-3-22OK\\runtime\\live_feature_mount.json",
+        "cross_sectional_runtime": "C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
+        "event_calendar_runtime": "C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
+        "status": "feature_stack_audit_ready"
+      }
+    },
+    "cross_sectional_percentile": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:13",
+        "module_version": "v83_cross_sectional_percentile_full",
+        "snapshot_path": "C:\\test\\test-2026-3-22OK\\data\\feature_cross_section_snapshot.csv",
+        "ticker_count": 1071,
+        "official_percentile_mode": true,
+        "status": "cross_sectional_snapshot_ready"
+      }
+    },
+    "event_calendar": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:13",
+        "module_version": "v83_event_calendar_service_full",
+        "event_table_rows": 3207,
+        "table_path": "C:\\test\\test-2026-3-22OK\\data\\feature_event_calendar.csv",
+        "status": "event_calendar_ready"
+      }
+    },
+    "mainline_linkage": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\mainline_linkage.json",
+      "payload": {
+        "cross": "C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
+        "event": "C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
+        "feature_stack": "C:\\test\\test-2026-3-22OK\\runtime\\feature_stack_audit.json",
+        "task_registry": "C:\\test\\test-2026-3-22OK\\runtime\\task_completion_registry.json",
+        "project_audit": "C:\\test\\test-2026-3-22OK\\runtime\\project_completion_audit.json",
+        "status": "mainline_linkage_ready"
+      }
+    },
+    "project_completion_audit": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\project_completion_audit.json",
+      "payload": {
+        "module_version": "v83_project_completion_audit",
+        "required_modules": {
+          "formal_trading_system_v83_official_main.py": true,
+          "fts_feature_service.py": true,
+          "fts_screening_engine.py": true,
+          "fts_cross_sectional_percentile_service.py": true,
+          "fts_event_calendar_service.py": true,
+          "fts_training_data_builder.py": true,
+          "db_setup_research_plus.py": true,
+          "fts_sql_feature_snapshot_sync.py": true,
+          "fts_mainline_linkage.py": true
+        },
+        "required_data": {
+          "feature_cross_section_snapshot.csv": true,
+          "feature_event_calendar.csv": true,
+          "selected_live_feature_mounts.csv": true
+        },
+        "required_runtime": {
+          "feature_stack_audit.json": true,
+          "cross_sectional_percentile_service.json": true,
+          "event_calendar_service.json": true,
+          "project_completion_audit.json": true
+        },
+        "task_board": {
+          "主控串聯": "完成",
+          "全市場percentile": "完成",
+          "事件窗精準化": "完成",
+          "特徵掛載": "完成",
+          "訓練資料接新特徵": "完成",
+          "研究層增補table": "完成",
+          "特徵snapshot寫回SQL": "完成"
+        },
+        "all_modules_ready": true,
+        "all_data_ready": true,
+        "all_runtime_ready": true,
+        "status": "project_completion_audit_ready"
+      }
+    },
+    "file_classification": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\file_classification.json",
+      "payload": {
+        "generated_at": "2026-04-09 23:20:13",
+        "system_name": "正式交易主控版_v83_official_main",
+        "must_keep": [
+          {
+            "file": "formal_trading_system_v83_official_main.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "formal_trading_system_v82_three_stage_upgrade.py",
+            "exists": false,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_fundamentals_etl_mainline.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_training_governance_mainline.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_trainer_backend.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_phase1_upgrade.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_phase2_mock_broker_stage.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_phase3_real_cutover_stage.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_decision_execution_bridge.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_live_safety.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_reconciliation_engine.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_preopen_checklist.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_intraday_incident_guard.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_eod_closebook.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_market_data_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_feature_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_chip_enrichment_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_screening_engine.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_sector_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_system_guard_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_risk_gateway.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_watchlist_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_market_climate_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_decision_desk_builder.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_signal_gate.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_portfolio_gate.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_position_state_service.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_ab_wave_upgrade.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "fts_ab_diff_audit.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "ml_data_generator.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "daily_chip_etl.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "monthly_revenue_simple.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          },
+          {
+            "file": "advanced_chart.py",
+            "exists": true,
+            "reason": "主線 or 核心 service / guard / engine"
+          }
+        ],
+        "diff_patch_only": [
+          {
+            "file": "yahoo_csv_to_sql.py",
+            "exists": true,
+            "reason": "已收編，現在只補差異"
+          },
+          {
+            "file": "daily_chip_etl.py",
+            "exists": true,
+            "reason": "已收編，現在只補差異"
+          },
+          {
+            "file": "monthly_revenue_simple.py",
+            "exists": true,
+            "reason": "已收編，現在只補差異"
+          },
+          {
+            "file": "ml_data_generator.py",
+            "exists": true,
+            "reason": "已收編，現在只補差異"
+          },
+          {
+            "file": "advanced_chart.py",
+            "exists": true,
+            "reason": "已收編，現在只補差異"
+          },
+          {
+            "file": "config.py",
+            "exists": true,
+            "reason": "已收編，現在只補差異"
+          }
+        ],
+        "hold_do_not_touch_yet": [
+          {
+            "file": "launcher.py",
+            "exists": true,
+            "reason": "仍可作零件來源，先別整支搬"
+          },
+          {
+            "file": "execution_engine.py",
+            "exists": true,
+            "reason": "仍可作零件來源，先別整支搬"
+          },
+          {
+            "file": "paper_broker.py",
+            "exists": true,
+            "reason": "仍可作零件來源，先別整支搬"
+          },
+          {
+            "file": "portfolio_risk.py",
+            "exists": true,
+            "reason": "仍可作零件來源，先別整支搬"
+          },
+          {
+            "file": "master_pipeline.py",
+            "exists": true,
+            "reason": "仍可作零件來源，先別整支搬"
+          },
+          {
+            "file": "live_paper_trading.py",
+            "exists": true,
+            "reason": "仍可作零件來源，先別整支搬"
+          }
+        ],
+        "absorbed_keep_wrapper": [
+          {
+            "file": "yahoo_csv_to_sql.py",
+            "exists": true,
+            "reason": "已被 fts_fundamentals_etl_mainline.py 收編；只補差異"
+          },
+          {
+            "file": "model_governance.py",
+            "exists": true,
+            "reason": "已被 fts_training_governance_mainline.py 收編；保留治理核心"
+          },
+          {
+            "file": "ml_trainer.py",
+            "exists": true,
+            "reason": "已被 fts_trainer_backend.py 收編；保留舊執行入口"
+          },
+          {
+            "file": "daily_chip_etl.py",
+            "exists": true,
+            "reason": "已被 fts_etl_daily_chip_service.py 收編；保留舊門牌"
+          },
+          {
+            "file": "monthly_revenue_simple.py",
+            "exists": true,
+            "reason": "已被 fts_etl_monthly_revenue_service.py 收編；保留舊門牌"
+          },
+          {
+            "file": "ml_data_generator.py",
+            "exists": true,
+            "reason": "已被 fts_training_data_builder.py 收編；保留舊門牌"
+          },
+          {
+            "file": "advanced_chart.py",
+            "exists": true,
+            "reason": "已被 fts_chart_service.py 收編；保留舊門牌"
+          }
+        ],
+        "status": "classification_ready_v83_wave123"
+      }
+    },
+    "upgrade_stages": {
+      "fts_phase1_upgrade": {
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\phase1_upgrade.json",
+        "payload": {
+          "generated_at": "2026-04-09 23:20:14",
+          "module_version": "v82_phase1",
+          "seeded": {
+            "created_demo_assets": []
+          },
+          "preflight_tests": {
+            "config_check": {
+              "passed": true,
+              "errors": []
+            },
+            "paths_check": {
+              "passed": true,
+              "errors": []
+            },
+            "decision_file_check": {
+              "passed": true,
+              "path": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+              "errors": []
+            },
+            "mock_broker_roundtrip": {
+              "passed": true,
+              "errors": [],
+              "fill_count": 1,
+              "callback_count": 2,
+              "status": "OrderStatus.FILLED"
+            },
+            "absorption_services_check": {
+              "passed": true,
+              "errors": []
+            },
+            "screening_detachment_check": {
+              "passed": true,
+              "errors": [],
+              "audit": {
+                "generated_at": "2026-04-09 23:20:13",
+                "module_version": "v83_screening_detachment_audit",
+                "direct_legacy_fallback_modules": [],
+                "legacy_screening_import_callers": [
+                  "event_backtester.py",
+                  "fts_screening_detachment_audit.py",
+                  "live_paper_trading.py",
+                  "master_pipeline.py",
+                  "strategies.py"
+                ],
+                "status": "screening_detachment_audited",
+                "note": "目標是讓 service 不再反向 import 舊 screening.py；舊 screening.py 只保留相容 wrapper。"
+              }
+            },
+            "all_passed": true
+          },
+          "training_orchestrator": {
+            "generated_at": "2026-04-09 23:20:14",
+            "module_version": "v83",
+            "ai_stage_enabled": true,
+            "dry_run": true,
+            "bootstrap": {
+              "bootstrap_source": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+              "registry_written": true,
+              "template_written": true,
+              "bootstrap_plan_written": true,
+              "candidate_feature_count": 3,
+              "bootstrap_plan_rows": 3
+            },
+            "bootstrap_score": 25,
+            "dataset": {
+              "exists": true,
+              "rows": 0,
+              "columns": [],
+              "feature_count": 0,
+              "label_balance": {},
+              "regime_counts": {},
+              "status": "read_failed: No columns to parse from file",
+              "readiness_score": 10
+            },
+            "models": {
+              "models_dir_exists": true,
+              "required_files": [
+                {
+                  "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+                  "exists": true
+                },
+                {
+                  "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢多頭.pkl",
+                  "exists": true
+                },
+                {
+                  "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+                  "exists": true
+                },
+                {
+                  "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+                  "exists": true
+                }
+              ],
+              "existing_required_count": 4,
+              "all_required_present": true,
+              "readiness_score": 65
+            },
+            "actions": [
+              {
+                "stage": "ai",
+                "action": "skip",
+                "reason": "dry_run_upstream_execution=True"
+              }
+            ],
+            "training_readiness_pct": 49,
+            "go_for_training": false,
+            "go_for_inference": true,
+            "backend_entrypoint": "fts_trainer_backend.train_models",
+            "governance_entrypoint": "model_governance.ModelGovernanceManager",
+            "status": "training_governed_v83"
+          },
+          "training_prod_readiness": {
+            "generated_at": "2026-04-09 23:20:14",
+            "system_name": "正式交易主控版_v83_official_main",
+            "summary": {
+              "ready_count": 10,
+              "total_checks": 10,
+              "readiness_ratio": 1.0,
+              "overall_conclusion": "prelive_grade",
+              "required_model_count": 4
+            },
+            "checks": [
+              {
+                "area": "training_data_generation",
+                "ready": true,
+                "level": "governed"
+              },
+              {
+                "area": "trainer_entrypoint",
+                "ready": true,
+                "level": "bridge_ready"
+              },
+              {
+                "area": "model_artifact_output",
+                "ready": true,
+                "level": "governed"
+              },
+              {
+                "area": "model_version_registry",
+                "ready": true,
+                "level": "governed"
+              },
+              {
+                "area": "training_quality_report",
+                "ready": true,
+                "level": "governed"
+              },
+              {
+                "area": "walk_forward_validation",
+                "ready": true,
+                "level": "policy_ready"
+              },
+              {
+                "area": "automatic rollback policy",
+                "ready": true,
+                "level": "policy_ready"
+              },
+              {
+                "area": "live shadow evaluation",
+                "ready": true,
+                "level": "bridge_ready"
+              },
+              {
+                "area": "data drift monitoring",
+                "ready": true,
+                "level": "bridge_ready"
+              },
+              {
+                "area": "promotion gate for live deployment",
+                "ready": true,
+                "level": "policy_ready"
+              }
+            ],
+            "status": "training_readiness_ready"
+          },
+          "promotion_decision_path": "C:\\test\\test-2026-3-22OK\\runtime\\trainer_promotion_decision.json",
+          "promotion_decision": {
+            "generated_at": "2026-04-09 23:20:14",
+            "system_name": "正式交易主控版_v83_official_main",
+            "inputs": {
+              "artifact_ok": true,
+              "registry_updated": true,
+              "walk_forward_score": 49.0,
+              "profit_factor": 1.05,
+              "win_rate": 0.48,
+              "max_drawdown_pct": 0.14,
+              "shadow_return_drift_pct": 0.03,
+              "rollback_version_exists": true,
+              "operator_approved": true,
+              "live_safety_clear": true
+            },
+            "go_for_shadow": false,
+            "go_for_promote": false,
+            "failures": [
+              "walk_forward_score_fail",
+              "profit_factor_fail",
+              "win_rate_fail",
+              "drawdown_fail"
+            ],
+            "warnings": [],
+            "status": "promote_blocked"
+          },
+          "orders_preview_count": 3,
+          "live_safety": {
+            "generated_at": "2026-04-09 23:20:14",
+            "system_name": "正式交易主控版_v83_official_main",
+            "mode": "PAPER",
+            "broker_type": "paper",
+            "paper_live_safe": true,
+            "status": "live_safety_green",
+            "failures": [],
+            "warnings": [],
+            "blocked_orders": [],
+            "limits": {
+              "daily_loss_limit_pct": 0.03,
+              "max_single_position_pct": 0.1,
+              "max_order_notional": 500000.0,
+              "max_industry_exposure_pct": 0.25
+            }
+          },
+          "status": "phase1_ready",
+          "completed_items": [
+            "AI 自動化訓練與 promotion",
+            "execution payload 產生",
+            "live safety 先行封口",
+            "preflight smoke tests"
+          ]
+        }
+      },
+      "fts_phase2_mock_broker_stage": {
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\phase2_mock_real_broker.json",
+        "payload": {
+          "generated_at": "2026-04-09 23:20:14",
+          "module_version": "v82_phase2",
+          "broker_mode": "mock_real",
+          "orders_submitted": 3,
+          "orders_filled": 0,
+          "orders_partial": 0,
+          "fills_count": 0,
+          "callbacks_recorded": 6,
+          "reconciliation_status": "reconciliation_green",
+          "reconciliation_all_green": true,
+          "recovery_ready": true,
+          "preopen_status": "preopen_partial",
+          "incident_status": "incident_guard_block",
+          "closebook_status": "closebook_ready",
+          "notes": [
+            "假真券商已補上：可測試 broker_order_id / callback / reconciliation",
+            "仍未接真券商 API，但 phase2 contract 已跑通"
+          ],
+          "status": "phase2_ready"
+        }
+      },
+      "fts_phase3_real_cutover_stage": {
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\phase3_real_cutover.json",
+        "payload": {
+          "generated_at": "2026-04-09 23:20:14",
+          "module_version": "v83_phase3_adapter_ready",
+          "contract_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_requirements_contract.json",
+          "approval_path": "C:\\test\\test-2026-3-22OK\\runtime\\operator_approval_registry.json",
+          "cutover_plan_path": "C:\\test\\test-2026-3-22OK\\runtime\\live_cutover_plan.json",
+          "release_gate_path": "C:\\test\\test-2026-3-22OK\\runtime\\live_release_gate.json",
+          "real_broker_fields": {
+            "auth": [
+              "api_key",
+              "api_secret",
+              "account_id",
+              "cert_or_token"
+            ],
+            "order_payload": [
+              "ticker",
+              "side",
+              "qty",
+              "price",
+              "order_type",
+              "time_in_force",
+              "session",
+              "idempotency_key"
+            ],
+            "callback_payload": [
+              "broker_order_id",
+              "order_status",
+              "fill_qty",
+              "fill_price",
+              "event_time",
+              "reject_reason"
+            ],
+            "account_snapshot": [
+              "cash_available",
+              "market_value",
+              "equity",
+              "buying_power"
+            ]
+          },
+          "credentials_template_path": "C:\\test\\test-2026-3-22OK\\runtime\\real_broker_credentials_template.json",
+          "broker_adapter_template_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_config.template.json",
+          "broker_adapter_config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
+          "broker_adapter_probe_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_probe.json",
+          "broker_adapter_probe": {
+            "generated_at": "2026-04-09 23:20:14",
+            "module_version": "v83_configurable_broker_adapter",
+            "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
+            "template_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_config.template.json",
+            "provider_name": "fill_me_after_account_opened",
+            "transport": "rest",
+            "ready_for_live_connect": false,
+            "missing_items": [
+              "config_enabled_false",
+              "provider_name",
+              "base_url",
+              "auth.api_key",
+              "auth.account_id"
+            ],
+            "status": "broker_adapter_account_pending"
+          },
+          "complete_now": [
+            "broker contract",
+            "callback schema",
+            "operator approval registry",
+            "live cutover plan",
+            "release gate",
+            "configurable broker adapter",
+            "broker adapter template/config"
+          ],
+          "waiting_for_real_account": [
+            "券商 API 金鑰",
+            "認證/簽章方式",
+            "callback 或 polling 真實規格",
+            "錯誤碼映射",
+            "實盤小額 smoke test"
+          ],
+          "status": "phase3_adapter_ready_account_pending"
+        }
+      }
     }
   },
-  "phase_completion": {
-    "phase1": {
-      "status": "phase1_ready",
-      "complete_for_scope": true
-    },
-    "phase2": {
-      "status": "phase2_ready",
-      "complete_for_scope": true
-    },
-    "phase3": {
-      "status": "phase3_adapter_ready_account_pending",
-      "complete_for_scope": false
-    }
-  },
-  "status": "v83_official_main_hardening_ready"
+  "status": "daily_ready"
 }

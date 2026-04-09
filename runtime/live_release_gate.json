@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-04-09 15:50:28",
+  "generated_at": "2026-04-09 23:20:14",
   "status": "live_release_blocked",
   "allow_pre_live_dryrun": true,
   "allow_live": false,
   "checks": {
-    "promotion_clear": true,
+    "promotion_clear": false,
     "safety_clear": true,
     "reconciliation_green": true,
     "recovery_ready": true,

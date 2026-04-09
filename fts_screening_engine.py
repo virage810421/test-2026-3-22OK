@@ -7,18 +7,34 @@ from typing import Any
 
 import pandas as pd
 
-from fts_config import PATHS
-from fts_utils import now_str, log
+try:
+    from fts_config import PATHS  # type: ignore
+except Exception:  # pragma: no cover
+    class _Paths:
+        base_dir = Path(__file__).resolve().parent
+        runtime_dir = base_dir / 'runtime'
+    PATHS = _Paths()
+
+try:
+    from fts_utils import now_str, log  # type: ignore
+except Exception:  # pragma: no cover
+    from datetime import datetime
+    def now_str() -> str:
+        return datetime.now().isoformat(timespec='seconds')
+    def log(msg: str) -> None:
+        print(msg)
+
 from fts_market_data_service import MarketDataService
 from fts_feature_service import FeatureService
 from fts_chip_enrichment_service import ChipEnrichmentService
 
 
 class ScreeningEngine:
-    MODULE_VERSION = 'v83_screening_engine_detached'
+    MODULE_VERSION = 'v83_screening_engine_percentile_mount_full'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'screening_engine.json'
+        Path(PATHS.runtime_dir).mkdir(parents=True, exist_ok=True)
         self.market = MarketDataService()
         self.features = FeatureService()
         self.chips = ChipEnrichmentService()
@@ -37,11 +53,7 @@ class ScreeningEngine:
         down_move = -low.diff().fillna(0)
         plus_dm = up_move.where((up_move > down_move) & (up_move > 0), 0.0)
         minus_dm = down_move.where((down_move > up_move) & (down_move > 0), 0.0)
-        tr = pd.concat([
-            high - low,
-            (high - close.shift(1)).abs(),
-            (low - close.shift(1)).abs(),
-        ], axis=1).max(axis=1)
+        tr = pd.concat([high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()], axis=1).max(axis=1)
         atr = tr.rolling(window, min_periods=1).mean().replace(0, pd.NA)
         plus_di = 100 * plus_dm.rolling(window, min_periods=1).mean() / atr
         minus_di = 100 * minus_dm.rolling(window, min_periods=1).mean() / atr
@@ -72,54 +84,40 @@ class ScreeningEngine:
         out['Weighted_Buy_Score'] = out['Buy_Score'].astype(float)
         out['Weighted_Sell_Score'] = out['Sell_Score'].astype(float)
         out['Score_Gap'] = out['Weighted_Buy_Score'] - out['Weighted_Sell_Score']
-        out['Signal_Conflict'] = ((out['Buy_Score'] > 0) & (out['Sell_Score'] > 0)).astype(int)
-        out['Vol_Squeeze'] = (out['BB_Width'] < out['BB_Width'].rolling(20, min_periods=1).median()).astype(int)
-        out['Absorption'] = ((out.get('Total_Ratio', 0) > 0) & (out['Close'].pct_change().fillna(0) < 0)).astype(int)
-        out['Fake_Breakout'] = ((out['Close'] > out['BB_Upper']) & (out['MACD_Hist'] < 0))
-        out['Bear_Trap'] = ((out['Close'] < out['BB_Lower']) & (out['MACD_Hist'] > 0))
-        out['Golden_Type'] = out['Score_Gap'].apply(lambda x: '多方進場' if x > 0 else ('空方進場' if x < 0 else '無'))
-        ret20 = out['Close'].pct_change(20).fillna(0)
-        out['Regime'] = ret20.apply(lambda x: '趨勢多頭' if x > 0.05 else ('趨勢空頭' if x < -0.05 else '區間盤整'))
-        out['AI_Proba'] = (0.5 + out['Score_Gap'] * 0.1).clip(0.0, 1.0)
-        out['Realized_EV'] = out['Close'].pct_change(5).shift(-5).fillna(0) * 100
-        out['Sample_Size'] = len(out)
+        out['Signal_Conflict'] = ((out['Weighted_Buy_Score'] > 0) & (out['Weighted_Sell_Score'] > 0)).astype(int)
+        out['Vol_Squeeze'] = (out['BB_Width'] < out['BB_Width'].rolling(20, min_periods=5).mean()).fillna(False).astype(int)
+        out['Fake_Breakout'] = ((out['Close'] < out['MA20']) & (out['RSI'] > 55)).fillna(False)
+        out['Bear_Trap'] = ((out['Close'] > out['MA20']) & (out['RSI'] < 45)).fillna(False)
+        out['Absorption'] = ((out['Close'].pct_change().fillna(0) < 0) & (out.get('Total_Ratio', 0) > 0)).astype(int)
+        out['MR_Long_Spring'] = ((out['Low'] < out['BB_Lower']) & (out['RSI'] < 35)).fillna(False).astype(int)
+        out['MR_Short_Trap'] = ((out['High'] > out['BB_Upper']) & (out['RSI'] > 65)).fillna(False).astype(int)
+        out['MR_Long_Accumulation'] = ((out['Close'] > out['MA20']) & (out.get('Total_Ratio', 0) > 0)).astype(int)
+        out['MR_Short_Distribution'] = ((out['Close'] < out['MA20']) & (out.get('Total_Ratio', 0) < 0)).astype(int)
+        out['Regime'] = out['ADX14'].apply(lambda x: '趨勢多頭' if x >= 30 else ('區間盤整' if x < 20 else '趨勢空頭'))
+        out['AI_Proba'] = (0.5 + out['Score_Gap'].clip(-2, 2) * 0.1).clip(0.01, 0.99)
+        out['Realized_EV'] = (out['Close'].shift(-5) / out['Close'] - 1).fillna(0.0)
         return out
 
-    def inspect_stock(self, ticker: str, preloaded_df: pd.DataFrame | None = None, p: dict[str, Any] | None = None) -> dict[str, Any] | None:
-        df = preloaded_df.copy() if isinstance(preloaded_df, pd.DataFrame) else self.market.smart_download(ticker, period='1y')
-        if df is None or df.empty:
+    def inspect_stock(self, ticker: str, period: str = '1y') -> dict[str, Any] | None:
+        hist = self.market.smart_download(ticker, period=period)
+        if hist.empty or 'Close' not in hist.columns:
             return None
-        df = self.chips.add_chip_data(df, ticker)
-        out = self._prepare(df)
-        if out.empty:
+        prepared = self._prepare(hist)
+        if prepared.empty:
             return None
-        latest = out.iloc[-1]
-        latest_features = self.features.extract_ai_features(latest)
-        return {
-            'Ticker SYMBOL': self.market.normalize_ticker_symbol(ticker),
-            'Structure': str(latest.get('Golden_Type', '無')),
-            'Regime': str(latest.get('Regime', '區間盤整')),
-            'AI_Proba': round(float(latest.get('AI_Proba', 0.5)), 4),
-            'Realized_EV': round(float(latest.get('Realized_EV', 0.0)), 4),
-            'Sample_Size': int(latest.get('Sample_Size', len(out))),
-            '計算後資料': out,
-            'ai_features_latest': latest_features,
-        }
+        latest = prepared.iloc[-1].to_dict()
+        latest = self.chips.enrich_row(ticker, latest)
+        all_features, mounted = self.features.mount_live_features(ticker, latest, history_df=prepared)
+        latest.update(all_features)
+        latest['Mounted_Feature_Count'] = len(mounted)
+        latest['Mounted_Features'] = list(mounted.keys())[:100]
+        latest['Official_Percentile_Mode'] = 1
+        latest['Precise_Event_Calendar_Mode'] = 1
+        latest['Selected_Features_Driven_Live'] = int(bool(self.features.load_selected_features()))
+        return latest
 
     def build_summary(self) -> tuple[Path, dict[str, Any]]:
-        payload = {
-            'generated_at': now_str(),
-            'module_version': self.MODULE_VERSION,
-            'legacy_screening_dependency': False,
-            'absorbed_components': [
-                'normalize_ticker_symbol -> fts_market_data_service.py',
-                'smart_download -> fts_market_data_service.py',
-                'extract_ai_features -> fts_feature_service.py',
-                'add_chip_data -> fts_chip_enrichment_service.py',
-                'inspect_stock -> fts_screening_engine.py',
-            ],
-            'status': 'screening_detached_from_legacy',
-        }
+        payload = {'generated_at': now_str(), 'module_version': self.MODULE_VERSION, 'legacy_screening_dependency': False, 'official_percentile_mode': True, 'precise_event_calendar_mode': True, 'selected_features_driven_live': bool(self.features.load_selected_features()), 'status': 'screening_engine_ready'}
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🛰️ screening engine detached: {self.runtime_path}')
         return self.runtime_path, payload

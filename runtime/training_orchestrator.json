@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09 15:50:27",
+  "generated_at": "2026-04-09 23:20:14",
   "module_version": "v83",
   "ai_stage_enabled": true,
   "dry_run": true,
@@ -14,28 +14,13 @@
   "bootstrap_score": 25,
   "dataset": {
     "exists": true,
-    "rows": 180,
-    "columns": [
-      "Ticker",
-      "Date",
-      "Regime",
-      "Label_Y",
-      "Target_Return",
-      "AI_Proba",
-      "Score",
-      "Kelly_Pos"
-    ],
-    "feature_count": 3,
-    "label_balance": {
-      "1": 135,
-      "0": 45
-    },
-    "regime_counts": {
-      "趨勢多頭": 120,
-      "區間盤整": 60
-    },
-    "status": "ready_for_training",
-    "readiness_score": 75
+    "rows": 0,
+    "columns": [],
+    "feature_count": 0,
+    "label_balance": {},
+    "regime_counts": {},
+    "status": "read_failed: No columns to parse from file",
+    "readiness_score": 10
   },
   "models": {
     "models_dir_exists": true,
@@ -68,8 +53,8 @@
       "reason": "dry_run_upstream_execution=True"
     }
   ],
-  "training_readiness_pct": 78,
-  "go_for_training": true,
+  "training_readiness_pct": 49,
+  "go_for_training": false,
   "go_for_inference": true,
   "backend_entrypoint": "fts_trainer_backend.train_models",
   "governance_entrypoint": "model_governance.ModelGovernanceManager",

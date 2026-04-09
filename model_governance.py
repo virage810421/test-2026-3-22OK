@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Core governance service for v83 mainline.
-
-`model_governance.py` 不是過渡 wrapper；它本身就是治理核心服務。
-主線透過 `fts_training_governance_mainline.py` 統一調度，但核心版本管理、快照、回退、promotion 仍由本檔負責。
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -14,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fts_upgrade_runtime import PATHS, CONFIG, now_str, log, load_json, write_json, append_jsonl
+from fts_upgrade_runtime import PATHS, CONFIG, now_str, load_json, write_json, append_jsonl
 
 MODELS_DIR = Path(getattr(PATHS, 'model_dir', Path('models')))
 VERSIONS_DIR = MODELS_DIR / 'versions'
@@ -167,10 +161,7 @@ def get_best_version_entry() -> dict[str, Any] | None:
     return None
 
 
-
 class ModelGovernanceManager:
-    """Safe promotion / rollback / shadow management for model lifecycle."""
-
     def __init__(self):
         ensure_dirs()
         self.runtime_path = Path(getattr(PATHS, 'runtime_dir', Path('runtime'))) / 'model_governance_status.json'
@@ -186,49 +177,21 @@ class ModelGovernanceManager:
                 'size_bytes': p.stat().st_size if p.exists() else 0,
                 'sha256': _artifact_hash(p) if p.exists() else None,
             })
-        return {
-            'tracked_files': tracked,
-            'all_present': all(r['exists'] for r in rows),
-            'files': rows,
-        }
+        return {'tracked_files': tracked, 'all_present': all(r['exists'] for r in rows), 'files': rows}
 
-    def register_candidate(
-        self,
-        version_tag: str | None = None,
-        metrics: dict[str, Any] | None = None,
-        walk_forward: dict[str, Any] | None = None,
-        shadow_result: dict[str, Any] | None = None,
-        feature_schema: dict[str, Any] | None = None,
-        note: str = '',
-    ) -> dict[str, Any]:
+    def register_candidate(self, version_tag: str | None = None, metrics: dict[str, Any] | None = None, note: str = '') -> dict[str, Any]:
         version_tag = version_tag or create_version_tag('candidate')
         entry = snapshot_current_models(version_tag, metrics=metrics, note=note)
         registry = load_registry()
         registry['last_candidate_version'] = version_tag
         registry['active_deployment'] = registry.get('current_version')
         save_registry(registry)
-        payload = {
-            'time': now_str(),
-            'event': 'register_candidate',
-            'version': version_tag,
-            'metrics': metrics or {},
-            'walk_forward': walk_forward or {},
-            'shadow_result': shadow_result or {},
-            'feature_schema': feature_schema or {},
-            'note': note,
-        }
-        append_jsonl(EVENTS_PATH, payload)
-        entry.update(payload)
+        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'register_candidate', 'version': version_tag, 'metrics': metrics or {}, 'note': note})
         return entry
 
-    def evaluate_candidate(
-        self,
-        metrics: dict[str, Any] | None = None,
-        walk_forward: dict[str, Any] | None = None,
-        shadow_result: dict[str, Any] | None = None,
-        thresholds: dict[str, Any] | None = None,
-        rollback_version: str | None = None,
-    ) -> dict[str, Any]:
+    def evaluate_candidate(self, metrics: dict[str, Any] | None = None, walk_forward: dict[str, Any] | None = None,
+                           shadow_result: dict[str, Any] | None = None, thresholds: dict[str, Any] | None = None,
+                           rollback_version: str | None = None) -> dict[str, Any]:
         metrics = metrics or {}
         walk_forward = walk_forward or {}
         shadow_result = shadow_result or {}
@@ -241,7 +204,6 @@ class ModelGovernanceManager:
         }
         failures = []
         warnings = []
-
         if metrics.get('win_rate', 0) < thresholds['min_win_rate']:
             failures.append('win_rate_below_threshold')
         if metrics.get('profit_factor', 0) < thresholds['min_profit_factor']:
@@ -254,11 +216,9 @@ class ModelGovernanceManager:
             warnings.append('shadow_drift_above_preferred_band')
         if not rollback_version:
             failures.append('rollback_version_missing')
-
         artifacts = self._collect_artifact_status()
         if not artifacts['all_present']:
             failures.append('artifacts_incomplete')
-
         decision = {
             'generated_at': now_str(),
             'system_name': getattr(CONFIG, 'system_name', 'FTS'),
@@ -266,58 +226,15 @@ class ModelGovernanceManager:
             'metrics': metrics,
             'walk_forward': walk_forward,
             'shadow_result': shadow_result,
-            'artifacts': artifacts,
-            'rollback_version': rollback_version,
-            'go_for_shadow': len([x for x in failures if x != 'rollback_version_missing']) == 0,
-            'go_for_promote': len(failures) == 0,
             'failures': failures,
             'warnings': warnings,
+            'rollback_version': rollback_version,
+            'candidate_ready': len(failures) == 0,
             'status': 'candidate_ready' if len(failures) == 0 else 'candidate_blocked',
         }
         write_json(self.runtime_path, decision)
-        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'evaluate_candidate', 'decision': decision['status'], 'failures': failures, 'warnings': warnings})
+        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'evaluate_candidate', 'status': decision['status'], 'failures': failures, 'warnings': warnings})
         return decision
-
-    def mark_shadow_result(self, version_tag: str, result: dict[str, Any]) -> dict[str, Any]:
-        registry = load_registry()
-        registry['last_shadow_version'] = version_tag
-        save_registry(registry)
-        payload = {'time': now_str(), 'event': 'shadow_result', 'version': version_tag, 'result': result}
-        append_jsonl(EVENTS_PATH, payload)
-        return payload
-
-    def promote_to_current(self, version_tag: str, operator: str = 'system', note: str = '') -> dict[str, Any]:
-        restored = restore_version(version_tag)
-        registry = load_registry()
-        registry['current_version'] = version_tag
-        registry['active_deployment'] = version_tag
-        save_registry(registry)
-        deployment = {
-            'promoted_at': now_str(),
-            'version': version_tag,
-            'operator': operator,
-            'note': note,
-            'restored': restored.get('restored', []),
-            'status': 'live_candidate_promoted',
-        }
-        write_json(DEPLOYMENT_STATUS_PATH, deployment)
-        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'promote_to_current', 'version': version_tag, 'operator': operator, 'note': note})
-        return deployment
-
-    def rollback(self, version_tag: str | None = None, reason: str = '') -> dict[str, Any]:
-        registry = load_registry()
-        target = version_tag or registry.get('best_version') or registry.get('current_version')
-        restored = restore_version(target)
-        deployment = {
-            'rolled_back_at': now_str(),
-            'target_version': target,
-            'reason': reason,
-            'status': 'rolled_back',
-            'restored': restored.get('restored', []),
-        }
-        write_json(DEPLOYMENT_STATUS_PATH, deployment)
-        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'rollback', 'target_version': target, 'reason': reason})
-        return deployment
 
     def evaluate_live_health(self, live_metrics: dict[str, Any], thresholds: dict[str, Any] | None = None) -> dict[str, Any]:
         thresholds = thresholds or {
@@ -325,23 +242,72 @@ class ModelGovernanceManager:
             'max_consecutive_losses': 5,
             'max_reject_rate': 0.20,
             'max_fill_slippage_bps': 35,
+            'min_trades_required': 20,
         }
         triggers = []
-        if live_metrics.get('win_rate', 1.0) < thresholds['min_live_win_rate']:
-            triggers.append('live_win_rate_break')
+        warnings = []
+        trade_count = int(live_metrics.get('trade_count', live_metrics.get('num_trades', 0)) or 0)
+        enough_sample = trade_count >= int(thresholds.get('min_trades_required', 20))
+        if enough_sample:
+            if live_metrics.get('win_rate', 1.0) < thresholds['min_live_win_rate']:
+                triggers.append('live_win_rate_break')
+            if live_metrics.get('reject_rate', 0.0) > thresholds['max_reject_rate']:
+                triggers.append('reject_rate_break')
+        else:
+            warnings.append('sample_too_small_for_winrate_rejectrate_guard')
         if live_metrics.get('consecutive_losses', 0) > thresholds['max_consecutive_losses']:
             triggers.append('consecutive_losses_break')
-        if live_metrics.get('reject_rate', 0.0) > thresholds['max_reject_rate']:
-            triggers.append('reject_rate_break')
         if live_metrics.get('avg_slippage_bps', 0.0) > thresholds['max_fill_slippage_bps']:
             triggers.append('slippage_break')
         payload = {
             'generated_at': now_str(),
             'thresholds': thresholds,
             'live_metrics': live_metrics,
+            'trade_count': trade_count,
+            'sample_gate_passed': enough_sample,
+            'warnings': warnings,
             'rollback_recommended': len(triggers) > 0,
             'triggers': triggers,
             'status': 'rollback_recommended' if triggers else 'live_health_ok',
         }
-        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'live_health_eval', 'status': payload['status'], 'triggers': triggers})
+        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'live_health_eval', 'status': payload['status'], 'triggers': triggers, 'warnings': warnings, 'sample_gate_passed': enough_sample, 'trade_count': trade_count})
+        return payload
+
+    def evaluate_training_integrity(self, training_report: dict[str, Any], thresholds: dict[str, Any] | None = None) -> dict[str, Any]:
+        thresholds = thresholds or {
+            'min_oot_hit_rate': 0.50,
+            'min_oot_profit_factor': 1.00,
+            'max_overfit_gap': 0.15,
+            'max_feature_to_sample_ratio': 0.35,
+        }
+        failures = []
+        warnings = []
+        leakage_guards = training_report.get('leakage_guards', {}) or {}
+        if not leakage_guards.get('feature_selection_train_only', False):
+            failures.append('feature_selection_not_train_only')
+        if not leakage_guards.get('purged_walk_forward', False):
+            failures.append('purged_walk_forward_missing')
+        if not leakage_guards.get('out_of_time_holdout', False):
+            failures.append('out_of_time_holdout_missing')
+        oot = training_report.get('out_of_time', {}) or {}
+        if float(oot.get('hit_rate', 0.0) or 0.0) < thresholds['min_oot_hit_rate']:
+            warnings.append('oot_hit_rate_soft')
+        if float(oot.get('profit_factor', 0.0) or 0.0) < thresholds['min_oot_profit_factor']:
+            warnings.append('oot_profit_factor_soft')
+        overfit_gap = float(training_report.get('overfit_gap', 0.0) or 0.0)
+        if overfit_gap > thresholds['max_overfit_gap']:
+            failures.append('overfit_gap_too_large')
+        ratio = float(training_report.get('feature_to_sample_ratio', 0.0) or 0.0)
+        if ratio > thresholds['max_feature_to_sample_ratio']:
+            warnings.append('feature_to_sample_ratio_high')
+        payload = {
+            'generated_at': now_str(),
+            'thresholds': thresholds,
+            'training_report': training_report,
+            'failures': failures,
+            'warnings': warnings,
+            'promotion_ready': len(failures) == 0,
+            'status': 'training_integrity_ok' if len(failures) == 0 else 'training_integrity_blocked',
+        }
+        append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'training_integrity_eval', 'status': payload['status'], 'failures': failures, 'warnings': warnings})
         return payload
