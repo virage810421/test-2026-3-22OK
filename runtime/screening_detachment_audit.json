@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "module_version": "v83_screening_detachment_audit",
+  "direct_legacy_fallback_modules": [],
+  "legacy_screening_import_callers": [
+    "event_backtester.py",
+    "fts_screening_detachment_audit.py",
+    "live_paper_trading.py",
+    "master_pipeline.py",
+    "strategies.py"
+  ],
+  "status": "screening_detachment_audited",
+  "note": "目標是讓 service 不再反向 import 舊 screening.py；舊 screening.py 只保留相容 wrapper。"
+}

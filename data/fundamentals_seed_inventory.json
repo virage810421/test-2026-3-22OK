@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "seed_inventory": [
+    {
+      "seed": "C:\\test\\test-2026-3-22OK\\seed_data\\market_financials_backup_fullspeed.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+      "before_size": 159061,
+      "after_size": 159061,
+      "action": "skipped"
+    },
+    {
+      "seed": "C:\\test\\test-2026-3-22OK\\seed_data\\latest_monthly_revenue_with_industry.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\latest_monthly_revenue_with_industry.csv",
+      "before_size": 30863,
+      "after_size": 30863,
+      "action": "skipped"
+    },
+    {
+      "seed": "C:\\test\\test-2026-3-22OK\\seed_data\\stock_revenue_industry_tw.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\stock_revenue_industry_tw.csv",
+      "before_size": 81814,
+      "after_size": 81814,
+      "action": "skipped"
+    }
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "generated_at": "2026-04-08 14:22:31",
+  "module_version": "v70",
+  "mode": "local_first_optional_online_backfill",
+  "source_files_scanned": 43,
+  "history_like_files_found": 0,
+  "history_rows_normalized": 0,
+  "cache_files_written_from_local": 0,
+  "cache_ticker_count": 0,
+  "cache_tickers_preview": [],
+  "bootstrap_universe_count": 1058,
+  "missing_cache_ticker_count_before_online": 1058,
+  "missing_cache_ticker_count": 1058,
+  "request_list_rows": 1058,
+  "request_list_path": "C:\\test\\test-2026-3-22OK\\data\\kline_cache_request_list.csv",
+  "cache_dir": "C:\\test\\test-2026-3-22OK\\data\\kline_cache",
+  "online_backfill": {
+    "enabled": false,
+    "provider": "yfinance",
+    "requested": 30,
+    "fetched": 0,
+    "written_files": 0,
+    "status": "disabled",
+    "errors_preview": []
+  },
+  "status": "waiting_for_ohlcv_history",
+  "scan_diagnostics_preview": [
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\daily_chip_data_backup.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "日期",
+        "Ticker SYMBOL",
+        "外資買賣超",
+        "投信買賣超",
+        "自營商買賣超",
+        "三大法人合計",
+        "資料來源"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache_request_list.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker",
+        "Preferred_Period",
+        "Preferred_Interval",
+        "Preferred_Provider",
+        "Target_File"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\latest_monthly_revenue_simple.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "公司名稱",
+        "產業類別",
+        "資料年月日",
+        "單月營收年增率(%)"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\latest_monthly_revenue_with_industry.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "產業類別",
+        "產業類別名稱",
+        "資料年月",
+        "單月營收年增率(%)"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\market_financials_backup_fullspeed.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "資料年月日",
+        "毛利率(%)",
+        "營業利益率(%)",
+        "單季EPS",
+        "ROE(%)",
+        "稅後淨利率(%)",
+        "營業現金流",
+        "預估殖利率(%)",
+        "負債比率(%)",
+        "本業獲利比(%)"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\monthly_revenue_simple.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "公司名稱",
+        "產業類別",
+        "產業類別名稱",
+        "資料年月日",
+        "單月營收年增率(%)"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\stock_list_cache_listed.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "stock_id",
+        "Ticker SYMBOL",
+        "公司名稱",
+        "產業類別"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\stock_revenue_industry_tw.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL",
+        "公司名稱",
+        "產業類別",
+        "產業類別名稱",
+        "資料年月日",
+        "單月營收年增率(%)"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\trade_stats.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "ticker",
+        "wins",
+        "total"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\data\\kline_cache_request_list.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker",
+        "Preferred_Period",
+        "Preferred_Interval",
+        "Target_File"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\data\\last_price_snapshot_template.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker",
+        "Reference_Price"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\data\\stock_list_cache_listed.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Ticker SYMBOL"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\1101.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\1513.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\1519.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\2002.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\2317.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\2330.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\2382.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    },
+    {
+      "file": "C:\\test\\test-2026-3-22OK\\kline_cache\\2454.TW.csv",
+      "status": "missing_required_columns",
+      "columns": [
+        "Date",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume"
+      ]
+    }
+  ]
+}

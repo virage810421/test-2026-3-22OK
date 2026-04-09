@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-04-09 14:44:17",
+  "overall": "WARN",
+  "block_new_positions": false,
+  "alerts": [],
+  "model_status": {
+    "health": "OK",
+    "existing": [
+      "selected_features.pkl",
+      "model_趨勢多頭.pkl",
+      "model_區間盤整.pkl",
+      "model_趨勢空頭.pkl"
+    ],
+    "required_count": 4,
+    "existing_count": 4
+  },
+  "decision_desk": {
+    "health": "WARN",
+    "rows": 3,
+    "avg_ai_proba": 0.5,
+    "avg_realized_ev": 0.0,
+    "avg_score_gap": 0.0,
+    "message": "決策桌品質偏弱，但未到阻斷",
+    "path": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv"
+  },
+  "recent_trades": {
+    "health": "WARN",
+    "sample_size": 0,
+    "message": "近期無成交報表"
+  },
+  "module_version": "v83_system_guard_service",
+  "status": "wave2_system_guard_ready"
+}

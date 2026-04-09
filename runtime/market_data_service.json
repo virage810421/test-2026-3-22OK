@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-04-09 14:44:16",
+  "module_version": "v83_market_data_service_detached",
+  "legacy_screening_dependency": false,
+  "service_entrypoints": [
+    "normalize_ticker_symbol",
+    "smart_download"
+  ],
+  "cache_dir": "C:\\test\\test-2026-3-22OK\\data\\kline_cache",
+  "status": "market_data_service_ready"
+}

@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-04-09 10:15:46",
+  "status": "order_state_machine_defined",
+  "states": [
+    "CANCELLED",
+    "CANCEL_PENDING",
+    "FILLED",
+    "NEW",
+    "PARTIALLY_FILLED",
+    "PENDING_SUBMIT",
+    "REJECTED",
+    "SUBMITTED"
+  ],
+  "allowed_transitions": {
+    "NEW": [
+      "CANCELLED",
+      "PENDING_SUBMIT",
+      "REJECTED"
+    ],
+    "PENDING_SUBMIT": [
+      "CANCELLED",
+      "REJECTED",
+      "SUBMITTED"
+    ],
+    "SUBMITTED": [
+      "CANCELLED",
+      "CANCEL_PENDING",
+      "FILLED",
+      "PARTIALLY_FILLED",
+      "REJECTED"
+    ],
+    "PARTIALLY_FILLED": [
+      "CANCELLED",
+      "CANCEL_PENDING",
+      "FILLED",
+      "PARTIALLY_FILLED"
+    ],
+    "CANCEL_PENDING": [
+      "CANCELLED",
+      "FILLED",
+      "PARTIALLY_FILLED"
+    ],
+    "FILLED": [],
+    "CANCELLED": [],
+    "REJECTED": []
+  }
+}

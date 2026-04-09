@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
+  "checklist": {
+    "daily_chip_etl.py": [
+      "補 quality report 輸出",
+      "補 batch stats 輸出",
+      "補 sql sync summary 輸出",
+      "補 error classification 輸出",
+      "補欄位完整率統計"
+    ],
+    "monthly_revenue_simple.py": [
+      "補 publish window guard 輸出",
+      "補 csv/sql consistency 輸出",
+      "補 fallback summary 輸出",
+      "補 coverage ratio 統計"
+    ],
+    "ml_data_generator.py": [
+      "補 feature summary 輸出",
+      "補 missing value report",
+      "補 output versioning",
+      "補 data quality score"
+    ]
+  },
+  "status": "checklist_ready"
+}

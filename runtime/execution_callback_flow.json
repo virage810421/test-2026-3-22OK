@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "flow": [
+    "submit_order_payload",
+    "receive_broker_callback",
+    "normalize_callback_status",
+    "validate_callback_fields",
+    "update_order_state_machine",
+    "reconciliation_engine_check",
+    "persist_state_and_report"
+  ],
+  "integration_points": {
+    "callback_norm": "broker_callback_normalization.json",
+    "state_machine": "order_state_machine.json",
+    "reconciliation_engine": "reconciliation_engine.json"
+  },
+  "status": "callback_flow_defined"
+}

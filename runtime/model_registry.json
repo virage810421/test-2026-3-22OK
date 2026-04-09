@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
+  "models_dir": "C:\\test\\test-2026-3-22OK\\models",
+  "candidates": [
+    {
+      "name": "model_區間盤整.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+      "is_file": true,
+      "is_dir": false
+    },
+    {
+      "name": "model_趨勢空頭.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+      "is_file": true,
+      "is_dir": false
+    },
+    {
+      "name": "selected_features.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+      "is_file": true,
+      "is_dir": false
+    },
+    {
+      "name": "test_line.py",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\test_line.py",
+      "is_file": true,
+      "is_dir": false
+    }
+  ],
+  "candidate_count": 4
+}

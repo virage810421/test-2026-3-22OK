@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "status": "preopen_partial",
+  "all_green": false,
+  "green_count": 7,
+  "total_count": 8,
+  "readiness_pct": 88,
+  "items": [
+    {
+      "item": "模型 promotion / governance",
+      "ok": true,
+      "detail": "promote_ready"
+    },
+    {
+      "item": "training orchestrator 已建置",
+      "ok": true,
+      "detail": "training_governed_v83"
+    },
+    {
+      "item": "execution payload 已產出",
+      "ok": true,
+      "detail": "execution_payload_ready"
+    },
+    {
+      "item": "live safety 通過",
+      "ok": true,
+      "detail": "live_safety_green"
+    },
+    {
+      "item": "前次對帳全綠",
+      "ok": true,
+      "detail": "reconciliation_green"
+    },
+    {
+      "item": "recovery validation 通過",
+      "ok": true,
+      "detail": "validation_ready"
+    },
+    {
+      "item": "incident guard 無封鎖",
+      "ok": false,
+      "detail": "incident_guard_block"
+    },
+    {
+      "item": "kill switch 未觸發",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "next_blockers": [
+    "incident guard 無封鎖"
+  ]
+}

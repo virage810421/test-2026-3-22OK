@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-09 15:50:28",
+  "module_version": "v83_configurable_broker_adapter",
+  "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
+  "template_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_config.template.json",
+  "provider_name": "fill_me_after_account_opened",
+  "transport": "rest",
+  "ready_for_live_connect": false,
+  "missing_items": [
+    "config_enabled_false",
+    "provider_name",
+    "base_url",
+    "auth.api_key",
+    "auth.account_id"
+  ],
+  "status": "broker_adapter_account_pending"
+}

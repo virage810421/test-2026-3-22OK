@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-04-09 10:15:46",
+  "system_name": "正式交易主控版_v79",
+  "checks": {
+    "state_file_exists": true,
+    "retry_queue_total": 0,
+    "broker_snapshot_found": true,
+    "missing_on_broker_count": 3,
+    "orphan_on_broker_count": 0
+  },
+  "failures": [
+    {
+      "type": "state_position_missing_on_broker",
+      "tickers": [
+        "2330.TW",
+        "2467.TW",
+        "2471.TW"
+      ]
+    }
+  ],
+  "warnings": [],
+  "all_passed": false,
+  "status": "consistency_break"
+}

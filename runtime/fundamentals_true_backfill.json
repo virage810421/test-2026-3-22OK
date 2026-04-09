@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "status": "fundamentals_true_backfill_applied",
+  "actions": [
+    {
+      "seed": "C:\\test\\test-2026-3-22OK\\seed_data\\market_financials_backup_fullspeed.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+      "before_size": 159061,
+      "after_size": 159061,
+      "action": "skipped"
+    },
+    {
+      "seed": "C:\\test\\test-2026-3-22OK\\seed_data\\latest_monthly_revenue_with_industry.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\latest_monthly_revenue_with_industry.csv",
+      "before_size": 30863,
+      "after_size": 30863,
+      "action": "skipped"
+    },
+    {
+      "seed": "C:\\test\\test-2026-3-22OK\\seed_data\\stock_revenue_industry_tw.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\stock_revenue_industry_tw.csv",
+      "before_size": 81814,
+      "after_size": 81814,
+      "action": "skipped"
+    }
+  ],
+  "inventory_path": "C:\\test\\test-2026-3-22OK\\data\\fundamentals_seed_inventory.json",
+  "recommendation": "若本機已安裝 yfinance / pyodbc，之後可再執行 fundamentals ETL 主線做增量補抓。"
+}

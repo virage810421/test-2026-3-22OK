@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-04-09 14:44:17",
+  "module_version": "v83_market_climate_service",
+  "market_climate": {
+    "regime": "區間盤整",
+    "risk_mode": "balanced",
+    "avg_ai_proba": 0.5,
+    "avg_score_gap": 0.0,
+    "avg_ev": 0.0
+  },
+  "retrain_policy": {
+    "should_retrain": true,
+    "reason": "市場狀態允許重訓",
+    "market_climate": {
+      "regime": "區間盤整",
+      "risk_mode": "balanced",
+      "avg_ai_proba": 0.5,
+      "avg_score_gap": 0.0,
+      "avg_ev": 0.0
+    }
+  },
+  "status": "wave3_market_climate_ready"
+}

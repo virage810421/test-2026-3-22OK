@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-04-09 03:00:26",
+  "module_version": "v82_three_stage",
+  "system_name": "正式交易主控版_v82_three_stage",
+  "phase_outputs": {
+    "phase1": "/mnt/data/fts_v82_upgrade_pack/runtime/phase1_upgrade.json",
+    "phase2": "/mnt/data/fts_v82_upgrade_pack/runtime/phase2_mock_real_broker.json",
+    "phase3": "/mnt/data/fts_v82_upgrade_pack/runtime/phase3_real_cutover.json",
+    "file_classification": "/mnt/data/fts_v82_upgrade_pack/runtime/file_classification.json"
+  },
+  "completed_upgrades": [
+    "Phase1：AI / payload / safety / preflight",
+    "Phase2：mock broker / callback / reconciliation / preopen / closebook",
+    "Phase3：real-account contract & cutover skeleton"
+  ],
+  "fully_upgraded_now": [
+    "AI 自動化訓練與 promotion（pre-live 等級）",
+    "execution payload 產生與 idempotency key",
+    "pre-open checklist",
+    "EOD closebook",
+    "incident handling",
+    "mock real broker / callback / reconciliation flow"
+  ],
+  "still_waiting_for_real_account": [
+    "券商 API 金鑰",
+    "認證/簽章方式",
+    "callback 或 polling 真實規格",
+    "錯誤碼映射",
+    "實盤小額 smoke test"
+  ],
+  "status": "v82_three_stage_ready"
+}

@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "status": "data_cleanup_applied",
+  "canonical_daily_decision_desk": "C:\\test\\test-2026-3-22OK\\data\\daily_decision_desk.csv",
+  "root_daily_decision_desk_kept_for_compat": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+  "actions": [
+    {
+      "action": "sync_root_from_data",
+      "source": "C:\\test\\test-2026-3-22OK\\data\\daily_decision_desk.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv"
+    },
+    {
+      "action": "template_snapshot",
+      "source": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\templates\\manual_price_snapshot_template.csv"
+    },
+    {
+      "action": "template_snapshot",
+      "source": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data_template.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\templates\\ml_training_data_template.csv"
+    },
+    {
+      "action": "template_snapshot",
+      "source": "C:\\test\\test-2026-3-22OK\\data\\last_price_snapshot_template.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\templates\\last_price_snapshot_template.csv"
+    },
+    {
+      "action": "audit_copy_suspicious_name",
+      "source": "C:\\test\\test-2026-3-22OK\\data\\datakline_cache.csv",
+      "target": "C:\\test\\test-2026-3-22OK\\data\\audit\\datakline_cache.csv"
+    }
+  ],
+  "suspicious_small_files": [
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\data\\daily_decision_desk.csv",
+      "exists": true,
+      "size": 258,
+      "mtime": 1775719801.2858732
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_overrides.csv",
+      "exists": true,
+      "size": 57,
+      "mtime": 1775719890.833537
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output.csv",
+      "exists": true,
+      "size": 258,
+      "mtime": 1775717057.0853727
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\data\\stock_list_cache_listed.csv",
+      "exists": true,
+      "size": 63,
+      "mtime": 1775720393.5854523
+    }
+  ]
+}

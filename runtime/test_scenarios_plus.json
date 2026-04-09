@@ -1,0 +1,68 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "scenario_count": 12,
+  "scenarios": [
+    {
+      "name": "decision_rows_zero",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "ticker_missing",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "signal_count_zero",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "launch_gate_false",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "submission_gate_false",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "duplicate_ticker_orders",
+      "priority": "medium",
+      "covered": true
+    },
+    {
+      "name": "state_file_missing",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "retry_queue_not_empty",
+      "priority": "medium",
+      "covered": true
+    },
+    {
+      "name": "model_artifact_missing",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "etl_files_missing",
+      "priority": "high",
+      "covered": true
+    },
+    {
+      "name": "ai_stage_dry_run",
+      "priority": "medium",
+      "covered": true
+    },
+    {
+      "name": "execution_result_zero_fill",
+      "priority": "medium",
+      "covered": true
+    }
+  ],
+  "status": "expanded_matrix"
+}

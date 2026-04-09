@@ -1,0 +1,58 @@
+[02:58:37] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_policy.json
+[02:58:37] 🧠 已輸出 trainer promotion decision：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_decision.json
+[02:58:37] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=1
+[02:58:56] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_policy.json
+[02:58:56] 🧠 已輸出 trainer promotion decision：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_decision.json
+[02:58:56] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=1
+[02:58:56] ♻️ 已輸出 recovery validation：/mnt/data/fts_v82_upgrade_pack/runtime/recovery_validation.json
+[02:58:56] 🧮 已輸出 reconciliation engine：/mnt/data/fts_v82_upgrade_pack/runtime/reconciliation_engine.json | all_green=False
+[02:59:45] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_policy.json
+[02:59:45] 🧠 已輸出 trainer promotion decision：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_decision.json
+[02:59:45] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=1
+[02:59:45] ♻️ 已輸出 recovery validation：/mnt/data/fts_v82_upgrade_pack/runtime/recovery_validation.json
+[02:59:45] 🧮 已輸出 reconciliation engine：/mnt/data/fts_v82_upgrade_pack/runtime/reconciliation_engine.json | all_green=True
+[03:00:26] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_policy.json
+[03:00:26] 🧠 已輸出 trainer promotion decision：/mnt/data/fts_v82_upgrade_pack/runtime/trainer_promotion_decision.json
+[03:00:26] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[03:00:26] ♻️ 已輸出 recovery validation：/mnt/data/fts_v82_upgrade_pack/runtime/recovery_validation.json
+[03:00:26] 🧮 已輸出 reconciliation engine：/mnt/data/fts_v82_upgrade_pack/runtime/reconciliation_engine.json | all_green=True
+[03:17:44] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_v83_official_pack/runtime/trainer_promotion_policy.json
+[03:17:44] 🧠 已輸出 trainer promotion decision：/mnt/data/fts_v83_official_pack/runtime/trainer_promotion_decision.json
+[03:17:44] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[03:17:44] ♻️ 已輸出 recovery validation：/mnt/data/fts_v83_official_pack/runtime/recovery_validation.json
+[03:17:44] 🧮 已輸出 reconciliation engine：/mnt/data/fts_v83_official_pack/runtime/reconciliation_engine.json | all_green=True
+[03:18:29] 🚦 已輸出 trainer promotion policy：/mnt/data/fts_v83_official_pack/runtime/trainer_promotion_policy.json
+[03:18:29] 🧠 已輸出 trainer promotion decision：/mnt/data/fts_v83_official_pack/runtime/trainer_promotion_decision.json
+[03:18:29] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[03:18:29] ♻️ 已輸出 recovery validation：/mnt/data/fts_v83_official_pack/runtime/recovery_validation.json
+[03:18:29] 🧮 已輸出 reconciliation engine：/mnt/data/fts_v83_official_pack/runtime/reconciliation_engine.json | all_green=True
+[13:08:21] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[13:08:21] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[13:08:22] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[13:08:22] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[13:08:22] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[14:31:59] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[14:31:59] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[14:31:59] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[14:31:59] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[14:31:59] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[14:44:16] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[14:44:16] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[14:44:16] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[14:44:16] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[14:44:16] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[15:30:01] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[15:30:01] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[15:30:01] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[15:30:01] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[15:30:01] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[15:31:30] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[15:31:30] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[15:31:30] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[15:31:30] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[15:31:30] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[15:50:27] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[15:50:27] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[15:50:27] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[15:50:27] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[15:50:27] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True

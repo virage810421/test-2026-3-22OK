@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "module_version": "v81_prelive_bridge",
+  "v80_layer_status": {
+    "generated_at": "2026-04-09 09:42:38",
+    "module_version": "v80_prebroker_sealed",
+    "direct_mainline_entry": "formal_trading_system_v80_prebroker_sealed.py",
+    "P0": {
+      "status": "completed",
+      "completed_layers": [
+        "模型治理",
+        "對帳",
+        "恢復",
+        "live safety",
+        "kill switch"
+      ],
+      "files": [
+        "model_governance.py",
+        "fts_trainer_promotion_policy.py",
+        "fts_model_gate.py",
+        "fts_reconciliation_engine.py",
+        "fts_recovery_engine.py",
+        "fts_recovery_validation.py",
+        "fts_recovery_consistency.py",
+        "fts_live_safety.py",
+        "fts_kill_switch.py"
+      ]
+    },
+    "P1": {
+      "status": "completed_for_pre_broker_stage",
+      "completed_layers": [
+        "daily ops",
+        "performance attribution",
+        "mainline integration"
+      ],
+      "files": [
+        "fts_daily_ops.py",
+        "fts_performance_attribution.py",
+        "formal_trading_system_v80_prebroker_sealed.py"
+      ]
+    },
+    "P2": {
+      "status": "broker_ready_blueprint_only",
+      "completed_layers": [
+        "real adapter blueprint"
+      ],
+      "files": [
+        "fts_real_broker_adapter_blueprint.py"
+      ],
+      "waiting_for": [
+        "券商 API 文件",
+        "帳號 / 憑證",
+        "callback 格式",
+        "交易限制細節"
+      ]
+    },
+    "ten_items": {
+      "真券商 adapter": "P2 blueprint only",
+      "實盤回報接收器": "P2 blueprint only",
+      "對帳系統": "done pre-broker",
+      "重啟恢復機制": "done pre-broker",
+      "Kill switch": "done pre-broker",
+      "Walk-forward 正式化": "done",
+      "Shadow trading": "done pre-broker",
+      "Promotion / rollback policy": "done",
+      "交易日操作面板": "done",
+      "績效歸因 / 風控歸因": "done"
+    },
+    "four_gaps": {
+      "真執行": "P2 blueprint only",
+      "對帳恢復": "done pre-broker",
+      "模型治理": "done",
+      "實盤安全機制": "done pre-broker"
+    }
+  },
+  "v80_report_present": true,
+  "old_v79_gap_headline": {
+    "completion_excluding_real_broker_pct": 85,
+    "remaining_major_blocks_excluding_real_broker": 1,
+    "real_broker_binding_present": false
+  },
+  "old_v79_three_hard_gaps": [
+    "AI訓練資料與模型產物仍未落地到可訓練水位"
+  ],
+  "final_12_files": [
+    "fts_prelive_runtime.py",
+    "fts_broker_requirements_contract.py",
+    "fts_order_state_machine.py",
+    "fts_callback_event_schema.py",
+    "fts_callback_event_store.py",
+    "fts_operator_approval.py",
+    "fts_preopen_checklist.py",
+    "fts_intraday_incident_guard.py",
+    "fts_eod_closebook.py",
+    "fts_live_release_gate.py",
+    "fts_live_cutover_plan.py",
+    "formal_trading_system_v81_prelive_bridge.py"
+  ],
+  "outputs": {
+    "broker_requirements_contract": "C:\\test\\test-2026-3-22OK\\runtime\\broker_requirements_contract.json",
+    "order_state_machine_definition": "C:\\test\\test-2026-3-22OK\\runtime\\order_state_machine_definition.json",
+    "callback_event_schema": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_schema.json",
+    "callback_event_store_summary": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_store_summary.json",
+    "operator_approval_registry": "C:\\test\\test-2026-3-22OK\\runtime\\operator_approval_registry.json",
+    "preopen_checklist": "C:\\test\\test-2026-3-22OK\\runtime\\preopen_checklist.json",
+    "intraday_incident_guard": "C:\\test\\test-2026-3-22OK\\runtime\\intraday_incident_guard.json",
+    "eod_closebook": "C:\\test\\test-2026-3-22OK\\runtime\\eod_closebook.json",
+    "live_cutover_plan": "C:\\test\\test-2026-3-22OK\\runtime\\live_cutover_plan.json",
+    "live_release_gate": "C:\\test\\test-2026-3-22OK\\runtime\\live_release_gate.json"
+  },
+  "statuses": {
+    "preopen_all_green": false,
+    "incident_guard": "incident_guard_block",
+    "release_gate": "live_release_blocked",
+    "ready_now_before_account": 9,
+    "waiting_for_broker": 3
+  }
+}

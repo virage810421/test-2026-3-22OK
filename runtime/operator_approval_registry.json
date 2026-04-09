@@ -1,0 +1,89 @@
+{
+  "approvals": [
+    {
+      "ts": "2026-04-09 02:58:56",
+      "stage": "live_cutover",
+      "operator": "system_v82",
+      "approved": false,
+      "note": "尚未有真券商帳號與 API 文件，先維持 blocked，但 contract 已齊備"
+    },
+    {
+      "ts": "2026-04-09 02:59:45",
+      "stage": "live_cutover",
+      "operator": "system_v82",
+      "approved": false,
+      "note": "尚未有真券商帳號與 API 文件，先維持 blocked，但 contract 已齊備"
+    },
+    {
+      "ts": "2026-04-09 03:00:26",
+      "stage": "live_cutover",
+      "operator": "system_v82",
+      "approved": false,
+      "note": "尚未有真券商帳號與 API 文件，先維持 blocked，但 contract 已齊備"
+    },
+    {
+      "ts": "2026-04-09 03:17:44",
+      "stage": "live_cutover",
+      "operator": "system_v82",
+      "approved": false,
+      "note": "尚未有真券商帳號與 API 文件，先維持 blocked，但 contract 已齊備"
+    },
+    {
+      "ts": "2026-04-09 03:18:29",
+      "stage": "live_cutover",
+      "operator": "system_v82",
+      "approved": false,
+      "note": "尚未有真券商帳號與 API 文件，先維持 blocked，但 contract 已齊備"
+    },
+    {
+      "ts": "2026-04-09 13:08:22",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-09 14:31:59",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-09 14:44:16",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-09 15:30:01",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-09 15:31:31",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-09 15:50:27",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    }
+  ],
+  "last": {
+    "ts": "2026-04-09 15:50:27",
+    "stage": "live_cutover",
+    "operator": "system_v83",
+    "approved": false,
+    "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+  },
+  "status": "approval_recorded"
+}

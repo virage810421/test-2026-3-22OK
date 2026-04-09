@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-04-09 14:44:17",
+  "module_version": "v83_screening_engine_detached",
+  "legacy_screening_dependency": false,
+  "absorbed_components": [
+    "normalize_ticker_symbol -> fts_market_data_service.py",
+    "smart_download -> fts_market_data_service.py",
+    "extract_ai_features -> fts_feature_service.py",
+    "add_chip_data -> fts_chip_enrichment_service.py",
+    "inspect_stock -> fts_screening_engine.py"
+  ],
+  "status": "screening_detached_from_legacy"
+}

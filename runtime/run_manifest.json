@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-04-08 14:22:40",
+  "system_name": "正式交易主控版_v70",
+  "mode": "PAPER",
+  "broker_type": "paper",
+  "stages": {
+    "ai_training": {
+      "enabled": false,
+      "dry_run": true,
+      "executed_count": 0,
+      "skipped_count": 1,
+      "failed_count": 0
+    },
+    "decision_normalize": {
+      "row_count": 3,
+      "rows_with_ticker": 3,
+      "rows_with_action": 3,
+      "rows_with_price": 3
+    },
+    "signal_readiness": {
+      "execution_ready": true,
+      "signal_count": 3
+    },
+    "risk_filter": {
+      "accepted_count": 3,
+      "rejected_count": 0
+    },
+    "execution": {
+      "submitted": 0,
+      "filled": 0,
+      "partially_filled": 0,
+      "rejected": 0,
+      "cancelled": 0,
+      "auto_exit_signals": 0
+    }
+  },
+  "generated_outputs": {
+    "training_orchestrator": "C:\\test\\test-2026-3-22OK\\runtime\\training_orchestrator.json",
+    "local_history_bootstrap": "C:\\test\\test-2026-3-22OK\\runtime\\local_history_bootstrap.json",
+    "training_bootstrap_recipe": "C:\\test\\test-2026-3-22OK\\runtime\\training_bootstrap_recipe.json",
+    "decision_execution_bridge": "C:\\test\\test-2026-3-22OK\\runtime\\decision_execution_bridge.json",
+    "manual_price_template": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
+    "progress_full_report_json": "C:\\test\\test-2026-3-22OK\\runtime\\progress_full_report.json",
+    "progress_full_report_md": "C:\\test\\test-2026-3-22OK\\runtime\\progress_full_report.md"
+  },
+  "status": "manifest_ready"
+}

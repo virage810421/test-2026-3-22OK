@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "bridge": {
+    "upstream": [
+      "daily_chip_etl.py",
+      "monthly_revenue_simple.py",
+      "yahoo_csv_to_sql.py"
+    ],
+    "training": [
+      "ml_data_generator.py",
+      "ml_trainer.py",
+      "model_governance.py"
+    ],
+    "downstream": [
+      "daily_decision_desk.csv",
+      "formal_trading_system_v29.py"
+    ],
+    "status": "ai_connected_at_architecture_level"
+  }
+}

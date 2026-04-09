@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
+  "ai_pipeline": {
+    "feature_data_script": "ml_data_generator.py",
+    "trainer_script": "ml_trainer.py",
+    "model_governance_script": "model_governance.py",
+    "expected_outputs": [
+      "data/ml_training_data.csv",
+      "models/",
+      "daily_decision_desk.csv"
+    ],
+    "status": "registered_not_fully_managed",
+    "notes": "v29 開始把 AI 訓練正式掛進主控視角，但預設仍為安全模式，不自動執行。"
+  }
+}

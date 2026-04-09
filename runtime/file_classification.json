@@ -1,0 +1,273 @@
+{
+  "generated_at": "2026-04-09 15:50:28",
+  "system_name": "正式交易主控版_v83_official_main",
+  "must_keep": [
+    {
+      "file": "formal_trading_system_v83_official_main.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "formal_trading_system_v82_three_stage_upgrade.py",
+      "exists": false,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_fundamentals_etl_mainline.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_training_governance_mainline.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_trainer_backend.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_phase1_upgrade.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_phase2_mock_broker_stage.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_phase3_real_cutover_stage.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_decision_execution_bridge.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_live_safety.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_reconciliation_engine.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_preopen_checklist.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_intraday_incident_guard.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_eod_closebook.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_market_data_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_feature_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_chip_enrichment_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_screening_engine.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_sector_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_system_guard_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_risk_gateway.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_watchlist_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_market_climate_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_decision_desk_builder.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_signal_gate.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_portfolio_gate.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_position_state_service.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_ab_wave_upgrade.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "fts_ab_diff_audit.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "ml_data_generator.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "daily_chip_etl.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "monthly_revenue_simple.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    },
+    {
+      "file": "advanced_chart.py",
+      "exists": true,
+      "reason": "主線 or 核心 service / guard / engine"
+    }
+  ],
+  "diff_patch_only": [
+    {
+      "file": "yahoo_csv_to_sql.py",
+      "exists": true,
+      "reason": "已收編，現在只補差異"
+    },
+    {
+      "file": "daily_chip_etl.py",
+      "exists": true,
+      "reason": "已收編，現在只補差異"
+    },
+    {
+      "file": "monthly_revenue_simple.py",
+      "exists": true,
+      "reason": "已收編，現在只補差異"
+    },
+    {
+      "file": "ml_data_generator.py",
+      "exists": true,
+      "reason": "已收編，現在只補差異"
+    },
+    {
+      "file": "advanced_chart.py",
+      "exists": true,
+      "reason": "已收編，現在只補差異"
+    },
+    {
+      "file": "config.py",
+      "exists": true,
+      "reason": "已收編，現在只補差異"
+    }
+  ],
+  "hold_do_not_touch_yet": [
+    {
+      "file": "launcher.py",
+      "exists": true,
+      "reason": "仍可作零件來源，先別整支搬"
+    },
+    {
+      "file": "execution_engine.py",
+      "exists": true,
+      "reason": "仍可作零件來源，先別整支搬"
+    },
+    {
+      "file": "paper_broker.py",
+      "exists": true,
+      "reason": "仍可作零件來源，先別整支搬"
+    },
+    {
+      "file": "portfolio_risk.py",
+      "exists": true,
+      "reason": "仍可作零件來源，先別整支搬"
+    },
+    {
+      "file": "master_pipeline.py",
+      "exists": true,
+      "reason": "仍可作零件來源，先別整支搬"
+    },
+    {
+      "file": "live_paper_trading.py",
+      "exists": true,
+      "reason": "仍可作零件來源，先別整支搬"
+    }
+  ],
+  "absorbed_keep_wrapper": [
+    {
+      "file": "yahoo_csv_to_sql.py",
+      "exists": true,
+      "reason": "已被 fts_fundamentals_etl_mainline.py 收編；只補差異"
+    },
+    {
+      "file": "model_governance.py",
+      "exists": true,
+      "reason": "已被 fts_training_governance_mainline.py 收編；保留治理核心"
+    },
+    {
+      "file": "ml_trainer.py",
+      "exists": true,
+      "reason": "已被 fts_trainer_backend.py 收編；保留舊執行入口"
+    },
+    {
+      "file": "daily_chip_etl.py",
+      "exists": true,
+      "reason": "已被 fts_etl_daily_chip_service.py 收編；保留舊門牌"
+    },
+    {
+      "file": "monthly_revenue_simple.py",
+      "exists": true,
+      "reason": "已被 fts_etl_monthly_revenue_service.py 收編；保留舊門牌"
+    },
+    {
+      "file": "ml_data_generator.py",
+      "exists": true,
+      "reason": "已被 fts_training_data_builder.py 收編；保留舊門牌"
+    },
+    {
+      "file": "advanced_chart.py",
+      "exists": true,
+      "reason": "已被 fts_chart_service.py 收編；保留舊門牌"
+    }
+  ],
+  "status": "classification_ready_v83_wave123"
+}

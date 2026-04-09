@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "system_name": "正式交易主控版_v83_official_main",
+  "mode": "PAPER",
+  "broker_type": "paper",
+  "paper_live_safe": true,
+  "status": "live_safety_green",
+  "failures": [],
+  "warnings": [],
+  "blocked_orders": [],
+  "limits": {
+    "daily_loss_limit_pct": 0.03,
+    "max_single_position_pct": 0.1,
+    "max_order_notional": 500000.0,
+    "max_industry_exposure_pct": 0.25
+  }
+}

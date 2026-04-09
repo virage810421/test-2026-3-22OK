@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-04-08 12:28:37",
+  "system_name": "正式交易主控版_v24",
+  "waves": [
+    {
+      "wave": 1,
+      "focus": "明確 contract 與治理層",
+      "targets": [
+        "monthly_revenue_simple.py",
+        "ml_data_generator.py",
+        "ml_trainer.py"
+      ]
+    },
+    {
+      "wave": 2,
+      "focus": "逐步吸收可重複邏輯",
+      "targets": [
+        "yahoo_csv_to_sql.py",
+        "model_governance.py"
+      ]
+    },
+    {
+      "wave": 3,
+      "focus": "保留少數高價值專業引擎",
+      "targets": [
+        "advanced_chart.py",
+        "daily_chip_etl.py"
+      ]
+    }
+  ],
+  "principle": "不是全部刪掉，而是把該吸收的吸收、該保留的保留成正規子模組",
+  "status": "replacement_plan_ready"
+}

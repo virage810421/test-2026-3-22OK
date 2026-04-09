@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "status": "closebook_ready",
+  "reconciliation_status": "reconciliation_green",
+  "all_green": true,
+  "headline": {
+    "payload_rows": 3,
+    "orders_submitted": 3,
+    "orders_filled": 0,
+    "fills_count": 0,
+    "callbacks_recorded": 6,
+    "incident_status": "incident_guard_block"
+  },
+  "pnl_summary": {},
+  "callback_store": {
+    "generated_at": "2026-04-09 15:50:27",
+    "status": "callback_event_recorded",
+    "last_event_valid": true,
+    "last_event_type": "REJECT",
+    "last_event_status": "REJECTED",
+    "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_events.jsonl"
+  },
+  "close_notes": [
+    "模型治理 gate：candidate_blocked",
+    "promotion gate：promote_blocked",
+    "對帳狀態：reconciliation_green",
+    "恢復狀態：recovery_ready",
+    "live safety：BLOCK",
+    "假真券商已補上：可測試 broker_order_id / callback / reconciliation",
+    "仍未接真券商 API，但 phase2 contract 已跑通"
+  ],
+  "next_day_resume_ready": false
+}

@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-04-09 15:50:28",
+  "module_version": "v83_phase3_adapter_ready",
+  "contract_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_requirements_contract.json",
+  "approval_path": "C:\\test\\test-2026-3-22OK\\runtime\\operator_approval_registry.json",
+  "cutover_plan_path": "C:\\test\\test-2026-3-22OK\\runtime\\live_cutover_plan.json",
+  "release_gate_path": "C:\\test\\test-2026-3-22OK\\runtime\\live_release_gate.json",
+  "real_broker_fields": {
+    "auth": [
+      "api_key",
+      "api_secret",
+      "account_id",
+      "cert_or_token"
+    ],
+    "order_payload": [
+      "ticker",
+      "side",
+      "qty",
+      "price",
+      "order_type",
+      "time_in_force",
+      "session",
+      "idempotency_key"
+    ],
+    "callback_payload": [
+      "broker_order_id",
+      "order_status",
+      "fill_qty",
+      "fill_price",
+      "event_time",
+      "reject_reason"
+    ],
+    "account_snapshot": [
+      "cash_available",
+      "market_value",
+      "equity",
+      "buying_power"
+    ]
+  },
+  "credentials_template_path": "C:\\test\\test-2026-3-22OK\\runtime\\real_broker_credentials_template.json",
+  "broker_adapter_template_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_config.template.json",
+  "broker_adapter_config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
+  "broker_adapter_probe_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_probe.json",
+  "broker_adapter_probe": {
+    "generated_at": "2026-04-09 15:50:28",
+    "module_version": "v83_configurable_broker_adapter",
+    "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
+    "template_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_config.template.json",
+    "provider_name": "fill_me_after_account_opened",
+    "transport": "rest",
+    "ready_for_live_connect": false,
+    "missing_items": [
+      "config_enabled_false",
+      "provider_name",
+      "base_url",
+      "auth.api_key",
+      "auth.account_id"
+    ],
+    "status": "broker_adapter_account_pending"
+  },
+  "complete_now": [
+    "broker contract",
+    "callback schema",
+    "operator approval registry",
+    "live cutover plan",
+    "release gate",
+    "configurable broker adapter",
+    "broker adapter template/config"
+  ],
+  "waiting_for_real_account": [
+    "券商 API 金鑰",
+    "認證/簽章方式",
+    "callback 或 polling 真實規格",
+    "錯誤碼映射",
+    "實盤小額 smoke test"
+  ],
+  "status": "phase3_adapter_ready_account_pending"
+}

@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-04-09 15:57:43",
+  "module_version": "v83_fundamentals_etl_mainline_builtin",
+  "csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+  "table_name": "fundamentals_clean",
+  "target_reports_per_stock": 2,
+  "network_fetch_requires": [
+    "yfinance"
+  ],
+  "sql_import_requires": [
+    "pyodbc",
+    "SQL Server reachable"
+  ],
+  "safe_default_mode": "local_sync_only",
+  "modes": [
+    "local_sync_only",
+    "smart_sync"
+  ]
+}

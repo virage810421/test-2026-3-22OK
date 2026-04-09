@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "status": "incident_guard_block",
+  "severity": "critical",
+  "alerts": [
+    "reject_rate_too_high"
+  ],
+  "metrics": {
+    "broker_connected": true,
+    "callback_lag_seconds": 1,
+    "reject_rate": 1.0,
+    "day_loss_pct": 0.0,
+    "stale_price_symbols": [],
+    "orphan_order_count": 0
+  },
+  "kill_switch_recommended": true
+}

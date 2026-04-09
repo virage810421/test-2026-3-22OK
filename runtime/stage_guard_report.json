@@ -1,0 +1,34 @@
+{
+  "package_version": "v79",
+  "safe_upgrade_mode": true,
+  "continue_on_stage_failure": true,
+  "resume_completed_stages": true,
+  "soft_timeout_seconds": 120,
+  "max_stage_retries": 1,
+  "stages": [
+    {
+      "stage_key": "training_orchestrator",
+      "stage_label": "訓練治理檢查",
+      "status": "skipped_from_checkpoint",
+      "elapsed_seconds": 0
+    },
+    {
+      "stage_key": "decision_execution_bridge",
+      "stage_label": "決策執行橋接",
+      "status": "skipped_from_checkpoint",
+      "elapsed_seconds": 0
+    },
+    {
+      "stage_key": "completion_gap_report",
+      "stage_label": "完成度缺口報告",
+      "status": "skipped_from_checkpoint",
+      "elapsed_seconds": 0
+    },
+    {
+      "stage_key": "progress_full_report",
+      "stage_label": "完整進度報告",
+      "status": "skipped_from_checkpoint",
+      "elapsed_seconds": 0
+    }
+  ]
+}

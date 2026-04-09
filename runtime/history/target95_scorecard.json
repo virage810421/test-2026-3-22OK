@@ -1,0 +1,155 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
+  "scorecard": {
+    "ETL資料層": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "AI訓練層": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "研究/選股層": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "決策輸出層": {
+      "current_pct": 99,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "風控層": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "模擬執行層": {
+      "current_pct": 99,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "主控整合層": {
+      "current_pct": 99,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "真券商介面預留": {
+      "current_pct": 97,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "委託狀態機/對帳骨架": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "恢復機制骨架": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "測試/驗證框架": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "實盤工程化": {
+      "current_pct": 98,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "舊訓練核心上線資格評估": {
+      "current_pct": 99,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "舊核心95+並行升級規劃": {
+      "current_pct": 99,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "Wave1舊核心升級骨架": {
+      "current_pct": 99,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "Wave1本體補強模板 / IO bindings": {
+      "current_pct": 99,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "接口對齊稽核": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "研究/選股品質閘門": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "AI訓練品質/模型產物一致性/測試矩陣": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "風控 deeper checks / 恢復校驗 / 情境擴充": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "研究品質統計 / 決策一致性 / 接口收口": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "委託狀態機 / 對帳 / callback 正規化": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "真券商 adapter / live workflow / callback 對接": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    },
+    "ETL深化 / research versioning / live adapter stub": {
+      "current_pct": 95,
+      "target_pct": 95,
+      "gap_to_95": 0,
+      "already_at_or_above_95": true
+    }
+  },
+  "summary": {
+    "total_modules": 24,
+    "at_or_above_95": 24,
+    "below_95": 0
+  }
+}

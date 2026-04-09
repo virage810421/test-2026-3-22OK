@@ -1,0 +1,60 @@
+[22:49:13] ============================================================
+[22:49:13] 🚀 啟動 正式交易主控版_v14
+[22:49:13] 🧭 模式：PAPER
+[22:49:13] 🏦 broker_type：paper
+[22:49:13] 📈 目前整體升級進度：80.6%
+[22:49:13] ============================================================
+[22:49:13] ✅ SQL Server 連線成功。
+[22:49:13] ✅ execution tables ready.
+[22:49:13] 📚 版本保留建議：
+[22:49:13]    - 主入口：formal_trading_system_v14.py
+[22:49:13]    - 建議保留：formal_trading_system_v13.py, formal_trading_system_v14.py
+[22:49:13] 🧷 package consistency check 通過
+[22:49:13] 📦 已輸出 runtime manifest：C:\test\test-2026-3-22OK\logs\runtime_manifest_v14.json
+[22:49:13] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 22:47:29 positions=0
+[22:49:13] 🧪 preflight all_passed=True
+[22:49:13] 🎯 階段四：執行層
+[22:49:13] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[22:49:13] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[22:49:13] ✅ 讀入訊號：0 筆 | execution_ready=False | with_regime=0
+[22:49:13] 🛡️ 風控通過：0
+[22:49:13] 🚫 風控擋下：0
+[22:49:13] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[22:49:13] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[22:49:13] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v14_report_20260407_224913.json
+[22:49:13] 🛑 系統關閉。
+[23:17:54] ============================================================
+[23:17:54] 🚀 啟動 正式交易主控版_v16
+[23:17:54] 🧭 模式：PAPER
+[23:17:54] 🏦 broker_type：paper
+[23:17:54] 🎬 execution_style：TWAP3
+[23:17:54] 🪜 bracket_exit：True
+[23:17:54] 📈 目前整體升級進度：82.0%
+[23:17:54] ============================================================
+[23:17:54] ✅ SQL Server 連線成功。
+[23:17:54] ✅ execution tables ready.
+[23:17:54] 🧷 package consistency check 通過
+[23:17:54] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 22:49:13 positions=0
+[23:17:54] 🧪 preflight all_passed=True
+[23:17:54] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[23:17:54] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[23:17:54] ✅ 讀入訊號：0 筆 | execution_ready=False
+[23:17:54] 🛡️ 風控通過：0
+[23:17:54] 🚫 風控擋下：0
+[23:17:54] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[23:17:54] 🎯 執行摘要 | filled=0 | partial=0 | auto_exit=0
+[23:17:54] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[23:17:54] ❌ 系統例外：
+[23:17:54] ReportBuilder.save() missing 4 required positional arguments: 'stage_results', 'runtime_manifest', 'legacy_bridge_info', and 'recovery_info'
+[23:17:54] Traceback (most recent call last):
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v16.py", line 107, in main
+    app.run()
+    ~~~~~~~^^
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v16.py", line 85, in run
+    report_path = self.report_builder.save(
+        package_check=package_check,
+    ...<8 lines>...
+        decision_path=decision_path,
+    )
+TypeError: ReportBuilder.save() missing 4 required positional arguments: 'stage_results', 'runtime_manifest', 'legacy_bridge_info', and 'recovery_info'
+

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "system_name": "正式交易主控版_v83_official_main",
+  "inputs": {
+    "artifact_ok": true,
+    "registry_updated": true,
+    "walk_forward_score": 78.0,
+    "profit_factor": 1.2,
+    "win_rate": 0.56,
+    "max_drawdown_pct": 0.08,
+    "shadow_return_drift_pct": 0.03,
+    "rollback_version_exists": true,
+    "operator_approved": true,
+    "live_safety_clear": true
+  },
+  "go_for_shadow": true,
+  "go_for_promote": true,
+  "failures": [],
+  "warnings": [],
+  "status": "promote_ready"
+}

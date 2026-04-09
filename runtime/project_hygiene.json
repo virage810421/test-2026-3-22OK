@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "status": "project_hygiene_applied",
+  "moved_versions": [],
+  "moved_docs": [],
+  "created_paths": [
+    "C:\\test\\test-2026-3-22OK\\archive\\versions",
+    "C:\\test\\test-2026-3-22OK\\archive\\docs\\upgrades",
+    "C:\\test\\test-2026-3-22OK\\archive\\root_exports",
+    "C:\\test\\test-2026-3-22OK\\runtime\\history",
+    "C:\\test\\test-2026-3-22OK\\runtime\\errors",
+    "C:\\test\\test-2026-3-22OK\\docs\\upgrades",
+    "C:\\test\\test-2026-3-22OK\\data\\templates",
+    "C:\\test\\test-2026-3-22OK\\data\\audit",
+    "C:\\test\\test-2026-3-22OK\\data\\fundamentals"
+  ],
+  "warnings": [],
+  "recommended_entry": "C:\\test\\test-2026-3-22OK\\formal_trading_system.py",
+  "official_entry": "C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py"
+}

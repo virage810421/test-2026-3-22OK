@@ -1,0 +1,196 @@
+[02:58:37] ========================================================================
+[02:58:37] 🚀 啟動 formal_trading_system_v82_three_stage_upgrade
+[02:58:37] 🧭 三階段升級：Phase1 無真券商補滿 → Phase2 假真券商 → Phase3 真開戶切接
+[02:58:37] ========================================================================
+[02:58:37] 🧠 已輸出 training orchestrator：/mnt/data/fts_v82_upgrade_pack/runtime/training_orchestrator.json
+[02:58:37] 🎓 已輸出 training prod readiness：/mnt/data/fts_v82_upgrade_pack/runtime/training_prod_readiness.json
+[02:58:37] 🧩 已輸出 execution bridge：/mnt/data/fts_v82_upgrade_pack/runtime/decision_execution_bridge.json
+[02:58:37] 🥇 Phase1 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase1_upgrade.json
+[02:58:37] ❌ v82 三階段升級失敗：'ORDERSIDE.BUY' is not a valid OrderSide
+[02:58:56] ========================================================================
+[02:58:56] 🚀 啟動 formal_trading_system_v82_three_stage_upgrade
+[02:58:56] 🧭 三階段升級：Phase1 無真券商補滿 → Phase2 假真券商 → Phase3 真開戶切接
+[02:58:56] ========================================================================
+[02:58:56] 🧠 已輸出 training orchestrator：/mnt/data/fts_v82_upgrade_pack/runtime/training_orchestrator.json
+[02:58:56] 🎓 已輸出 training prod readiness：/mnt/data/fts_v82_upgrade_pack/runtime/training_prod_readiness.json
+[02:58:56] 🧩 已輸出 execution bridge：/mnt/data/fts_v82_upgrade_pack/runtime/decision_execution_bridge.json
+[02:58:56] 🥇 Phase1 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase1_upgrade.json
+[02:58:56] 🥈 Phase2 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase2_mock_real_broker.json
+[02:58:56] 🥉 Phase3 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase3_real_cutover.json
+[02:58:56] 🗂️ 已輸出 file classification：/mnt/data/fts_v82_upgrade_pack/runtime/file_classification.json
+[02:58:56] ✅ v82 三階段升級完成：/mnt/data/fts_v82_upgrade_pack/runtime/formal_trading_system_v82_three_stage_upgrade.json
+[02:59:45] ========================================================================
+[02:59:45] 🚀 啟動 formal_trading_system_v82_three_stage_upgrade
+[02:59:45] 🧭 三階段升級：Phase1 無真券商補滿 → Phase2 假真券商 → Phase3 真開戶切接
+[02:59:45] ========================================================================
+[02:59:45] 🧠 已輸出 training orchestrator：/mnt/data/fts_v82_upgrade_pack/runtime/training_orchestrator.json
+[02:59:45] 🎓 已輸出 training prod readiness：/mnt/data/fts_v82_upgrade_pack/runtime/training_prod_readiness.json
+[02:59:45] 🧩 已輸出 execution bridge：/mnt/data/fts_v82_upgrade_pack/runtime/decision_execution_bridge.json
+[02:59:45] 🥇 Phase1 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase1_upgrade.json
+[02:59:45] 🥈 Phase2 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase2_mock_real_broker.json
+[02:59:45] 🥉 Phase3 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase3_real_cutover.json
+[02:59:45] 🗂️ 已輸出 file classification：/mnt/data/fts_v82_upgrade_pack/runtime/file_classification.json
+[02:59:45] ✅ v82 三階段升級完成：/mnt/data/fts_v82_upgrade_pack/runtime/formal_trading_system_v82_three_stage_upgrade.json
+[03:00:26] ========================================================================
+[03:00:26] 🚀 啟動 formal_trading_system_v82_three_stage_upgrade
+[03:00:26] 🧭 三階段升級：Phase1 無真券商補滿 → Phase2 假真券商 → Phase3 真開戶切接
+[03:00:26] ========================================================================
+[03:00:26] 🧠 已輸出 training orchestrator：/mnt/data/fts_v82_upgrade_pack/runtime/training_orchestrator.json
+[03:00:26] 🎓 已輸出 training prod readiness：/mnt/data/fts_v82_upgrade_pack/runtime/training_prod_readiness.json
+[03:00:26] 🧩 已輸出 execution bridge：/mnt/data/fts_v82_upgrade_pack/runtime/decision_execution_bridge.json
+[03:00:26] 🥇 Phase1 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase1_upgrade.json
+[03:00:26] 🥈 Phase2 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase2_mock_real_broker.json
+[03:00:26] 🥉 Phase3 完成：/mnt/data/fts_v82_upgrade_pack/runtime/phase3_real_cutover.json
+[03:00:26] 🗂️ 已輸出 file classification：/mnt/data/fts_v82_upgrade_pack/runtime/file_classification.json
+[03:00:26] ✅ v82 三階段升級完成：/mnt/data/fts_v82_upgrade_pack/runtime/formal_trading_system_v82_three_stage_upgrade.json
+[03:17:44] ========================================================================
+[03:17:44] 🚀 啟動 正式交易主控版_v83_official_main
+[03:17:44] 🧭 收編內容：fundamentals ETL + training governance + 三階段交易升級
+[03:17:44] ========================================================================
+[03:17:44] 📚 fundamentals ETL 主線盤點完成：/mnt/data/fts_v83_official_pack/runtime/fundamentals_etl_mainline.json
+[03:17:44] 🧠 已輸出 training orchestrator：/mnt/data/fts_v83_official_pack/runtime/training_orchestrator.json
+[03:17:44] 🧠 training governance 主線盤點完成：/mnt/data/fts_v83_official_pack/runtime/training_governance_mainline.json
+[03:17:44] 🧠 已輸出 training orchestrator：/mnt/data/fts_v83_official_pack/runtime/training_orchestrator.json
+[03:17:44] 🎓 已輸出 training prod readiness：/mnt/data/fts_v83_official_pack/runtime/training_prod_readiness.json
+[03:17:44] 🧩 已輸出 execution bridge：/mnt/data/fts_v83_official_pack/runtime/decision_execution_bridge.json
+[03:17:44] 🥇 Phase1 完成：/mnt/data/fts_v83_official_pack/runtime/phase1_upgrade.json
+[03:17:44] 🥈 Phase2 完成：/mnt/data/fts_v83_official_pack/runtime/phase2_mock_real_broker.json
+[03:17:44] 🥉 Phase3 完成：/mnt/data/fts_v83_official_pack/runtime/phase3_real_cutover.json
+[03:17:44] 🗂️ 已輸出 file classification：/mnt/data/fts_v83_official_pack/runtime/file_classification.json
+[03:17:44] ✅ v83 正式交易主控版完成：/mnt/data/fts_v83_official_pack/runtime/formal_trading_system_v83_official_main.json
+[03:18:29] ========================================================================
+[03:18:29] 🚀 啟動 正式交易主控版_v83_official_main
+[03:18:29] 🧭 收編內容：fundamentals ETL + training governance + 三階段交易升級
+[03:18:29] ========================================================================
+[03:18:29] 📚 fundamentals ETL 主線盤點完成：/mnt/data/fts_v83_official_pack/runtime/fundamentals_etl_mainline.json
+[03:18:29] 🧠 已輸出 training orchestrator：/mnt/data/fts_v83_official_pack/runtime/training_orchestrator.json
+[03:18:29] 🧠 training governance 主線盤點完成：/mnt/data/fts_v83_official_pack/runtime/training_governance_mainline.json
+[03:18:29] 🧠 已輸出 training orchestrator：/mnt/data/fts_v83_official_pack/runtime/training_orchestrator.json
+[03:18:29] 🎓 已輸出 training prod readiness：/mnt/data/fts_v83_official_pack/runtime/training_prod_readiness.json
+[03:18:29] 🧩 已輸出 execution bridge：/mnt/data/fts_v83_official_pack/runtime/decision_execution_bridge.json
+[03:18:29] 🥇 Phase1 完成：/mnt/data/fts_v83_official_pack/runtime/phase1_upgrade.json
+[03:18:29] 🥈 Phase2 完成：/mnt/data/fts_v83_official_pack/runtime/phase2_mock_real_broker.json
+[03:18:29] 🥉 Phase3 完成：/mnt/data/fts_v83_official_pack/runtime/phase3_real_cutover.json
+[03:18:29] 🗂️ 已輸出 file classification：/mnt/data/fts_v83_official_pack/runtime/file_classification.json
+[03:18:29] ✅ v83 正式交易主控版完成：/mnt/data/fts_v83_official_pack/runtime/formal_trading_system_v83_official_main.json
+[13:08:21] ========================================================================
+[13:08:21] 🚀 啟動 正式交易主控版_v83_official_main
+[13:08:21] 🧭 收編內容：內建 fundamentals ETL + training governance + 三階段交易升級
+[13:08:21] ========================================================================
+[13:08:21] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:08:21] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:08:21] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:08:21] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:08:21] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[13:08:22] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[13:08:22] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[13:08:22] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[13:08:22] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[13:08:22] ✅ v83 正式交易主控版完成：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v83_official_main.json
+[14:31:58] ========================================================================
+[14:31:58] 🚀 啟動 正式交易主控版_v83_official_main
+[14:31:58] 🧭 收編內容：fundamentals ETL + training governance + 三階段交易升級 + A/B 波次收編
+[14:31:58] ========================================================================
+[14:31:58] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[14:31:58] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[14:31:58] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[14:31:59] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[14:31:59] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[14:31:59] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:31:59] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[14:31:59] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[14:31:59] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[14:31:59] 📦 market data service ready: C:\test\test-2026-3-22OK\runtime\market_data_service.json
+[14:31:59] 🧩 feature service ready: C:\test\test-2026-3-22OK\runtime\feature_service.json
+[14:31:59] 🧲 chip enrichment service ready: C:\test\test-2026-3-22OK\runtime\chip_enrichment_service.json
+[14:31:59] 🛰️ screening wave ready: C:\test\test-2026-3-22OK\runtime\screening_engine.json
+[14:31:59] 🏷️ sector service ready: C:\test\test-2026-3-22OK\runtime\sector_service.json
+[14:31:59] 🛡️ system guard ready: C:\test\test-2026-3-22OK\runtime\system_guard_service.json
+[14:31:59] 🚧 risk gateway ready: C:\test\test-2026-3-22OK\runtime\risk_gateway_service.json
+[14:31:59] 🎯 watchlist service ready: C:\test\test-2026-3-22OK\runtime\watchlist_service.json
+[14:31:59] 🌤️ market climate ready: C:\test\test-2026-3-22OK\runtime\market_climate_service.json
+[14:31:59] 🧭 decision desk builder ready: C:\test\test-2026-3-22OK\runtime\decision_desk_builder.json
+[14:31:59] 🧾 A/B diff audit ready: C:\test\test-2026-3-22OK\runtime\ab_diff_audit.json
+[14:31:59] 🏗️ A/B 波次升級完成：C:\test\test-2026-3-22OK\runtime\ab_wave_upgrade.json
+[14:31:59] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[14:31:59] ✅ v83 正式主控版完成：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v83_official_main.json
+[14:44:16] ========================================================================
+[14:44:16] 🚀 啟動 正式交易主控版_v83_official_main
+[14:44:16] 🧭 收編內容：fundamentals ETL + training governance + 三階段交易升級 + A/B 波次收編 + screening 去 legacy 依賴
+[14:44:16] ========================================================================
+[14:44:16] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[14:44:16] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[14:44:16] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[14:44:16] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[14:44:16] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[14:44:16] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[14:44:16] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[14:44:16] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[14:44:16] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[14:44:16] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[14:44:16] 📦 market data service ready: C:\test\test-2026-3-22OK\runtime\market_data_service.json
+[14:44:16] 🧩 feature service ready: C:\test\test-2026-3-22OK\runtime\feature_service.json
+[14:44:17] 🧲 chip enrichment service ready: C:\test\test-2026-3-22OK\runtime\chip_enrichment_service.json
+[14:44:17] 🛰️ screening engine detached: C:\test\test-2026-3-22OK\runtime\screening_engine.json
+[14:44:17] 🏷️ sector service ready: C:\test\test-2026-3-22OK\runtime\sector_service.json
+[14:44:17] 🛡️ system guard ready: C:\test\test-2026-3-22OK\runtime\system_guard_service.json
+[14:44:17] 🚧 risk gateway ready: C:\test\test-2026-3-22OK\runtime\risk_gateway_service.json
+[14:44:17] 🎯 watchlist service ready: C:\test\test-2026-3-22OK\runtime\watchlist_service.json
+[14:44:17] 🌤️ market climate ready: C:\test\test-2026-3-22OK\runtime\market_climate_service.json
+[14:44:17] 🧭 decision desk builder ready: C:\test\test-2026-3-22OK\runtime\decision_desk_builder.json
+[14:44:17] 🧾 A/B diff audit ready: C:\test\test-2026-3-22OK\runtime\ab_diff_audit.json
+[14:44:17] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[14:44:17] 🏗️ A/B 波次升級完成：C:\test\test-2026-3-22OK\runtime\ab_wave_upgrade.json
+[14:44:17] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[14:44:17] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[14:44:17] ✅ v83 正式主控版完成：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v83_official_main.json
+[15:30:00] ========================================================================
+[15:30:00] 🚀 啟動 正式交易主控版_v83_official_main
+[15:30:00] 🧭 收編內容：主入口收口 + runtime/data 清理 + fundamentals 真資料補強 + 三階段交易主線
+[15:30:00] ========================================================================
+[15:30:01] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:30:01] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:30:01] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[15:30:01] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[15:30:01] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:30:01] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[15:30:01] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[15:30:01] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[15:30:01] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[15:30:01] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[15:30:01] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[15:30:01] ✅ v83 正式交易主控版完成：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v83_official_main.json
+[15:31:30] ========================================================================
+[15:31:30] 🚀 啟動 正式交易主控版_v83_official_main
+[15:31:30] 🧭 收編內容：主入口收口 + runtime/data 清理 + fundamentals 真資料補強 + 三階段交易主線
+[15:31:30] ========================================================================
+[15:31:30] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:31:30] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:31:30] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[15:31:30] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[15:31:30] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:31:30] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[15:31:30] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[15:31:30] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[15:31:31] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[15:31:31] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[15:31:31] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[15:31:31] ✅ v83 正式交易主控版完成：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v83_official_main.json
+[15:50:27] ========================================================================
+[15:50:27] 🚀 啟動 正式交易主控版_v83_official_main
+[15:50:27] 🧭 收編內容：主入口收口 + runtime/data 清理 + fundamentals 真資料補強 + 三階段交易主線
+[15:50:27] ========================================================================
+[15:50:27] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:50:27] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:50:27] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[15:50:27] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[15:50:27] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:50:27] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[15:50:27] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[15:50:27] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[15:50:27] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[15:50:28] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[15:50:28] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[15:50:28] ✅ v83 正式交易主控版完成：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v83_official_main.json
+[15:57:05] 📚 fundamentals ETL smart sync 完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:57:56] 📚 fundamentals ETL smart sync 完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json

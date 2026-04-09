@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-04-09 14:44:17",
+  "module_version": "v83_risk_gateway",
+  "sample_approved": true,
+  "limits": {
+    "max_single_order_value": 500000.0,
+    "max_symbol_abs_position": 5000,
+    "allow_short": false,
+    "min_cash_buffer": 50000.0
+  },
+  "status": "wave2_risk_gateway_ready"
+}

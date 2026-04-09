@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "stub_methods": [
+    "connect",
+    "place_order",
+    "cancel_order",
+    "get_order_status",
+    "get_positions",
+    "get_cash",
+    "disconnect"
+  ],
+  "safety_rules": [
+    "default_disabled",
+    "requires_live_approval_workflow",
+    "requires_operator_confirmation",
+    "requires_callback_monitoring"
+  ],
+  "status": "stub_defined_not_enabled"
+}

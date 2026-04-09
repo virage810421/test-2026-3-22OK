@@ -1,0 +1,23 @@
+[22:32:56] ============================================================
+[22:32:56] 🚀 啟動 正式交易主控版_v12
+[22:32:56] 🧭 模式：PAPER
+[22:32:56] 🏦 broker_type：paper
+[22:32:56] 📈 目前整體升級進度：79.3%
+[22:32:56] ============================================================
+[22:32:56] ✅ SQL Server 連線成功。
+[22:32:56] ✅ execution tables ready.
+[22:32:56] 📚 版本保留建議：
+[22:32:56]    - 主入口：formal_trading_system_v12.py
+[22:32:56]    - 建議保留：formal_trading_system_v11.py, formal_trading_system_v12.py
+[22:32:56] ♻️ 已從 state 檔恢復狀態，saved_at=2026-04-07 22:20:48 positions=0
+[22:32:56] 🧪 preflight all_passed=True
+[22:32:56] 🎯 階段四：執行層
+[22:32:56] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[22:32:56] 🧩 已輸出 normalized decision csv：C:\test\test-2026-3-22OK\data\normalized_decision_output.csv
+[22:32:56] ✅ 讀入訊號：0 筆 | execution_ready=False | with_regime=0
+[22:32:56] 🛡️ 風控通過：0
+[22:32:56] 🚫 風控擋下：0
+[22:32:56] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[22:32:56] 💾 已儲存 state：C:\test\test-2026-3-22OK\state\engine_state.json
+[22:32:56] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v12_report_20260407_223256.json
+[22:32:56] 🛑 系統關閉。

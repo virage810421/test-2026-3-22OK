@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-04-09 10:15:46",
+  "system_name": "正式交易主控版_v79",
+  "models_dir": "C:\\test\\test-2026-3-22OK\\models",
+  "candidates": [
+    {
+      "name": "best",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\best",
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 0
+    },
+    {
+      "name": "current",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\current",
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 0
+    },
+    {
+      "name": "governance_events.jsonl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1520
+    },
+    {
+      "name": "model_區間盤整.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2774137
+    },
+    {
+      "name": "model_趨勢空頭.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 3399417
+    },
+    {
+      "name": "selected_features.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 483
+    },
+    {
+      "name": "test_line.py",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\test_line.py",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1595
+    },
+    {
+      "name": "versions",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\versions",
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 0
+    }
+  ],
+  "candidate_count": 8,
+  "governance_registry": {}
+}

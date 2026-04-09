@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-04-09 14:44:17",
+  "module_version": "v83_sector_service",
+  "mapped_ticker_count": 0,
+  "service_entrypoints": [
+    "load_sector_map",
+    "get_stock_sector",
+    "classify_tickers"
+  ],
+  "status": "wave2_sector_service_ready"
+}

@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-04-09 15:57:56",
+  "module_version": "v83_fundamentals_etl_mainline_builtin",
+  "system_name": "正式交易主控版_v83_official_main",
+  "mode": "smart_sync",
+  "csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+  "csv_template_created": false,
+  "config_template_path": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_config.template.json",
+  "network_fetch_enabled": true,
+  "network_fetch_available": true,
+  "target_stocks": [
+    "2330",
+    "2317",
+    "2454",
+    "2603",
+    "2881"
+  ],
+  "discovered_backups": [
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+      "rows": 2143,
+      "columns": [
+        "Ticker SYMBOL",
+        "資料年月日",
+        "毛利率(%)",
+        "營業利益率(%)",
+        "單季EPS",
+        "ROE(%)",
+        "稅後淨利率(%)",
+        "營業現金流",
+        "預估殖利率(%)",
+        "負債比率(%)",
+        "本業獲利比(%)"
+      ]
+    }
+  ],
+  "preexisting_rows": 2143,
+  "new_rows_fetched": 0,
+  "final_rows": 2143,
+  "fetch_errors": [],
+  "saved_csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+  "sql_status": {
+    "sql_import_attempted": true,
+    "sql_imported_rows": 2064,
+    "sql_error": "('42000', '[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]內送表格式資料流 (TDS) 遠端程序呼叫 (RPC) 通訊協定資料流不正確。參數 6 (\"\"): 提供的值不是資料類型 float 的有效執行個體。請檢查無效值的來源資料。例如，無效值是具有小數位數大於有效位數的 numeric 類型資料。 (8023) (SQLExecDirectW)')"
+  },
+  "legacy_dependency_removed": true,
+  "auto_outputs": [
+    "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+    "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_config.template.json",
+    "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json"
+  ],
+  "status": "fundamentals_etl_mainline_ready"
+}

@@ -1,0 +1,9 @@
+﻿column,role,dtype_guess
+Ticker,meta,str
+Action,meta,str
+Reference_Price,meta,float64
+Kelly_Pos,candidate_feature,float64
+風險金額,meta,int64
+Strategy,meta,str
+Regime,context_feature,str
+Score,candidate_feature,float64

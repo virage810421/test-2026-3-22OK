@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
+  "aligned": {
+    "etl_to_main_control": true,
+    "ai_to_main_control": true,
+    "decision_to_execution": true,
+    "launch_gate_to_execution": true,
+    "live_safety_to_execution": true,
+    "broker_approval_to_execution": true,
+    "ops_dashboard_to_runtime": true
+  },
+  "partial_or_not_fully_governed": {
+    "research_to_decision_quality_contract": "partial",
+    "model_selection_to_decision_policy": "partial",
+    "live_broker_submission_contract": "reserved_only"
+  },
+  "not_aligned_yet": [
+    "真券商實接提交契約尚未正式落地",
+    "research 輸出品質雖已有 gate，但還缺更完整的版本化治理",
+    "model 選用規則已初步治理，但尚未形成完整回退/升版策略"
+  ]
+}

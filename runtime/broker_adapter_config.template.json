@@ -1,0 +1,84 @@
+{
+  "generated_at": "2026-04-09 15:50:28",
+  "module_version": "v83_configurable_broker_adapter",
+  "enabled": false,
+  "provider_name": "fill_me_after_account_opened",
+  "transport": "rest",
+  "base_url": "",
+  "auth": {
+    "api_key": "",
+    "api_secret": "",
+    "account_id": "",
+    "cert_or_token": "",
+    "header_api_key": "X-API-KEY",
+    "header_bearer_prefix": "Bearer "
+  },
+  "timeouts": {
+    "connect_seconds": 10,
+    "read_seconds": 20
+  },
+  "endpoints": {
+    "connect": {
+      "method": "GET",
+      "path": "/v1/account/ping"
+    },
+    "place_order": {
+      "method": "POST",
+      "path": "/v1/orders"
+    },
+    "cancel_order": {
+      "method": "POST",
+      "path": "/v1/orders/{broker_order_id}/cancel"
+    },
+    "replace_order": {
+      "method": "POST",
+      "path": "/v1/orders/{broker_order_id}/replace"
+    },
+    "get_order_status": {
+      "method": "GET",
+      "path": "/v1/orders/{broker_order_id}"
+    },
+    "get_fills": {
+      "method": "GET",
+      "path": "/v1/fills"
+    },
+    "get_positions": {
+      "method": "GET",
+      "path": "/v1/positions"
+    },
+    "get_cash": {
+      "method": "GET",
+      "path": "/v1/account/cash"
+    },
+    "poll_callbacks": {
+      "method": "GET",
+      "path": "/v1/events"
+    }
+  },
+  "field_mapping": {
+    "order_status": "status",
+    "broker_order_id": "broker_order_id",
+    "client_order_id": "client_order_id",
+    "filled_qty": "filled_qty",
+    "remaining_qty": "remaining_qty",
+    "avg_fill_price": "avg_fill_price",
+    "reject_reason": "reject_reason",
+    "event_time": "timestamp"
+  },
+  "payload_mapping": {
+    "ticker": "symbol",
+    "side": "side",
+    "qty": "qty",
+    "price": "price",
+    "order_type": "order_type",
+    "time_in_force": "time_in_force",
+    "session": "session",
+    "client_order_id": "client_order_id",
+    "idempotency_key": "idempotency_key"
+  },
+  "polling": {
+    "enabled": true,
+    "use_since_cursor": true,
+    "cursor_field": "cursor"
+  }
+}

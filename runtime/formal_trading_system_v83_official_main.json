@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-04-09 15:50:28",
+  "module_version": "v83_official_main_hardening_cleanup",
+  "system_name": "正式交易主控版_v83_official_main",
+  "maintenance_outputs": {
+    "project_hygiene": "C:\\test\\test-2026-3-22OK\\runtime\\project_hygiene.json",
+    "runtime_cleanup": "C:\\test\\test-2026-3-22OK\\runtime\\runtime_cleanup.json",
+    "data_cleanup": "C:\\test\\test-2026-3-22OK\\runtime\\data_cleanup.json",
+    "fundamentals_true_backfill": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_true_backfill.json"
+  },
+  "mainline_outputs": {
+    "fundamentals_etl_mainline": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+    "training_governance_mainline": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
+    "phase1": "C:\\test\\test-2026-3-22OK\\runtime\\phase1_upgrade.json",
+    "phase2": "C:\\test\\test-2026-3-22OK\\runtime\\phase2_mock_real_broker.json",
+    "phase3": "C:\\test\\test-2026-3-22OK\\runtime\\phase3_real_cutover.json",
+    "file_classification": "C:\\test\\test-2026-3-22OK\\runtime\\file_classification.json"
+  },
+  "completed_upgrades": [
+    "Step1：主入口收口完成（舊主控移入 archive/versions，建立 formal_trading_system.py）",
+    "Step2：runtime 清理完成（歷史快照/舊版報告/錯誤檔分流）",
+    "Step3：data 清理完成（decision 檔統一、模板快照、可疑小檔稽核）",
+    "Step4：fundamentals 真資料補強完成（seed 覆蓋小檔/缺檔）",
+    "Fundamentals ETL 主線就緒",
+    "Training Governance 主線就緒",
+    "Phase1：pre-live 就緒",
+    "Phase2：mock-real-broker 就緒",
+    "Phase3：真券商 adapter-ready"
+  ],
+  "cleanup_completion": {
+    "step1_main_entry": {
+      "status": "project_hygiene_applied",
+      "complete_for_scope": true
+    },
+    "step2_runtime": {
+      "status": "runtime_cleanup_applied",
+      "complete_for_scope": true
+    },
+    "step3_data": {
+      "status": "data_cleanup_applied",
+      "complete_for_scope": true
+    },
+    "step4_fundamentals_true_data": {
+      "status": "fundamentals_true_backfill_applied",
+      "complete_for_scope": true
+    }
+  },
+  "phase_completion": {
+    "phase1": {
+      "status": "phase1_ready",
+      "complete_for_scope": true
+    },
+    "phase2": {
+      "status": "phase2_ready",
+      "complete_for_scope": true
+    },
+    "phase3": {
+      "status": "phase3_adapter_ready_account_pending",
+      "complete_for_scope": false
+    }
+  },
+  "status": "v83_official_main_hardening_ready"
+}

@@ -1,0 +1,13 @@
+{
+  "etl_entry": "daily_chip_etl.py / monthly_revenue_simple.py / yahoo_csv_to_sql.py",
+  "ai_entry": "ml_data_generator.py / ml_trainer.py / model_governance.py",
+  "research_entry": "你的 research / scoring / decision builder 主程式",
+  "decision_file": "daily_decision_desk.csv",
+  "execution_entry": "formal_trading_system_v19.py",
+  "state_store": "state/engine_state.json",
+  "audit_trail": "runtime/audit_events.jsonl",
+  "runtime_heartbeat": "runtime/heartbeat.json",
+  "notes": "v19 重點是把新主控明確掛回你的原始上游架構，而不是取代它。",
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72"
+}

@@ -1,0 +1,44 @@
+[21:49:08] ============================================================
+[21:49:08] 🚀 啟動 正式交易主控版_v8
+[21:49:08] 🧭 模式：PAPER
+[21:49:08] 🏦 broker_type：paper
+[21:49:08] 📈 目前整體升級進度：75.4%
+[21:49:08] ============================================================
+[21:49:08] ✅ SQL Server 連線成功。
+[21:49:08] ✅ execution tables ready.
+[21:49:08] 📚 版本保留建議：
+[21:49:08]    - 主入口：formal_trading_system_v8.py
+[21:49:08]    - 建議保留：formal_trading_system_v7.py, formal_trading_system_v8.py
+[21:49:08] 🎯 階段四：執行層
+[21:49:08] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[21:49:08] ❌ 系統例外：
+[21:49:08] CSV 缺少必要欄位：action | 現有欄位=['Ticker', 'Direction', 'Regime', 'Structure', 'AI_Proba', 'Hist_WinRate', 'Heuristic_EV', 'Realized_EV', 'Kelly_Pos', 'Score', 'Risk', 'Health', '預期停損(%)', '預期停利(%)', '風報比(RR)', '風險金額']
+[21:49:08] Traceback (most recent call last):
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v8.py", line 159, in main
+    app.run()
+    ~~~~~~~^^
+  File "c:\test\test-2026-3-22OK\formal_trading_system_v8.py", line 48, in run
+    signals = self.signal_loader.load(decision_path)
+  File "c:\test\test-2026-3-22OK\fts_signal.py", line 44, in load
+    raise ValueError(f"CSV 缺少必要欄位：{required} | 現有欄位={cols}")
+ValueError: CSV 缺少必要欄位：action | 現有欄位=['Ticker', 'Direction', 'Regime', 'Structure', 'AI_Proba', 'Hist_WinRate', 'Heuristic_EV', 'Realized_EV', 'Kelly_Pos', 'Score', 'Risk', 'Health', '預期停損(%)', '預期停利(%)', '風報比(RR)', '風險金額']
+
+[21:58:11] ============================================================
+[21:58:11] 🚀 啟動 正式交易主控版_v8
+[21:58:11] 🧭 模式：PAPER
+[21:58:11] 🏦 broker_type：paper
+[21:58:11] 📈 目前整體升級進度：75.4%
+[21:58:11] ============================================================
+[21:58:11] ✅ SQL Server 連線成功。
+[21:58:11] ✅ execution tables ready.
+[21:58:11] 📚 版本保留建議：
+[21:58:11]    - 主入口：formal_trading_system_v8.py
+[21:58:11]    - 建議保留：formal_trading_system_v7.py, formal_trading_system_v8.py
+[21:58:11] 🎯 階段四：執行層
+[21:58:11] 📥 載入決策檔：C:\test\test-2026-3-22OK\daily_decision_desk.csv
+[21:58:11] ✅ 讀入訊號：0 筆 | execution_ready=False | with_model_name=0 | with_regime=0
+[21:58:11] 🛡️ 風控通過：0
+[21:58:11] 🚫 風控擋下：0
+[21:58:11] 💰 帳戶快照 | cash=3,000,000 | mv=0 | equity=3,000,000 | exposure=0.00%
+[21:58:11] 📝 執行報告已輸出：C:\test\test-2026-3-22OK\logs\formal_trading_system_v8_report_20260407_215811.json
+[21:58:11] 🛑 系統關閉。

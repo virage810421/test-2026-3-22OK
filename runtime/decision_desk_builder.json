@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-04-09 14:44:17",
+  "module_version": "v83_decision_desk_builder",
+  "output_path": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output.csv",
+  "row_count": 3,
+  "market_climate": {
+    "regime": "區間盤整",
+    "risk_mode": "balanced",
+    "avg_ai_proba": 0.5,
+    "avg_score_gap": 0.0,
+    "avg_ev": 0.0
+  },
+  "status": "wave3_decision_desk_rules_ready"
+}

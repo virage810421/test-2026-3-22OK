@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-04-09 15:50:27",
+  "module_version": "v82",
+  "rows_total": 3,
+  "rows_with_price": 3,
+  "rows_with_qty": 3,
+  "rows_market_rule_passed": 3,
+  "rows_market_rule_failed": 0,
+  "rows_watchlist_ready": 3,
+  "price_source_counts": {
+    "unknown": 3
+  },
+  "sizing_reason_counts": {
+    "paper_odd_lot_min_of_risk_cap": 2,
+    "strict_min_of_risk_cap": 1
+  },
+  "failed_tickers_preview": [],
+  "missing_price_tickers": [],
+  "rows_board_lot_ready": 1,
+  "rows_odd_lot_ready_for_paper": 2,
+  "execution_readiness_pct": 100,
+  "output_path": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+  "watchlist_output_path": "C:\\test\\test-2026-3-22OK\\data\\paper_execution_watchlist.csv",
+  "price_gap_bridge_status": "price_gap_reduced",
+  "idempotency_keys_written": true,
+  "status": "execution_payload_ready"
+}

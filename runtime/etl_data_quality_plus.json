@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "tracked_assets": [
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\daily_chip_etl.py",
+      "exists": true,
+      "is_file": true
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\monthly_revenue_simple.py",
+      "exists": true,
+      "is_file": true
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\yahoo_csv_to_sql.py",
+      "exists": true,
+      "is_file": true
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\latest_monthly_revenue_master.csv",
+      "exists": false,
+      "is_file": false
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\market_financials_backup.csv",
+      "exists": false,
+      "is_file": false
+    },
+    {
+      "path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
+      "exists": false,
+      "is_file": false
+    }
+  ],
+  "summary": {
+    "tracked_count": 6,
+    "existing_count": 3,
+    "coverage_ratio": 0.5
+  },
+  "status": "plus_quality_ready"
+}

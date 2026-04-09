@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-04-08 14:22:40",
+  "system_name": "正式交易主控版_v70",
+  "trace": [
+    {
+      "stage": "ai_training",
+      "enabled": false,
+      "dry_run": true,
+      "executed_count": 0,
+      "skipped_count": 1,
+      "failed_count": 0
+    },
+    {
+      "stage": "decision_normalize",
+      "row_count": 3,
+      "rows_with_ticker": 3,
+      "rows_with_action": 3,
+      "rows_with_price": 3
+    },
+    {
+      "stage": "signal_readiness",
+      "execution_ready": true,
+      "total_signals": 3
+    },
+    {
+      "stage": "risk_filter",
+      "accepted_count": 3,
+      "rejected_count": 0
+    },
+    {
+      "stage": "execution",
+      "submitted": 0,
+      "filled": 0,
+      "partially_filled": 0,
+      "rejected": 0,
+      "cancelled": 0,
+      "auto_exit_signals": 0
+    }
+  ]
+}

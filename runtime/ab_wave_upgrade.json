@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-04-09 14:44:17",
+  "module_version": "v83_ab_wave_upgrade",
+  "step1_a_main_version": {
+    "status": "a_is_main_version",
+    "system_name": "正式交易主控版_v83_official_main",
+    "note": "A 為主版本；B 只作零件來源，不整包覆蓋 A"
+  },
+  "step2_wave1_screening_absorption": {
+    "status": "complete",
+    "outputs": [
+      "C:\\test\\test-2026-3-22OK\\runtime\\market_data_service.json",
+      "C:\\test\\test-2026-3-22OK\\runtime\\feature_service.json",
+      "C:\\test\\test-2026-3-22OK\\runtime\\chip_enrichment_service.json",
+      "C:\\test\\test-2026-3-22OK\\runtime\\screening_engine.json"
+    ],
+    "note": "screening.py 核心能力已拆到 market/feature/chip/screening engine"
+  },
+  "step2_wave2_supporting_services": {
+    "status": "complete",
+    "outputs": [
+      "C:\\test\\test-2026-3-22OK\\runtime\\sector_service.json",
+      "C:\\test\\test-2026-3-22OK\\runtime\\system_guard_service.json",
+      "C:\\test\\test-2026-3-22OK\\runtime\\risk_gateway_service.json"
+    ],
+    "note": "sector_classifier.py / system_guard.py / risk_gateway.py 已收成 service"
+  },
+  "step2_wave3_pipeline_rules": {
+    "status": "complete",
+    "outputs": [
+      "C:\\test\\test-2026-3-22OK\\runtime\\watchlist_service.json",
+      "C:\\test\\test-2026-3-22OK\\runtime\\market_climate_service.json",
+      "C:\\test\\test-2026-3-22OK\\runtime\\decision_desk_builder.json"
+    ],
+    "note": "master_pipeline.py / live_paper_trading.py 的規則層已抽成 watchlist / market climate / decision desk / gates"
+  },
+  "step3_diff_patch_only": {
+    "status": "complete",
+    "output": "C:\\test\\test-2026-3-22OK\\runtime\\ab_diff_audit.json",
+    "note": "對已收編模組採只補差異，不再整支重收"
+  },
+  "step4_smoke_tests": {
+    "status": "complete",
+    "tests": {
+      "config_check": {
+        "passed": true,
+        "errors": []
+      },
+      "paths_check": {
+        "passed": true,
+        "errors": []
+      },
+      "decision_file_check": {
+        "passed": true,
+        "path": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+        "errors": []
+      },
+      "mock_broker_roundtrip": {
+        "passed": true,
+        "errors": [],
+        "fill_count": 1,
+        "callback_count": 2,
+        "status": "OrderStatus.FILLED"
+      },
+      "absorption_services_check": {
+        "passed": true,
+        "errors": []
+      },
+      "screening_detachment_check": {
+        "passed": true,
+        "errors": [],
+        "audit": {
+          "generated_at": "2026-04-09 14:44:17",
+          "module_version": "v83_screening_detachment_audit",
+          "direct_legacy_fallback_modules": [],
+          "legacy_screening_import_callers": [
+            "event_backtester.py",
+            "fts_screening_detachment_audit.py",
+            "live_paper_trading.py",
+            "master_pipeline.py",
+            "strategies.py"
+          ],
+          "status": "screening_detachment_audited",
+          "note": "目標是讓 service 不再反向 import 舊 screening.py；舊 screening.py 只保留相容 wrapper。"
+        }
+      },
+      "all_passed": true
+    }
+  },
+  "status": "ab_wave_upgrade_ready"
+}

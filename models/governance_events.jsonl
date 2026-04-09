@@ -1,0 +1,16 @@
+{"time": "2026-04-09 03:17:44", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 03:17:44", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}
+{"time": "2026-04-09 03:18:29", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 03:18:29", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}
+{"time": "2026-04-09 13:08:21", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 13:08:21", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}
+{"time": "2026-04-09 14:31:58", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 14:31:58", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}
+{"time": "2026-04-09 14:44:16", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 14:44:16", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}
+{"time": "2026-04-09 15:30:01", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 15:30:01", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}
+{"time": "2026-04-09 15:31:30", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 15:31:30", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}
+{"time": "2026-04-09 15:50:27", "event": "live_health_eval", "status": "live_health_ok", "triggers": []}
+{"time": "2026-04-09 15:50:27", "event": "evaluate_candidate", "decision": "candidate_ready", "failures": [], "warnings": []}

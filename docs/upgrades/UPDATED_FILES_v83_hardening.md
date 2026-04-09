@@ -1,0 +1,11 @@
+formal_trading_system_v83_official_main.py
+fts_project_hygiene.py
+fts_runtime_cleanup.py
+fts_data_cleanup.py
+fts_fundamentals_true_backfill.py
+fts_v83_housekeeping_once.py
+seed_data/market_financials_backup_fullspeed.csv
+seed_data/latest_monthly_revenue_with_industry.csv
+seed_data/stock_revenue_industry_tw.csv
+UPGRADE_SUMMARY_v83_hardening.md
+UPDATED_FILES_v83_hardening.md

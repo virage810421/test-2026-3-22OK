@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "checks": {
+    "feature_data_script_exists": true,
+    "trainer_script_exists": true,
+    "governance_script_exists": true,
+    "training_data_exists": false,
+    "models_dir_exists": true
+  },
+  "all_core_scripts_present": true,
+  "training_assets_present": false
+}

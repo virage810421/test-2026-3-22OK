@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-04-08 14:22:40",
+  "system_name": "正式交易主控版_v70",
+  "go_for_execution": true,
+  "failures": [],
+  "warnings": [],
+  "summary": {
+    "failure_count": 0,
+    "warning_count": 0,
+    "signal_count": 3
+  }
+}

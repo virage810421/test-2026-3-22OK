@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "checks": [
+    {
+      "check": "accepted_signal_count",
+      "value": 0,
+      "status": "ok"
+    },
+    {
+      "check": "unique_ticker_count",
+      "value": 0,
+      "status": "ok"
+    },
+    {
+      "check": "total_target_qty",
+      "value": 0,
+      "status": "ok"
+    }
+  ],
+  "status": "deepcheck_skeleton"
+}

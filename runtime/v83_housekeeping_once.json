@@ -1,0 +1,18 @@
+{
+  "project_hygiene": {
+    "path": "C:\\test\\test-2026-3-22OK\\runtime\\project_hygiene.json",
+    "status": "project_hygiene_applied"
+  },
+  "runtime_cleanup": {
+    "path": "C:\\test\\test-2026-3-22OK\\runtime\\runtime_cleanup.json",
+    "status": "runtime_cleanup_applied"
+  },
+  "data_cleanup": {
+    "path": "C:\\test\\test-2026-3-22OK\\runtime\\data_cleanup.json",
+    "status": "data_cleanup_applied"
+  },
+  "fundamentals_true_backfill": {
+    "path": "C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_true_backfill.json",
+    "status": "fundamentals_true_backfill_applied"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "categories": {
+    "RISK_LIMIT": [
+      "position limit",
+      "risk limit",
+      "exposure",
+      "cash buffer"
+    ],
+    "BAD_PAYLOAD": [
+      "missing field",
+      "invalid qty",
+      "invalid price",
+      "schema"
+    ],
+    "BROKER_REJECT": [
+      "broker reject",
+      "rejected",
+      "exchange reject"
+    ],
+    "MARKET_RULE": [
+      "price band",
+      "tick rule",
+      "trading halt"
+    ],
+    "UNKNOWN": [
+      "unknown",
+      "unclassified"
+    ]
+  },
+  "status": "defined"
+}

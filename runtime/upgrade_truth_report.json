@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-04-08 14:29:38",
+  "system_name": "正式交易主控版_v72",
+  "headline": {
+    "architecture_score_ready": 24,
+    "architecture_score_total": 24,
+    "training_assets_present": false,
+    "go_for_execution": true,
+    "submitted_orders": 0,
+    "real_api_live_bound": false
+  },
+  "truth_table": [
+    {
+      "layer": "架構/模組化",
+      "status": "high",
+      "evidence": "24/24 模組已達 95+"
+    },
+    {
+      "layer": "舊核心納管",
+      "status": "high",
+      "evidence": "核心檔案已納入主控與評分"
+    },
+    {
+      "layer": "AI 真正訓練資產",
+      "status": "low",
+      "evidence": "training_data_exists=False"
+    },
+    {
+      "layer": "決策可執行性",
+      "status": "medium",
+      "evidence": "rows_with_price_after=3"
+    },
+    {
+      "layer": "Paper execution",
+      "status": "medium",
+      "evidence": "go_for_execution=True"
+    },
+    {
+      "layer": "Real API live binding",
+      "status": "low",
+      "evidence": "contract defined but not live bound"
+    }
+  ],
+  "next_milestones": [
+    "補齊 last_price_snapshot.csv 或在決策輸出直接寫入 Close/Reference_Price",
+    "補齊 training_data 與模型 artifact 產出",
+    "接入真券商登入/下單/查單/成交 callback",
+    "建立 broker reject code -> internal reject classifier 映射"
+  ],
+  "status": "truth_report_ready"
+}

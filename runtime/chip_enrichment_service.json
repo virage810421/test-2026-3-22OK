@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-04-09 14:44:17",
+  "module_version": "v83_chip_enrichment_service_detached",
+  "legacy_screening_dependency": false,
+  "chip_columns": [
+    "Foreign_Net",
+    "Trust_Net",
+    "Dealers_Net",
+    "Foreign_Ratio",
+    "Trust_Ratio",
+    "Total_Ratio",
+    "Foreign_Consecutive",
+    "Trust_Consecutive"
+  ],
+  "status": "chip_enrichment_service_ready"
+}

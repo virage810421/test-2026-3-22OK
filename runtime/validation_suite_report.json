@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-04-08 12:28:33",
+  "system_name": "正式交易主控版_v24",
+  "checks": {
+    "launch_gate": false,
+    "model_gate": true,
+    "live_safety_gate": false,
+    "broker_approval_gate": false,
+    "submission_gate": false
+  },
+  "failed_checks": [
+    "launch_gate",
+    "live_safety_gate",
+    "broker_approval_gate",
+    "submission_gate"
+  ],
+  "all_passed": false,
+  "summary": {
+    "total_checks": 5,
+    "passed_checks": 1,
+    "failed_checks": 4
+  }
+}

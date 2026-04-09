@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-04-08 14:22:32",
+  "module_version": "v70",
+  "sources": {
+    "monthly_revenue_simple.csv": true,
+    "daily_chip_data_backup.csv": true,
+    "market_financials_backup_fullspeed.csv": true
+  },
+  "rows": {
+    "revenue": 1064,
+    "chip": 4374,
+    "fundamentals": 2143,
+    "common_universe": 1058
+  },
+  "universe_csv_path": "C:\\test\\test-2026-3-22OK\\data\\training_bootstrap_universe.csv",
+  "tickers_preview": [
+    "1101.TW",
+    "1102.TW",
+    "1103.TW",
+    "1104.TW",
+    "1108.TW",
+    "1109.TW",
+    "1110.TW",
+    "1201.TW",
+    "1203.TW",
+    "1210.TW",
+    "1215.TW",
+    "1216.TW",
+    "1217.TW",
+    "1218.TW",
+    "1219.TW",
+    "1220.TW",
+    "1225.TW",
+    "1227.TW",
+    "1229.TW",
+    "1231.TW"
+  ],
+  "bootstrap_possible_from_local_tables": true,
+  "blocking_reason": ""
+}

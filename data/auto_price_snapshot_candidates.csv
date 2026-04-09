@@ -1,0 +1,6 @@
+﻿Ticker,Reference_Price,Source
+2330.TW,150.0,decision:daily_decision_desk.csv
+2471.TW,52.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
+2467.TW,449.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
+2317.TW,110.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
+2454.TW,220.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv

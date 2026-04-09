@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-04-09 10:15:46",
+  "system_name": "正式交易主控版_v79",
+  "snapshot_found": true,
+  "broker_snapshot_found": true,
+  "retry_queue_total": 0,
+  "actions": [
+    "restore_cash_from_snapshot",
+    "restore_positions_from_snapshot",
+    "rebuild_open_order_state_machine",
+    "replay_recent_fills_for_pnl_consistency",
+    "restore_kill_switch_state",
+    "fetch_live_open_orders_from_broker",
+    "fetch_today_fills_from_broker",
+    "reconcile_snapshot_vs_broker",
+    "repair_orphan_orders_if_any"
+  ],
+  "failures": [],
+  "ready_to_recover": true,
+  "status": "recovery_ready"
+}
