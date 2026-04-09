@@ -1,37 +1,41 @@
 # -*- coding: utf-8 -*-
-import json
-from fts_config import PATHS, CONFIG
-from fts_utils import now_str, log
+from __future__ import annotations
 
-class OrderStateMachineRegistry:
-    def __init__(self):
-        self.path = PATHS.runtime_dir / "order_state_machine.json"
+from typing import Any
 
-    def build(self):
-        payload = {
-            "generated_at": now_str(),
-            "system_name": CONFIG.system_name,
-            "states": [
-                "NEW",
-                "PENDING_SUBMIT",
-                "SUBMITTED",
-                "PARTIALLY_FILLED",
-                "FILLED",
-                "CANCELLED",
-                "REJECTED",
-            ],
-            "allowed_transitions": {
-                "NEW": ["PENDING_SUBMIT", "REJECTED"],
-                "PENDING_SUBMIT": ["SUBMITTED", "REJECTED", "CANCELLED"],
-                "SUBMITTED": ["PARTIALLY_FILLED", "FILLED", "CANCELLED", "REJECTED"],
-                "PARTIALLY_FILLED": ["FILLED", "CANCELLED"],
-                "FILLED": [],
-                "CANCELLED": [],
-                "REJECTED": [],
-            },
-            "status": "registry_defined"
+from fts_prelive_runtime import PATHS, now_str, write_json, normalize_key
+
+_ALLOWED = {
+    'NEW': {'PENDING_SUBMIT', 'REJECTED', 'CANCELLED'},
+    'PENDING_SUBMIT': {'SUBMITTED', 'REJECTED', 'CANCELLED'},
+    'SUBMITTED': {'PARTIALLY_FILLED', 'FILLED', 'CANCEL_PENDING', 'CANCELLED', 'REJECTED'},
+    'PARTIALLY_FILLED': {'PARTIALLY_FILLED', 'FILLED', 'CANCEL_PENDING', 'CANCELLED'},
+    'CANCEL_PENDING': {'CANCELLED', 'PARTIALLY_FILLED', 'FILLED'},
+    'FILLED': set(),
+    'CANCELLED': set(),
+    'REJECTED': set(),
+}
+
+
+class OrderStateMachine:
+    def transition(self, current: str, target: str) -> dict[str, Any]:
+        current = normalize_key(current) or 'NEW'
+        target = normalize_key(target)
+        ok = target in _ALLOWED.get(current, set()) or current == target
+        return {
+            'from': current,
+            'to': target,
+            'allowed': ok,
+            'reason': 'ok' if ok else 'illegal_transition',
         }
-        with open(self.path, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
-        log(f"📜 已輸出 order state machine：{self.path}")
-        return self.path, payload
+
+    def build_definition(self) -> tuple[str, dict[str, Any]]:
+        payload = {
+            'generated_at': now_str(),
+            'status': 'order_state_machine_defined',
+            'states': sorted(_ALLOWED.keys()),
+            'allowed_transitions': {k: sorted(v) for k, v in _ALLOWED.items()},
+        }
+        path = PATHS.runtime_dir / 'order_state_machine_definition.json'
+        write_json(path, payload)
+        return str(path), payload

@@ -1,17 +1,51 @@
 {
-  "generated_at": "2026-04-08 14:22:40",
-  "system_name": "正式交易主控版_v70",
+  "generated_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
   "mode": "PAPER",
   "broker_type": "paper",
   "headline": {
     "pending_retry": 0,
     "signals": 3,
-    "filled": 0,
+    "filled": 1,
     "partial": 0,
-    "auto_exit": 0,
-    "positions": 0,
-    "recent_task_logs": 0,
+    "positions": 3,
     "alerts": 0
   },
-  "alerts": []
+  "today_candidates": [
+    {
+      "ticker": "2330.TW",
+      "score": 0.5392,
+      "regime": "區間盤整"
+    },
+    {
+      "ticker": "2471.TW",
+      "score": 0.4881,
+      "regime": "趨勢空頭"
+    },
+    {
+      "ticker": "2467.TW",
+      "score": 0.524,
+      "regime": "趨勢多頭"
+    }
+  ],
+  "blacklist": [],
+  "risk_usage": {
+    "day_loss_pct": 0.0,
+    "max_single_position_pct": 0.1,
+    "max_industry_exposure_pct": 0.25
+  },
+  "order_board": {
+    "submitted_like": 3,
+    "filled": 1,
+    "rejected": 0,
+    "blocked": 0
+  },
+  "alerts": [],
+  "close_notes": [
+    "模型治理 gate：candidate_blocked",
+    "promotion gate：promote_blocked",
+    "對帳狀態：reconciliation_green",
+    "恢復狀態：recovery_ready",
+    "live safety：BLOCK"
+  ]
 }

@@ -7,17 +7,17 @@
     "real_api_readiness.json"
   ],
   "headline": {
-    "completion_excluding_real_broker_pct": 58,
-    "remaining_major_blocks_excluding_real_broker": 3,
+    "completion_excluding_real_broker_pct": 85,
+    "remaining_major_blocks_excluding_real_broker": 1,
     "real_broker_binding_present": false
   },
   "subscores": {
     "architecture_pct": 96,
     "legacy_core_pct": 95,
     "governance_pct": 92,
-    "training_pct": 33,
-    "execution_pct": 15,
-    "paper_execution_pct": 38
+    "training_pct": 47,
+    "execution_pct": 100,
+    "paper_execution_pct": 90
   },
   "completed_excluding_real_broker": [
     "24/24 架構模組達 95+",
@@ -28,20 +28,35 @@
     "paper execution watchlist 已建立"
   ],
   "remaining_excluding_real_broker": [
-    "AI訓練資料與模型產物仍未落地到可訓練水位",
-    "決策價格/股數/台股規則 payload 尚未形成穩定可執行集",
-    "Paper execution 端到端尚未放行"
+    "AI訓練資料與模型產物仍未落地到可訓練水位"
   ],
   "detailed_flags": {
     "training_ready": false,
-    "execution_payload_ready": false,
+    "execution_payload_ready": true,
     "paper_execution_ready": true,
     "live_ready": false,
     "real_api_live_bound": false
   },
   "real_api_is_separate_track": {
-    "already_reserved": [],
-    "still_missing": []
+    "already_reserved": [
+      "broker submission contract defined",
+      "callback normalization contract defined",
+      "live approval workflow reserved",
+      "real broker stub reserved",
+      "order payload preview contract defined"
+    ],
+    "still_missing": [
+      "broker authentication and token refresh",
+      "account routing: cash / margin / short-sell",
+      "market session calendar and holiday source",
+      "tick size / price band / odd-lot rules",
+      "broker order id mapping and idempotency key",
+      "real callback receiver and persistence",
+      "partial fill reconciliation against broker ledger",
+      "cancel/replace semantics for each broker",
+      "rate limit and retry policy by endpoint",
+      "live kill-switch and operator confirmation UX"
+    ]
   },
   "status": "completion_gap_mapped_v79"
 }

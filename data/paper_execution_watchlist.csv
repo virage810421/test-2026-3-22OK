@@ -1,4 +1,4 @@
 ﻿Ticker,Action,Reference_Price,Target_Qty,MarketRuleReason,SizingReason
-2330.TW,SELL,0.0,0,missing_or_invalid_price,preexisting_qty
-2471.TW,SELL,0.0,0,missing_or_invalid_price,preexisting_qty
-2467.TW,SELL,0.0,0,missing_or_invalid_price,preexisting_qty
+2330.TW,SELL,1950.0,72,ok_odd_lot_allowed,paper_odd_lot_min_of_risk_cap
+2471.TW,SELL,52.0,1000,ok,strict_min_of_risk_cap
+2467.TW,SELL,449.0,185,ok_odd_lot_allowed,paper_odd_lot_min_of_risk_cap

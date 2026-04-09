@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "status": "incident_guard_block",
+  "alerts": [
+    "broker_disconnected",
+    "callback_lag_too_high"
+  ],
+  "kill_switch_recommended": true
+}

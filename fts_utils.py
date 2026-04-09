@@ -48,10 +48,12 @@ def resolve_decision_csv():
 
 
 def render_progress_bar(progress: float, width: int = 26) -> str:
+    """
+    保留原函式名稱，避免舊主線 import 壞掉；
+    但不再輸出視覺進度條，只輸出純文字百分比。
+    """
     progress = max(0.0, min(float(progress), 1.0))
-    filled = int(round(width * progress))
-    bar = '█' * filled + '░' * (width - filled)
-    return f'[{bar}] {int(progress * 100):>3d}%'
+    return f"{int(progress * 100):>3d}%"
 
 
 class StageProgress:
@@ -61,7 +63,8 @@ class StageProgress:
         self.current_stage = 0
 
     def _emit(self, label: str, progress: float, state: str) -> None:
-        log(f'📊 {render_progress_bar(progress)} {label}｜{state}')
+        pct = int(max(0.0, min(float(progress), 1.0)) * 100)
+        log(f'📊 {label}｜{state}｜{pct}%')
 
     @contextmanager
     def stage(self, stage_no: int, label: str):
@@ -76,7 +79,8 @@ class StageProgress:
         def heartbeat():
             while not stop_event.wait(self.heartbeat_seconds):
                 elapsed = int(time.time() - start_ts)
-                log(f'⏳ {render_progress_bar(start_progress)} {label}｜執行中，已耗時 {elapsed}s')
+                pct = int(start_progress * 100)
+                log(f'⏳ {label}｜執行中｜{pct}%｜已耗時 {elapsed}s')
 
         thread = threading.Thread(target=heartbeat, daemon=True)
         thread.start()
@@ -85,4 +89,4 @@ class StageProgress:
         finally:
             stop_event.set()
             elapsed = int(time.time() - start_ts)
-            self._emit(label, end_progress, f'完成，耗時 {elapsed}s')
+            log(f'📊 {label}｜完成｜{int(end_progress * 100)}%｜耗時 {elapsed}s')

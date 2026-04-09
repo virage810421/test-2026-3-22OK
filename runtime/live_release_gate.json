@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "status": "live_release_blocked",
+  "allow_pre_live_dryrun": false,
+  "allow_live": false,
+  "checks": {
+    "promotion_clear": false,
+    "safety_clear": false,
+    "reconciliation_green": false,
+    "recovery_ready": false,
+    "broker_contract_defined": true,
+    "operator_approved": false
+  }
+}

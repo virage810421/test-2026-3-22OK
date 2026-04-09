@@ -1,20 +1,90 @@
 {
-  "generated_at": "2026-04-08 12:28:33",
-  "system_name": "正式交易主控版_v24",
-  "go_for_model_linkage": true,
-  "failures": [],
+  "generated_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
+  "go_for_model_linkage": false,
+  "governance": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "thresholds": {
+      "min_win_rate": 0.5,
+      "min_profit_factor": 1.1,
+      "max_drawdown_pct": 0.12,
+      "min_walk_forward_score": 60,
+      "max_shadow_return_drift_pct": 0.08
+    },
+    "metrics": {
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "max_drawdown_pct": 0.0
+    },
+    "walk_forward": {
+      "score": 0.0
+    },
+    "shadow_result": {
+      "return_drift_pct": 0.0
+    },
+    "artifacts": {
+      "tracked_files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "all_present": false,
+      "files": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 483,
+          "sha256": "a2d6ca032aba2a61f814bac52bf3a4ab9536069ef0a44d7c6c2ab818f5c9ecf9"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": false,
+          "size_bytes": 0,
+          "sha256": null
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 2774137,
+          "sha256": "e2489a8c6a7f1fb2365396f7965a88354f6ae32e7c0b9d1c64794bdaedcadf71"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 3399417,
+          "sha256": "a4f33e52e361082237f6f293835bb45a5641472120f31b41fa850080895ae7e5"
+        }
+      ]
+    },
+    "rollback_version": null,
+    "go_for_shadow": false,
+    "go_for_promote": false,
+    "failures": [
+      "win_rate_below_threshold",
+      "profit_factor_below_threshold",
+      "walk_forward_not_strong_enough",
+      "rollback_version_missing",
+      "artifacts_incomplete"
+    ],
+    "warnings": [],
+    "status": "candidate_blocked"
+  },
+  "failures": [
+    {
+      "type": "governance_blocked",
+      "message": "模型治理閘門未放行"
+    }
+  ],
   "warnings": [
     {
       "type": "training_assets_incomplete",
       "message": "訓練資料或 models 資產尚未齊備"
-    },
-    {
-      "type": "zero_signal",
-      "message": "目前 decision 輸出為 0 筆有效訊號"
     }
   ],
   "summary": {
-    "failure_count": 0,
-    "warning_count": 2
+    "failure_count": 1,
+    "warning_count": 1
   }
 }

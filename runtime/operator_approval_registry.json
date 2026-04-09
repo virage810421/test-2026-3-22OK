@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "ts": "2026-04-09 09:42:38",
+      "stage": "live_cutover",
+      "operator": "system_seed",
+      "approved": false,
+      "note": "預設不放行，等待真券商資訊"
+    }
+  ],
+  "last": {
+    "ts": "2026-04-09 09:42:38",
+    "stage": "live_cutover",
+    "operator": "system_seed",
+    "approved": false,
+    "note": "預設不放行，等待真券商資訊"
+  },
+  "status": "approval_recorded"
+}

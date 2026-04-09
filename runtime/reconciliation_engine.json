@@ -1,20 +1,34 @@
 {
-  "generated_at": "2026-04-08 12:28:33",
-  "system_name": "正式交易主控版_v24",
-  "checks": {
-    "submitted_vs_filled_consistent": true,
-    "submitted_vs_partial_consistent": true,
-    "submitted_vs_rejected_consistent": true
+  "generated_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
+  "summary": {
+    "local_orders": 3,
+    "broker_orders": 3,
+    "local_fills": 1,
+    "broker_fills": 1,
+    "local_positions": 3,
+    "broker_positions": 3,
+    "order_mismatch_count": 0,
+    "fill_mismatch_count": 0,
+    "position_mismatch_count": 0,
+    "orphan_broker_orders": 0,
+    "orphan_broker_fills": 0,
+    "cash_matched": true,
+    "all_green": true,
+    "broker_status_mix": {
+      "": 3
+    }
   },
-  "execution_result": {
-    "submitted": 0,
-    "filled": 0,
-    "partially_filled": 0,
-    "rejected": 0,
-    "cancelled": 0,
-    "fills_count": 0,
-    "auto_exit_signals": 0,
-    "reconciliation": {}
+  "cash_check": {
+    "local_cash": 3000000.0,
+    "broker_cash": 3000000.0,
+    "cash_diff": 0.0,
+    "matched": true
   },
-  "status": "reconciliation_skeleton"
+  "order_mismatches": [],
+  "fill_mismatches": [],
+  "position_mismatches": [],
+  "orphan_broker_orders": [],
+  "orphan_broker_fills": [],
+  "status": "reconciliation_green"
 }

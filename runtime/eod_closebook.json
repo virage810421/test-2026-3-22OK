@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "status": "closebook_ready",
+  "reconciliation_status": "reconciliation_green",
+  "all_green": false,
+  "pnl_summary": {},
+  "close_notes": [
+    "模型治理 gate：candidate_blocked",
+    "promotion gate：promote_blocked",
+    "對帳狀態：reconciliation_green",
+    "恢復狀態：recovery_ready",
+    "live safety：BLOCK"
+  ],
+  "next_day_resume_ready": false
+}

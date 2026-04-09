@@ -1,0 +1,103 @@
+[01:19:34] ========================================================================
+[01:19:34] 🚀 啟動 formal_trading_system_v80_prebroker_sealed
+[01:19:34] 🧭 模式：PAPER | broker_type：paper
+[01:19:34] 🛡️ 目標：券商開戶前，把可由 code 封口的層全部補齊，並掛進 formal_trading_system 主線
+[01:19:34] ========================================================================
+[01:19:34] 💾 已輸出 recovery snapshot：C:\test\test-2026-3-22OK\state\engine_state.json
+[01:19:34] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[01:19:34] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[01:19:34] 🧩 已輸出 recovery consistency report：C:\test\test-2026-3-22OK\runtime\recovery_consistency_report.json
+[01:19:34] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[01:19:34] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[01:19:34] 🧪 Model Gate | go_for_model_linkage=False | failures=1 | warnings=1
+[01:19:34] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[01:19:34] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[01:19:34] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[01:19:34] 📈 已輸出 performance attribution：C:\test\test-2026-3-22OK\runtime\performance_attribution.json
+[01:19:34] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[01:19:34] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[01:19:34] ------------------------------------------------------------------------
+[01:19:34] ✅ 主控封口完成 | P0=completed | P1=completed_for_pre_broker_stage | P2=broker_ready_blueprint_only
+[01:19:34] 🧠 governance=candidate_blocked | promotion=promote_blocked | safety=BLOCK
+[01:19:34] 🧮 reconciliation=reconciliation_green | recovery=recovery_ready | attribution=attribution_ready
+[01:19:34] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v80_prebroker_sealed_report.json
+[01:19:34] ------------------------------------------------------------------------
+[01:24:23] ========================================================================
+[01:24:23] 🚀 啟動 formal_trading_system_v80_prebroker_sealed
+[01:24:23] 🧭 模式：PAPER | broker_type：paper
+[01:24:23] 🛡️ 目標：券商開戶前，把可由 code 封口的層全部補齊，並掛進 formal_trading_system 主線
+[01:24:23] ========================================================================
+[01:24:23] 💾 已輸出 recovery snapshot：C:\test\test-2026-3-22OK\state\engine_state.json
+[01:24:23] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[01:24:23] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[01:24:23] 🧩 已輸出 recovery consistency report：C:\test\test-2026-3-22OK\runtime\recovery_consistency_report.json
+[01:24:23] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[01:24:23] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[01:24:23] 🧪 Model Gate | go_for_model_linkage=False | failures=1 | warnings=1
+[01:24:23] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[01:24:23] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[01:24:23] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[01:24:23] 📈 已輸出 performance attribution：C:\test\test-2026-3-22OK\runtime\performance_attribution.json
+[01:24:23] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[01:24:23] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[01:24:23] ------------------------------------------------------------------------
+[01:24:23] ✅ 主控封口完成 | P0=completed | P1=completed_for_pre_broker_stage | P2=broker_ready_blueprint_only
+[01:24:23] 🧠 governance=candidate_blocked | promotion=promote_blocked | safety=BLOCK
+[01:24:23] 🧮 reconciliation=reconciliation_green | recovery=recovery_ready | attribution=attribution_ready
+[01:24:23] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v80_prebroker_sealed_report.json
+[01:24:23] ------------------------------------------------------------------------
+[09:25:45] ========================================================================
+[09:25:45] 🚀 啟動 formal_trading_system_v80_prebroker_sealed
+[09:25:45] 🧭 模式：PAPER | broker_type：paper
+[09:25:45] 🛡️ 目標：券商開戶前，把可由 code 封口的層全部補齊，並掛進 formal_trading_system 主線
+[09:25:45] ========================================================================
+[09:25:46] 💾 已輸出 recovery snapshot：C:\test\test-2026-3-22OK\state\engine_state.json
+[09:25:46] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[09:25:46] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[09:25:46] 🧩 已輸出 recovery consistency report：C:\test\test-2026-3-22OK\runtime\recovery_consistency_report.json
+[09:25:46] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[09:25:46] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[09:25:46] 🧪 Model Gate | go_for_model_linkage=False | failures=1 | warnings=1
+[09:25:46] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[09:25:46] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[09:25:46] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[09:25:46] 📈 已輸出 performance attribution：C:\test\test-2026-3-22OK\runtime\performance_attribution.json
+[09:25:46] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[09:25:46] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[09:25:46] ------------------------------------------------------------------------
+[09:25:46] ✅ 主控封口完成 | P0=completed | P1=completed_for_pre_broker_stage | P2=broker_ready_blueprint_only
+[09:25:46] 🧠 governance=candidate_blocked | promotion=promote_blocked | safety=BLOCK
+[09:25:46] 🧮 reconciliation=reconciliation_green | recovery=recovery_ready | attribution=attribution_ready
+[09:25:46] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v80_prebroker_sealed_report.json
+[09:25:46] ------------------------------------------------------------------------
+[09:42:37] ========================================================================
+[09:42:37] 🚀 啟動 formal_trading_system_v81_prelive_bridge
+[09:42:37] 🎯 目標：把券商開戶前可用 code 封口的最後 12 步收齊，並為日後實盤 cutover 做橋接
+[09:42:37] ========================================================================
+[09:42:37] ========================================================================
+[09:42:37] 🚀 啟動 formal_trading_system_v80_prebroker_sealed
+[09:42:37] 🧭 模式：PAPER | broker_type：paper
+[09:42:37] 🛡️ 目標：券商開戶前，把可由 code 封口的層全部補齊，並掛進 formal_trading_system 主線
+[09:42:37] ========================================================================
+[09:42:38] 💾 已輸出 recovery snapshot：C:\test\test-2026-3-22OK\state\engine_state.json
+[09:42:38] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[09:42:38] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[09:42:38] 🧩 已輸出 recovery consistency report：C:\test\test-2026-3-22OK\runtime\recovery_consistency_report.json
+[09:42:38] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[09:42:38] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[09:42:38] 🧪 Model Gate | go_for_model_linkage=False | failures=1 | warnings=1
+[09:42:38] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[09:42:38] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[09:42:38] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[09:42:38] 📈 已輸出 performance attribution：C:\test\test-2026-3-22OK\runtime\performance_attribution.json
+[09:42:38] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[09:42:38] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[09:42:38] ------------------------------------------------------------------------
+[09:42:38] ✅ 主控封口完成 | P0=completed | P1=completed_for_pre_broker_stage | P2=broker_ready_blueprint_only
+[09:42:38] 🧠 governance=candidate_blocked | promotion=promote_blocked | safety=BLOCK
+[09:42:38] 🧮 reconciliation=reconciliation_green | recovery=recovery_ready | attribution=attribution_ready
+[09:42:38] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v80_prebroker_sealed_report.json
+[09:42:38] ------------------------------------------------------------------------
+[09:42:38] ✅ v81 prelive bridge 完成 | ready_now=9 | waiting_for_broker=3
+[09:42:38] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v81_prelive_bridge_report.json
+[09:42:38] ------------------------------------------------------------------------

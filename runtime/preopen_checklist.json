@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "status": "preopen_checklist_built",
+  "all_green": false,
+  "items": [
+    {
+      "item": "模型 promotion 是否放行",
+      "ok": false
+    },
+    {
+      "item": "live safety 是否通過",
+      "ok": false
+    },
+    {
+      "item": "前次對帳是否全綠",
+      "ok": false
+    },
+    {
+      "item": "recovery validation 是否通過",
+      "ok": false
+    }
+  ]
+}

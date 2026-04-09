@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-08 12:28:37",
-  "system_name": "正式交易主控版_v24",
+  "generated_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
   "mode": "PAPER",
   "broker_type": "paper",
   "paper_live_safe": false,
@@ -10,10 +10,12 @@
       "message": "發車前驗證閘門未通過"
     }
   ],
-  "warnings": [
-    {
-      "type": "zero_signal",
-      "message": "本輪有效訊號為 0"
-    }
-  ]
+  "warnings": [],
+  "blocked_orders": [],
+  "limits": {
+    "daily_loss_limit_pct": 0.03,
+    "max_single_position_pct": 0.1,
+    "max_order_notional": 500000.0,
+    "max_industry_exposure_pct": 0.25
+  }
 }

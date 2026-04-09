@@ -1,10 +1,123 @@
 {
-  "saved_at": "2026-04-08 13:48:35",
+  "saved_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
   "cash": 3000000.0,
-  "positions": {},
-  "last_prices": {},
+  "positions": [
+    {
+      "ticker": "2330.TW",
+      "qty": 72,
+      "avg_price": 1950.0,
+      "market_value": 140400.0
+    },
+    {
+      "ticker": "2471.TW",
+      "qty": 1000,
+      "avg_price": 52.0,
+      "market_value": 52000.0
+    },
+    {
+      "ticker": "2467.TW",
+      "qty": 185,
+      "avg_price": 449.0,
+      "market_value": 83065.0
+    }
+  ],
+  "open_orders": [
+    {
+      "Ticker": "2330.TW",
+      "Action": "SELL",
+      "Regime": "區間盤整",
+      "Structure": "空方進場",
+      "AI_Proba": 0.5953,
+      "Score": 0.5392,
+      "Kelly_Pos": 0.0473,
+      "Heuristic_EV": -0.18,
+      "Reference_Price": 1950.0,
+      "Target_Qty": 72,
+      "_has_ticker": true,
+      "_has_action": true,
+      "_has_price": true,
+      "_raw_action": "SELL",
+      "風險金額": 0.0,
+      "預期停損(%)": 0.04,
+      "Source": "decision:normalized_decision_output.csv",
+      "PriceSource": "",
+      "MarketRulePassed": true,
+      "MarketRuleReason": "ok_odd_lot_allowed",
+      "LotMode": "odd",
+      "SizingReason": "paper_odd_lot_min_of_risk_cap"
+    },
+    {
+      "Ticker": "2471.TW",
+      "Action": "SELL",
+      "Regime": "趨勢空頭",
+      "Structure": "空方進場",
+      "AI_Proba": 0.5302,
+      "Score": 0.4881,
+      "Kelly_Pos": 0.0278,
+      "Heuristic_EV": -0.3,
+      "Reference_Price": 52.0,
+      "Target_Qty": 1000,
+      "_has_ticker": true,
+      "_has_action": true,
+      "_has_price": true,
+      "_raw_action": "SELL",
+      "風險金額": 0.0,
+      "預期停損(%)": 0.04,
+      "Source": "decision:normalized_decision_output.csv",
+      "PriceSource": "",
+      "MarketRulePassed": true,
+      "MarketRuleReason": "ok",
+      "LotMode": "board",
+      "SizingReason": "strict_min_of_risk_cap"
+    },
+    {
+      "Ticker": "2467.TW",
+      "Action": "SELL",
+      "Regime": "趨勢多頭",
+      "Structure": "空方進場",
+      "AI_Proba": 0.53,
+      "Score": 0.524,
+      "Kelly_Pos": 0.0278,
+      "Heuristic_EV": 0.06,
+      "Reference_Price": 449.0,
+      "Target_Qty": 185,
+      "_has_ticker": true,
+      "_has_action": true,
+      "_has_price": true,
+      "_raw_action": "SELL",
+      "風險金額": 0.0,
+      "預期停損(%)": 0.04,
+      "Source": "decision:normalized_decision_output.csv",
+      "PriceSource": "",
+      "MarketRulePassed": true,
+      "MarketRuleReason": "ok_odd_lot_allowed",
+      "LotMode": "odd",
+      "SizingReason": "paper_odd_lot_min_of_risk_cap"
+    }
+  ],
+  "recent_fills": [
+    {
+      "ticker": "INIT",
+      "wins": 0,
+      "total": 0
+    }
+  ],
+  "kill_switch_state": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system": {
+      "armed": false,
+      "reason": ""
+    },
+    "account": {
+      "armed": false,
+      "reason": ""
+    },
+    "strategies": {},
+    "symbols": {}
+  },
   "meta": {
-    "equity": 3000000.0,
-    "exposure_ratio": 0.0
+    "order_source": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+    "trade_source": "C:\\test\\test-2026-3-22OK\\trade_stats.csv"
   }
 }

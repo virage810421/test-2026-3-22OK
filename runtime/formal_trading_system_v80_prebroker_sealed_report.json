@@ -1,0 +1,1164 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "module_version": "v80_prebroker_sealed",
+  "core": {
+    "training_report": {
+      "generated_at": "2026-04-09 09:42:37",
+      "module_version": "v79",
+      "ai_stage_enabled": false,
+      "dry_run": true,
+      "bootstrap": {
+        "bootstrap_source": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+        "registry_written": true,
+        "template_written": true,
+        "bootstrap_plan_written": true,
+        "candidate_feature_count": 8,
+        "bootstrap_plan_rows": 3
+      },
+      "bootstrap_score": 25,
+      "dataset": {
+        "exists": false,
+        "rows": 0,
+        "columns": [],
+        "feature_count": 0,
+        "label_balance": {},
+        "regime_counts": {},
+        "status": "missing",
+        "readiness_score": 15
+      },
+      "models": {
+        "models_dir_exists": true,
+        "required_files": [
+          {
+            "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+            "exists": true
+          },
+          {
+            "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢多頭.pkl",
+            "exists": false
+          },
+          {
+            "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+            "exists": true
+          },
+          {
+            "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+            "exists": true
+          }
+        ],
+        "existing_required_count": 3,
+        "all_required_present": false,
+        "readiness_score": 50
+      },
+      "actions": [
+        {
+          "stage": "ai",
+          "action": "skip",
+          "reason": "run_ai_stage=False"
+        }
+      ],
+      "training_readiness_pct": 47,
+      "go_for_training": false,
+      "go_for_inference": true,
+      "status": "training_governed_v79"
+    },
+    "bridge_report": {
+      "generated_at": "2026-04-09 09:42:38",
+      "module_version": "v79",
+      "rows_total": 3,
+      "rows_with_price": 3,
+      "rows_with_qty": 3,
+      "rows_market_rule_passed": 3,
+      "rows_market_rule_failed": 0,
+      "rows_watchlist_ready": 3,
+      "price_source_counts": {
+        "unknown": 3
+      },
+      "sizing_reason_counts": {
+        "paper_odd_lot_min_of_risk_cap": 2,
+        "strict_min_of_risk_cap": 1
+      },
+      "failed_tickers_preview": [],
+      "missing_price_tickers": [],
+      "rows_board_lot_ready": 1,
+      "rows_odd_lot_ready_for_paper": 2,
+      "execution_readiness_pct": 100,
+      "output_path": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+      "watchlist_output_path": "C:\\test\\test-2026-3-22OK\\data\\paper_execution_watchlist.csv",
+      "price_gap_bridge_status": "price_gap_reduced",
+      "status": "execution_payload_ready"
+    },
+    "base_gap_report": {
+      "generated_from": [
+        "upgrade_truth_report.json",
+        "live_readiness_gate.json",
+        "training_orchestrator.json",
+        "decision_execution_bridge.json",
+        "real_api_readiness.json"
+      ],
+      "headline": {
+        "completion_excluding_real_broker_pct": 85,
+        "remaining_major_blocks_excluding_real_broker": 1,
+        "real_broker_binding_present": false
+      },
+      "subscores": {
+        "architecture_pct": 96,
+        "legacy_core_pct": 95,
+        "governance_pct": 92,
+        "training_pct": 47,
+        "execution_pct": 100,
+        "paper_execution_pct": 90
+      },
+      "completed_excluding_real_broker": [
+        "24/24 架構模組達 95+",
+        "舊核心已納管進主控",
+        "live readiness gate / TW market rules / execution bridge 已建立",
+        "safe upgrade / checkpoint / retry / resume 已建立",
+        "training bootstrap registry / template / bootstrap plan 已建立",
+        "paper execution watchlist 已建立"
+      ],
+      "remaining_excluding_real_broker": [
+        "AI訓練資料與模型產物仍未落地到可訓練水位"
+      ],
+      "detailed_flags": {
+        "training_ready": false,
+        "execution_payload_ready": true,
+        "paper_execution_ready": true,
+        "live_ready": false,
+        "real_api_live_bound": false
+      },
+      "real_api_is_separate_track": {
+        "already_reserved": [
+          "broker submission contract defined",
+          "callback normalization contract defined",
+          "live approval workflow reserved",
+          "real broker stub reserved",
+          "order payload preview contract defined"
+        ],
+        "still_missing": [
+          "broker authentication and token refresh",
+          "account routing: cash / margin / short-sell",
+          "market session calendar and holiday source",
+          "tick size / price band / odd-lot rules",
+          "broker order id mapping and idempotency key",
+          "real callback receiver and persistence",
+          "partial fill reconciliation against broker ledger",
+          "cancel/replace semantics for each broker",
+          "rate limit and retry policy by endpoint",
+          "live kill-switch and operator confirmation UX"
+        ]
+      },
+      "status": "completion_gap_mapped_v79"
+    },
+    "base_progress_report": {
+      "completion_gap_report": {
+        "generated_from": [
+          "upgrade_truth_report.json",
+          "live_readiness_gate.json",
+          "training_orchestrator.json",
+          "decision_execution_bridge.json",
+          "real_api_readiness.json"
+        ],
+        "headline": {
+          "completion_excluding_real_broker_pct": 85,
+          "remaining_major_blocks_excluding_real_broker": 1,
+          "real_broker_binding_present": false
+        },
+        "subscores": {
+          "architecture_pct": 96,
+          "legacy_core_pct": 95,
+          "governance_pct": 92,
+          "training_pct": 47,
+          "execution_pct": 100,
+          "paper_execution_pct": 90
+        },
+        "completed_excluding_real_broker": [
+          "24/24 架構模組達 95+",
+          "舊核心已納管進主控",
+          "live readiness gate / TW market rules / execution bridge 已建立",
+          "safe upgrade / checkpoint / retry / resume 已建立",
+          "training bootstrap registry / template / bootstrap plan 已建立",
+          "paper execution watchlist 已建立"
+        ],
+        "remaining_excluding_real_broker": [
+          "AI訓練資料與模型產物仍未落地到可訓練水位"
+        ],
+        "detailed_flags": {
+          "training_ready": false,
+          "execution_payload_ready": true,
+          "paper_execution_ready": true,
+          "live_ready": false,
+          "real_api_live_bound": false
+        },
+        "real_api_is_separate_track": {
+          "already_reserved": [
+            "broker submission contract defined",
+            "callback normalization contract defined",
+            "live approval workflow reserved",
+            "real broker stub reserved",
+            "order payload preview contract defined"
+          ],
+          "still_missing": [
+            "broker authentication and token refresh",
+            "account routing: cash / margin / short-sell",
+            "market session calendar and holiday source",
+            "tick size / price band / odd-lot rules",
+            "broker order id mapping and idempotency key",
+            "real callback receiver and persistence",
+            "partial fill reconciliation against broker ledger",
+            "cancel/replace semantics for each broker",
+            "rate limit and retry policy by endpoint",
+            "live kill-switch and operator confirmation UX"
+          ]
+        },
+        "status": "completion_gap_mapped_v79"
+      },
+      "training_orchestrator": {
+        "generated_at": "2026-04-09 09:42:37",
+        "module_version": "v79",
+        "ai_stage_enabled": false,
+        "dry_run": true,
+        "bootstrap": {
+          "bootstrap_source": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+          "registry_written": true,
+          "template_written": true,
+          "bootstrap_plan_written": true,
+          "candidate_feature_count": 8,
+          "bootstrap_plan_rows": 3
+        },
+        "bootstrap_score": 25,
+        "dataset": {
+          "exists": false,
+          "rows": 0,
+          "columns": [],
+          "feature_count": 0,
+          "label_balance": {},
+          "regime_counts": {},
+          "status": "missing",
+          "readiness_score": 15
+        },
+        "models": {
+          "models_dir_exists": true,
+          "required_files": [
+            {
+              "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+              "exists": true
+            },
+            {
+              "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢多頭.pkl",
+              "exists": false
+            },
+            {
+              "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+              "exists": true
+            },
+            {
+              "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+              "exists": true
+            }
+          ],
+          "existing_required_count": 3,
+          "all_required_present": false,
+          "readiness_score": 50
+        },
+        "actions": [
+          {
+            "stage": "ai",
+            "action": "skip",
+            "reason": "run_ai_stage=False"
+          }
+        ],
+        "training_readiness_pct": 47,
+        "go_for_training": false,
+        "go_for_inference": true,
+        "status": "training_governed_v79"
+      },
+      "decision_execution_bridge": {
+        "generated_at": "2026-04-09 09:42:38",
+        "module_version": "v79",
+        "rows_total": 3,
+        "rows_with_price": 3,
+        "rows_with_qty": 3,
+        "rows_market_rule_passed": 3,
+        "rows_market_rule_failed": 0,
+        "rows_watchlist_ready": 3,
+        "price_source_counts": {
+          "unknown": 3
+        },
+        "sizing_reason_counts": {
+          "paper_odd_lot_min_of_risk_cap": 2,
+          "strict_min_of_risk_cap": 1
+        },
+        "failed_tickers_preview": [],
+        "missing_price_tickers": [],
+        "rows_board_lot_ready": 1,
+        "rows_odd_lot_ready_for_paper": 2,
+        "execution_readiness_pct": 100,
+        "output_path": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+        "watchlist_output_path": "C:\\test\\test-2026-3-22OK\\data\\paper_execution_watchlist.csv",
+        "price_gap_bridge_status": "price_gap_reduced",
+        "status": "execution_payload_ready"
+      },
+      "price_gap_bridge": {
+        "generated_at": "2026-04-09 09:42:38",
+        "module_version": "v79",
+        "scanned_csv_count": 9,
+        "scanned_csv_success_count": 3,
+        "candidate_rows": 4,
+        "required_tickers": 3,
+        "matched_tickers": 3,
+        "missing_tickers": [],
+        "price_scan_dirs": [
+          "C:\\test\\test-2026-3-22OK",
+          "C:\\test\\test-2026-3-22OK\\data"
+        ],
+        "source_mount_dirs": [],
+        "manual_override_path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_overrides.csv",
+        "manual_override_prefilled_rows": 0,
+        "candidates_path": "C:\\test\\test-2026-3-22OK\\data\\auto_price_snapshot_candidates.csv",
+        "manual_template_path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
+        "status": "price_gap_reduced"
+      },
+      "config": {
+        "package_version": "v79",
+        "source_mount_dirs": [],
+        "price_scan_dirs": [
+          "C:\\test\\test-2026-3-22OK",
+          "C:\\test\\test-2026-3-22OK\\data"
+        ],
+        "history_scan_dirs": [
+          "C:\\test\\test-2026-3-22OK",
+          "C:\\test\\test-2026-3-22OK\\data"
+        ]
+      }
+    }
+  },
+  "order_source": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+  "trade_source": "C:\\test\\test-2026-3-22OK\\trade_stats.csv",
+  "governance_decision": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "thresholds": {
+      "min_win_rate": 0.5,
+      "min_profit_factor": 1.1,
+      "max_drawdown_pct": 0.12,
+      "min_walk_forward_score": 60,
+      "max_shadow_return_drift_pct": 0.08
+    },
+    "metrics": {
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "max_drawdown_pct": 0.0
+    },
+    "walk_forward": {
+      "score": 0.0
+    },
+    "shadow_result": {
+      "return_drift_pct": 0.0
+    },
+    "artifacts": {
+      "tracked_files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "all_present": false,
+      "files": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 483,
+          "sha256": "a2d6ca032aba2a61f814bac52bf3a4ab9536069ef0a44d7c6c2ab818f5c9ecf9"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": false,
+          "size_bytes": 0,
+          "sha256": null
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 2774137,
+          "sha256": "e2489a8c6a7f1fb2365396f7965a88354f6ae32e7c0b9d1c64794bdaedcadf71"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 3399417,
+          "sha256": "a4f33e52e361082237f6f293835bb45a5641472120f31b41fa850080895ae7e5"
+        }
+      ]
+    },
+    "rollback_version": null,
+    "go_for_shadow": false,
+    "go_for_promote": false,
+    "failures": [
+      "win_rate_below_threshold",
+      "profit_factor_below_threshold",
+      "walk_forward_not_strong_enough",
+      "rollback_version_missing",
+      "artifacts_incomplete"
+    ],
+    "warnings": [],
+    "status": "candidate_blocked"
+  },
+  "model_registry_runtime": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "models_dir": "C:\\test\\test-2026-3-22OK\\models",
+    "candidates": [
+      {
+        "name": "best",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\best",
+        "is_file": false,
+        "is_dir": true,
+        "size_bytes": 0
+      },
+      {
+        "name": "current",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\current",
+        "is_file": false,
+        "is_dir": true,
+        "size_bytes": 0
+      },
+      {
+        "name": "governance_events.jsonl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
+        "is_file": true,
+        "is_dir": false,
+        "size_bytes": 1246
+      },
+      {
+        "name": "model_區間盤整.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+        "is_file": true,
+        "is_dir": false,
+        "size_bytes": 2774137
+      },
+      {
+        "name": "model_趨勢空頭.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+        "is_file": true,
+        "is_dir": false,
+        "size_bytes": 3399417
+      },
+      {
+        "name": "selected_features.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+        "is_file": true,
+        "is_dir": false,
+        "size_bytes": 483
+      },
+      {
+        "name": "test_line.py",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\test_line.py",
+        "is_file": true,
+        "is_dir": false,
+        "size_bytes": 1595
+      },
+      {
+        "name": "versions",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\versions",
+        "is_file": false,
+        "is_dir": true,
+        "size_bytes": 0
+      }
+    ],
+    "candidate_count": 8,
+    "governance_registry": {}
+  },
+  "model_gate": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "go_for_model_linkage": false,
+    "governance": {
+      "generated_at": "2026-04-09 09:42:38",
+      "system_name": "正式交易主控版_v79",
+      "thresholds": {
+        "min_win_rate": 0.5,
+        "min_profit_factor": 1.1,
+        "max_drawdown_pct": 0.12,
+        "min_walk_forward_score": 60,
+        "max_shadow_return_drift_pct": 0.08
+      },
+      "metrics": {
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "max_drawdown_pct": 0.0
+      },
+      "walk_forward": {
+        "score": 0.0
+      },
+      "shadow_result": {
+        "return_drift_pct": 0.0
+      },
+      "artifacts": {
+        "tracked_files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "all_present": false,
+        "files": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 483,
+            "sha256": "a2d6ca032aba2a61f814bac52bf3a4ab9536069ef0a44d7c6c2ab818f5c9ecf9"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": false,
+            "size_bytes": 0,
+            "sha256": null
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 2774137,
+            "sha256": "e2489a8c6a7f1fb2365396f7965a88354f6ae32e7c0b9d1c64794bdaedcadf71"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 3399417,
+            "sha256": "a4f33e52e361082237f6f293835bb45a5641472120f31b41fa850080895ae7e5"
+          }
+        ]
+      },
+      "rollback_version": null,
+      "go_for_shadow": false,
+      "go_for_promote": false,
+      "failures": [
+        "win_rate_below_threshold",
+        "profit_factor_below_threshold",
+        "walk_forward_not_strong_enough",
+        "rollback_version_missing",
+        "artifacts_incomplete"
+      ],
+      "warnings": [],
+      "status": "candidate_blocked"
+    },
+    "failures": [
+      {
+        "type": "governance_blocked",
+        "message": "模型治理閘門未放行"
+      }
+    ],
+    "warnings": [
+      {
+        "type": "training_assets_incomplete",
+        "message": "訓練資料或 models 資產尚未齊備"
+      }
+    ],
+    "summary": {
+      "failure_count": 1,
+      "warning_count": 1
+    }
+  },
+  "promotion_policy": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "promotion_policy": {
+      "stages": [
+        "offline_training_pass",
+        "walk_forward_validation_pass",
+        "artifact_integrity_pass",
+        "registry_update_pass",
+        "shadow_live_observation_pass",
+        "operator_approval_pass",
+        "paper_live_safe_pass"
+      ],
+      "minimum_requirements": [
+        "模型產物完整",
+        "版本號已更新",
+        "walk_forward_score 達標",
+        "shadow drift 未爆表",
+        "未觸發 live safety block",
+        "可回退版本存在"
+      ],
+      "default_thresholds": {
+        "min_walk_forward_score": 60,
+        "min_profit_factor": 1.1,
+        "min_win_rate": 0.5,
+        "max_drawdown_pct": 0.12,
+        "max_shadow_return_drift_pct": 0.08
+      },
+      "deployment_rule": "not_promote_to_live_without_all_required_stages",
+      "rollback_rule": "auto_recommend_rollback_when_live_metrics_break_thresholds"
+    },
+    "status": "promotion_policy_ready"
+  },
+  "promotion_eval": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "inputs": {
+      "artifact_ok": false,
+      "registry_updated": false,
+      "walk_forward_score": 0.0,
+      "profit_factor": 0.0,
+      "win_rate": 0.0,
+      "max_drawdown_pct": 0.0,
+      "shadow_return_drift_pct": 0.0,
+      "rollback_version_exists": false,
+      "operator_approved": false,
+      "live_safety_clear": false
+    },
+    "go_for_shadow": false,
+    "go_for_promote": false,
+    "failures": [
+      "artifact_integrity_fail",
+      "registry_update_fail",
+      "walk_forward_score_fail",
+      "profit_factor_fail",
+      "win_rate_fail",
+      "rollback_version_missing",
+      "operator_approval_missing",
+      "live_safety_blocked"
+    ],
+    "warnings": [],
+    "status": "promote_blocked"
+  },
+  "promotion_eval_path": "C:\\test\\test-2026-3-22OK\\runtime\\trainer_promotion_decision.json",
+  "launch_gate": {
+    "module_version": "v64",
+    "checks": {
+      "mode_is_live": false,
+      "broker_is_real": false,
+      "manual_live_arm": false,
+      "dual_confirm": true,
+      "kill_switch_defined": true,
+      "credentials_file_present": false,
+      "price_snapshot_present": false,
+      "training_artifacts_present": true
+    },
+    "payload_check_total": 3,
+    "payload_check_passed": 1,
+    "payload_checks": [
+      {
+        "ticker": "2330.TW",
+        "passed": false,
+        "ref_price": 1950.0,
+        "qty": 72,
+        "reason": "qty_not_board_lot_multiple",
+        "tick_size": 5.0,
+        "limit_up": 2145.0,
+        "limit_down": 1755.0,
+        "lot_mode": "board"
+      },
+      {
+        "ticker": "2471.TW",
+        "passed": true,
+        "ref_price": 52.0,
+        "qty": 1000,
+        "reason": "ok",
+        "tick_size": 0.1,
+        "limit_up": 57.2,
+        "limit_down": 46.8,
+        "lot_mode": "board"
+      },
+      {
+        "ticker": "2467.TW",
+        "passed": false,
+        "ref_price": 449.0,
+        "qty": 185,
+        "reason": "qty_not_board_lot_multiple",
+        "tick_size": 0.5,
+        "limit_up": 493.9,
+        "limit_down": 404.1,
+        "lot_mode": "board"
+      }
+    ],
+    "hard_blocks": [
+      "some_order_payloads_fail_tw_market_rules"
+    ],
+    "live_ready": false,
+    "status": "blocked"
+  },
+  "live_safety": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "mode": "PAPER",
+    "broker_type": "paper",
+    "paper_live_safe": false,
+    "failures": [
+      {
+        "type": "launch_gate_blocked",
+        "message": "發車前驗證閘門未通過"
+      }
+    ],
+    "warnings": [],
+    "blocked_orders": [],
+    "limits": {
+      "daily_loss_limit_pct": 0.03,
+      "max_single_position_pct": 0.1,
+      "max_order_notional": 500000.0,
+      "max_industry_exposure_pct": 0.25
+    }
+  },
+  "reconciliation": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "summary": {
+      "local_orders": 3,
+      "broker_orders": 3,
+      "local_fills": 1,
+      "broker_fills": 1,
+      "local_positions": 3,
+      "broker_positions": 3,
+      "order_mismatch_count": 0,
+      "fill_mismatch_count": 0,
+      "position_mismatch_count": 0,
+      "orphan_broker_orders": 0,
+      "orphan_broker_fills": 0,
+      "cash_matched": true,
+      "all_green": true,
+      "broker_status_mix": {
+        "": 3
+      }
+    },
+    "cash_check": {
+      "local_cash": 3000000.0,
+      "broker_cash": 3000000.0,
+      "cash_diff": 0.0,
+      "matched": true
+    },
+    "order_mismatches": [],
+    "fill_mismatches": [],
+    "position_mismatches": [],
+    "orphan_broker_orders": [],
+    "orphan_broker_fills": [],
+    "status": "reconciliation_green"
+  },
+  "recovery_snapshot": {
+    "saved_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "cash": 3000000.0,
+    "positions": [
+      {
+        "ticker": "2330.TW",
+        "qty": 72,
+        "avg_price": 1950.0,
+        "market_value": 140400.0
+      },
+      {
+        "ticker": "2471.TW",
+        "qty": 1000,
+        "avg_price": 52.0,
+        "market_value": 52000.0
+      },
+      {
+        "ticker": "2467.TW",
+        "qty": 185,
+        "avg_price": 449.0,
+        "market_value": 83065.0
+      }
+    ],
+    "open_orders": [
+      {
+        "Ticker": "2330.TW",
+        "Action": "SELL",
+        "Regime": "區間盤整",
+        "Structure": "空方進場",
+        "AI_Proba": 0.5953,
+        "Score": 0.5392,
+        "Kelly_Pos": 0.0473,
+        "Heuristic_EV": -0.18,
+        "Reference_Price": 1950.0,
+        "Target_Qty": 72,
+        "_has_ticker": true,
+        "_has_action": true,
+        "_has_price": true,
+        "_raw_action": "SELL",
+        "風險金額": 0.0,
+        "預期停損(%)": 0.04,
+        "Source": "decision:normalized_decision_output.csv",
+        "PriceSource": "",
+        "MarketRulePassed": true,
+        "MarketRuleReason": "ok_odd_lot_allowed",
+        "LotMode": "odd",
+        "SizingReason": "paper_odd_lot_min_of_risk_cap"
+      },
+      {
+        "Ticker": "2471.TW",
+        "Action": "SELL",
+        "Regime": "趨勢空頭",
+        "Structure": "空方進場",
+        "AI_Proba": 0.5302,
+        "Score": 0.4881,
+        "Kelly_Pos": 0.0278,
+        "Heuristic_EV": -0.3,
+        "Reference_Price": 52.0,
+        "Target_Qty": 1000,
+        "_has_ticker": true,
+        "_has_action": true,
+        "_has_price": true,
+        "_raw_action": "SELL",
+        "風險金額": 0.0,
+        "預期停損(%)": 0.04,
+        "Source": "decision:normalized_decision_output.csv",
+        "PriceSource": "",
+        "MarketRulePassed": true,
+        "MarketRuleReason": "ok",
+        "LotMode": "board",
+        "SizingReason": "strict_min_of_risk_cap"
+      },
+      {
+        "Ticker": "2467.TW",
+        "Action": "SELL",
+        "Regime": "趨勢多頭",
+        "Structure": "空方進場",
+        "AI_Proba": 0.53,
+        "Score": 0.524,
+        "Kelly_Pos": 0.0278,
+        "Heuristic_EV": 0.06,
+        "Reference_Price": 449.0,
+        "Target_Qty": 185,
+        "_has_ticker": true,
+        "_has_action": true,
+        "_has_price": true,
+        "_raw_action": "SELL",
+        "風險金額": 0.0,
+        "預期停損(%)": 0.04,
+        "Source": "decision:normalized_decision_output.csv",
+        "PriceSource": "",
+        "MarketRulePassed": true,
+        "MarketRuleReason": "ok_odd_lot_allowed",
+        "LotMode": "odd",
+        "SizingReason": "paper_odd_lot_min_of_risk_cap"
+      }
+    ],
+    "recent_fills": [
+      {
+        "ticker": "INIT",
+        "wins": 0,
+        "total": 0
+      }
+    ],
+    "kill_switch_state": {
+      "generated_at": "2026-04-09 09:42:38",
+      "system": {
+        "armed": false,
+        "reason": ""
+      },
+      "account": {
+        "armed": false,
+        "reason": ""
+      },
+      "strategies": {},
+      "symbols": {}
+    },
+    "meta": {
+      "order_source": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+      "trade_source": "C:\\test\\test-2026-3-22OK\\trade_stats.csv"
+    }
+  },
+  "recovery_plan": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "snapshot_found": true,
+    "broker_snapshot_found": true,
+    "retry_queue_total": 0,
+    "actions": [
+      "restore_cash_from_snapshot",
+      "restore_positions_from_snapshot",
+      "rebuild_open_order_state_machine",
+      "replay_recent_fills_for_pnl_consistency",
+      "restore_kill_switch_state",
+      "fetch_live_open_orders_from_broker",
+      "fetch_today_fills_from_broker",
+      "reconcile_snapshot_vs_broker",
+      "repair_orphan_orders_if_any"
+    ],
+    "failures": [],
+    "ready_to_recover": true,
+    "status": "recovery_ready"
+  },
+  "recovery_validation": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "checks": [
+      {
+        "check": "state_file_exists",
+        "value": true,
+        "status": "ok"
+      },
+      {
+        "check": "state_has_cash",
+        "value": 3000000.0,
+        "status": "ok"
+      },
+      {
+        "check": "state_has_positions",
+        "value": 3,
+        "status": "ok"
+      },
+      {
+        "check": "state_has_open_orders",
+        "value": 3,
+        "status": "ok"
+      },
+      {
+        "check": "retry_queue_total",
+        "value": 0,
+        "status": "ok"
+      },
+      {
+        "check": "recovery_plan_ready",
+        "value": true,
+        "status": "ok"
+      }
+    ],
+    "all_green": true,
+    "status": "validation_ready"
+  },
+  "recovery_consistency": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "checks": {
+      "state_file_exists": true,
+      "retry_queue_total": 0,
+      "broker_snapshot_found": true,
+      "missing_on_broker_count": 3,
+      "orphan_on_broker_count": 0
+    },
+    "failures": [
+      {
+        "type": "state_position_missing_on_broker",
+        "tickers": [
+          "2330.TW",
+          "2467.TW",
+          "2471.TW"
+        ]
+      }
+    ],
+    "warnings": [],
+    "all_passed": false,
+    "status": "consistency_break"
+  },
+  "daily_ops": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "mode": "PAPER",
+    "broker_type": "paper",
+    "headline": {
+      "pending_retry": 0,
+      "signals": 3,
+      "filled": 1,
+      "partial": 0,
+      "positions": 3,
+      "alerts": 0
+    },
+    "today_candidates": [
+      {
+        "ticker": "2330.TW",
+        "score": 0.5392,
+        "regime": "區間盤整"
+      },
+      {
+        "ticker": "2471.TW",
+        "score": 0.4881,
+        "regime": "趨勢空頭"
+      },
+      {
+        "ticker": "2467.TW",
+        "score": 0.524,
+        "regime": "趨勢多頭"
+      }
+    ],
+    "blacklist": [],
+    "risk_usage": {
+      "day_loss_pct": 0.0,
+      "max_single_position_pct": 0.1,
+      "max_industry_exposure_pct": 0.25
+    },
+    "order_board": {
+      "submitted_like": 3,
+      "filled": 1,
+      "rejected": 0,
+      "blocked": 0
+    },
+    "alerts": [],
+    "close_notes": [
+      "模型治理 gate：candidate_blocked",
+      "promotion gate：promote_blocked",
+      "對帳狀態：reconciliation_green",
+      "恢復狀態：recovery_ready",
+      "live safety：BLOCK"
+    ]
+  },
+  "performance_attribution": {
+    "generated_at": "2026-04-09 09:42:38",
+    "system_name": "正式交易主控版_v79",
+    "summary": {
+      "trade_count": 1,
+      "total_pnl": 0.0,
+      "total_slippage_cost": 0.0,
+      "total_commission": 0.0,
+      "total_tax": 0.0,
+      "reject_count": 0
+    },
+    "by_regime": [
+      {
+        "bucket": "UNKNOWN",
+        "count": 1,
+        "pnl": 0.0,
+        "win_rate": 0.0
+      }
+    ],
+    "by_setup": [
+      {
+        "bucket": "UNKNOWN",
+        "count": 1,
+        "pnl": 0.0,
+        "win_rate": 0.0
+      }
+    ],
+    "by_industry": [
+      {
+        "bucket": "UNKNOWN",
+        "count": 1,
+        "pnl": 0.0,
+        "win_rate": 0.0
+      }
+    ],
+    "reject_reasons": [],
+    "status": "attribution_ready"
+  },
+  "upgrade_plan": {
+    "generated_at": "2026-04-09 09:42:38",
+    "goal": "券商開戶前先把 code 可封口範圍做滿，並可直接掛進 formal_trading_system 主線",
+    "p0": {
+      "status": "completed",
+      "scope": "券商開戶前可完全由 code 封口",
+      "items": [
+        "模型升降級治理",
+        "walk-forward / shadow / promotion / rollback policy",
+        "對帳引擎",
+        "重啟恢復 snapshot / recovery plan / validation / consistency",
+        "live safety gate",
+        "kill switch"
+      ]
+    },
+    "p1": {
+      "status": "completed_for_pre_broker_stage",
+      "scope": "交易員工作流與歸因層",
+      "items": [
+        "交易日操作面板",
+        "績效歸因 / 風控歸因",
+        "交易員工作流輸出",
+        "mainline seal status report"
+      ]
+    },
+    "p2": {
+      "status": "broker_ready_blueprint_only",
+      "scope": "等券商 API / 帳號 / 憑證後接上",
+      "items": [
+        "真券商 adapter",
+        "callback receiver",
+        "broker ledger / real account reconciliation",
+        "實盤 cutover"
+      ]
+    },
+    "ten_items_mapping": {
+      "A_must_have": {
+        "真券商 adapter": "broker-ready blueprint only",
+        "實盤回報接收器": "broker-ready blueprint only",
+        "對帳系統": "completed for pre-broker stage",
+        "重啟恢復機制": "completed for pre-broker stage",
+        "Kill switch": "completed for pre-broker stage"
+      },
+      "B_model_governance": {
+        "Walk-forward 正式化": "completed",
+        "Shadow trading": "completed for pre-broker stage",
+        "Promotion / rollback policy": "completed"
+      },
+      "C_trader_workflow": {
+        "交易日操作面板": "completed",
+        "績效歸因 / 風控歸因": "completed"
+      }
+    },
+    "four_gap_mapping": {
+      "真執行": "broker-ready blueprint only",
+      "對帳恢復": "completed for pre-broker stage",
+      "模型治理": "completed",
+      "實盤安全機制": "completed for pre-broker stage"
+    },
+    "direct_mainline_entry": "formal_trading_system_v80_prebroker_sealed.py"
+  },
+  "layer_status": {
+    "generated_at": "2026-04-09 09:42:38",
+    "module_version": "v80_prebroker_sealed",
+    "direct_mainline_entry": "formal_trading_system_v80_prebroker_sealed.py",
+    "P0": {
+      "status": "completed",
+      "completed_layers": [
+        "模型治理",
+        "對帳",
+        "恢復",
+        "live safety",
+        "kill switch"
+      ],
+      "files": [
+        "model_governance.py",
+        "fts_trainer_promotion_policy.py",
+        "fts_model_gate.py",
+        "fts_reconciliation_engine.py",
+        "fts_recovery_engine.py",
+        "fts_recovery_validation.py",
+        "fts_recovery_consistency.py",
+        "fts_live_safety.py",
+        "fts_kill_switch.py"
+      ]
+    },
+    "P1": {
+      "status": "completed_for_pre_broker_stage",
+      "completed_layers": [
+        "daily ops",
+        "performance attribution",
+        "mainline integration"
+      ],
+      "files": [
+        "fts_daily_ops.py",
+        "fts_performance_attribution.py",
+        "formal_trading_system_v80_prebroker_sealed.py"
+      ]
+    },
+    "P2": {
+      "status": "broker_ready_blueprint_only",
+      "completed_layers": [
+        "real adapter blueprint"
+      ],
+      "files": [
+        "fts_real_broker_adapter_blueprint.py"
+      ],
+      "waiting_for": [
+        "券商 API 文件",
+        "帳號 / 憑證",
+        "callback 格式",
+        "交易限制細節"
+      ]
+    },
+    "ten_items": {
+      "真券商 adapter": "P2 blueprint only",
+      "實盤回報接收器": "P2 blueprint only",
+      "對帳系統": "done pre-broker",
+      "重啟恢復機制": "done pre-broker",
+      "Kill switch": "done pre-broker",
+      "Walk-forward 正式化": "done",
+      "Shadow trading": "done pre-broker",
+      "Promotion / rollback policy": "done",
+      "交易日操作面板": "done",
+      "績效歸因 / 風控歸因": "done"
+    },
+    "four_gaps": {
+      "真執行": "P2 blueprint only",
+      "對帳恢復": "done pre-broker",
+      "模型治理": "done",
+      "實盤安全機制": "done pre-broker"
+    }
+  }
+}

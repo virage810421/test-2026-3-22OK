@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-08 12:28:33",
-  "system_name": "正式交易主控版_v24",
+  "generated_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
   "checks": [
     {
       "check": "state_file_exists",
@@ -8,11 +8,31 @@
       "status": "ok"
     },
     {
+      "check": "state_has_cash",
+      "value": 3000000.0,
+      "status": "ok"
+    },
+    {
+      "check": "state_has_positions",
+      "value": 3,
+      "status": "ok"
+    },
+    {
+      "check": "state_has_open_orders",
+      "value": 3,
+      "status": "ok"
+    },
+    {
       "check": "retry_queue_total",
       "value": 0,
+      "status": "ok"
+    },
+    {
+      "check": "recovery_plan_ready",
+      "value": true,
       "status": "ok"
     }
   ],
   "all_green": true,
-  "status": "validation_skeleton"
+  "status": "validation_ready"
 }

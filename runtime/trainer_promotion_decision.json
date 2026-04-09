@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
+  "inputs": {
+    "artifact_ok": false,
+    "registry_updated": false,
+    "walk_forward_score": 0.0,
+    "profit_factor": 0.0,
+    "win_rate": 0.0,
+    "max_drawdown_pct": 0.0,
+    "shadow_return_drift_pct": 0.0,
+    "rollback_version_exists": false,
+    "operator_approved": false,
+    "live_safety_clear": false
+  },
+  "go_for_shadow": false,
+  "go_for_promote": false,
+  "failures": [
+    "artifact_integrity_fail",
+    "registry_update_fail",
+    "walk_forward_score_fail",
+    "profit_factor_fail",
+    "win_rate_fail",
+    "rollback_version_missing",
+    "operator_approval_missing",
+    "live_safety_blocked"
+  ],
+  "warnings": [],
+  "status": "promote_blocked"
+}

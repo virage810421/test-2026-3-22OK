@@ -8,7 +8,7 @@
       "real_api_readiness.json"
     ],
     "headline": {
-      "completion_excluding_real_broker_pct": 80,
+      "completion_excluding_real_broker_pct": 85,
       "remaining_major_blocks_excluding_real_broker": 1,
       "real_broker_binding_present": false
     },
@@ -16,15 +16,17 @@
       "architecture_pct": 96,
       "legacy_core_pct": 95,
       "governance_pct": 92,
-      "training_pct": 29,
+      "training_pct": 47,
       "execution_pct": 100,
-      "paper_execution_pct": 80
+      "paper_execution_pct": 90
     },
     "completed_excluding_real_broker": [
       "24/24 架構模組達 95+",
       "舊核心已納管進主控",
       "live readiness gate / TW market rules / execution bridge 已建立",
-      "safe upgrade / checkpoint / retry / resume 已建立"
+      "safe upgrade / checkpoint / retry / resume 已建立",
+      "training bootstrap registry / template / bootstrap plan 已建立",
+      "paper execution watchlist 已建立"
     ],
     "remaining_excluding_real_broker": [
       "AI訓練資料與模型產物仍未落地到可訓練水位"
@@ -57,19 +59,22 @@
         "live kill-switch and operator confirmation UX"
       ]
     },
-    "status": "completion_gap_mapped_v78"
+    "status": "completion_gap_mapped_v79"
   },
   "training_orchestrator": {
-    "generated_at": "2026-04-08 14:57:59",
-    "module_version": "v78",
+    "generated_at": "2026-04-09 09:42:37",
+    "module_version": "v79",
     "ai_stage_enabled": false,
     "dry_run": true,
     "bootstrap": {
       "bootstrap_source": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
       "registry_written": true,
       "template_written": true,
-      "candidate_feature_count": 8
+      "bootstrap_plan_written": true,
+      "candidate_feature_count": 8,
+      "bootstrap_plan_rows": 3
     },
+    "bootstrap_score": 25,
     "dataset": {
       "exists": false,
       "rows": 0,
@@ -111,19 +116,20 @@
         "reason": "run_ai_stage=False"
       }
     ],
-    "training_readiness_pct": 29,
+    "training_readiness_pct": 47,
     "go_for_training": false,
     "go_for_inference": true,
-    "status": "training_governed"
+    "status": "training_governed_v79"
   },
   "decision_execution_bridge": {
-    "generated_at": "2026-04-08 14:58:00",
-    "module_version": "v78",
+    "generated_at": "2026-04-09 09:42:38",
+    "module_version": "v79",
     "rows_total": 3,
     "rows_with_price": 3,
     "rows_with_qty": 3,
     "rows_market_rule_passed": 3,
     "rows_market_rule_failed": 0,
+    "rows_watchlist_ready": 3,
     "price_source_counts": {
       "unknown": 3
     },
@@ -137,12 +143,13 @@
     "rows_odd_lot_ready_for_paper": 2,
     "execution_readiness_pct": 100,
     "output_path": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+    "watchlist_output_path": "C:\\test\\test-2026-3-22OK\\data\\paper_execution_watchlist.csv",
     "price_gap_bridge_status": "price_gap_reduced",
     "status": "execution_payload_ready"
   },
   "price_gap_bridge": {
-    "generated_at": "2026-04-08 14:58:00",
-    "module_version": "v73",
+    "generated_at": "2026-04-09 09:42:38",
+    "module_version": "v79",
     "scanned_csv_count": 9,
     "scanned_csv_success_count": 3,
     "candidate_rows": 4,
@@ -155,12 +162,13 @@
     ],
     "source_mount_dirs": [],
     "manual_override_path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_overrides.csv",
+    "manual_override_prefilled_rows": 0,
     "candidates_path": "C:\\test\\test-2026-3-22OK\\data\\auto_price_snapshot_candidates.csv",
     "manual_template_path": "C:\\test\\test-2026-3-22OK\\data\\manual_price_snapshot_template.csv",
     "status": "price_gap_reduced"
   },
   "config": {
-    "package_version": "v78",
+    "package_version": "v79",
     "source_mount_dirs": [],
     "price_scan_dirs": [
       "C:\\test\\test-2026-3-22OK",

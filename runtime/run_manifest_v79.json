@@ -9,9 +9,9 @@
   "rows_with_price": 0,
   "rows_with_qty": 0,
   "rows_market_rule_passed": 0,
-  "rows_watchlist_ready": 3,
-  "execution_readiness_pct": 15,
-  "training_readiness_pct": 33,
-  "completion_excluding_real_broker_pct": 58,
+  "rows_watchlist_ready": 0,
+  "execution_readiness_pct": 0,
+  "training_readiness_pct": 8,
+  "completion_excluding_real_broker_pct": 45,
   "remaining_major_blocks_excluding_real_broker": 3
 }

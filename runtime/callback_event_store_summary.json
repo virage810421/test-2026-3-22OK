@@ -1,0 +1,8 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "status": "callback_event_recorded",
+  "last_event_valid": true,
+  "last_event_type": "ACK",
+  "last_event_status": "SUBMITTED",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_events.jsonl"
+}

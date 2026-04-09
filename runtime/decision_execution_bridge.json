@@ -1,31 +1,26 @@
 {
-  "generated_at": "2026-04-08 07:01:16",
+  "generated_at": "2026-04-09 09:42:38",
   "module_version": "v79",
   "rows_total": 3,
-  "rows_with_price": 0,
-  "rows_with_qty": 0,
-  "rows_market_rule_passed": 0,
-  "rows_market_rule_failed": 3,
+  "rows_with_price": 3,
+  "rows_with_qty": 3,
+  "rows_market_rule_passed": 3,
+  "rows_market_rule_failed": 0,
   "rows_watchlist_ready": 3,
-  "price_source_counts": {},
-  "sizing_reason_counts": {
-    "preexisting_qty": 3
+  "price_source_counts": {
+    "unknown": 3
   },
-  "failed_tickers_preview": [
-    "2330.TW",
-    "2471.TW",
-    "2467.TW"
-  ],
-  "missing_price_tickers": [
-    "2330.TW",
-    "2471.TW",
-    "2467.TW"
-  ],
-  "rows_board_lot_ready": 0,
-  "rows_odd_lot_ready_for_paper": 0,
-  "execution_readiness_pct": 15,
-  "output_path": "/mnt/data/fts_upgrade_100/data/executable_order_payloads.csv",
-  "watchlist_output_path": "/mnt/data/fts_upgrade_100/data/paper_execution_watchlist.csv",
-  "price_gap_bridge_status": "waiting_for_price_sources",
-  "status": "waiting_for_price_or_qty"
+  "sizing_reason_counts": {
+    "paper_odd_lot_min_of_risk_cap": 2,
+    "strict_min_of_risk_cap": 1
+  },
+  "failed_tickers_preview": [],
+  "missing_price_tickers": [],
+  "rows_board_lot_ready": 1,
+  "rows_odd_lot_ready_for_paper": 2,
+  "execution_readiness_pct": 100,
+  "output_path": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
+  "watchlist_output_path": "C:\\test\\test-2026-3-22OK\\data\\paper_execution_watchlist.csv",
+  "price_gap_bridge_status": "price_gap_reduced",
+  "status": "execution_payload_ready"
 }

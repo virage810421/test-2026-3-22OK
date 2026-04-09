@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-04-08 07:01:16",
+  "generated_at": "2026-04-09 09:42:37",
   "module_version": "v79",
   "ai_stage_enabled": false,
   "dry_run": true,
   "bootstrap": {
-    "bootstrap_source": "/mnt/data/fts_upgrade_100/daily_decision_desk.csv",
+    "bootstrap_source": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
     "registry_written": true,
     "template_written": true,
     "bootstrap_plan_written": true,
@@ -26,25 +26,25 @@
     "models_dir_exists": true,
     "required_files": [
       {
-        "path": "/mnt/data/fts_upgrade_100/models/selected_features.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+        "exists": true
+      },
+      {
+        "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢多頭.pkl",
         "exists": false
       },
       {
-        "path": "/mnt/data/fts_upgrade_100/models/model_趨勢多頭.pkl",
-        "exists": false
+        "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+        "exists": true
       },
       {
-        "path": "/mnt/data/fts_upgrade_100/models/model_區間盤整.pkl",
-        "exists": false
-      },
-      {
-        "path": "/mnt/data/fts_upgrade_100/models/model_趨勢空頭.pkl",
-        "exists": false
+        "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+        "exists": true
       }
     ],
-    "existing_required_count": 0,
+    "existing_required_count": 3,
     "all_required_present": false,
-    "readiness_score": 5
+    "readiness_score": 50
   },
   "actions": [
     {
@@ -53,8 +53,8 @@
       "reason": "run_ai_stage=False"
     }
   ],
-  "training_readiness_pct": 33,
+  "training_readiness_pct": 47,
   "go_for_training": false,
-  "go_for_inference": false,
+  "go_for_inference": true,
   "status": "training_governed_v79"
 }

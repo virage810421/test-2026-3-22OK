@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-04-09 09:42:38",
+  "system_name": "正式交易主控版_v79",
+  "summary": {
+    "trade_count": 1,
+    "total_pnl": 0.0,
+    "total_slippage_cost": 0.0,
+    "total_commission": 0.0,
+    "total_tax": 0.0,
+    "reject_count": 0
+  },
+  "by_regime": [
+    {
+      "bucket": "UNKNOWN",
+      "count": 1,
+      "pnl": 0.0,
+      "win_rate": 0.0
+    }
+  ],
+  "by_setup": [
+    {
+      "bucket": "UNKNOWN",
+      "count": 1,
+      "pnl": 0.0,
+      "win_rate": 0.0
+    }
+  ],
+  "by_industry": [
+    {
+      "bucket": "UNKNOWN",
+      "count": 1,
+      "pnl": 0.0,
+      "win_rate": 0.0
+    }
+  ],
+  "reject_reasons": [],
+  "status": "attribution_ready"
+}
