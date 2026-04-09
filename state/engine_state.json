@@ -1,5 +1,5 @@
 {
-  "saved_at": "2026-04-09 09:42:38",
+  "saved_at": "2026-04-09 10:15:46",
   "system_name": "正式交易主控版_v79",
   "cash": 3000000.0,
   "positions": [
@@ -104,7 +104,7 @@
     }
   ],
   "kill_switch_state": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system": {
       "armed": false,
       "reason": ""

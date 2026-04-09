@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-04-09 03:18:29",
+  "module_version": "v82_phase3",
+  "contract_path": "/mnt/data/fts_v83_official_pack/runtime/broker_requirements_contract.json",
+  "approval_path": "/mnt/data/fts_v83_official_pack/runtime/operator_approval_registry.json",
+  "cutover_plan_path": "/mnt/data/fts_v83_official_pack/runtime/live_cutover_plan.json",
+  "release_gate_path": "/mnt/data/fts_v83_official_pack/runtime/live_release_gate.json",
+  "real_broker_fields": {
+    "auth": [
+      "api_key",
+      "api_secret",
+      "account_id",
+      "cert_or_token"
+    ],
+    "order_payload": [
+      "ticker",
+      "side",
+      "qty",
+      "price",
+      "order_type",
+      "time_in_force",
+      "session",
+      "idempotency_key"
+    ],
+    "callback_payload": [
+      "broker_order_id",
+      "order_status",
+      "fill_qty",
+      "fill_price",
+      "event_time",
+      "reject_reason"
+    ],
+    "account_snapshot": [
+      "cash_available",
+      "market_value",
+      "equity",
+      "buying_power"
+    ]
+  },
+  "credentials_template_path": "/mnt/data/fts_v83_official_pack/runtime/real_broker_credentials_template.json",
+  "complete_now": [
+    "broker contract",
+    "callback schema",
+    "operator approval registry",
+    "live cutover plan",
+    "release gate"
+  ],
+  "waiting_for_real_account": [
+    "券商 API 金鑰",
+    "認證/簽章方式",
+    "callback 或 polling 真實規格",
+    "錯誤碼映射",
+    "實盤小額 smoke test"
+  ],
+  "status": "phase3_contract_ready_account_pending"
+}

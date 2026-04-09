@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-04-09 03:18:29",
+  "module_version": "v83_official_main",
+  "system_name": "正式交易主控版_v83_official_main",
+  "mainline_outputs": {
+    "fundamentals_etl_mainline": "/mnt/data/fts_v83_official_pack/runtime/fundamentals_etl_mainline.json",
+    "training_governance_mainline": "/mnt/data/fts_v83_official_pack/runtime/training_governance_mainline.json",
+    "phase1": "/mnt/data/fts_v83_official_pack/runtime/phase1_upgrade.json",
+    "phase2": "/mnt/data/fts_v83_official_pack/runtime/phase2_mock_real_broker.json",
+    "phase3": "/mnt/data/fts_v83_official_pack/runtime/phase3_real_cutover.json",
+    "file_classification": "/mnt/data/fts_v83_official_pack/runtime/file_classification.json"
+  },
+  "completed_upgrades": [
+    "Fundamentals ETL：已吸收 yahoo_csv_to_sql.py",
+    "Training Governance：已吸收 ml_trainer.py + model_governance.py",
+    "Phase1：pre-live 補滿",
+    "Phase2：假真券商補滿",
+    "Phase3：真券商 contract ready，待開戶"
+  ],
+  "phase_completion": {
+    "phase1": {
+      "status": "phase1_ready",
+      "complete_for_scope": true,
+      "scope_note": "AI / promotion / payload / safety / preflight 已補齊到 pre-live 等級"
+    },
+    "phase2": {
+      "status": "phase2_ready",
+      "complete_for_scope": true,
+      "scope_note": "mock broker / callback / reconciliation / preopen / EOD 已補齊到假真券商等級"
+    },
+    "phase3": {
+      "status": "phase3_contract_ready_account_pending",
+      "complete_for_scope": false,
+      "scope_note": "真券商接口規格與 cutover skeleton 已完成；開戶前無法宣告完整升級"
+    }
+  },
+  "status": "v83_official_main_ready"
+}

@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-09 09:42:38",
+  "generated_at": "2026-04-09 10:15:46",
   "module_version": "v80_prebroker_sealed",
   "core": {
     "training_report": {
-      "generated_at": "2026-04-09 09:42:37",
+      "generated_at": "2026-04-09 10:15:46",
       "module_version": "v79",
       "ai_stage_enabled": false,
       "dry_run": true,
@@ -63,7 +63,7 @@
       "status": "training_governed_v79"
     },
     "bridge_report": {
-      "generated_at": "2026-04-09 09:42:38",
+      "generated_at": "2026-04-09 10:15:46",
       "module_version": "v79",
       "rows_total": 3,
       "rows_with_price": 3,
@@ -214,7 +214,7 @@
         "status": "completion_gap_mapped_v79"
       },
       "training_orchestrator": {
-        "generated_at": "2026-04-09 09:42:37",
+        "generated_at": "2026-04-09 10:15:46",
         "module_version": "v79",
         "ai_stage_enabled": false,
         "dry_run": true,
@@ -274,7 +274,7 @@
         "status": "training_governed_v79"
       },
       "decision_execution_bridge": {
-        "generated_at": "2026-04-09 09:42:38",
+        "generated_at": "2026-04-09 10:15:46",
         "module_version": "v79",
         "rows_total": 3,
         "rows_with_price": 3,
@@ -300,7 +300,7 @@
         "status": "execution_payload_ready"
       },
       "price_gap_bridge": {
-        "generated_at": "2026-04-09 09:42:38",
+        "generated_at": "2026-04-09 10:15:46",
         "module_version": "v79",
         "scanned_csv_count": 9,
         "scanned_csv_success_count": 3,
@@ -336,7 +336,7 @@
   "order_source": "C:\\test\\test-2026-3-22OK\\data\\executable_order_payloads.csv",
   "trade_source": "C:\\test\\test-2026-3-22OK\\trade_stats.csv",
   "governance_decision": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "thresholds": {
       "min_win_rate": 0.5,
@@ -405,7 +405,7 @@
     "status": "candidate_blocked"
   },
   "model_registry_runtime": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "models_dir": "C:\\test\\test-2026-3-22OK\\models",
     "candidates": [
@@ -428,7 +428,7 @@
         "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
         "is_file": true,
         "is_dir": false,
-        "size_bytes": 1246
+        "size_bytes": 1520
       },
       {
         "name": "model_區間盤整.pkl",
@@ -470,11 +470,11 @@
     "governance_registry": {}
   },
   "model_gate": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "go_for_model_linkage": false,
     "governance": {
-      "generated_at": "2026-04-09 09:42:38",
+      "generated_at": "2026-04-09 10:15:46",
       "system_name": "正式交易主控版_v79",
       "thresholds": {
         "min_win_rate": 0.5,
@@ -560,7 +560,7 @@
     }
   },
   "promotion_policy": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "promotion_policy": {
       "stages": [
@@ -593,7 +593,7 @@
     "status": "promotion_policy_ready"
   },
   "promotion_eval": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "inputs": {
       "artifact_ok": false,
@@ -679,7 +679,7 @@
     "status": "blocked"
   },
   "live_safety": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "mode": "PAPER",
     "broker_type": "paper",
@@ -700,7 +700,7 @@
     }
   },
   "reconciliation": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "summary": {
       "local_orders": 3,
@@ -734,7 +734,7 @@
     "status": "reconciliation_green"
   },
   "recovery_snapshot": {
-    "saved_at": "2026-04-09 09:42:38",
+    "saved_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "cash": 3000000.0,
     "positions": [
@@ -839,7 +839,7 @@
       }
     ],
     "kill_switch_state": {
-      "generated_at": "2026-04-09 09:42:38",
+      "generated_at": "2026-04-09 10:15:46",
       "system": {
         "armed": false,
         "reason": ""
@@ -857,7 +857,7 @@
     }
   },
   "recovery_plan": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "snapshot_found": true,
     "broker_snapshot_found": true,
@@ -878,7 +878,7 @@
     "status": "recovery_ready"
   },
   "recovery_validation": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "checks": [
       {
@@ -916,7 +916,7 @@
     "status": "validation_ready"
   },
   "recovery_consistency": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "checks": {
       "state_file_exists": true,
@@ -940,7 +940,7 @@
     "status": "consistency_break"
   },
   "daily_ops": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "mode": "PAPER",
     "broker_type": "paper",
@@ -991,7 +991,7 @@
     ]
   },
   "performance_attribution": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "system_name": "正式交易主控版_v79",
     "summary": {
       "trade_count": 1,
@@ -1029,7 +1029,7 @@
     "status": "attribution_ready"
   },
   "upgrade_plan": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "goal": "券商開戶前先把 code 可封口範圍做滿，並可直接掛進 formal_trading_system 主線",
     "p0": {
       "status": "completed",
@@ -1090,7 +1090,7 @@
     "direct_mainline_entry": "formal_trading_system_v80_prebroker_sealed.py"
   },
   "layer_status": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "module_version": "v80_prebroker_sealed",
     "direct_mainline_entry": "formal_trading_system_v80_prebroker_sealed.py",
     "P0": {

@@ -101,3 +101,36 @@
 [09:42:38] ✅ v81 prelive bridge 完成 | ready_now=9 | waiting_for_broker=3
 [09:42:38] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v81_prelive_bridge_report.json
 [09:42:38] ------------------------------------------------------------------------
+[10:15:46] ========================================================================
+[10:15:46] 🚀 啟動 formal_trading_system_v81_mainline_merged
+[10:15:46] 🧭 單一主控入口：V80 prebroker sealed + V81 prelive bridge 已合併
+[10:15:46] 🎯 目標：券商開戶前只跑一支主線，完成所有可由 code 封口的層
+[10:15:46] ========================================================================
+[10:15:46] ========================================================================
+[10:15:46] 🚀 啟動 formal_trading_system_v80_prebroker_sealed
+[10:15:46] 🧭 模式：PAPER | broker_type：paper
+[10:15:46] 🛡️ 目標：券商開戶前，把可由 code 封口的層全部補齊，並掛進 formal_trading_system 主線
+[10:15:46] ========================================================================
+[10:15:46] 💾 已輸出 recovery snapshot：C:\test\test-2026-3-22OK\state\engine_state.json
+[10:15:46] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[10:15:46] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[10:15:46] 🧩 已輸出 recovery consistency report：C:\test\test-2026-3-22OK\runtime\recovery_consistency_report.json
+[10:15:46] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[10:15:46] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[10:15:46] 🧪 Model Gate | go_for_model_linkage=False | failures=1 | warnings=1
+[10:15:46] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[10:15:46] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[10:15:46] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[10:15:46] 📈 已輸出 performance attribution：C:\test\test-2026-3-22OK\runtime\performance_attribution.json
+[10:15:46] 📝 已輸出 daily ops summary：C:\test\test-2026-3-22OK\runtime\daily_ops_summary.json
+[10:15:46] 🚨 已輸出 alerts：C:\test\test-2026-3-22OK\runtime\alerts.json
+[10:15:46] ------------------------------------------------------------------------
+[10:15:46] ✅ 主控封口完成 | P0=completed | P1=completed_for_pre_broker_stage | P2=broker_ready_blueprint_only
+[10:15:46] 🧠 governance=candidate_blocked | promotion=promote_blocked | safety=BLOCK
+[10:15:46] 🧮 reconciliation=reconciliation_green | recovery=recovery_ready | attribution=attribution_ready
+[10:15:46] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v80_prebroker_sealed_report.json
+[10:15:46] ------------------------------------------------------------------------
+[10:15:46] ✅ V81 單一主線合併完成 | 不需要再分開跑 v80 與 v81
+[10:15:46] 🧩 ready_now=9 | waiting_for_broker=3
+[10:15:46] 📄 報告輸出：C:\test\test-2026-3-22OK\runtime\formal_trading_system_v81_mainline_merged_report.json
+[10:15:46] ------------------------------------------------------------------------

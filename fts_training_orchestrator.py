@@ -11,7 +11,7 @@ from fts_utils import now_str, log
 
 
 class TrainingOrchestrator:
-    MODULE_VERSION = "v79"
+    MODULE_VERSION = "v83"
 
     def __init__(self):
         self.report_path = PATHS.runtime_dir / "training_orchestrator.json"
@@ -213,7 +213,9 @@ class TrainingOrchestrator:
             "training_readiness_pct": training_readiness_pct,
             "go_for_training": dataset.get("status") == "ready_for_training",
             "go_for_inference": models.get("existing_required_count", 0) >= 2,
-            "status": "training_governed_v79",
+            "backend_entrypoint": "fts_trainer_backend.train_models",
+            "governance_entrypoint": "model_governance.ModelGovernanceManager",
+            "status": "training_governed_v83",
         }
         self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         log(f"🧠 已輸出 training orchestrator：{self.report_path}")

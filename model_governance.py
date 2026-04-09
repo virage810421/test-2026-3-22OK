@@ -150,6 +150,18 @@ def restore_version(version_tag: str) -> dict[str, Any]:
     return payload
 
 
+def get_best_version_entry() -> dict[str, Any] | None:
+    registry = load_registry()
+    best_version = registry.get('best_version')
+    if not best_version:
+        return None
+    for row in registry.get('versions', []):
+        if row.get('version') == best_version:
+            return row
+    return None
+
+
+
 class ModelGovernanceManager:
     """Safe promotion / rollback / shadow management for model lifecycle."""
 

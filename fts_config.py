@@ -79,17 +79,27 @@ class AppPaths:
 
 @dataclass
 class SystemConfig:
-    system_name: str = '正式交易主控版_v79'
-    package_version: str = 'v79'
+    system_name: str = '正式交易主控版_v83_official_main'
+    package_version: str = 'v83'
     mode: str = 'PAPER'
     broker_type: str = 'paper'
     starting_cash: float = 3_000_000
     lot_size: int = 1000
     price_round: int = 2
     max_single_position_pct: float = 0.10
+    max_order_notional: float = 500_000
+    max_industry_exposure_pct: float = 0.25
+    daily_loss_limit_pct: float = 0.03
     default_stop_loss_pct: float = 0.04
+    default_take_profit_pct: float = 0.12
+    commission_rate: float = 0.001425
+    tax_rate_sell: float = 0.003
+    slippage_bps: float = 8.0
+    execution_style: str = 'TWAP3'
+    current_bar_index: int = 0
+
     upstream_timeout_seconds: int = 3600
-    run_ai_stage: bool = False
+    run_ai_stage: bool = True
     dry_run_upstream_execution: bool = True
     allow_online_history_backfill: bool = False
     scan_recursive_depth: int = 3
@@ -98,10 +108,24 @@ class SystemConfig:
     stage_soft_timeout_seconds: int = 120
     max_stage_retries: int = 1
     resume_completed_stages: bool = True
+
     allow_odd_lot_in_paper: bool = True
     paper_min_qty: int = 1
     partial_ready_price_threshold: float = 0.34
     partial_ready_qty_threshold: float = 0.34
+
+    enable_retry_queue: bool = True
+    max_retry_attempts: int = 3
+    fail_on_retry_queue_required_items: bool = True
+
+    live_manual_arm: bool = False
+    require_dual_confirmation: bool = True
+    enable_live_kill_switch: bool = True
+
+    mock_broker_auto_connect: bool = True
+    mock_broker_partial_fill_threshold_lots: int = 2
+    mock_broker_reject_notional: float = 900_000
+    mock_broker_callback_lag_seconds: int = 1
 
 
 @dataclass

@@ -1,0 +1,218 @@
+{
+  "generated_at": "2026-04-09 03:18:29",
+  "module_version": "v82_phase1",
+  "seeded": {
+    "created_demo_assets": []
+  },
+  "preflight_tests": {
+    "config_check": {
+      "passed": true,
+      "errors": []
+    },
+    "paths_check": {
+      "passed": true,
+      "errors": []
+    },
+    "decision_file_check": {
+      "passed": true,
+      "path": "/mnt/data/fts_v83_official_pack/daily_decision_desk.csv",
+      "errors": []
+    },
+    "mock_broker_roundtrip": {
+      "passed": true,
+      "errors": [],
+      "fill_count": 1,
+      "callback_count": 2,
+      "status": "OrderStatus.FILLED"
+    },
+    "all_passed": true
+  },
+  "training_orchestrator": {
+    "generated_at": "2026-04-09 03:18:29",
+    "module_version": "v83",
+    "ai_stage_enabled": true,
+    "dry_run": true,
+    "bootstrap": {
+      "bootstrap_source": "/mnt/data/fts_v83_official_pack/daily_decision_desk.csv",
+      "registry_written": true,
+      "template_written": true,
+      "bootstrap_plan_written": true,
+      "candidate_feature_count": 3,
+      "bootstrap_plan_rows": 3
+    },
+    "bootstrap_score": 25,
+    "dataset": {
+      "exists": true,
+      "rows": 180,
+      "columns": [
+        "Ticker",
+        "Date",
+        "Regime",
+        "Label_Y",
+        "Target_Return",
+        "AI_Proba",
+        "Score",
+        "Kelly_Pos"
+      ],
+      "feature_count": 3,
+      "label_balance": {
+        "1": 135,
+        "0": 45
+      },
+      "regime_counts": {
+        "趨勢多頭": 120,
+        "區間盤整": 60
+      },
+      "status": "ready_for_training",
+      "readiness_score": 75
+    },
+    "models": {
+      "models_dir_exists": true,
+      "required_files": [
+        {
+          "path": "/mnt/data/fts_v83_official_pack/models/selected_features.pkl",
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/fts_v83_official_pack/models/model_趨勢多頭.pkl",
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/fts_v83_official_pack/models/model_區間盤整.pkl",
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/fts_v83_official_pack/models/model_趨勢空頭.pkl",
+          "exists": true
+        }
+      ],
+      "existing_required_count": 4,
+      "all_required_present": true,
+      "readiness_score": 65
+    },
+    "actions": [
+      {
+        "stage": "ai",
+        "action": "skip",
+        "reason": "dry_run_upstream_execution=True"
+      }
+    ],
+    "training_readiness_pct": 78,
+    "go_for_training": true,
+    "go_for_inference": true,
+    "backend_entrypoint": "fts_trainer_backend.train_models",
+    "governance_entrypoint": "model_governance.ModelGovernanceManager",
+    "status": "training_governed_v83"
+  },
+  "training_prod_readiness": {
+    "generated_at": "2026-04-09 03:18:29",
+    "system_name": "正式交易主控版_v83_official_main",
+    "summary": {
+      "ready_count": 10,
+      "total_checks": 10,
+      "readiness_ratio": 1.0,
+      "overall_conclusion": "prelive_grade",
+      "required_model_count": 4
+    },
+    "checks": [
+      {
+        "area": "training_data_generation",
+        "ready": true,
+        "level": "governed"
+      },
+      {
+        "area": "trainer_entrypoint",
+        "ready": true,
+        "level": "bridge_ready"
+      },
+      {
+        "area": "model_artifact_output",
+        "ready": true,
+        "level": "governed"
+      },
+      {
+        "area": "model_version_registry",
+        "ready": true,
+        "level": "governed"
+      },
+      {
+        "area": "training_quality_report",
+        "ready": true,
+        "level": "governed"
+      },
+      {
+        "area": "walk_forward_validation",
+        "ready": true,
+        "level": "policy_ready"
+      },
+      {
+        "area": "automatic rollback policy",
+        "ready": true,
+        "level": "policy_ready"
+      },
+      {
+        "area": "live shadow evaluation",
+        "ready": true,
+        "level": "bridge_ready"
+      },
+      {
+        "area": "data drift monitoring",
+        "ready": true,
+        "level": "bridge_ready"
+      },
+      {
+        "area": "promotion gate for live deployment",
+        "ready": true,
+        "level": "policy_ready"
+      }
+    ],
+    "status": "training_readiness_ready"
+  },
+  "promotion_decision_path": "/mnt/data/fts_v83_official_pack/runtime/trainer_promotion_decision.json",
+  "promotion_decision": {
+    "generated_at": "2026-04-09 03:18:29",
+    "system_name": "正式交易主控版_v83_official_main",
+    "inputs": {
+      "artifact_ok": true,
+      "registry_updated": true,
+      "walk_forward_score": 78.0,
+      "profit_factor": 1.2,
+      "win_rate": 0.56,
+      "max_drawdown_pct": 0.08,
+      "shadow_return_drift_pct": 0.03,
+      "rollback_version_exists": true,
+      "operator_approved": true,
+      "live_safety_clear": true
+    },
+    "go_for_shadow": true,
+    "go_for_promote": true,
+    "failures": [],
+    "warnings": [],
+    "status": "promote_ready"
+  },
+  "orders_preview_count": 3,
+  "live_safety": {
+    "generated_at": "2026-04-09 03:18:29",
+    "system_name": "正式交易主控版_v83_official_main",
+    "mode": "PAPER",
+    "broker_type": "paper",
+    "paper_live_safe": true,
+    "status": "live_safety_green",
+    "failures": [],
+    "warnings": [],
+    "blocked_orders": [],
+    "limits": {
+      "daily_loss_limit_pct": 0.03,
+      "max_single_position_pct": 0.1,
+      "max_order_notional": 500000.0,
+      "max_industry_exposure_pct": 0.25
+    }
+  },
+  "status": "phase1_ready",
+  "completed_items": [
+    "AI 自動化訓練與 promotion",
+    "execution payload 產生",
+    "live safety 先行封口",
+    "preflight smoke tests"
+  ]
+}

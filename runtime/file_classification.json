@@ -1,0 +1,325 @@
+{
+  "generated_at": "2026-04-09 03:18:29",
+  "system_name": "正式交易主控版_v83_official_main",
+  "must_keep": [
+    {
+      "file": "formal_trading_system_v83_official_main.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "formal_trading_system_v82_three_stage_upgrade.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_fundamentals_etl_mainline.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_training_governance_mainline.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_trainer_backend.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_phase1_upgrade.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_phase2_mock_broker_stage.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_phase3_real_cutover_stage.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_broker_factory.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_broker_paper.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_broker_real_stub.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_decision_execution_bridge.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_live_safety.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_reconciliation_engine.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_preopen_checklist.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_intraday_incident_guard.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_eod_closebook.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_callback_event_schema.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_callback_event_store.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_order_state_machine.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_broker_requirements_contract.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_real_broker_adapter_blueprint.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_live_release_gate.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_live_cutover_plan.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_training_orchestrator.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_training_prod_readiness.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "fts_trainer_promotion_policy.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "ml_data_generator.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "daily_chip_etl.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "monthly_revenue_simple.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    },
+    {
+      "file": "advanced_chart.py",
+      "exists": true,
+      "reason": "主線 or 核心 contract / 執行 / 風控 / ETL"
+    }
+  ],
+  "mergeable": [
+    {
+      "file": "fts_bridge_replacement_plan.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_legacy_bridge_map.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_module_fate_map.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_unused_candidates.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_upgrade_plan.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_target95_plan.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_target95_push.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_target95_scorecard.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_upgrade_truth_report.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_completion_gap_report.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_progress.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_progress_full_report.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_gate_summary.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_console_brief.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_report.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    },
+    {
+      "file": "fts_dashboard.py",
+      "exists": true,
+      "reason": "偏治理/報表/規劃，可以再收斂"
+    }
+  ],
+  "hold_do_not_touch_yet": [
+    {
+      "file": "launcher.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    },
+    {
+      "file": "risk_gateway.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    },
+    {
+      "file": "execution_engine.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    },
+    {
+      "file": "paper_broker.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    },
+    {
+      "file": "portfolio_risk.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    },
+    {
+      "file": "system_guard.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    },
+    {
+      "file": "live_paper_trading.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    },
+    {
+      "file": "master_pipeline.py",
+      "exists": true,
+      "reason": "仍可能被 legacy 主線或資料流依賴"
+    }
+  ],
+  "deletable_after_smoketest": [
+    {
+      "file": "formal_trading_system_v79.py",
+      "exists": true,
+      "reason": "v83 冒煙測試通過後可封存或刪除"
+    },
+    {
+      "file": "formal_trading_system_v80_prebroker_sealed.py",
+      "exists": true,
+      "reason": "v83 冒煙測試通過後可封存或刪除"
+    },
+    {
+      "file": "formal_trading_system_v81_mainline_merged.py",
+      "exists": true,
+      "reason": "v83 冒煙測試通過後可封存或刪除"
+    },
+    {
+      "file": "fts_live_adapter_stub.py",
+      "exists": true,
+      "reason": "v83 冒煙測試通過後可封存或刪除"
+    }
+  ],
+  "absorbed_keep_wrapper": [
+    {
+      "file": "yahoo_csv_to_sql.py",
+      "exists": true,
+      "reason": "已被 fts_fundamentals_etl_mainline.py 吸收；先保留相容入口"
+    },
+    {
+      "file": "model_governance.py",
+      "exists": true,
+      "reason": "已被 fts_training_governance_mainline.py 吸收；先保留治理函式"
+    },
+    {
+      "file": "ml_trainer.py",
+      "exists": true,
+      "reason": "已被 fts_trainer_backend.py 吸收；先保留舊執行入口"
+    }
+  ],
+  "status": "classification_ready_v83"
+}

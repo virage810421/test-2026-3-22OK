@@ -62,7 +62,7 @@
     "status": "completion_gap_mapped_v79"
   },
   "training_orchestrator": {
-    "generated_at": "2026-04-09 09:42:37",
+    "generated_at": "2026-04-09 10:15:46",
     "module_version": "v79",
     "ai_stage_enabled": false,
     "dry_run": true,
@@ -122,7 +122,7 @@
     "status": "training_governed_v79"
   },
   "decision_execution_bridge": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "module_version": "v79",
     "rows_total": 3,
     "rows_with_price": 3,
@@ -148,7 +148,7 @@
     "status": "execution_payload_ready"
   },
   "price_gap_bridge": {
-    "generated_at": "2026-04-09 09:42:38",
+    "generated_at": "2026-04-09 10:15:46",
     "module_version": "v79",
     "scanned_csv_count": 9,
     "scanned_csv_success_count": 3,

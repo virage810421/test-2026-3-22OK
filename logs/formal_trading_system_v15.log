@@ -96,3 +96,9 @@
 [09:42:38] 🧮 已輸出完成度缺口報告：C:\test\test-2026-3-22OK\runtime\completion_gap_report.json
 [09:42:38] 📝 開始彙整完整進度報告...
 [09:42:38] 📝 已輸出完整進度報告：C:\test\test-2026-3-22OK\runtime\progress_full_report.md
+[10:15:46] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[10:15:46] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[10:15:46] 🧮 開始計算非券商完成度缺口...
+[10:15:46] 🧮 已輸出完成度缺口報告：C:\test\test-2026-3-22OK\runtime\completion_gap_report.json
+[10:15:46] 📝 開始彙整完整進度報告...
+[10:15:46] 📝 已輸出完整進度報告：C:\test\test-2026-3-22OK\runtime\progress_full_report.md
