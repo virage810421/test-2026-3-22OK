@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-04-10 16:58:33",
+  "dataset_name": "ml_training_generated",
+  "rows": 0,
+  "columns": 0,
+  "missing_required_columns": [
+    "Label_Y",
+    "Target_Return",
+    "Regime"
+  ],
+  "required_columns_with_null_rate": {},
+  "columns_with_null_rate": {},
+  "status": "empty"
+}

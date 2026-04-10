@@ -1,11 +1,12 @@
 {
   "project_root": "C:\\test\\test-2026-3-22OK",
   "summary": {
-    "python_files_total": 282,
+    "python_files_total": 285,
     "compile_failures": 0,
     "core_import_failures": 0,
     "missing_local_import_edges": 0,
-    "wrapper_linkage_failures": 0
+    "wrapper_linkage_failures": 0,
+    "bridge_interface_failures": 0
   },
   "compile_results": [
     {
@@ -524,6 +525,11 @@
       "error": ""
     },
     {
+      "file": "fts_control_tower.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_cross_sectional_percentile_service.py",
       "ok": true,
       "error": ""
@@ -540,6 +546,11 @@
     },
     {
       "file": "fts_data_cleanup.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_data_quality_guard.py",
       "ok": true,
       "error": ""
     },
@@ -745,6 +756,11 @@
     },
     {
       "file": "fts_level3_bridge_selftest.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_level3_control_selftest.py",
       "ok": true,
       "error": ""
     },
@@ -1424,85 +1440,79 @@
       "module": "formal_trading_system_v83_official_main",
       "ok": true,
       "error": "",
-      "seconds": 0.056
-    },
-    {
-      "module": "fts_pipeline",
-      "ok": true,
-      "error": "",
-      "seconds": 0.448
+      "seconds": 0.919
     },
     {
       "module": "fts_fundamentals_etl_mainline",
       "ok": true,
       "error": "",
-      "seconds": 0.758
+      "seconds": 0.733
     },
     {
       "module": "fts_training_governance_mainline",
       "ok": true,
       "error": "",
-      "seconds": 1.594
+      "seconds": 1.397
     },
     {
       "module": "fts_feature_service",
       "ok": true,
       "error": "",
-      "seconds": 0.449
+      "seconds": 0.399
     },
     {
       "module": "fts_screening_engine",
       "ok": true,
       "error": "",
-      "seconds": 0.728
+      "seconds": 0.922
     },
     {
       "module": "fts_cross_sectional_percentile_service",
       "ok": true,
       "error": "",
-      "seconds": 0.765
+      "seconds": 0.687
     },
     {
       "module": "fts_event_calendar_service",
       "ok": true,
       "error": "",
-      "seconds": 0.399
+      "seconds": 0.387
     },
     {
       "module": "fts_decision_execution_bridge",
       "ok": true,
       "error": "",
-      "seconds": 0.4
+      "seconds": 0.409
     },
     {
       "module": "fts_phase1_upgrade",
       "ok": true,
       "error": "",
-      "seconds": 0.402
+      "seconds": 0.387
     },
     {
       "module": "fts_phase2_mock_broker_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.396
+      "seconds": 0.412
     },
     {
       "module": "fts_phase3_real_cutover_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.512
+      "seconds": 0.496
     },
     {
       "module": "model_governance",
       "ok": true,
       "error": "",
-      "seconds": 0.071
+      "seconds": 0.067
     },
     {
       "module": "db_setup",
       "ok": true,
       "error": "",
-      "seconds": 0.048
+      "seconds": 0.044
     }
   ],
   "local_imports_by_file": {
@@ -1694,6 +1704,7 @@
       "broker_base",
       "db_logger",
       "fts_broker_paper",
+      "fts_data_quality_guard",
       "fts_level3_runtime_loader",
       "paper_broker",
       "risk_gateway"
@@ -1702,10 +1713,7 @@
       "formal_trading_system_v83_official_main"
     ],
     "formal_trading_system_v83_official_main.py": [
-      "config",
-      "fts_config",
-      "fts_screening_engine",
-      "fts_watchlist_service"
+      "fts_control_tower"
     ],
     "fts_ab_diff_audit.py": [
       "fts_config",
@@ -1855,6 +1863,27 @@
       "fts_config",
       "fts_utils"
     ],
+    "fts_control_tower.py": [
+      "fts_broker_approval",
+      "fts_config",
+      "fts_gatekeeper",
+      "fts_interface_audit",
+      "fts_live_readiness_gate",
+      "fts_live_release_gate",
+      "fts_live_safety",
+      "fts_mainline_linkage",
+      "fts_model_gate",
+      "fts_operator_approval",
+      "fts_pipeline",
+      "fts_project_completion_audit",
+      "fts_project_healthcheck",
+      "fts_reconciliation_engine",
+      "fts_recovery_engine",
+      "fts_recovery_validation",
+      "fts_submission_gate",
+      "fts_utils",
+      "fts_validation_suite"
+    ],
     "fts_cross_sectional_percentile_service.py": [
       "fts_config",
       "fts_feature_service",
@@ -1869,6 +1898,9 @@
       "fts_utils"
     ],
     "fts_data_cleanup.py": [],
+    "fts_data_quality_guard.py": [
+      "fts_upgrade_runtime"
+    ],
     "fts_decision_consistency.py": [
       "fts_config",
       "fts_utils"
@@ -1959,6 +1991,7 @@
     ],
     "fts_fundamentals_etl_mainline.py": [
       "fts_config",
+      "fts_data_quality_guard",
       "fts_utils"
     ],
     "fts_fundamentals_true_backfill.py": [],
@@ -2025,6 +2058,11 @@
     ],
     "fts_level2_variant_registry.py": [],
     "fts_level3_bridge_selftest.py": [],
+    "fts_level3_control_selftest.py": [
+      "fts_control_tower",
+      "fts_gatekeeper",
+      "fts_live_release_gate"
+    ],
     "fts_level3_runtime_loader.py": [],
     "fts_live_adapter_stub.py": [
       "fts_config",
@@ -2046,6 +2084,7 @@
       "fts_prelive_runtime"
     ],
     "fts_live_safety.py": [
+      "fts_data_quality_guard",
       "fts_kill_switch",
       "fts_market_rules_tw",
       "fts_upgrade_runtime"
@@ -2183,7 +2222,10 @@
     "fts_project_completion_audit.py": [
       "fts_config"
     ],
-    "fts_project_healthcheck.py": [],
+    "fts_project_healthcheck.py": [
+      "fts_screening_engine",
+      "screening"
+    ],
     "fts_project_hygiene.py": [],
     "fts_real_api_readiness.py": [
       "fts_config",
@@ -2273,6 +2315,7 @@
       "fts_config",
       "fts_feature_service",
       "fts_market_data_service",
+      "fts_screening_legacy_compat",
       "fts_utils"
     ],
     "fts_screening_legacy_compat.py": [
@@ -2377,6 +2420,7 @@
     ],
     "fts_trainer_backend.py": [
       "config",
+      "fts_data_quality_guard",
       "model_governance"
     ],
     "fts_trainer_promotion_policy.py": [
@@ -2385,6 +2429,7 @@
     "fts_training_data_builder.py": [
       "config",
       "fts_chip_enrichment_service",
+      "fts_data_quality_guard",
       "fts_feature_service",
       "fts_market_data_service",
       "fts_screening_engine"
@@ -2477,7 +2522,8 @@
       "strategies"
     ],
     "master_pipeline.py": [
-      "fts_pipeline"
+      "fts_pipeline",
+      "fts_utils"
     ],
     "ml_data_generator.py": [
       "fts_training_data_builder"
@@ -2548,7 +2594,8 @@
       "performance"
     ],
     "yahoo_csv_to_sql.py": [
-      "fts_fundamentals_etl_mainline"
+      "fts_fundamentals_etl_mainline",
+      "fts_utils"
     ]
   },
   "missing_local_imports_by_file": {},
@@ -2583,12 +2630,17 @@
       "service_exists": true,
       "linked_ok": true
     },
+    "master_pipeline.py": {
+      "wrapper_exists": true,
+      "service_exists": true,
+      "linked_ok": true
+    },
     "yahoo_csv_to_sql.py": {
       "wrapper_exists": true,
       "service_exists": true,
       "linked_ok": true
     },
-    "master_pipeline.py": {
+    "formal_trading_system_v83_official_main.py": {
       "wrapper_exists": true,
       "service_exists": true,
       "linked_ok": true
@@ -2597,6 +2649,9 @@
   "single_entry_readiness": {
     "expected_files": {
       "formal_trading_system_v83_official_main.py": true,
+      "fts_control_tower.py": true,
+      "launcher.py": true,
+      "master_pipeline.py": true,
       "db_setup_research_plus.py": true,
       "run_full_market_percentile_snapshot.py": true,
       "run_precise_event_calendar_build.py": true,
@@ -2639,27 +2694,22 @@
       "training_governance_mainline.json": true
     }
   },
-  "deep_runs": [
-    {
-      "args": [
-        "formal_trading_system_v83_official_main.py"
+  "bridge_interface_audit": {
+    "screening.inspect_stock": {
+      "wrapper_params": [
+        "ticker",
+        "preloaded_df",
+        "p"
       ],
-      "ok": true,
-      "seconds": 2.654,
-      "stdout_tail": "[13:15:32] ========================================================================\n[13:15:32] ? 啟動 正式交易主控版_v83_official_main\n[13:15:32] ? 模式：DAILY\n[13:15:32] ========================================================================\n[13:15:33] ? fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[13:15:34] ? training governance 主線盤點完成：C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json\n[13:15:34] ? training stress audit：C:\\test\\test-2026-3-22OK\\runtime\\training_stress_audit.json\n[13:15:34] ? backfill resilience audit：C:\\test\\test-2026-3-22OK\\runtime\\backfill_resilience_audit.json\n[13:15:34] ? feature stack audit：C:\\test\\test-2026-3-22OK\\runtime\\feature_stack_audit.json\n[13:15:34] ? 全市場 percentile 狀態：C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n[13:15:34] ?? event calendar ready：C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n[13:15:34] ? 主線串聯檢查：C:\\test\\test-2026-3-22OK\\runtime\\mainline_linkage.json\n[13:15:34] ? 專案完成度稽核：C:\\test\\test-2026-3-22OK\\runtime\\project_completion_audit.json\n[13:15:34] ?? file classification updated：C:\\test\\test-2026-3-22OK\\runtime\\file_classification.json\n[13:15:35] ? Phase1 完成：C:\\test\\test-2026-3-22OK\\runtime\\phase1_upgrade.json\n[13:15:35] ? Phase2 完成：C:\\test\\test-2026-3-22OK\\runtime\\phase2_mock_real_broker.json\n[13:15:35] ? Phase3 完成：C:\\test\\test-2026-3-22OK\\runtime\\phase3_real_cutover.json\n[13:15:35] ? v83 正式主控版完成：C:\\test\\test-2026-3-22OK\\runtime\\formal_trading_system_v83_official_main.json\n",
-      "stderr_tail": "",
-      "returncode": 0
-    },
-    {
-      "args": [
-        "formal_trading_system_v83_official_main.py",
-        "--train"
+      "engine_params": [
+        "self",
+        "ticker",
+        "preloaded_df",
+        "p",
+        "period"
       ],
-      "ok": true,
-      "seconds": 3.97,
-      "stdout_tail": "[13:15:35] ========================================================================\n[13:15:35] ? 啟動 正式交易主控版_v83_official_main\n[13:15:35] ? 模式：TRAIN\n[13:15:35] ========================================================================\n[13:15:39] ? training governance 主線盤點完成：C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json\n[13:15:39] ? training stress audit：C:\\test\\test-2026-3-22OK\\runtime\\training_stress_audit.json\n[13:15:39] ? train 完成：C:\\test\\test-2026-3-22OK\\runtime\\formal_trading_system_v83_train.json\n",
-      "stderr_tail": "",
-      "returncode": 0
+      "compatible": true,
+      "missing_in_engine": []
     }
-  ]
+  }
 }

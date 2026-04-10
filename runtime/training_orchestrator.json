@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 13:16:50",
+  "generated_at": "2026-04-10 18:19:50",
   "module_version": "v83",
   "ai_stage_enabled": true,
   "dry_run": true,
@@ -8,8 +8,8 @@
     "registry_written": true,
     "template_written": true,
     "bootstrap_plan_written": true,
-    "candidate_feature_count": 3,
-    "bootstrap_plan_rows": 3
+    "candidate_feature_count": 13,
+    "bootstrap_plan_rows": 0
   },
   "bootstrap_score": 25,
   "dataset": {

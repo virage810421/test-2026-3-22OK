@@ -10,46 +10,10 @@
     "price_snapshot_present": false,
     "training_artifacts_present": true
   },
-  "payload_check_total": 3,
-  "payload_check_passed": 1,
-  "payload_checks": [
-    {
-      "ticker": "2330.TW",
-      "passed": false,
-      "ref_price": 1950.0,
-      "qty": 72,
-      "reason": "qty_not_board_lot_multiple",
-      "tick_size": 5.0,
-      "limit_up": 2145.0,
-      "limit_down": 1755.0,
-      "lot_mode": "board"
-    },
-    {
-      "ticker": "2471.TW",
-      "passed": true,
-      "ref_price": 52.0,
-      "qty": 1000,
-      "reason": "ok",
-      "tick_size": 0.1,
-      "limit_up": 57.2,
-      "limit_down": 46.8,
-      "lot_mode": "board"
-    },
-    {
-      "ticker": "2467.TW",
-      "passed": false,
-      "ref_price": 449.0,
-      "qty": 185,
-      "reason": "qty_not_board_lot_multiple",
-      "tick_size": 0.5,
-      "limit_up": 493.9,
-      "limit_down": 404.1,
-      "lot_mode": "board"
-    }
-  ],
-  "hard_blocks": [
-    "some_order_payloads_fail_tw_market_rules"
-  ],
+  "payload_check_total": 0,
+  "payload_check_passed": 0,
+  "payload_checks": [],
+  "hard_blocks": [],
   "live_ready": false,
-  "status": "blocked"
+  "status": "ready"
 }

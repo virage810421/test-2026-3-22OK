@@ -1,8 +1,15 @@
 {
-  "generated_at": "2026-04-09 10:15:46",
-  "system_name": "正式交易主控版_v79",
+  "generated_at": "2026-04-10 18:19:50",
+  "system_name": "正式交易主控版_v83_official_main",
   "models_dir": "C:\\test\\test-2026-3-22OK\\models",
   "candidates": [
+    {
+      "name": "__pycache__",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\__pycache__",
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 0
+    },
     {
       "name": "best",
       "path": "C:\\test\\test-2026-3-22OK\\models\\best",
@@ -22,28 +29,42 @@
       "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 1520
+      "size_bytes": 5319
+    },
+    {
+      "name": "model_registry.json",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_registry.json",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 15305
     },
     {
       "name": "model_區間盤整.pkl",
       "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 2774137
+      "size_bytes": 13
+    },
+    {
+      "name": "model_趨勢多頭.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢多頭.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 13
     },
     {
       "name": "model_趨勢空頭.pkl",
       "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 3399417
+      "size_bytes": 13
     },
     {
       "name": "selected_features.pkl",
       "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 483
+      "size_bytes": 13
     },
     {
       "name": "test_line.py",
@@ -60,6 +81,512 @@
       "size_bytes": 0
     }
   ],
-  "candidate_count": 8,
-  "governance_registry": {}
+  "candidate_count": 11,
+  "suspicious_small_artifacts": [
+    {
+      "name": "model_區間盤整.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_區間盤整.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 13
+    },
+    {
+      "name": "model_趨勢多頭.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢多頭.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 13
+    },
+    {
+      "name": "model_趨勢空頭.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\model_趨勢空頭.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 13
+    },
+    {
+      "name": "selected_features.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 13
+    }
+  ],
+  "governance_registry": {
+    "versions": [
+      {
+        "version": "pretrain_20260409_212217",
+        "timestamp": "2026-04-09 21:22:17",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_114828",
+        "timestamp": "2026-04-10 11:48:28",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_120442",
+        "timestamp": "2026-04-10 12:04:42",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_122538",
+        "timestamp": "2026-04-10 12:25:38",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_123912",
+        "timestamp": "2026-04-10 12:39:12",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_131537",
+        "timestamp": "2026-04-10 13:15:37",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_134411",
+        "timestamp": "2026-04-10 13:44:11",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_160034",
+        "timestamp": "2026-04-10 16:00:34",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_164438",
+        "timestamp": "2026-04-10 16:44:38",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_164617",
+        "timestamp": "2026-04-10 16:46:17",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_164746",
+        "timestamp": "2026-04-10 16:47:46",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      },
+      {
+        "version": "pretrain_20260410_165903",
+        "timestamp": "2026-04-10 16:59:03",
+        "files": [
+          "selected_features.pkl",
+          "model_趨勢多頭.pkl",
+          "model_區間盤整.pkl",
+          "model_趨勢空頭.pkl"
+        ],
+        "artifacts": [
+          {
+            "name": "selected_features.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢多頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_區間盤整.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          },
+          {
+            "name": "model_趨勢空頭.pkl",
+            "exists": true,
+            "size_bytes": 13,
+            "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+          }
+        ],
+        "metrics": {},
+        "note": "重訓前自動備份（防過擬合版）",
+        "status": "snapshot"
+      }
+    ],
+    "current_version": "pretrain_20260410_165903",
+    "best_version": null,
+    "last_candidate_version": null,
+    "last_shadow_version": null,
+    "active_deployment": null
+  }
 }

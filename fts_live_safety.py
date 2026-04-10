@@ -6,6 +6,7 @@ from typing import Any
 
 from fts_upgrade_runtime import PATHS, CONFIG, now_str, log, safe_float, safe_int, write_json
 from fts_kill_switch import KillSwitchManager
+from fts_data_quality_guard import validate_order_contract_dict
 
 try:  # pragma: no cover
     from fts_market_rules_tw import validate_order_payload  # type: ignore
@@ -54,6 +55,9 @@ class LiveSafetyGate:
             symbol = str(order.get('ticker') or order.get('Ticker') or '').strip()
             strategy = str(order.get('strategy_name') or order.get('Strategy') or '').strip()
             blocked, reasons = self.kill_switch.is_blocked(symbol=symbol, strategy=strategy)
+            contract_report = validate_order_contract_dict(order)
+            if not contract_report.get('passed', False):
+                reasons.extend([f'contract_fail:{x}' for x in contract_report.get('failures', [])])
             qty = safe_int(order.get('qty', order.get('Target_Qty', 0)), 0)
             ref_price = safe_float(order.get('ref_price', order.get('Reference_Price', 0.0)), 0.0)
             notional = qty * ref_price

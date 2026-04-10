@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-10 13:16:51",
+  "generated_at": "2026-04-10 18:19:50",
   "system_name": "正式交易主控版_v83_official_main",
   "summary": {
-    "local_orders": 3,
-    "broker_orders": 3,
+    "local_orders": 0,
+    "broker_orders": 0,
     "local_fills": 0,
     "broker_fills": 0,
     "local_positions": 0,
@@ -16,9 +16,7 @@
     "orphan_broker_fills": 0,
     "cash_matched": true,
     "all_green": true,
-    "broker_status_mix": {
-      "REJECTED": 3
-    }
+    "broker_status_mix": {}
   },
   "cash_check": {
     "local_cash": 3000000.0,

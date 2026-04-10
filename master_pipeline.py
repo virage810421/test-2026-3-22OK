@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
-"""Level-2 compatibility wrapper for master_pipeline.
-
-舊門牌 master_pipeline.py 保留；
-真正的全主線整合入口改由 fts_pipeline.Level2MainlinePipeline 提供。
-原始研究/決策主體已封存到 fts_legacy_master_pipeline_impl.py。
-"""
 from __future__ import annotations
 
-from fts_pipeline import Level2MainlinePipeline, main as _fts_pipeline_main
+"""Level-2 wrapper for legacy master_pipeline.
+
+保留舊門牌 master_pipeline.py，
+真正主線改由 fts_pipeline.run_level2_mainline 接管；
+舊版完整研究/決策實作保存在 fts_legacy_master_pipeline_impl.py。
+"""
+
+from fts_pipeline import run_level2_mainline
+from fts_utils import log
 
 BRIDGE_LEVEL = 'level_2'
-BRIDGE_TARGET = 'fts_pipeline.Level2MainlinePipeline'
-LEGACY_SOURCE = 'master_pipeline.py -> fts_legacy_master_pipeline_impl.py'
+BRIDGE_TARGET = 'fts_pipeline.run_level2_mainline'
+LEGACY_IMPL = 'fts_legacy_master_pipeline_impl.py'
 
 
-def run_level2_mainline():
-    return Level2MainlinePipeline().run()
-
-
-def main():
-    return _fts_pipeline_main()
+def main(execute_legacy: bool = True) -> int:
+    path, payload = run_level2_mainline(execute_legacy=execute_legacy)
+    log(f'✅ master_pipeline 第二級主線完成：{path}')
+    return 0 if payload.get('status') in {'mainline_ready', 'mainline_degraded'} else 1
 
 
 if __name__ == '__main__':

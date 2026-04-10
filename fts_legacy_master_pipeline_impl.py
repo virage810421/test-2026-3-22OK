@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Legacy decision/research pipeline preserved for Level-2 mainline integration.
-
-本檔保存原 master_pipeline.py 的研究/決策/模擬交易主體，
-由新的 fts_pipeline.py 以安全方式調度。
-"""
 import json
 import logging
 import os

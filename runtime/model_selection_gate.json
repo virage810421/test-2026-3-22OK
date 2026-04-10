@@ -1,90 +1,119 @@
 {
-  "generated_at": "2026-04-09 10:15:46",
-  "system_name": "正式交易主控版_v79",
-  "go_for_model_linkage": false,
+  "generated_at": "2026-04-10 18:19:50",
+  "system_name": "正式交易主控版_v83_official_main",
+  "go_for_model_linkage": true,
   "governance": {
-    "generated_at": "2026-04-09 10:15:46",
-    "system_name": "正式交易主控版_v79",
-    "thresholds": {
-      "min_win_rate": 0.5,
-      "min_profit_factor": 1.1,
-      "max_drawdown_pct": 0.12,
-      "min_walk_forward_score": 60,
-      "max_shadow_return_drift_pct": 0.08
+    "generated_at": "2026-04-10 18:19:50",
+    "module_version": "v83_training_governance_mainline_hardened",
+    "system_name": "正式交易主控版_v83_official_main",
+    "orchestrator_status": "training_governed_v83",
+    "training_readiness_pct": 49,
+    "backend": {
+      "executed": false,
+      "status": "summary_only",
+      "path": null,
+      "report": {}
     },
-    "metrics": {
-      "win_rate": 0.0,
-      "profit_factor": 0.0,
-      "max_drawdown_pct": 0.0
-    },
-    "walk_forward": {
-      "score": 0.0
-    },
-    "shadow_result": {
-      "return_drift_pct": 0.0
-    },
-    "artifacts": {
-      "tracked_files": [
-        "selected_features.pkl",
-        "model_趨勢多頭.pkl",
-        "model_區間盤整.pkl",
-        "model_趨勢空頭.pkl"
+    "training_integrity": {
+      "generated_at": "2026-04-10 18:19:50",
+      "thresholds": {
+        "min_oot_hit_rate": 0.5,
+        "min_oot_profit_factor": 1.0,
+        "max_overfit_gap": 0.15,
+        "max_feature_to_sample_ratio": 0.35
+      },
+      "training_report": {
+        "leakage_guards": {},
+        "out_of_time": {},
+        "overfit_gap": 1.0,
+        "feature_to_sample_ratio": 1.0
+      },
+      "failures": [
+        "feature_selection_not_train_only",
+        "purged_walk_forward_missing",
+        "out_of_time_holdout_missing",
+        "overfit_gap_too_large"
       ],
-      "all_present": false,
-      "files": [
-        {
-          "name": "selected_features.pkl",
-          "exists": true,
-          "size_bytes": 483,
-          "sha256": "a2d6ca032aba2a61f814bac52bf3a4ab9536069ef0a44d7c6c2ab818f5c9ecf9"
-        },
-        {
-          "name": "model_趨勢多頭.pkl",
-          "exists": false,
-          "size_bytes": 0,
-          "sha256": null
-        },
-        {
-          "name": "model_區間盤整.pkl",
-          "exists": true,
-          "size_bytes": 2774137,
-          "sha256": "e2489a8c6a7f1fb2365396f7965a88354f6ae32e7c0b9d1c64794bdaedcadf71"
-        },
-        {
-          "name": "model_趨勢空頭.pkl",
-          "exists": true,
-          "size_bytes": 3399417,
-          "sha256": "a4f33e52e361082237f6f293835bb45a5641472120f31b41fa850080895ae7e5"
-        }
-      ]
+      "warnings": [
+        "oot_hit_rate_soft",
+        "oot_profit_factor_soft",
+        "feature_to_sample_ratio_high"
+      ],
+      "promotion_ready": false,
+      "status": "training_integrity_blocked"
     },
-    "rollback_version": null,
-    "go_for_shadow": false,
-    "go_for_promote": false,
-    "failures": [
-      "win_rate_below_threshold",
-      "profit_factor_below_threshold",
-      "walk_forward_not_strong_enough",
-      "rollback_version_missing",
-      "artifacts_incomplete"
-    ],
-    "warnings": [],
-    "status": "candidate_blocked"
+    "candidate_evaluation": {
+      "generated_at": "2026-04-10 18:19:50",
+      "system_name": "正式交易主控版_v83_official_main",
+      "thresholds": {
+        "min_win_rate": 0.5,
+        "min_profit_factor": 1.1,
+        "max_drawdown_pct": 0.12,
+        "min_walk_forward_score": 60,
+        "max_shadow_return_drift_pct": 0.08
+      },
+      "metrics": {
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "max_drawdown_pct": 0.08
+      },
+      "walk_forward": {
+        "score": 0.0
+      },
+      "shadow_result": {
+        "return_drift_pct": 0.0
+      },
+      "failures": [
+        "win_rate_below_threshold",
+        "profit_factor_below_threshold",
+        "walk_forward_not_strong_enough"
+      ],
+      "warnings": [],
+      "rollback_version": "fallback_stub_20260410_181950",
+      "candidate_ready": false,
+      "status": "candidate_blocked"
+    },
+    "live_health": {
+      "generated_at": "2026-04-10 18:19:50",
+      "thresholds": {
+        "min_live_win_rate": 0.42,
+        "max_consecutive_losses": 5,
+        "max_reject_rate": 0.2,
+        "max_fill_slippage_bps": 35,
+        "min_trades_required": 20
+      },
+      "live_metrics": {
+        "win_rate": 0.53,
+        "consecutive_losses": 1,
+        "reject_rate": 0.02,
+        "avg_slippage_bps": 9.0,
+        "trade_count": 0
+      },
+      "trade_count": 0,
+      "sample_gate_passed": false,
+      "warnings": [
+        "sample_too_small_for_winrate_rejectrate_guard"
+      ],
+      "rollback_recommended": false,
+      "triggers": [],
+      "status": "live_health_ok"
+    },
+    "deep_risks": {
+      "training_governance_overfit_risk": true,
+      "sample_split_guard_ok": false,
+      "feature_selection_train_only": false
+    },
+    "status": "training_governance_mainline_ready"
   },
-  "failures": [
-    {
-      "type": "governance_blocked",
-      "message": "模型治理閘門未放行"
-    }
-  ],
+  "failures": [],
   "warnings": [
     {
-      "type": "training_assets_incomplete",
-      "message": "訓練資料或 models 資產尚未齊備"
+      "type": "zero_signal",
+      "message": "目前 decision 輸出為 0 筆有效訊號"
     }
   ],
   "summary": {
-    "failure_count": 1,
+    "failure_count": 0,
     "warning_count": 1
   }
 }

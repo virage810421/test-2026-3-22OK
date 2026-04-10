@@ -1,23 +1,18 @@
 {
-  "generated_at": "2026-04-08 12:28:33",
-  "system_name": "正式交易主控版_v24",
+  "generated_at": "2026-04-10 18:19:50",
+  "system_name": "正式交易主控版_v83_official_main",
   "checks": {
-    "launch_gate": false,
+    "launch_gate": true,
     "model_gate": true,
-    "live_safety_gate": false,
-    "broker_approval_gate": false,
-    "submission_gate": false
+    "live_safety_gate": true,
+    "broker_approval_gate": true,
+    "submission_gate": true
   },
-  "failed_checks": [
-    "launch_gate",
-    "live_safety_gate",
-    "broker_approval_gate",
-    "submission_gate"
-  ],
-  "all_passed": false,
+  "failed_checks": [],
+  "all_passed": true,
   "summary": {
     "total_checks": 5,
-    "passed_checks": 1,
-    "failed_checks": 4
+    "passed_checks": 5,
+    "failed_checks": 0
   }
 }

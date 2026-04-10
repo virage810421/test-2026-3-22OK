@@ -1,19 +1,10 @@
 {
-  "generated_at": "2026-04-08 12:28:33",
-  "system_name": "正式交易主控版_v24",
+  "generated_at": "2026-04-10 18:19:50",
+  "system_name": "正式交易主控版_v83_official_main",
   "mode": "PAPER",
   "broker_type": "paper",
   "requires_explicit_approval": false,
-  "go_for_broker_submission": false,
-  "failures": [
-    {
-      "type": "launch_gate_blocked",
-      "message": "launch gate 未通過"
-    },
-    {
-      "type": "live_safety_blocked",
-      "message": "live safety gate 未通過"
-    }
-  ],
+  "go_for_broker_submission": true,
+  "failures": [],
   "warnings": []
 }

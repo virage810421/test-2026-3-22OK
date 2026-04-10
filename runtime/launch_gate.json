@@ -1,12 +1,24 @@
 {
-  "generated_at": "2026-04-08 14:22:40",
-  "system_name": "正式交易主控版_v70",
+  "generated_at": "2026-04-10 18:19:50",
+  "system_name": "正式交易主控版_v83_official_main",
   "go_for_execution": true,
   "failures": [],
-  "warnings": [],
+  "warnings": [
+    {
+      "type": "empty_decision_after_normalize",
+      "count": 1,
+      "items": [],
+      "message": "本輪沒有可執行訊號，視為安全 no-op，不阻擋主控完成"
+    },
+    {
+      "type": "zero_signal",
+      "count": 1,
+      "items": []
+    }
+  ],
   "summary": {
     "failure_count": 0,
-    "warning_count": 0,
-    "signal_count": 3
+    "warning_count": 2,
+    "signal_count": 0
   }
 }

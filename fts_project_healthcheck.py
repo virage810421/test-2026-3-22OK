@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ast
+import inspect
 import json
 import os
 import py_compile
@@ -24,13 +25,13 @@ WRAPPER_MAP = {
     "ml_data_generator.py": "fts_training_data_builder.py",
     "ml_trainer.py": "fts_trainer_backend.py",
     "screening.py": "fts_screening_engine.py",
-    "yahoo_csv_to_sql.py": "fts_fundamentals_etl_mainline.py",
     "master_pipeline.py": "fts_pipeline.py",
+    "yahoo_csv_to_sql.py": "fts_fundamentals_etl_mainline.py",
+    "formal_trading_system_v83_official_main.py": "fts_control_tower.py",
 }
 
 CORE_MODULES = [
     "formal_trading_system_v83_official_main",
-    "fts_pipeline",
     "fts_fundamentals_etl_mainline",
     "fts_training_governance_mainline",
     "fts_feature_service",
@@ -47,6 +48,9 @@ CORE_MODULES = [
 
 SINGLE_ENTRY_EXPECTED_FILES = [
     "formal_trading_system_v83_official_main.py",
+    "fts_control_tower.py",
+    "launcher.py",
+    "master_pipeline.py",
     "db_setup_research_plus.py",
     "run_full_market_percentile_snapshot.py",
     "run_precise_event_calendar_build.py",
@@ -167,6 +171,31 @@ class ProjectHealthcheck:
                 results.append(self._subprocess_import(mod))
         return results
 
+    def _bridge_interface_audit(self) -> Dict[str, object]:
+        findings: Dict[str, object] = {}
+        # 針對容易漏掉的 wrapper -> service 介面不一致做靜態檢查
+        try:
+            sys.path.insert(0, str(self.project_root))
+            import screening  # type: ignore
+            import fts_screening_engine  # type: ignore
+            wrapper_sig = inspect.signature(screening.inspect_stock)
+            engine_sig = inspect.signature(fts_screening_engine.ScreeningEngine.inspect_stock)
+            wrapper_params = list(wrapper_sig.parameters.keys())
+            engine_params = list(engine_sig.parameters.keys())
+            required_by_wrapper = [
+                p for p in wrapper_params
+                if p not in ('ticker',) and p not in engine_params
+            ]
+            findings['screening.inspect_stock'] = {
+                'wrapper_params': wrapper_params,
+                'engine_params': engine_params,
+                'compatible': len(required_by_wrapper) == 0,
+                'missing_in_engine': required_by_wrapper,
+            }
+        except Exception as e:
+            findings['screening.inspect_stock'] = {'compatible': False, 'error': str(e)}
+        return findings
+
     def _wrapper_linkage(self) -> Dict[str, Dict[str, object]]:
         payload: Dict[str, Dict[str, object]] = {}
         for wrapper, service in WRAPPER_MAP.items():
@@ -254,6 +283,7 @@ class ProjectHealthcheck:
         single_entry = self._single_entry_readiness()
         db_setup = self._db_setup_audit()
         runtime_presence = self._runtime_presence()
+        bridge_interface_audit = self._bridge_interface_audit()
 
         report = {
             "project_root": str(self.project_root),
@@ -265,6 +295,10 @@ class ProjectHealthcheck:
                 "wrapper_linkage_failures": sum(
                     0 if v["linked_ok"] else 1 for v in wrapper_linkage.values()
                 ),
+                "bridge_interface_failures": sum(
+                    0 if v.get("compatible", False) else 1
+                    for v in bridge_interface_audit.values() if isinstance(v, dict)
+                ),
             },
             "compile_results": [asdict(r) for r in compile_results],
             "core_import_smoke": [asdict(r) for r in import_results],
@@ -274,6 +308,7 @@ class ProjectHealthcheck:
             "single_entry_readiness": single_entry,
             "db_setup_audit": db_setup,
             "runtime_presence": runtime_presence,
+            "bridge_interface_audit": bridge_interface_audit,
         }
 
         if deep:
@@ -306,8 +341,9 @@ def main(argv: List[str] | None = None) -> int:
     print(f"🔌 核心 import 失敗：{summary['core_import_failures']}")
     print(f"🧷 本地缺失 import 邊：{summary['missing_local_import_edges']}")
     print(f"🧩 wrapper link 失敗：{summary['wrapper_linkage_failures']}")
+    print(f"🪛 bridge 介面失敗：{summary.get('bridge_interface_failures', 0)}")
     print("=" * 72)
-    return 0 if (summary["compile_failures"] == 0 and summary["core_import_failures"] == 0 and summary["missing_local_import_edges"] == 0) else 1
+    return 0 if (summary["compile_failures"] == 0 and summary["core_import_failures"] == 0 and summary["missing_local_import_edges"] == 0 and summary.get("bridge_interface_failures", 0) == 0) else 1
 
 if __name__ == "__main__":
     raise SystemExit(main())

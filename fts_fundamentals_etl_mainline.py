@@ -11,6 +11,7 @@ import pandas as pd
 
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
+from fts_data_quality_guard import safe_float_or_none, safe_int_or_none, build_frame_quality_summary
 
 try:  # optional dependency on user machine
     import yfinance as yf  # type: ignore
@@ -129,6 +130,14 @@ class FundamentalsETLMainline:
         except Exception:
             return None
 
+    @staticmethod
+    def _coerce_sql_float(value: Any) -> float | None:
+        return safe_float_or_none(value, precision=2)
+
+    @staticmethod
+    def _coerce_sql_int(value: Any) -> int | None:
+        return safe_int_or_none(value)
+
     def normalize_dataframe(self, df: pd.DataFrame | None) -> pd.DataFrame:
         if df is None or df.empty:
             return pd.DataFrame(columns=DATA_COLUMNS)
@@ -142,6 +151,12 @@ class FundamentalsETLMainline:
             out['Ticker SYMBOL'] = out['Ticker SYMBOL'].astype(str).str.strip().str.upper()
         if '資料年月日' in out.columns:
             out['資料年月日'] = pd.to_datetime(out['資料年月日'], errors='coerce').dt.strftime('%Y-%m-%d')
+        numeric_float_cols = ['毛利率(%)', '營業利益率(%)', '單季EPS', 'ROE(%)', '稅後淨利率(%)', '預估殖利率(%)', '負債比率(%)', '本業獲利比(%)']
+        for col in numeric_float_cols:
+            if col in out.columns:
+                out[col] = out[col].apply(self._coerce_sql_float)
+        if '營業現金流' in out.columns:
+            out['營業現金流'] = out['營業現金流'].apply(self._coerce_sql_int)
         out = out.dropna(subset=['Ticker SYMBOL', '資料年月日'], how='any')
         out = out.drop_duplicates(subset=['Ticker SYMBOL', '資料年月日']).reset_index(drop=True)
         return out
@@ -300,6 +315,17 @@ class FundamentalsETLMainline:
                 self._ensure_sql_table(cursor)
                 conn.commit()
                 for _, row in normalized.iterrows():
+                    ticker = str(row['Ticker SYMBOL']).strip().upper()
+                    report_date = row['資料年月日']
+                    gross_margin = self._coerce_sql_float(row['毛利率(%)'])
+                    op_margin = self._coerce_sql_float(row['營業利益率(%)'])
+                    eps = self._coerce_sql_float(row['單季EPS'])
+                    roe = self._coerce_sql_float(row['ROE(%)'])
+                    net_margin = self._coerce_sql_float(row['稅後淨利率(%)'])
+                    cash_flow = self._coerce_sql_int(row['營業現金流'])
+                    div_yield = self._coerce_sql_float(row['預估殖利率(%)'])
+                    debt_ratio = self._coerce_sql_float(row['負債比率(%)'])
+                    core_profit_ratio = self._coerce_sql_float(row['本業獲利比(%)'])
                     cursor.execute(
                         f"""
                         IF EXISTS (
@@ -322,11 +348,11 @@ class FundamentalsETLMainline:
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
                         END
                         """,
-                        row['Ticker SYMBOL'], row['資料年月日'],
-                        row['毛利率(%)'], row['營業利益率(%)'], row['單季EPS'], row['ROE(%)'], row['稅後淨利率(%)'], row['營業現金流'], row['預估殖利率(%)'], row['負債比率(%)'], row['本業獲利比(%)'],
-                        row['Ticker SYMBOL'], row['資料年月日'],
-                        row['Ticker SYMBOL'], row['資料年月日'],
-                        row['毛利率(%)'], row['營業利益率(%)'], row['單季EPS'], row['ROE(%)'], row['稅後淨利率(%)'], row['營業現金流'], row['預估殖利率(%)'], row['負債比率(%)'], row['本業獲利比(%)'],
+                        ticker, report_date,
+                        gross_margin, op_margin, eps, roe, net_margin, cash_flow, div_yield, debt_ratio, core_profit_ratio,
+                        ticker, report_date,
+                        ticker, report_date,
+                        gross_margin, op_margin, eps, roe, net_margin, cash_flow, div_yield, debt_ratio, core_profit_ratio,
                     )
                     count += 1
                 conn.commit()
@@ -357,6 +383,7 @@ class FundamentalsETLMainline:
         saved_csv = self.save_csv(consolidated_df if not consolidated_df.empty else self.normalize_dataframe(None))
         sql_status = self.import_df_to_sql(consolidated_df)
 
+        quality_summary = build_frame_quality_summary(consolidated_df, required_cols=['Ticker SYMBOL', '資料年月日'], dataset_name='fundamentals_etl_mainline')
         payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
@@ -368,6 +395,7 @@ class FundamentalsETLMainline:
             'discovered_backups': discovered,
             'merged_rows': int(len(consolidated_df)),
             'saved_csv_path': str(saved_csv),
+            'data_quality': quality_summary,
             'sql_status': sql_status,
             'legacy_dependency_removed': True,
             'legacy_compat_script_present': (PATHS.base_dir / 'yahoo_csv_to_sql.py').exists(),

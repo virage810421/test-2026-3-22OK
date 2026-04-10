@@ -15,6 +15,7 @@ from fts_screening_engine import ScreeningEngine
 from fts_market_data_service import MarketDataService
 from fts_chip_enrichment_service import ChipEnrichmentService
 from fts_feature_service import FeatureService
+from fts_data_quality_guard import sanitize_generated_training_df
 
 _market = MarketDataService()
 _chip = ChipEnrichmentService()
@@ -78,7 +79,7 @@ def generate_ml_dataset(tickers=None):
                 label = 1 if future_ret > 0 else 0
                 feats = _features.extract_ai_features(row.to_dict(), history_df=computed_df.iloc[:i+1].copy(), ticker=ticker, as_of_date=row.name if hasattr(row, 'name') else None)
                 mounted = _features.select_live_features(feats)
-                sample = {'Ticker SYMBOL': ticker, 'Label': label, 'Future_Return_Pct': round(future_ret, 4), 'Setup_Tag': setup_tag, 'Regime': regime}
+                sample = {'Ticker SYMBOL': ticker, 'Date': pd.to_datetime(row.name, errors='coerce').strftime('%Y-%m-%d') if hasattr(row, 'name') and pd.notna(row.name) else None, 'Label': label, 'Label_Y': label, 'Future_Return_Pct': round(future_ret, 4), 'Target_Return': round(future_ret, 4), 'Setup_Tag': setup_tag, 'Regime': regime}
                 sample.update(feats)
                 for k, v in mounted.items():
                     sample[f'MOUNT__{k}'] = v
@@ -87,6 +88,7 @@ def generate_ml_dataset(tickers=None):
             continue
 
     df_out = pd.DataFrame(rows)
+    df_out, quality_report = sanitize_generated_training_df(df_out)
     df_out.to_csv(dataset_path, index=False, encoding='utf-8-sig')
     if not df_out.empty:
         _features.write_training_feature_registry(df_out.iloc[0].to_dict())

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 13:16:47",
+  "generated_at": "2026-04-10 18:19:46",
   "module_version": "v83_fundamentals_etl_mainline_builtin",
   "system_name": "正式交易主控版_v83_official_main",
   "mode": "local_sync_only",
@@ -27,10 +27,29 @@
   ],
   "merged_rows": 2143,
   "saved_csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
+  "data_quality": {
+    "generated_at": "2026-04-10 18:19:46",
+    "dataset_name": "fundamentals_etl_mainline",
+    "rows": 2143,
+    "columns": 11,
+    "missing_required_columns": [],
+    "required_columns_with_null_rate": {},
+    "columns_with_null_rate": {
+      "毛利率(%)": 0.0322,
+      "營業利益率(%)": 0.0322,
+      "單季EPS": 0.4951,
+      "ROE(%)": 0.0056,
+      "稅後淨利率(%)": 0.0065,
+      "營業現金流": 0.0061,
+      "預估殖利率(%)": 0.2021,
+      "負債比率(%)": 0.0056,
+      "本業獲利比(%)": 0.0313
+    }
+  },
   "sql_status": {
     "sql_import_attempted": true,
-    "sql_imported_rows": 0,
-    "sql_error": "('42000', '[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]內送表格式資料流 (TDS) 遠端程序呼叫 (RPC) 通訊協定資料流不正確。參數 8 (\"\"): 提供的值不是資料類型 float 的有效執行個體。請檢查無效值的來源資料。例如，無效值是具有小數位數大於有效位數的 numeric 類型資料。 (8023) (SQLExecDirectW)')"
+    "sql_imported_rows": 2143,
+    "sql_error": null
   },
   "legacy_dependency_removed": true,
   "legacy_compat_script_present": true,

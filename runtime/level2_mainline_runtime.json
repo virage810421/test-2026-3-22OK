@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-04-10 18:19:49",
+  "module_version": "v83_level2_mainline_integrated",
+  "status": "mainline_degraded",
+  "etl": [
+    {
+      "stage": "script",
+      "target": "daily_chip_etl.py",
+      "ok": true,
+      "mode": "subprocess",
+      "returncode": 0,
+      "error": "",
+      "stdout_tail": "🎉 SQL 寫入完成：1064 筆 -> monthly_revenue_simple\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 不存在：market_financials_backup_fullspeed.csv\n\n🟢 [日更雷達] 法人籌碼上網補抓：符合條件，可立即補跑。\n========================================================\n🌐 啟動法人籌碼上網補抓：只處理缺漏新資料\n========================================================\n⚠️ 尚未設定 FINMIND_API_TOKEN，請先設定後再執行\n\n⚪ [月更雷達] 月營收上網補抓：尚未到可抓取時間 18:30，目前 18:19。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+      "stderr_tail": "",
+      "seconds": 0.0,
+      "skipped": false
+    },
+    {
+      "stage": "script",
+      "target": "monthly_revenue_simple.py",
+      "ok": true,
+      "mode": "subprocess",
+      "returncode": 0,
+      "error": "",
+      "stdout_tail": "==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-02\n✅ 月營收筆數：1065\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1064 筆\n⏳ 已寫入 200 筆...\n⏳ 已寫入 400 筆...\n⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1064 筆 -> monthly_revenue_simple\n✅ 全部完成",
+      "stderr_tail": "",
+      "seconds": 0.0,
+      "skipped": false
+    },
+    {
+      "stage": "script",
+      "target": "yahoo_csv_to_sql.py",
+      "ok": false,
+      "mode": "subprocess",
+      "returncode": 1,
+      "error": "",
+      "stdout_tail": "[18:19:46] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[18:19:46] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "stderr_tail": "",
+      "seconds": 0.0,
+      "skipped": false
+    }
+  ],
+  "legacy_pipeline": {
+    "stage": "python",
+    "target": "fts_legacy_master_pipeline_impl.main",
+    "ok": true,
+    "mode": "inprocess",
+    "returncode": null,
+    "error": "",
+    "stdout_tail": "🌐 啟動法人籌碼上網補抓：只處理缺漏新資料\n========================================================\n⚠️ 尚未設定 FINMIND_API_TOKEN，請先設定後再執行\n\n⚪ [月更雷達] 月營收上網補抓：尚未到可抓取時間 18:30，目前 18:19。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================\n\n✅ 完成 daily_chip_etl.py（2.3s）\n\n⚡ 今日跳過 AI 重訓，使用現役模型\n🌤️ 大盤氣候判定：多頭順風，允許標準火力。\n🌍 市場氣候：多頭順風 | 風險倍率：1.00\n📡 啟動動態索敵雷達：正在從 SQL 資料庫獲取監控名單...\n🛑 致命錯誤：無法連線 SQL 或獲取動態名單！詳細原因: 資料庫中找不到任何股票代碼！請檢查資料表是否為空。\n📊 已生成系統日誌 daily_report.json",
+    "stderr_tail": "",
+    "seconds": 0.0,
+    "skipped": false
+  },
+  "decision_csv": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+  "model_dir": "C:\\test\\test-2026-3-22OK\\models"
+}

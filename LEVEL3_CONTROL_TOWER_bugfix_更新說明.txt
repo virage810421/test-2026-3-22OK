@@ -1,0 +1,53 @@
+Level-3 Control Tower bugfix 說明
+============================================================
+
+本次修正內容：
+1. 修正 formal_trading_system_v83_official_main.py --bootstrap / --daily 途中會報：
+   control tower failure: too many values to unpack (expected 2)
+
+根因：
+- fts_control_tower.py 內，對 LaunchGatekeeper().evaluate(...) 直接寫成：
+  launch_gate_path, launch_gate_payload = ...
+- 但 fts_gatekeeper.py 的 LaunchGatekeeper.evaluate() 實際只回傳一個 dict，不是 (path, payload)
+- 因此在 daily / bootstrap 期間會直接炸掉
+
+額外兼容問題：
+- LiveReleaseGate.evaluate() 不接受 control tower 傳入的 kwargs
+- 原本 control tower 寫法也會在某些環境下引發 TypeError
+
+本次修法：
+- 在 fts_control_tower.py 新增：
+  _extract_path_payload(...)
+  _call_builder_result(...)
+- 將以下 builder / gate 統一做回傳正規化：
+  * LiveReadinessGate
+  * LaunchGatekeeper
+  * LiveSafetyGate
+  * BrokerApprovalGate
+  * SubmissionContractGate
+  * ValidationSuiteBuilder
+  * ReconciliationEngine
+  * RecoveryEngine
+  * RecoveryValidationBuilder
+  * LiveReleaseGate
+
+修正效果：
+- 無論 builder 回傳：
+  * (path, payload)
+  * payload dict
+  * path only
+  都能被 control tower 正常接住
+- formal_trading_system_v83_official_main.py 不會再因 unpack 格式不一致直接崩潰
+
+本次附帶更新：
+- 強化 fts_level3_control_selftest.py
+  加入 LaunchGatekeeper / LiveReleaseGate 的 builder smoke test
+- 新增：舊模組功能_新模組落點對照表.txt
+
+注意：
+- 這次修的是「control tower 致命崩潰 bug」
+- 你在 level-2 mainline 看到的：
+  yahoo_csv_to_sql.py | ok=False
+  legacy decision engine | ok=False
+  仍代表其子流程本身可能有本機資料/DB/API問題
+- 但現在就算子流程 degraded，control tower 也應該輸出完整 runtime，而不是直接炸掉

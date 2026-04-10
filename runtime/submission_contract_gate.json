@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-10 18:19:50",
+  "system_name": "正式交易主控版_v83_official_main",
+  "go_for_submission_contract": true,
+  "failures": [],
+  "warnings": [
+    {
+      "type": "no_accepted_signals",
+      "message": "目前沒有 accepted signals 可供生成 broker payload"
+    }
+  ],
+  "summary": {
+    "accepted_signal_count": 0,
+    "failure_count": 0,
+    "warning_count": 1
+  }
+}

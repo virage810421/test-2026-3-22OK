@@ -15,6 +15,7 @@ except Exception:
 from risk_gateway import RiskGateway
 from db_logger import SQLServerExecutionLogger
 from fts_level3_runtime_loader import build_level3_services
+from fts_data_quality_guard import validate_order_contract_dict, append_order_quality_report
 
 LOG_DIR = "execution_logs"
 ORDER_BLOTTER_PATH = os.path.join(LOG_DIR, "order_blotter.csv")
@@ -78,6 +79,19 @@ class ExecutionEngine:
                 continue
             try:
                 ref_price = self._resolve_ref_price(order_req)
+                contract_report = validate_order_contract_dict({
+                    'ticker': order_req.symbol,
+                    'side': order_req.side.value if hasattr(order_req.side, 'value') else str(order_req.side),
+                    'qty': order_req.quantity,
+                    'ref_price': ref_price,
+                    'Kelly_Pos': getattr(row, 'get', lambda *a, **k: None)('Kelly_Pos') if hasattr(row, 'get') else None,
+                    'AI_Proba': getattr(row, 'get', lambda *a, **k: None)('AI_Proba') if hasattr(row, 'get') else None,
+                })
+                if not contract_report.get('passed', False):
+                    append_order_quality_report(contract_report)
+                    print(f"⛔ 訂單契約拒單 | {order_req.symbol} | {'/'.join(contract_report.get('failures', []))}")
+                    skip_count += 1
+                    continue
                 risk_result = self.risk_gateway.validate(order_req, ref_price)
                 if not risk_result.approved:
                     print(f"⛔ 風控拒單 | {order_req.symbol} | {risk_result.reason}")

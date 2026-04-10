@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 13:16:49",
+  "generated_at": "2026-04-10 18:19:50",
   "module_version": "v83_training_governance_mainline_hardened",
   "system_name": "正式交易主控版_v83_official_main",
   "orchestrator_status": "training_governed_v83",
@@ -11,7 +11,7 @@
     "report": {}
   },
   "training_integrity": {
-    "generated_at": "2026-04-10 13:16:49",
+    "generated_at": "2026-04-10 18:19:50",
     "thresholds": {
       "min_oot_hit_rate": 0.5,
       "min_oot_profit_factor": 1.0,
@@ -39,7 +39,7 @@
     "status": "training_integrity_blocked"
   },
   "candidate_evaluation": {
-    "generated_at": "2026-04-10 13:16:49",
+    "generated_at": "2026-04-10 18:19:50",
     "system_name": "正式交易主控版_v83_official_main",
     "thresholds": {
       "min_win_rate": 0.5,
@@ -65,12 +65,12 @@
       "walk_forward_not_strong_enough"
     ],
     "warnings": [],
-    "rollback_version": "fallback_stub_20260410_131649",
+    "rollback_version": "fallback_stub_20260410_181950",
     "candidate_ready": false,
     "status": "candidate_blocked"
   },
   "live_health": {
-    "generated_at": "2026-04-10 13:16:49",
+    "generated_at": "2026-04-10 18:19:50",
     "thresholds": {
       "min_live_win_rate": 0.42,
       "max_consecutive_losses": 5,

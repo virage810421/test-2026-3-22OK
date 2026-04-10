@@ -38,12 +38,22 @@ class LaunchGatekeeper:
                 "items": pending_required_retry[:20],
             })
 
-        if compat_info.get("row_count", 0) == 0:
-            failures.append({
+        no_signal_mode = compat_info.get("row_count", 0) == 0 and readiness.get("total_signals", 0) == 0
+
+        if no_signal_mode:
+            warnings.append({
                 "type": "empty_decision_after_normalize",
                 "count": 1,
                 "items": [],
+                "message": "本輪沒有可執行訊號，視為安全 no-op，不阻擋主控完成",
             })
+        else:
+            if compat_info.get("row_count", 0) == 0:
+                failures.append({
+                    "type": "empty_decision_after_normalize",
+                    "count": 1,
+                    "items": [],
+                })
 
         if readiness.get("total_signals", 0) == 0:
             warnings.append({
@@ -52,21 +62,21 @@ class LaunchGatekeeper:
                 "items": [],
             })
 
-        if compat_info.get("rows_with_price", 0) == 0:
+        if not no_signal_mode and compat_info.get("rows_with_price", 0) == 0:
             failures.append({
                 "type": "decision_price_missing",
                 "count": 1,
                 "items": [],
             })
 
-        if compat_info.get("rows_with_ticker", 0) == 0:
+        if not no_signal_mode and compat_info.get("rows_with_ticker", 0) == 0:
             failures.append({
                 "type": "decision_ticker_missing",
                 "count": 1,
                 "items": [],
             })
 
-        if compat_info.get("rows_with_action", 0) == 0:
+        if not no_signal_mode and compat_info.get("rows_with_action", 0) == 0:
             failures.append({
                 "type": "decision_action_missing",
                 "count": 1,

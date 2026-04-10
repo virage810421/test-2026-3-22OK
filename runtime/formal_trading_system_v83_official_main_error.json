@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-09 21:18:19",
-  "module_version": "v83_single_entry_three_modes_final",
-  "error": "'cp950' codec can't encode character '\\U0001f680' in position 11: illegal multibyte sequence",
-  "traceback": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 217, in main\n    _run_mode_train()\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 175, in _run_mode_train\n    log('🚀 啟動 正式交易主控版_v83_official_main')\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 24, in log\n    print(f'[{now_str()[11:19]}] {msg}')\nUnicodeEncodeError: 'cp950' codec can't encode character '\\U0001f680' in position 11: illegal multibyte sequence\n"
+  "generated_at": "2026-04-10 16:46:13",
+  "module_version": "v83_level3_control_tower_integrated",
+  "error_type": "UnicodeEncodeError",
+  "error": "'cp950' codec can't encode character '\\U0001f9ec' in position 11: illegal multibyte sequence"
 }

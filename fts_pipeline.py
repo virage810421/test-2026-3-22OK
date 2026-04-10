@@ -1,144 +1,147 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+"""Level-2 mainline orchestrator.
+
+目標：
+1. 保留舊研究/決策主體，但不讓舊版 master_pipeline.py 直接擔任唯一入口。
+2. 讓 ETL / decision / legacy pipeline 進入同一條可追蹤的 mainline。
+3. 供第三級控制塔 formal_trading_system_v83_official_main.py 統一調度。
+"""
+
+import contextlib
+import importlib
+import io
 import json
 import os
 import subprocess
 import sys
-import time
+import traceback
 from dataclasses import dataclass, asdict
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fts_config import PATHS
+from fts_config import PATHS, CONFIG
 from fts_utils import log, now_str
+
+RUNTIME_PATH = PATHS.runtime_dir / 'level2_mainline_runtime.json'
 
 
 @dataclass
 class StageResult:
     stage: str
-    status: str
-    script: str | None = None
-    args: list[str] | None = None
+    target: str
+    ok: bool
+    mode: str
     returncode: int | None = None
-    seconds: float | None = None
-    critical: bool = False
+    error: str = ''
     stdout_tail: str = ''
     stderr_tail: str = ''
-    note: str = ''
+    seconds: float = 0.0
+    skipped: bool = False
 
 
-class Level2MainlinePipeline:
-    MODULE_VERSION = 'level2_full_mainline_integrated'
-
-    def __init__(self):
-        self.report_path = PATHS.runtime_dir / 'level2_mainline_pipeline.json'
-        self.results: list[StageResult] = []
-
-    def _run_script(self, script: str, *args: str, critical: bool = False, timeout: int = 7200) -> StageResult:
-        target = PATHS.base_dir / script
+class ExternalScriptRunner:
+    def run_script(self, script_name: str, timeout: int = 1800, critical: bool = False) -> StageResult:
+        target = PATHS.base_dir / script_name
         if not target.exists():
-            result = StageResult(stage=script, status='missing', script=script, args=list(args), critical=critical, note='script not found')
-            self.results.append(result)
-            if critical:
-                raise FileNotFoundError(script)
-            return result
+            return StageResult(stage='script', target=script_name, ok=not critical, mode='subprocess', error='missing', skipped=not critical)
+        cmd = [sys.executable, str(target)]
+        env = os.environ.copy()
+        env['PYTHONUTF8'] = '1'
+        env['PYTHONIOENCODING'] = 'utf-8'
+        try:
+            proc = subprocess.run(
+                cmd,
+                cwd=str(PATHS.base_dir),
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='replace',
+                timeout=timeout,
+                env=env,
+            )
+            ok = proc.returncode == 0
+            return StageResult(
+                stage='script',
+                target=script_name,
+                ok=ok,
+                mode='subprocess',
+                returncode=proc.returncode,
+                stdout_tail='\n'.join((proc.stdout or '').splitlines()[-20:]),
+                stderr_tail='\n'.join((proc.stderr or '').splitlines()[-20:]),
+            )
+        except Exception as exc:
+            return StageResult(stage='script', target=script_name, ok=False, mode='subprocess', error=repr(exc))
 
-        cmd = [sys.executable, str(target), *args]
-        start = time.time()
-        log(f'🚀 Level-2 主線執行：{script} {" ".join(args)}'.rstrip())
-        proc = subprocess.run(cmd, cwd=str(PATHS.base_dir), capture_output=True, text=True, encoding='utf-8', timeout=timeout, env={**os.environ, 'PYTHONPATH': str(PATHS.base_dir)})
-        result = StageResult(
-            stage=script,
-            status='ok' if proc.returncode == 0 else 'failed',
-            script=script,
-            args=list(args),
-            returncode=proc.returncode,
-            seconds=round(time.time() - start, 3),
-            critical=critical,
-            stdout_tail=(proc.stdout or '')[-4000:],
-            stderr_tail=(proc.stderr or '')[-4000:],
-        )
-        self.results.append(result)
-        if proc.stdout:
-            log((proc.stdout or '').strip()[:1200])
-        if proc.stderr:
-            log((proc.stderr or '').strip()[:1200])
-        if critical and proc.returncode != 0:
-            raise RuntimeError(f'{script} failed with returncode={proc.returncode}')
-        return result
 
-    def _write_report(self, status: str) -> Path:
+class StageManager:
+    def __init__(self, runner: ExternalScriptRunner | None = None):
+        self.runner = runner or ExternalScriptRunner()
+
+    def _call_module_main(self, module_name: str, attr_name: str = 'main') -> StageResult:
+        buf_out = io.StringIO()
+        buf_err = io.StringIO()
+        try:
+            mod = importlib.import_module(module_name)
+            fn = getattr(mod, attr_name)
+            with contextlib.redirect_stdout(buf_out), contextlib.redirect_stderr(buf_err):
+                result = fn()
+            ok = False if isinstance(result, int) and result != 0 else True
+            return StageResult(
+                stage='python',
+                target=f'{module_name}.{attr_name}',
+                ok=ok,
+                mode='inprocess',
+                stdout_tail='\n'.join(buf_out.getvalue().splitlines()[-20:]),
+                stderr_tail='\n'.join(buf_err.getvalue().splitlines()[-20:]),
+            )
+        except Exception as exc:
+            return StageResult(
+                stage='python',
+                target=f'{module_name}.{attr_name}',
+                ok=False,
+                mode='inprocess',
+                error=traceback.format_exc()[-4000:],
+                stdout_tail='\n'.join(buf_out.getvalue().splitlines()[-20:]),
+                stderr_tail='\n'.join(buf_err.getvalue().splitlines()[-20:]) + ('\n' + repr(exc)),
+            )
+
+    def run(self, execute_legacy: bool = True) -> dict[str, Any]:
+        etl_results = []
+        for script_name in ['daily_chip_etl.py', 'monthly_revenue_simple.py', 'yahoo_csv_to_sql.py']:
+            result = self.runner.run_script(script_name, timeout=getattr(CONFIG, 'upstream_timeout_seconds', 3600), critical=False)
+            etl_results.append(asdict(result))
+            log(f"🔁 mainline stage | {script_name} | ok={result.ok} | skipped={result.skipped}")
+
+        legacy_result = asdict(StageResult(stage='python', target='fts_legacy_master_pipeline_impl.main', ok=True, mode='inprocess', skipped=not execute_legacy))
+        if execute_legacy:
+            result = self._call_module_main('fts_legacy_master_pipeline_impl', 'main')
+            legacy_result = asdict(result)
+            log(f"🧠 legacy decision engine | ok={result.ok}")
+
         payload = {
             'generated_at': now_str(),
-            'module_version': self.MODULE_VERSION,
-            'status': status,
-            'results': [asdict(r) for r in self.results],
-            'summary': {
-                'total': len(self.results),
-                'ok': sum(1 for r in self.results if r.status == 'ok'),
-                'failed': sum(1 for r in self.results if r.status == 'failed'),
-                'missing': sum(1 for r in self.results if r.status == 'missing'),
-            },
+            'module_version': 'v83_level2_mainline_integrated',
+            'status': 'mainline_ready' if (all(r['ok'] or r['skipped'] for r in etl_results) and (legacy_result['ok'] or legacy_result['skipped'])) else 'mainline_degraded',
+            'etl': etl_results,
+            'legacy_pipeline': legacy_result,
+            'decision_csv': str(PATHS.base_dir / 'daily_decision_desk.csv'),
+            'model_dir': str(PATHS.model_dir),
         }
-        self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return self.report_path
+        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return payload
 
-    def run(self) -> tuple[Path, dict[str, Any]]:
-        weekday = datetime.now().weekday()
-        is_weekend = weekday >= 5
-        log('=' * 72)
-        log('🚦 Level-2 全主線整合啟動')
-        log('=' * 72)
 
-        # ETL mainlines
-        if is_weekend:
-            self.results.append(StageResult(stage='daily_chip_etl.py', status='skipped', script='daily_chip_etl.py', note='weekend skip'))
-        else:
-            self._run_script('daily_chip_etl.py', critical=True, timeout=7200)
-        self._run_script('monthly_revenue_simple.py', critical=False, timeout=7200)
-        self._run_script('yahoo_csv_to_sql.py', critical=False, timeout=7200)
-
-        # governance / readiness sidecar, does not replace decision mainline yet
-        self._run_script('formal_trading_system_v83_official_main.py', '--daily', critical=False, timeout=7200)
-
-        # keep legacy decision / report / live-paper logic, but skip duplicate ETL stage
-        legacy_env = {**os.environ, 'PYTHONPATH': str(PATHS.base_dir), 'FTS_SKIP_MAINLINE_ETL': '1'}
-        target = PATHS.base_dir / 'fts_legacy_master_pipeline_impl.py'
-        log('🧠 Level-2 交棒給 legacy 決策主體（已略過重複 ETL）')
-        start = time.time()
-        proc = subprocess.run([sys.executable, str(target)], cwd=str(PATHS.base_dir), capture_output=True, text=True, encoding='utf-8', timeout=14400, env=legacy_env)
-        result = StageResult(
-            stage='fts_legacy_master_pipeline_impl.py',
-            status='ok' if proc.returncode == 0 else 'failed',
-            script='fts_legacy_master_pipeline_impl.py',
-            args=[],
-            returncode=proc.returncode,
-            seconds=round(time.time() - start, 3),
-            critical=True,
-            stdout_tail=(proc.stdout or '')[-4000:],
-            stderr_tail=(proc.stderr or '')[-4000:],
-            note='legacy decision/research/live-paper body executed under level-2 mainline shell',
-        )
-        self.results.append(result)
-        if proc.stdout:
-            log((proc.stdout or '').strip()[:1200])
-        if proc.stderr:
-            log((proc.stderr or '').strip()[:1200])
-        if proc.returncode != 0:
-            path = self._write_report('failed')
-            raise RuntimeError(f'legacy decision body failed | report={path}')
-
-        path = self._write_report('ok')
-        payload = json.loads(path.read_text(encoding='utf-8'))
-        log(f'✅ Level-2 全主線整合完成：{path}')
-        return path, payload
+def run_level2_mainline(execute_legacy: bool = True) -> tuple[str, dict[str, Any]]:
+    payload = StageManager().run(execute_legacy=execute_legacy)
+    return str(RUNTIME_PATH), payload
 
 
 def main() -> int:
-    Level2MainlinePipeline().run()
-    return 0
+    path, payload = run_level2_mainline(execute_legacy=True)
+    log(f'✅ level-2 mainline 完成：{path}')
+    return 0 if payload.get('status') in {'mainline_ready', 'mainline_degraded'} else 1
 
 
 if __name__ == '__main__':

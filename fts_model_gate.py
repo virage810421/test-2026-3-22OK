@@ -24,12 +24,14 @@ class ModelVersionRegistry:
                     'is_dir': p.is_dir(),
                     'size_bytes': p.stat().st_size if p.exists() and p.is_file() else 0,
                 })
+        suspicious_small_artifacts = [x for x in candidates if x.get('is_file') and str(x.get('name', '')).endswith('.pkl') and int(x.get('size_bytes', 0)) < 128]
         payload = {
             'generated_at': now_str(),
             'system_name': CONFIG.system_name,
             'models_dir': str(models_dir),
             'candidates': candidates,
             'candidate_count': len(candidates),
+            'suspicious_small_artifacts': suspicious_small_artifacts,
             'governance_registry': governance_registry,
         }
         write_json(self.path, payload)
@@ -53,6 +55,9 @@ class ModelSelectionGate:
             warnings.append({'type': 'zero_signal', 'message': '目前 decision 輸出為 0 筆有效訊號'})
         if governance.get('go_for_promote') is False:
             failures.append({'type': 'governance_blocked', 'message': '模型治理閘門未放行'})
+        suspicious = list((ai_status or {}).get('suspicious_small_artifacts', []) or [])
+        if suspicious:
+            warnings.append({'type': 'suspicious_small_model_artifacts', 'count': len(suspicious), 'items': suspicious[:10], 'message': '偵測到過小模型檔，請確認不是占位檔或損毀檔'})
         gate = {
             'generated_at': now_str(),
             'system_name': CONFIG.system_name,

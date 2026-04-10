@@ -1,0 +1,172 @@
+舊模組功能 → 新模組落點 對照表
+============================================================
+
+一、主控 / 啟動
+1) formal_trading_system_v83_official_main.py
+   舊功能：直接扛 daily / train / bootstrap 主控
+   新落點：fts_control_tower.py
+   目前角色：保留舊門牌，轉交給 control tower
+
+2) launcher.py
+   舊功能：自行組 daily 主流程
+   新落點：formal_trading_system_v83_official_main.py --daily
+   目前角色：簡化成啟動入口
+
+3) master_pipeline.py
+   舊功能：研究 + ETL + 決策 + live/paper 混合主線
+   新落點：fts_pipeline.py（主線調度）
+           + fts_legacy_master_pipeline_impl.py（舊決策核心）
+   目前角色：Level-2 wrapper
+
+4) fts_orchestrator.py
+   舊功能：治理 / 調度草圖
+   新落點：保留參考；第三級由 fts_control_tower.py 直接接管
+
+二、圖表層
+5) advanced_chart.py
+   舊功能：直接畫 K 線 / BBands / RSI / MACD / 訊號圖
+   新落點：fts_chart_service.py
+   目前角色：wrapper，相容舊 import
+
+6) fts_chart_bridge.py
+   舊功能：無
+   新落點：圖表橋接狀態管理
+   目前角色：記錄 level-1 chart bridge 狀態
+
+三、海選 / 特徵 / 籌碼
+7) screening.py
+   舊功能：抓資料 + 算特徵 + 補籌碼 + 海選整包都在同一支
+   新落點：fts_market_data_service.py（資料）
+           + fts_feature_service.py（特徵）
+           + fts_chip_enrichment_service.py（籌碼補強）
+           + fts_screening_engine.py（海選主引擎）
+   目前角色：wrapper，相容舊呼叫介面
+
+8) fts_market_data_service.py
+   新功能：價格下載、快取、歷史資料前置處理
+
+9) fts_feature_service.py
+   新功能：技術指標 / live feature mount / 模型特徵組裝
+
+10) fts_chip_enrichment_service.py
+    新功能：法人籌碼、補欄位、籌碼 ratio
+
+11) fts_screening_engine.py
+    新功能：篩選主引擎、regime 切分、分數整理
+
+四、AI 訓練 / 資料生成
+12) ml_data_generator.py
+    舊功能：直接生成訓練資料
+    新落點：fts_training_data_builder.py
+    目前角色：wrapper
+
+13) ml_trainer.py
+    舊功能：直接做模型訓練 / walk-forward / 評估
+    新落點：fts_trainer_backend.py
+    目前角色：wrapper
+
+14) fts_training_data_builder.py
+    新功能：訓練資料集建構、特徵選取、label 組裝
+
+15) fts_trainer_backend.py
+    新功能：regime 專屬模型訓練、評估、輸出 model 檔
+
+16) fts_model_gate.py
+    新功能：model registry / model linkage gate / candidate 檢查
+
+五、ETL / 基建
+17) daily_chip_etl.py
+    舊功能：直接做日更籌碼
+    新落點：fts_etl_daily_chip_service.py
+    目前角色：wrapper + 舊入口保留
+
+18) monthly_revenue_simple.py
+    舊功能：直接做月營收 ETL
+    新落點：fts_etl_monthly_revenue_service.py
+    目前角色：wrapper + 舊入口保留
+
+19) yahoo_csv_to_sql.py
+    舊功能：基本面 CSV -> SQL 單體腳本
+    新落點：fts_fundamentals_etl_mainline.py
+    目前角色：Level-2 wrapper
+
+20) db_setup.py / db_setup_research_plus.py
+    舊功能：建表 / 升級 schema
+    新落點：仍保留現役主線
+    目前角色：bootstrap 核心腳本
+
+六、執行 / 券商 / 風控
+21) execution_engine.py
+    舊功能：直接處理 paper execution
+    新落點：仍為現役執行骨架，但已接到：
+           + fts_decision_execution_bridge.py
+           + fts_order_state_machine.py
+           + fts_kill_switch.py
+           + fts_reconciliation_engine.py
+           + fts_recovery_engine.py
+    目前角色：Level-3 execution 主線
+
+22) paper_broker.py
+    舊功能：paper 模擬券商
+    新落點：仍為現役 broker 骨架，並補 runtime snapshot / restore 能力
+
+23) risk_gateway.py
+    舊功能：paper 風控檢查
+    新落點：仍為現役主線，但往 broker-agnostic 方向補強
+
+24) live_paper_trading.py
+    舊功能：paper live 主流程
+    新落點：仍為現役主線，但已接 PositionState / KillSwitch / ReadinessGate
+
+25) fts_decision_desk_builder.py
+    新功能：把 watchlist / signal / climate 整理成 decision desk
+
+26) fts_decision_execution_bridge.py
+    新功能：把 decision desk 轉成執行訂單格式
+
+27) fts_order_state_machine.py
+    新功能：委託狀態機（NEW / SUBMITTED / PARTIAL / FILLED / CANCELLED）
+
+28) fts_position_state_service.py
+    新功能：持倉狀態整理
+
+29) fts_reconciliation_engine.py
+    新功能：部位 / 訂單 / 成交 / 現金 對帳
+
+30) fts_recovery_engine.py
+    新功能：快照、恢復計畫、復原動作
+
+31) fts_kill_switch.py
+    新功能：system / account / strategy / symbol 層級熔斷
+
+七、治理 / Gate / Audit
+32) run_project_healthcheck.py / fts_project_healthcheck.py
+    舊功能：專案健康檢查
+    新落點：仍是現役檢查主線，已補新主線 linkage
+
+33) fts_live_readiness_gate.py
+    新功能：live 前資料、憑證、訂單格式 readiness 檢查
+
+34) fts_live_safety.py
+    新功能：paper/live 安全閘門、倉位 / notional / 行業暴露檢查
+
+35) fts_broker_approval.py
+    新功能：broker submission 前 approval gate
+
+36) fts_submission_gate.py
+    新功能：送單契約欄位完整性檢查
+
+37) fts_validation_suite.py
+    新功能：launch/model/safety/broker/submission 整體檢查報告
+
+38) fts_live_release_gate.py
+    新功能：pre-live/live release 放行門
+
+39) fts_interface_audit.py / fts_mainline_linkage.py / fts_project_completion_audit.py
+    新功能：治理、介面、主線連接度檢查
+
+八、目前總結
+- 第一級：舊門牌橋接到 fts_* 主線，已完成
+- 第二級：mainline 主流程已統一到 fts_pipeline.py，已完成
+- 第三級：主控入口已集中到 fts_control_tower.py，已完成基礎接管
+- 真券商最後一哩：仍需實接 broker adapter / 憑證 / 真實回報 / operator approval

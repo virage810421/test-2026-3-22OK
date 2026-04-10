@@ -1,0 +1,27 @@
+{
+  "fts_control_tower.py": {
+    "compile_ok": true
+  },
+  "formal_trading_system_v83_official_main.py": {
+    "compile_ok": true
+  },
+  "master_pipeline.py": {
+    "compile_ok": true
+  },
+  "fts_pipeline.py": {
+    "compile_ok": true
+  },
+  "launcher.py": {
+    "compile_ok": true
+  },
+  "yahoo_csv_to_sql.py": {
+    "compile_ok": true
+  },
+  "control_tower_builder_smoke": {
+    "ok": true,
+    "launch_gate_path": "runtime/launch_gate.json",
+    "launch_gate_has_payload": true,
+    "live_release_path": "/tmp/funda3/runtime/live_release_gate.json",
+    "live_release_has_payload": true
+  }
+}

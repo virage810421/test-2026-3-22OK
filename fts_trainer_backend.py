@@ -18,6 +18,7 @@ from sklearn.model_selection import TimeSeriesSplit
 
 from config import PARAMS
 from model_governance import create_version_tag, get_best_version_entry, promote_best_version, restore_version, snapshot_current_models
+from fts_data_quality_guard import validate_training_frame
 
 RUNTIME_PATH = Path('runtime') / 'trainer_backend_report.json'
 
@@ -178,6 +179,11 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     snapshot_current_models(pretrain_version, note='重訓前自動備份（防過擬合版）')
 
     df = pd.read_csv(dataset_path)
+    df, quality_report = validate_training_frame(df, min_rows=max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))))
+    if quality_report.get('status') == 'blocked':
+        payload = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'blocked_by_data_quality', 'dataset_path': str(dataset_path), 'quality_report': quality_report}
+        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return RUNTIME_PATH, payload
     if 'Date' in df.columns:
         df = df.sort_values('Date').reset_index(drop=True)
     if 'Target_Return' not in df.columns:

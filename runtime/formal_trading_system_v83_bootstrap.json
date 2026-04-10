@@ -1,68 +1,52 @@
 {
-  "generated_at": "2026-04-10 13:16:51",
+  "generated_at": "2026-04-10 18:19:01",
   "mode": "bootstrap",
-  "module_version": "v83_bootstrap_auto_selected_live_feature_mount_hotfix",
-  "bootstrap_scripts": [
+  "module_version": "v83_level3_control_tower_integrated",
+  "steps": [
     {
       "status": "ok",
       "script": "db_setup.py",
+      "returncode": 0,
       "args": [
         "--mode",
         "upgrade"
       ],
-      "returncode": 0,
-      "stdout_tail": "========================================================\n🛠️ db_setup 自動化版本啟動\n模式支援：upgrade / reset\n預設：upgrade（安全補欄模式）\n========================================================\n🔧 開始檢查 / 建立核心資料表與欄位...\n✅ 資料表與欄位檢查完成\n   模式：upgrade\n   動作：保留資料 + 補齊缺表 / 缺欄",
+      "stdout_tail": "========================================================\n?? db_setup �۰ʤƪ����Ұ�\n�Ҧ��䴩�Gupgrade / reset\n�w�]�Gupgrade�]�w������Ҧ��^\n========================================================\n? �}�l�ˬd / �إ֤߮߸�ƪ��P���...\n? ��ƪ��P����ˬd����\n   �Ҧ��Gupgrade\n   �ʧ@�G�O�d��� + �ɻ��ʪ� / ����",
       "stderr_tail": ""
     },
     {
       "status": "ok",
       "script": "db_setup_research_plus.py",
-      "args": [],
       "returncode": 0,
-      "stdout_tail": "✅ research plus tables ready",
+      "args": [],
+      "stdout_tail": "? research plus tables ready",
       "stderr_tail": ""
     },
     {
       "status": "ok",
       "script": "run_full_market_percentile_snapshot.py",
-      "args": [],
       "returncode": 0,
-      "stdout_tail": "[13:16:42] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
+      "args": [],
+      "stdout_tail": "[18:18:24] ? cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
       "stderr_tail": ""
     },
     {
       "status": "ok",
       "script": "run_precise_event_calendar_build.py",
-      "args": [],
       "returncode": 0,
-      "stdout_tail": "[13:16:42] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
-      "stderr_tail": ""
-    },
-    {
-      "status": "ok",
-      "script": "internal_selected_live_feature_mount_builder",
       "args": [],
-      "returncode": 0,
-      "stdout_tail": "{\"status\": \"ok\", \"ticker\": \"2330.TW\", \"rows\": 84, \"csv_path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\data\\\\selected_live_feature_mounts.csv\", \"errors\": []}",
+      "stdout_tail": "[18:18:25] ?? event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
       "stderr_tail": ""
     },
     {
       "status": "ok",
       "script": "run_sync_feature_snapshots_to_sql.py",
-      "args": [],
       "returncode": 0,
-      "stdout_tail": "✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 84}, 'notes': {}}\n(WindowsPath('C:/test/test-2026-3-22OK/runtime/sql_feature_snapshot_sync.json'), {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 84}, 'notes': {}})",
+      "args": [],
+      "stdout_tail": "? sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 84}, 'notes': {}}\n(WindowsPath('C:/test/test-2026-3-22OK/runtime/sql_feature_snapshot_sync.json'), {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 84}, 'notes': {}})",
       "stderr_tail": ""
     }
   ],
-  "completion_audit_script": {
-    "status": "ok",
-    "script": "run_project_completion_audit.py",
-    "args": [],
-    "returncode": 0,
-    "stdout_tail": "(WindowsPath('C:/test/test-2026-3-22OK/runtime/project_completion_audit.json'), {'module_version': 'v83_project_completion_audit', 'required_modules': {'formal_trading_system_v83_official_main.py': True, 'fts_feature_service.py': True, 'fts_screening_engine.py': True, 'fts_cross_sectional_percentile_service.py': True, 'fts_event_calendar_service.py': True, 'fts_training_data_builder.py': True, 'db_setup_research_plus.py': True, 'fts_sql_feature_snapshot_sync.py': True, 'fts_mainline_linkage.py': True}, 'required_data': {'feature_cross_section_snapshot.csv': True, 'feature_event_calendar.csv': True, 'selected_live_feature_mounts.csv': True}, 'required_runtime': {'feature_stack_audit.json': True, 'cross_sectional_percentile_service.json': True, 'event_calendar_service.json': True, 'project_completion_audit.json': True}, 'task_board': {'主控串聯': '完成', '全市場percentile': '完成', '事件窗精準化': '完成', '特徵掛載': '完成', '訓練資料接新特徵': '完成', '研究層增補table': '完成', '特徵snapshot寫回SQL': '完成'}, 'all_modules_ready': True, 'all_data_ready': True, 'all_runtime_ready': True, 'status': 'project_completion_audit_ready'})",
-    "stderr_tail": ""
-  },
-  "daily_status": "daily_ready",
+  "daily_status": "control_tower_ready",
   "status": "bootstrap_ready"
 }
