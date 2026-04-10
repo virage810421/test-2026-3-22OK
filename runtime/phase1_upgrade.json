@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 12:54:31",
+  "generated_at": "2026-04-10 13:16:51",
   "module_version": "v82_phase1",
   "seeded": {
     "created_demo_assets": []
@@ -33,14 +33,14 @@
       "passed": true,
       "errors": [],
       "audit": {
-        "generated_at": "2026-04-10 12:54:30",
+        "generated_at": "2026-04-10 13:16:50",
         "module_version": "v83_screening_detachment_audit",
         "direct_legacy_fallback_modules": [],
         "legacy_screening_import_callers": [
           "event_backtester.py",
+          "fts_legacy_master_pipeline_impl.py",
           "fts_screening_detachment_audit.py",
           "live_paper_trading.py",
-          "master_pipeline.py",
           "strategies.py"
         ],
         "status": "screening_detachment_audited",
@@ -50,7 +50,7 @@
     "all_passed": true
   },
   "training_orchestrator": {
-    "generated_at": "2026-04-10 12:54:30",
+    "generated_at": "2026-04-10 13:16:50",
     "module_version": "v83",
     "ai_stage_enabled": true,
     "dry_run": true,
@@ -112,7 +112,7 @@
     "status": "training_governed_v83"
   },
   "training_prod_readiness": {
-    "generated_at": "2026-04-10 12:54:30",
+    "generated_at": "2026-04-10 13:16:50",
     "system_name": "正式交易主控版_v83_official_main",
     "summary": {
       "ready_count": 10,
@@ -177,7 +177,7 @@
   },
   "promotion_decision_path": "C:\\test\\test-2026-3-22OK\\runtime\\trainer_promotion_decision.json",
   "promotion_decision": {
-    "generated_at": "2026-04-10 12:54:30",
+    "generated_at": "2026-04-10 13:16:50",
     "system_name": "正式交易主控版_v83_official_main",
     "inputs": {
       "artifact_ok": true,
@@ -204,7 +204,7 @@
   },
   "orders_preview_count": 3,
   "live_safety": {
-    "generated_at": "2026-04-10 12:54:31",
+    "generated_at": "2026-04-10 13:16:51",
     "system_name": "正式交易主控版_v83_official_main",
     "mode": "PAPER",
     "broker_type": "paper",

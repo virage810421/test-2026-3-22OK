@@ -24,10 +24,13 @@ WRAPPER_MAP = {
     "ml_data_generator.py": "fts_training_data_builder.py",
     "ml_trainer.py": "fts_trainer_backend.py",
     "screening.py": "fts_screening_engine.py",
+    "yahoo_csv_to_sql.py": "fts_fundamentals_etl_mainline.py",
+    "master_pipeline.py": "fts_pipeline.py",
 }
 
 CORE_MODULES = [
     "formal_trading_system_v83_official_main",
+    "fts_pipeline",
     "fts_fundamentals_etl_mainline",
     "fts_training_governance_mainline",
     "fts_feature_service",

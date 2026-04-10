@@ -194,9 +194,48 @@
       "metrics": {},
       "note": "重訓前自動備份（防過擬合版）",
       "status": "snapshot"
+    },
+    {
+      "version": "pretrain_20260410_131537",
+      "timestamp": "2026-04-10 13:15:37",
+      "files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "artifacts": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        }
+      ],
+      "metrics": {},
+      "note": "重訓前自動備份（防過擬合版）",
+      "status": "snapshot"
     }
   ],
-  "current_version": "pretrain_20260410_123912",
+  "current_version": "pretrain_20260410_131537",
   "best_version": null,
   "last_candidate_version": null,
   "last_shadow_version": null,

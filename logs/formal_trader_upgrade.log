@@ -153,3 +153,11 @@
 [12:54:30] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
 [12:54:31] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
 [12:54:31] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[13:15:34] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[13:15:34] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[13:15:35] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[13:15:35] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[13:16:50] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[13:16:50] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[13:16:51] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[13:16:51] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json

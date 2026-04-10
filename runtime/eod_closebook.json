@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 12:54:31",
+  "generated_at": "2026-04-10 13:16:51",
   "status": "closebook_ready",
   "reconciliation_status": "reconciliation_green",
   "all_green": true,
@@ -13,7 +13,7 @@
   },
   "pnl_summary": {},
   "callback_store": {
-    "generated_at": "2026-04-10 12:54:31",
+    "generated_at": "2026-04-10 13:16:51",
     "status": "callback_event_recorded",
     "last_event_valid": true,
     "last_event_type": "REJECT",

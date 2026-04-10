@@ -237,10 +237,24 @@
       "operator": "system_v83",
       "approved": false,
       "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 13:15:35",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 13:16:51",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
     }
   ],
   "last": {
-    "ts": "2026-04-10 12:54:31",
+    "ts": "2026-04-10 13:16:51",
     "stage": "live_cutover",
     "operator": "system_v83",
     "approved": false,

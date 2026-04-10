@@ -1,0 +1,9 @@
+Level-2 全主線整合完成項目：
+1. master_pipeline.py 已升級為 Level-2 全主線入口，改由 fts_pipeline.Level2MainlinePipeline 控制。
+2. 原 master_pipeline 研究/決策/模擬交易主體已安全搬到 fts_legacy_master_pipeline_impl.py。
+3. yahoo_csv_to_sql.py 已改為 fundamentals ETL 主線 wrapper，主體由 fts_fundamentals_etl_mainline.py 提供。
+4. launcher.py 已標示並啟動新的 Level-2 主線入口。
+5. healthcheck 已納入 master_pipeline / yahoo_csv_to_sql 的 wrapper linkage。
+
+目前完整升級段落：
+- 第二級：全主線整合（master_pipeline / yahoo_csv_to_sql / launcher / fts_pipeline）

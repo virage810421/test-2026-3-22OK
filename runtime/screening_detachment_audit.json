@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-10 12:54:30",
+  "generated_at": "2026-04-10 13:16:50",
   "module_version": "v83_screening_detachment_audit",
   "direct_legacy_fallback_modules": [],
   "legacy_screening_import_callers": [
     "event_backtester.py",
+    "fts_legacy_master_pipeline_impl.py",
     "fts_screening_detachment_audit.py",
     "live_paper_trading.py",
-    "master_pipeline.py",
     "strategies.py"
   ],
   "status": "screening_detachment_audited",

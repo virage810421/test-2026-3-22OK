@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 12:39:13",
+  "generated_at": "2026-04-10 13:15:39",
   "mode": "train",
   "module_version": "v83_bootstrap_auto_selected_live_feature_mount_hotfix",
   "outputs": {
@@ -32,7 +32,7 @@
     "training_governance_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
       "payload": {
-        "generated_at": "2026-04-10 12:39:13",
+        "generated_at": "2026-04-10 13:15:39",
         "module_version": "v83_training_governance_mainline_hardened",
         "system_name": "正式交易主控版_v83_official_main",
         "orchestrator_status": "training_governed_v83",
@@ -44,7 +44,7 @@
           "report": {}
         },
         "training_integrity": {
-          "generated_at": "2026-04-10 12:39:13",
+          "generated_at": "2026-04-10 13:15:39",
           "thresholds": {
             "min_oot_hit_rate": 0.5,
             "min_oot_profit_factor": 1.0,
@@ -72,7 +72,7 @@
           "status": "training_integrity_blocked"
         },
         "candidate_evaluation": {
-          "generated_at": "2026-04-10 12:39:13",
+          "generated_at": "2026-04-10 13:15:39",
           "system_name": "正式交易主控版_v83_official_main",
           "thresholds": {
             "min_win_rate": 0.5,
@@ -98,12 +98,12 @@
             "walk_forward_not_strong_enough"
           ],
           "warnings": [],
-          "rollback_version": "fallback_stub_20260410_123913",
+          "rollback_version": "fallback_stub_20260410_131539",
           "candidate_ready": false,
           "status": "candidate_blocked"
         },
         "live_health": {
-          "generated_at": "2026-04-10 12:39:13",
+          "generated_at": "2026-04-10 13:15:39",
           "thresholds": {
             "min_live_win_rate": 0.42,
             "max_consecutive_losses": 5,
@@ -138,11 +138,11 @@
     "training_stress_audit": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_stress_audit.json",
       "payload": {
-        "generated_at": "2026-04-10 12:39:13",
+        "generated_at": "2026-04-10 13:15:39",
         "system_name": "正式交易主控版_v83_official_main",
         "trainer_backend_report_exists": false,
         "integrity": {
-          "generated_at": "2026-04-10 12:39:13",
+          "generated_at": "2026-04-10 13:15:39",
           "thresholds": {
             "min_oot_hit_rate": 0.5,
             "min_oot_profit_factor": 1.0,

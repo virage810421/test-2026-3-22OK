@@ -132,7 +132,7 @@ def main():
             log("⚠️ 找不到 db_setup.py，略過 schema 檢查")
 
         # 2) 主流程
-        log("🧠 階段 2：執行主流程 master_pipeline.py")
+        log("🧠 階段 2：執行 Level-2 全主線 master_pipeline.py")
         run_script("master_pipeline.py", timeout=7200, critical=True)
 
         # 3) 監控中心
