@@ -1,1 +1,1 @@
-﻿Ticker,Date,Regime,Label_Y,Target_Return,Structure,AI_Proba,Realized_EV,Strategy_EV_SQL,Buy_Score,Sell_Score,Weighted_Buy_Score,Weighted_Sell_Score,Score_Gap,Kelly_Pos,Score,Risk
+﻿Ticker,Date,Regime,Setup_Tag,Label_Y,Target_Return,Stop_Hit,Hold_Days,Entry_Price,Exit_Price,Realized_Return_After_Cost,Structure,AI_Proba,Realized_EV,Strategy_EV_SQL,Buy_Score,Sell_Score,Weighted_Buy_Score,Weighted_Sell_Score,Score_Gap,Kelly_Pos,Score,Risk

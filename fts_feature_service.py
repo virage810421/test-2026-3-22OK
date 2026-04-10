@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 try:
-    from fts_config import PATHS  # type: ignore
+    from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # pragma: no cover
     class _Paths:
         base_dir = Path(__file__).resolve().parent
@@ -21,7 +21,11 @@ except Exception:  # pragma: no cover
         data_dir = base_dir / 'data'
         model_dir = base_dir / 'models'
         models_dir = model_dir
+    class _Config:
+        strict_feature_parity = True
+        selected_features_required_for_live = True
     PATHS = _Paths()
+    CONFIG = _Config()
 
 try:
     from fts_utils import now_str, safe_float, safe_int, log  # type: ignore
@@ -48,7 +52,7 @@ from fts_feature_catalog import FEATURE_BUCKETS, PRIORITY_NEW_FEATURES_20
 
 
 class FeatureService:
-    MODULE_VERSION = 'v83_feature_service_percentile_mount_full'
+    MODULE_VERSION = 'v84_feature_service_execaware_registry_strict'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'feature_service.json'
@@ -56,6 +60,9 @@ class FeatureService:
         model_dir = getattr(PATHS, 'models_dir', getattr(PATHS, 'model_dir', Path('models')))
         self.selected_features_path = Path(model_dir) / 'selected_features.pkl'
         self.live_mount_csv = PATHS.data_dir / 'selected_live_feature_mounts.csv'
+        self.training_registry_csv = PATHS.runtime_dir / 'training_feature_registry.csv'
+        self.training_registry_json = PATHS.runtime_dir / 'training_feature_registry.json'
+        self.parity_status_path = PATHS.runtime_dir / 'feature_parity_status.json'
         Path(PATHS.runtime_dir).mkdir(parents=True, exist_ok=True)
         Path(PATHS.data_dir).mkdir(parents=True, exist_ok=True)
         if not self.live_mount_csv.exists():
@@ -65,7 +72,6 @@ class FeatureService:
 
     @staticmethod
     def _rolling_percentile(series: pd.Series, window: int) -> pd.Series:
-        """使用 sorted-window 而不是 rolling.apply(rank)，降低全市場 percentile 計算成本。"""
         s = pd.to_numeric(series, errors='coerce').astype(float)
         min_periods = max(5, min(window, 20))
         q = deque()
@@ -108,6 +114,61 @@ class FeatureService:
             return []
         return []
 
+    def load_training_feature_registry(self) -> pd.DataFrame:
+        if self.training_registry_csv.exists():
+            try:
+                return pd.read_csv(self.training_registry_csv, encoding='utf-8-sig')
+            except Exception:
+                return pd.read_csv(self.training_registry_csv)
+        return pd.DataFrame(columns=['feature_name', 'source', 'role', 'selected', 'present_in_sample'])
+
+    def write_training_feature_registry(
+        self,
+        sample_row: Mapping[str, Any] | None = None,
+        dataset_columns: Sequence[str] | None = None,
+        selected_features: Sequence[str] | None = None,
+    ) -> tuple[Path, dict[str, Any]]:
+        selected = [str(x) for x in (selected_features or self.load_selected_features()) if str(x).strip()]
+        dataset_cols = [str(c) for c in (dataset_columns or list(sample_row.keys()) if sample_row else [])]
+        meta_cols = {
+            'Ticker', 'Ticker SYMBOL', 'Date', 'Setup', 'Setup_Tag', 'Regime',
+            'Label', 'Label_Y', 'Target_Return', 'Future_Return_Pct', 'Entry_Price',
+            'Entry_Price_Basis', 'Exit_Price', 'Entry_Date', 'Exit_Date', 'Direction',
+            'Stop_Hit', 'Hold_Days', 'Touched_TP', 'Touched_SL', 'Label_Reason',
+            'Label_Exit_Type', 'Favorable_Move_Pct', 'Adverse_Move_Pct',
+            'Max_Favorable_Excursion', 'Max_Adverse_Excursion',
+            'Realized_Return_After_Cost', 'Mounted_Feature_Count'
+        }
+        rows = []
+        selected_set = set(selected)
+        dataset_set = set(dataset_cols)
+        for col in sorted(dataset_set | selected_set):
+            source = 'selected_features' if col in selected_set else 'dataset'
+            role = 'candidate_feature'
+            if col.startswith('MOUNT__'):
+                role = 'mounted_feature'
+            elif col in meta_cols:
+                role = 'meta'
+            rows.append({
+                'feature_name': col,
+                'source': source,
+                'role': role,
+                'selected': int(col in selected_set),
+                'present_in_sample': int(col in dataset_set),
+            })
+        df = pd.DataFrame(rows)
+        df.to_csv(self.training_registry_csv, index=False, encoding='utf-8-sig')
+        payload = {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'selected_feature_count': int(len(selected)),
+            'registry_row_count': int(len(df)),
+            'selected_features_present': bool(selected),
+            'status': 'training_feature_registry_ready',
+        }
+        self.training_registry_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return self.training_registry_csv, payload
+
     def _combo_feature(self, name: str, features: Mapping[str, Any]) -> float:
         parts = [p for p in str(name).split('_X_') if p]
         value = 1.0
@@ -115,13 +176,54 @@ class FeatureService:
             value *= safe_float(features.get(part, 0.0), 0.0)
         return float(value)
 
-    def select_live_features(self, features: Mapping[str, Any], selected_features: Sequence[str] | None = None) -> dict[str, float]:
-        picked = list(selected_features or self.load_selected_features())
+    def _write_parity_status(self, payload: dict[str, Any]) -> None:
+        self.parity_status_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+
+    def select_live_features(
+        self,
+        features: Mapping[str, Any],
+        selected_features: Sequence[str] | None = None,
+        strict: bool | None = None,
+    ) -> dict[str, float]:
+        picked = [str(x) for x in (selected_features or self.load_selected_features()) if str(x).strip()]
+        strict_mode = bool(getattr(CONFIG, 'strict_feature_parity', True)) if strict is None else bool(strict)
+
         if not picked:
+            payload = {
+                'generated_at': now_str(),
+                'module_version': self.MODULE_VERSION,
+                'strict_feature_parity': strict_mode,
+                'selected_features_present': False,
+                'fallback_all_features_blocked': bool(strict_mode),
+                'status': 'selected_features_missing',
+            }
+            self._write_parity_status(payload)
+            if strict_mode:
+                return {}
             return {k: safe_float(v, 0.0) for k, v in features.items()}
+
         out: dict[str, float] = {}
+        missing: list[str] = []
         for key in picked:
-            out[key] = self._combo_feature(key, features) if '_X_' in key else safe_float(features.get(key, 0.0), 0.0)
+            if '_X_' in key:
+                out[key] = self._combo_feature(key, features)
+                continue
+            if key not in features:
+                missing.append(key)
+            out[key] = safe_float(features.get(key, 0.0), 0.0)
+
+        payload = {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'strict_feature_parity': strict_mode,
+            'selected_features_present': True,
+            'selected_feature_count': int(len(picked)),
+            'mounted_feature_count': int(len(out)),
+            'missing_feature_count': int(len(missing)),
+            'missing_features_sample': missing[:20],
+            'status': 'feature_parity_locked',
+        }
+        self._write_parity_status(payload)
         return out
 
     def feature_buckets(self) -> dict[str, list[str]]:
@@ -140,83 +242,71 @@ class FeatureService:
         close = pd.to_numeric(out['Close'], errors='coerce').ffill().fillna(0.0)
         open_ = pd.to_numeric(out.get('Open', close), errors='coerce').fillna(close)
         volume = pd.to_numeric(out.get('Volume', 0), errors='coerce').fillna(0.0)
-        out['ATR14'] = self._compute_atr(out, 14)
-        out['ATR_Pct'] = (out['ATR14'] / close.replace(0, np.nan)).fillna(0.0)
+
+        atr14 = self._compute_atr(out, 14)
+        out['ATR14'] = atr14
+        out['ATR_Pct'] = (atr14 / close.replace(0, np.nan)).replace([np.inf, -np.inf], np.nan).fillna(0.0)
         out['ATR_Pctl_252'] = self._rolling_percentile(out['ATR_Pct'], 252)
-        logret = np.log(close / close.shift(1)).replace([np.inf, -np.inf], np.nan).fillna(0.0)
-        out['RealizedVol_20'] = (logret.rolling(20, min_periods=5).std() * np.sqrt(252)).fillna(0.0)
-        out['RealizedVol_60'] = (logret.rolling(60, min_periods=10).std() * np.sqrt(252)).fillna(0.0)
-        prev_close = close.shift(1)
-        out['Gap_Pct'] = ((open_ - prev_close) / prev_close.replace(0, np.nan)).fillna(0.0)
+        ret = close.pct_change().fillna(0.0)
+        out['RealizedVol_20'] = ret.rolling(20, min_periods=5).std().fillna(0.0) * np.sqrt(20)
+        out['RealizedVol_60'] = ret.rolling(60, min_periods=10).std().fillna(0.0) * np.sqrt(60)
+        out['Gap_Pct'] = ((open_ - close.shift(1)) / close.shift(1).replace(0, np.nan)).replace([np.inf, -np.inf], np.nan).fillna(0.0)
         out['Overnight_Return'] = out['Gap_Pct']
-        out['Intraday_Return'] = ((close - open_) / open_.replace(0, np.nan)).fillna(0.0)
-        turnover = (close * volume).fillna(0.0)
-        out['Turnover_Proxy'] = turnover
-        out['ADV20_Proxy'] = turnover.rolling(20, min_periods=1).mean().fillna(0.0)
-        out['DollarVol20_Proxy'] = out['ADV20_Proxy']
-        vol_mean = volume.rolling(20, min_periods=5).mean()
-        vol_std = volume.rolling(20, min_periods=5).std().replace(0, np.nan)
-        out['Volume_Z20'] = ((volume - vol_mean) / vol_std).replace([np.inf, -np.inf], np.nan).fillna(0.0)
-        ret1 = close.pct_change().fillna(0.0)
-        ret_mean = ret1.rolling(20, min_periods=5).mean()
-        ret_std = ret1.rolling(20, min_periods=5).std().replace(0, np.nan)
-        out['Return_Z20'] = ((ret1 - ret_mean) / ret_std).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        out['Intraday_Return'] = ((close - open_) / open_.replace(0, np.nan)).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        out['Turnover_Proxy'] = (close * volume).fillna(0.0)
+        out['ADV20_Proxy'] = volume.rolling(20, min_periods=5).mean().fillna(0.0)
+        out['DollarVol20_Proxy'] = (close * volume).rolling(20, min_periods=5).mean().fillna(0.0)
+        out['Volume_Z20'] = ((volume - volume.rolling(20, min_periods=5).mean()) / volume.rolling(20, min_periods=5).std().replace(0, np.nan)).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        out['Return_Z20'] = ((ret - ret.rolling(20, min_periods=5).mean()) / ret.rolling(20, min_periods=5).std().replace(0, np.nan)).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        out['Turnover_Pctl'] = self._rolling_percentile(out['Turnover_Proxy'], 252)
+        out['ADV20_Pctl'] = self._rolling_percentile(out['ADV20_Proxy'], 252)
+        out['ATR_Pct_Pctl'] = self._rolling_percentile(out['ATR_Pct'], 252)
+        out['RealizedVol_20_Pctl'] = self._rolling_percentile(out['RealizedVol_20'], 252)
         return out
 
-    def extract_ai_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, Any]:
-        close_p = safe_float(row.get('Close', 1), 1)
-        open_p = safe_float(row.get('Open', 1), 1)
-        high_p = safe_float(row.get('High', close_p), close_p)
-        low_p = safe_float(row.get('Low', close_p), close_p)
-        ma20 = safe_float(row.get('MA20', close_p), close_p)
-        volume = safe_float(row.get('Volume', 0), 0)
-        vol_ma20 = safe_float(row.get('Vol_MA20', 0), 0)
+    def extract_ai_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:
         features = {
-            'K_Body_Pct': ((close_p - open_p) / open_p) if open_p else 0.0,
-            'Upper_Shadow': ((high_p - max(close_p, open_p)) / close_p) if close_p else 0.0,
-            'Lower_Shadow': ((min(close_p, open_p) - low_p) / close_p) if close_p else 0.0,
-            'Dist_to_MA20': ((close_p - ma20) / (ma20 + 1e-4)),
-            'Volume_Ratio': (volume / (vol_ma20 + 1e-3)) if vol_ma20 else 1.0,
-            'BB_Width': safe_float(row.get('BB_Width', 0), 0),
-            'RSI': safe_float(row.get('RSI', 50), 50),
-            'MACD_Hist': safe_float(row.get('MACD_Hist', 0), 0),
-            'ADX': safe_float(row.get('ADX14', row.get('ADX', 25)), 25),
-            'Foreign_Ratio': safe_float(row.get('Foreign_Ratio', 0), 0),
-            'Trust_Ratio': safe_float(row.get('Trust_Ratio', 0), 0),
-            'Total_Ratio': safe_float(row.get('Total_Ratio', 0), 0),
-            'Foreign_Consec_Days': safe_int(row.get('Foreign_Consecutive', row.get('Foreign_Consec_Days', 0)), 0),
-            'Trust_Consec_Days': safe_int(row.get('Trust_Consecutive', row.get('Trust_Consec_Days', 0)), 0),
-            'Weighted_Buy_Score': safe_float(row.get('Weighted_Buy_Score', row.get('Buy_Score', 0)), 0),
-            'Weighted_Sell_Score': safe_float(row.get('Weighted_Sell_Score', row.get('Sell_Score', 0)), 0),
-            'Score_Gap': safe_float(row.get('Score_Gap', 0), 0),
-            'Signal_Conflict': safe_int(row.get('Signal_Conflict', 0), 0),
+            'Body_Pct': safe_float(row.get('Body_Pct', row.get('K_Body_Ratio', 0.0)), 0.0),
+            'Upper_Shadow_Pct': safe_float(row.get('Upper_Shadow_Pct', row.get('Upper_Shadow', 0.0)), 0.0),
+            'Lower_Shadow_Pct': safe_float(row.get('Lower_Shadow_Pct', row.get('Lower_Shadow', 0.0)), 0.0),
+            'Dist_MA20_Pct': safe_float(row.get('Dist_MA20_Pct', row.get('Distance_to_MA20', 0.0)), 0.0),
+            'Volume_Ratio': safe_float(row.get('Volume_Ratio', row.get('Vol_Ratio', 0.0)), 0.0),
+            'BB_Width': safe_float(row.get('BB_Width', 0.0), 0.0),
+            'RSI': safe_float(row.get('RSI', 0.0), 0.0),
+            'MACD_Hist': safe_float(row.get('MACD_Hist', 0.0), 0.0),
+            'ADX': safe_float(row.get('ADX14', row.get('ADX', 0.0)), 0.0),
+            'Foreign_Ratio': safe_float(row.get('Foreign_Ratio', 0.0), 0.0),
+            'Trust_Ratio': safe_float(row.get('Trust_Ratio', 0.0), 0.0),
+            'Total_Ratio': safe_float(row.get('Total_Ratio', 0.0), 0.0),
+            'Foreign_Continuous': safe_float(row.get('Foreign_Continuous', 0.0), 0.0),
+            'Trust_Continuous': safe_float(row.get('Trust_Continuous', 0.0), 0.0),
+            'Weighted_Buy_Score': safe_float(row.get('Weighted_Buy_Score', row.get('Buy_Score', 0.0)), 0.0),
+            'Weighted_Sell_Score': safe_float(row.get('Weighted_Sell_Score', row.get('Sell_Score', 0.0)), 0.0),
+            'Score_Gap': safe_float(row.get('Score_Gap', 0.0), 0.0),
+            'Signal_Conflict': safe_float(row.get('Signal_Conflict', 0.0), 0.0),
+            'Vol_Squeeze': safe_float(row.get('Vol_Squeeze', 0.0), 0.0),
+            'Absorption': safe_float(row.get('Absorption', 0.0), 0.0),
+            'MR_Long_Spring': safe_float(row.get('MR_Long_Spring', 0.0), 0.0),
+            'MR_Short_Trap': safe_float(row.get('MR_Short_Trap', 0.0), 0.0),
+            'MR_Long_Accumulation': safe_float(row.get('MR_Long_Accumulation', 0.0), 0.0),
+            'MR_Short_Distribution': safe_float(row.get('MR_Short_Distribution', 0.0), 0.0),
+            'buy_c2': safe_float(row.get('buy_c2', 0.0), 0.0),
+            'buy_c3': safe_float(row.get('buy_c3', 0.0), 0.0),
+            'buy_c4': safe_float(row.get('buy_c4', 0.0), 0.0),
+            'buy_c5': safe_float(row.get('buy_c5', 0.0), 0.0),
+            'buy_c6': safe_float(row.get('buy_c6', 0.0), 0.0),
+            'buy_c7': safe_float(row.get('buy_c7', 0.0), 0.0),
+            'buy_c8': safe_float(row.get('buy_c8', 0.0), 0.0),
+            'buy_c9': safe_float(row.get('buy_c9', 0.0), 0.0),
+            'sell_c2': safe_float(row.get('sell_c2', 0.0), 0.0),
+            'sell_c3': safe_float(row.get('sell_c3', 0.0), 0.0),
+            'sell_c4': safe_float(row.get('sell_c4', 0.0), 0.0),
+            'sell_c5': safe_float(row.get('sell_c5', 0.0), 0.0),
+            'sell_c6': safe_float(row.get('sell_c6', 0.0), 0.0),
+            'sell_c7': safe_float(row.get('sell_c7', 0.0), 0.0),
+            'sell_c8': safe_float(row.get('sell_c8', 0.0), 0.0),
+            'sell_c9': safe_float(row.get('sell_c9', 0.0), 0.0),
         }
-        for key in ['buy_c2', 'buy_c3', 'buy_c4', 'buy_c5', 'buy_c6', 'buy_c7', 'buy_c8', 'buy_c9', 'sell_c2', 'sell_c3', 'sell_c4', 'sell_c5', 'sell_c6', 'sell_c7', 'sell_c8', 'sell_c9']:
-            features[key] = safe_int(row.get(key, 0), 0)
-        features['Trap_Signal'] = 1 if bool(row.get('Fake_Breakout', False)) else (-1 if bool(row.get('Bear_Trap', False)) else 0)
-        features['Vol_Squeeze'] = safe_int(row.get('Vol_Squeeze', False), 0)
-        features['Absorption'] = safe_int(row.get('Absorption', False), 0)
-        features['MR_Long_Spring'] = safe_int(row.get('MR_Long_Spring', 0), 0)
-        features['MR_Short_Trap'] = safe_int(row.get('MR_Short_Trap', 0), 0)
-        features['MR_Long_Accumulation'] = safe_int(row.get('MR_Long_Accumulation', 0), 0)
-        features['MR_Short_Distribution'] = safe_int(row.get('MR_Short_Distribution', 0), 0)
-        for k in PRIORITY_NEW_FEATURES_20:
-            if k in row:
-                features[k] = safe_float(row.get(k, 0), 0)
-        features.setdefault('ATR14', safe_float(row.get('ATR14', 0), 0))
-        features.setdefault('ATR_Pct', safe_float(row.get('ATR_Pct', 0), 0))
-        features.setdefault('ATR_Pctl_252', safe_float(row.get('ATR_Pctl_252', 0.5), 0.5))
-        features.setdefault('RealizedVol_20', safe_float(row.get('RealizedVol_20', 0), 0))
-        features.setdefault('RealizedVol_60', safe_float(row.get('RealizedVol_60', 0), 0))
-        prev_close = safe_float(row.get('Prev_Close', close_p), close_p)
-        features.setdefault('Gap_Pct', ((open_p - prev_close) / prev_close) if prev_close else 0.0)
-        features.setdefault('Overnight_Return', features['Gap_Pct'])
-        features.setdefault('Intraday_Return', ((close_p - open_p) / open_p) if open_p else 0.0)
-        features.setdefault('Turnover_Proxy', close_p * volume)
-        features.setdefault('ADV20_Proxy', safe_float(row.get('ADV20_Proxy', features['Turnover_Proxy']), features['Turnover_Proxy']))
-        features.setdefault('DollarVol20_Proxy', safe_float(row.get('DollarVol20_Proxy', features['ADV20_Proxy']), features['ADV20_Proxy']))
-        features.setdefault('Volume_Z20', safe_float(row.get('Volume_Z20', 0), 0))
-        features.setdefault('Return_Z20', safe_float(row.get('Return_Z20', 0), 0))
         if history_df is not None and not history_df.empty:
             enriched = self.enrich_from_history(history_df)
             latest = enriched.iloc[-1].to_dict()
@@ -229,7 +319,7 @@ class FeatureService:
         features['Revenue_YoY_Rank'] = safe_float(row.get('Revenue_YoY_Rank', row.get('Revenue_YoY_Pctl', 0.5)), 0.5)
         features['Chip_Total_Ratio_Rank'] = safe_float(row.get('Chip_Total_Ratio_Rank', row.get('Chip_Total_Ratio_Pctl', 0.5)), 0.5)
         features['Regime_TrendStrength_X_ScoreGap'] = safe_float(row.get('Regime_TrendStrength_X_ScoreGap', (features['ADX'] / 100.0) * features['Score_Gap']), 0)
-        features['Volatility_X_SignalConflict'] = safe_float(row.get('Volatility_X_SignalConflict', features['ATR_Pctl_252'] * features['Signal_Conflict']), 0)
+        features['Volatility_X_SignalConflict'] = safe_float(row.get('Volatility_X_SignalConflict', features.get('ATR_Pctl_252', 0.0) * features['Signal_Conflict']), 0)
         return features
 
     def mount_live_features(self, ticker: str, as_of_row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> tuple[dict[str, Any], dict[str, float]]:
@@ -244,8 +334,19 @@ class FeatureService:
         from fts_cross_sectional_percentile_service import CrossSectionalPercentileService
         features = CrossSectionalPercentileService().enrich_row(ticker, features)
         selected = self.load_selected_features()
-        mounted = self.select_live_features(features, selected_features=selected)
-        mount_payload = {'generated_at': now_str(), 'module_version': self.MODULE_VERSION, 'ticker': str(ticker), 'selected_feature_count': len(selected), 'mounted_feature_count': len(mounted), 'selected_features_present': bool(selected), 'official_percentile_mode': True, 'precise_event_calendar_mode': True, 'status': 'live_feature_mount_ready'}
+        mounted = self.select_live_features(features, selected_features=selected, strict=getattr(CONFIG, 'strict_feature_parity', True))
+        mount_payload = {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'ticker': str(ticker),
+            'selected_feature_count': len(selected),
+            'mounted_feature_count': len(mounted),
+            'selected_features_present': bool(selected),
+            'strict_feature_parity': bool(getattr(CONFIG, 'strict_feature_parity', True)),
+            'official_percentile_mode': True,
+            'precise_event_calendar_mode': True,
+            'status': 'live_feature_mount_ready' if mounted else 'live_feature_mount_waiting_for_selected_features',
+        }
         self.live_mount_path.write_text(json.dumps(mount_payload, ensure_ascii=False, indent=2), encoding='utf-8')
         mount_rows = [
             {
@@ -264,7 +365,22 @@ class FeatureService:
         sample_df = pd.DataFrame({'Open':[98,100,101,102],'High':[101,103,104,105],'Low':[97,99,100,100],'Close':[100,101,103,104],'Volume':[1000,1100,900,1500]}, index=pd.date_range('2026-01-01', periods=4))
         sample = self.extract_ai_features(self.enrich_from_history(sample_df).iloc[-1].to_dict(), history_df=sample_df)
         selected = self.load_selected_features()
-        payload = {'generated_at': now_str(), 'module_version': self.MODULE_VERSION, 'sample_feature_count': len(sample), 'selected_features_present': bool(selected), 'selected_feature_count': len(selected), 'feature_buckets': {k: len(v) for k, v in FEATURE_BUCKETS.items()}, 'priority_new_features_20': PRIORITY_NEW_FEATURES_20, 'official_percentile_mode': True, 'precise_event_calendar_mode': True, 'live_mount_path': str(self.live_mount_path), 'rolling_percentile_engine': 'sorted_window_fast', 'status': 'feature_service_ready'}
+        payload = {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'sample_feature_count': len(sample),
+            'selected_features_present': bool(selected),
+            'selected_feature_count': len(selected),
+            'feature_buckets': {k: len(v) for k, v in FEATURE_BUCKETS.items()},
+            'priority_new_features_20': PRIORITY_NEW_FEATURES_20,
+            'official_percentile_mode': True,
+            'precise_event_calendar_mode': True,
+            'live_mount_path': str(self.live_mount_path),
+            'training_registry_csv': str(self.training_registry_csv),
+            'rolling_percentile_engine': 'sorted_window_fast',
+            'strict_feature_parity': bool(getattr(CONFIG, 'strict_feature_parity', True)),
+            'status': 'feature_service_ready',
+        }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🧩 feature service ready: {self.runtime_path}')
         return self.runtime_path, payload

@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 import json
 from fts_config import PATHS, CONFIG

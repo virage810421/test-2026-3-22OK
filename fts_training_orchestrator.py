@@ -54,7 +54,7 @@ class TrainingOrchestrator:
             rows.append({'column': col, 'role': role, 'dtype_guess': str(df[col].dtype)})
         pd.DataFrame(rows).to_csv(self.registry_path, index=False, encoding='utf-8-sig')
 
-        template_cols = ['Ticker', 'Date', 'Regime', 'Label_Y', 'Target_Return'] + [r['column'] for r in rows if r['role'] in {'candidate_feature', 'context_feature'}]
+        template_cols = ['Ticker', 'Date', 'Regime', 'Setup_Tag', 'Label_Y', 'Target_Return', 'Stop_Hit', 'Hold_Days', 'Entry_Price', 'Exit_Price', 'Realized_Return_After_Cost'] + [r['column'] for r in rows if r['role'] in {'candidate_feature', 'context_feature'}]
         template_cols = list(dict.fromkeys(template_cols))
         pd.DataFrame(columns=template_cols).to_csv(self.template_path, index=False, encoding='utf-8-sig')
 
@@ -101,7 +101,7 @@ class TrainingOrchestrator:
                 "readiness_score": 10,
             }
 
-        base_drop = {"Ticker", "Date", "Setup", "Regime", "Label_Y", "Target_Return", "Stop_Hit", "Hold_Days"}
+        base_drop = {"Ticker", "Ticker SYMBOL", "Date", "Setup", "Setup_Tag", "Regime", "Label", "Label_Y", "Target_Return", "Future_Return_Pct", "Entry_Price", "Entry_Price_Basis", "Exit_Price", "Entry_Date", "Exit_Date", "Direction", "Stop_Hit", "Hold_Days", "Touched_TP", "Touched_SL", "Label_Reason", "Label_Exit_Type", "Favorable_Move_Pct", "Adverse_Move_Pct", "Max_Favorable_Excursion", "Max_Adverse_Excursion", "Realized_Return_After_Cost"}
         feature_cols = [c for c in df.columns if c not in base_drop]
         label_balance = {}
         regime_counts = {}

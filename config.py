@@ -1,6 +1,7 @@
 # ==========================================
-# 中央參數總控台（升級整合版 v2）
+# 中央參數總控台（升級整合版 v2.1）
 # ==========================================
+import os
 
 PARAMS = {
     "RSI_PERIOD": 14,
@@ -74,6 +75,17 @@ PARAMS = {
     "W_C7_FOREIGN": 0.7,
     "W_C8_DMI_ADX": 2.0,
     "W_C9_TOTAL_RATIO": 0.3,
+
+    # 訓練 / live 一致性
+    "LABEL_USE_EXECUTION_AWARE": True,
+    "LABEL_USE_NEXT_OPEN": True,
+    "LABEL_REQUIRE_STOP_SAFE": True,
+    "LIVE_REQUIRE_SELECTED_FEATURES": True,
+    "LIVE_FEATURE_PARITY_MODE": "strict",
+    "EXECUTION_POLICY_MODE": "explicit",
+    "STRATEGY_LAYER_MODE": "independent",
+    "MODEL_LAYER_MODE": "independent",
+    "EXECUTION_LAYER_MODE": "independent",
 }
 
 WATCH_LIST = [
@@ -97,7 +109,8 @@ TRAINING_POOL = [
 
 BREAK_TEST_POOL = []
 
-FINMIND_API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wNC0xMCAxODoyMDoxMCIsInVzZXJfaWQiOiJob25kYSIsImVtYWlsIjoiaG9uZGEyMTMxMTMwQGdtYWlsLmNvbSIsImlwIjoiMTEwLjI4LjUwLjI0In0.hagUYcqLRFxCl290F7ngc1hBjFwTxPNXCP0dCROviPw"
+# 不再把 token 寫死在程式裡。正式環境請改設環境變數。
+FINMIND_API_TOKEN = os.getenv("FINMIND_API_TOKEN", "").strip()
 
 
 def get_dynamic_watch_list():
@@ -109,7 +122,6 @@ def get_dynamic_watch_list():
     return merged
 
 
-
 # ---- Portfolio Risk Layer ----
 PARAMS["PORT_MAX_SECTOR_POSITIONS"] = 2
 PARAMS["PORT_MAX_SECTOR_ALLOC"] = 0.35
@@ -119,12 +131,7 @@ PARAMS["PORT_MAX_SINGLE_POS"] = 0.12
 PARAMS["PORT_MIN_POSITION"] = 0.01
 
 
-
-
 # ---- Alert / Guard ----
-# ALERT_TEST_MODE 改成 False
-# 補上 LINE token / user id
-# 就能正式推送。
 PARAMS["ALERT_TEST_MODE"] = True
-PARAMS["ALERT_LINE_BOT_TOKEN"] = ""
-PARAMS["ALERT_LINE_USER_ID"] = ""
+PARAMS["ALERT_LINE_BOT_TOKEN"] = os.getenv("ALERT_LINE_BOT_TOKEN", "").strip()
+PARAMS["ALERT_LINE_USER_ID"] = os.getenv("ALERT_LINE_USER_ID", "").strip()

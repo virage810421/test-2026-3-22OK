@@ -1,11 +1,12 @@
 {
-  "generated_at": "2026-04-10 19:34:59",
-  "module_version": "v83_feature_service_percentile_mount_full",
-  "ticker": "2330.TW",
+  "generated_at": "2026-04-11 00:34:56",
+  "module_version": "v84_feature_service_execaware_registry_strict",
+  "ticker": "2002.TW",
   "selected_feature_count": 0,
-  "mounted_feature_count": 84,
+  "mounted_feature_count": 0,
   "selected_features_present": false,
+  "strict_feature_parity": true,
   "official_percentile_mode": true,
   "precise_event_calendar_mode": true,
-  "status": "live_feature_mount_ready"
+  "status": "live_feature_mount_waiting_for_selected_features"
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 19:34:59",
+  "generated_at": "2026-04-11 00:33:43",
   "module_version": "v83_level2_mainline_integrated",
   "status": "mainline_ready",
   "etl": [
@@ -10,7 +10,7 @@
       "mode": "subprocess",
       "returncode": 0,
       "error": "",
-      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1064 筆 -> monthly_revenue_simple\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：今天已成功執行過。\n\n⚪ [月更雷達] 月營收上網補抓：今天已成功執行過。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1064 筆 -> monthly_revenue_simple\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：日期條件未達成。\n\n⚪ [月更雷達] 月營收上網補抓：尚未到可抓取時間 18:30，目前 00:33。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -34,7 +34,7 @@
       "mode": "subprocess",
       "returncode": 0,
       "error": "",
-      "stdout_tail": "[19:34:44] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[19:34:44] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "stdout_tail": "[00:33:41] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[00:33:41] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false

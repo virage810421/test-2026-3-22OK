@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 19:34:59",
+  "generated_at": "2026-04-11 00:35:21",
   "system_name": "正式交易主控版_v83_official_main",
   "thresholds": {
     "min_win_rate": 0.5,
@@ -9,23 +9,25 @@
     "max_shadow_return_drift_pct": 0.08
   },
   "metrics": {
-    "win_rate": 0.0,
-    "profit_factor": 0.0,
+    "win_rate": 0.20862676056338028,
+    "profit_factor": 0.7069591594503442,
     "max_drawdown_pct": 0.08
   },
   "walk_forward": {
-    "score": 0.0
+    "score": -5.442537867448831
   },
   "shadow_result": {
-    "return_drift_pct": 0.0
+    "return_drift_pct": 0.23979952576422864
   },
   "failures": [
     "win_rate_below_threshold",
     "profit_factor_below_threshold",
     "walk_forward_not_strong_enough"
   ],
-  "warnings": [],
-  "rollback_version": "fallback_stub_20260410_193459",
+  "warnings": [
+    "shadow_drift_above_preferred_band"
+  ],
+  "rollback_version": "trained_20260411_003519",
   "candidate_ready": false,
   "status": "candidate_blocked"
 }

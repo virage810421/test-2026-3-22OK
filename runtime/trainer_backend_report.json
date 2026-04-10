@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-04-11 00:35:17",
+  "status": "trained",
+  "dataset_path": "data\\ml_training_data.csv",
+  "rows_total": 5682,
+  "rows_train": 4546,
+  "rows_out_of_time": 1136,
+  "selected_features_count": 4,
+  "selected_features": [
+    "MACD_Hist",
+    "Score_Gap",
+    "Volume_Z20",
+    "Regime_TrendStrength_X_ScoreGap"
+  ],
+  "feature_to_sample_ratio": 0.0008798944126704796,
+  "walk_forward_summary": {
+    "ret_mean": -0.06411746367239106,
+    "hit_rate_mean": 0.20026420079260238,
+    "pf_mean": 0.9692084997902753,
+    "coverage_mean": 0.4520475561426684,
+    "effective_splits": 5,
+    "score": -5.442537867448831
+  },
+  "walk_forward_results": [
+    {
+      "hit_rate": 0.14002642007926025,
+      "avg_return": -0.008215455746367235,
+      "pred_accuracy": 0.5852047556142669,
+      "profit_factor": 0.9844233280142907,
+      "coverage": 0.31836195508586523
+    },
+    {
+      "hit_rate": 0.23645970937912814,
+      "avg_return": 0.3086413474240422,
+      "pred_accuracy": 0.5653896961690885,
+      "profit_factor": 1.4138906874307464,
+      "coverage": 0.44517833553500663
+    },
+    {
+      "hit_rate": 0.22192866578599735,
+      "avg_return": -0.2785430647291942,
+      "pred_accuracy": 0.5270805812417437,
+      "profit_factor": 0.7383168001286715,
+      "coverage": 0.5257595772787318
+    },
+    {
+      "hit_rate": 0.17040951122853368,
+      "avg_return": -0.44385455746367247,
+      "pred_accuracy": 0.43989431968295906,
+      "profit_factor": 0.5797617759678515,
+      "coverage": 0.4583883751651255
+    },
+    {
+      "hit_rate": 0.23249669749009247,
+      "avg_return": 0.10138441215323643,
+      "pred_accuracy": 0.5389696169088507,
+      "profit_factor": 1.1296499074098165,
+      "coverage": 0.512549537648613
+    }
+  ],
+  "out_of_time": {
+    "hit_rate": 0.20862676056338028,
+    "avg_return": -0.3039169894366197,
+    "pred_accuracy": 0.4762323943661972,
+    "profit_factor": 0.7069591594503442,
+    "coverage": 0.5096830985915493
+  },
+  "overfit_gap": 0.23979952576422864,
+  "leakage_guards": {
+    "feature_selection_train_only": true,
+    "purged_walk_forward": true,
+    "out_of_time_holdout": true
+  },
+  "class_balance_train": 0.40519137703475583,
+  "class_balance_oot": 0.44014084507042256,
+  "promotion": {
+    "status": "promoted_best",
+    "version": "trained_20260411_003519"
+  },
+  "regimes": {
+    "趨勢多頭": {
+      "status": "SAVE",
+      "rows": 2861,
+      "feature_count": 4
+    },
+    "區間盤整": {
+      "status": "SAVE",
+      "rows": 622,
+      "feature_count": 4
+    },
+    "趨勢空頭": {
+      "status": "SAVE",
+      "rows": 1063,
+      "feature_count": 4
+    }
+  }
+}

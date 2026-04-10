@@ -80,7 +80,7 @@ class AppPaths:
 @dataclass
 class SystemConfig:
     system_name: str = '正式交易主控版_v83_official_main'
-    package_version: str = 'v83_phase3plus'
+    package_version: str = 'v84_phase4_fundgrade_three_layer_split'
     mode: str = 'PAPER'
     broker_type: str = 'paper'
     starting_cash: float = 3_000_000
@@ -136,6 +136,23 @@ class SystemConfig:
     db_driver: str = 'ODBC Driver 17 for SQL Server'
     db_server: str = 'localhost'
     db_database: str = '股票online'
+
+    # ---- 補齊 execution config 欄位 ----
+    trailing_stop_pct: float = 0.05
+    enable_bracket_exit: bool = True
+    partial_take_profit_ratio: float = 0.50
+    break_even_after_partial_tp: bool = True
+    max_holding_bars: int = 10
+    position_cooldown_bars: int = 2
+
+    # ---- 訓練 / live 一致性與策略治理 ----
+    strict_feature_parity: bool = True
+    selected_features_required_for_live: bool = True
+    strategy_policy_mode: str = 'explicit'
+    strategy_policy_filename: str = 'strategy_policy_book.json'
+    model_layer_status_filename: str = 'model_layer_status.json'
+    execution_layer_status_filename: str = 'execution_layer_status.json'
+    strategy_layer_status_filename: str = 'strategy_policy_book.json'
 
 
 @dataclass

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -35,11 +36,110 @@ def get_dynamic_watchlist():
             return []
 
 
+def _safe_float(v: Any, default: float = 0.0) -> float:
+    try:
+        if pd.isna(v):
+            return default
+        return float(v)
+    except Exception:
+        return default
+
+
 def _signal_flags(setup_tag: str):
     tag = str(setup_tag).strip()
     is_short = ('空' in tag) or ('SHORT' in tag.upper())
     is_long = ('多' in tag) or ('LONG' in tag.upper())
     return is_long, is_short
+
+
+def _round_trip_cost() -> float:
+    fee_rate = float(PARAMS.get('FEE_RATE', 0.001425)) * float(PARAMS.get('FEE_DISCOUNT', 1.0))
+    tax_rate = float(PARAMS.get('TAX_RATE', 0.003))
+    return float((2 * fee_rate) + tax_rate)
+
+
+def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: int, setup_tag: str) -> dict[str, Any] | None:
+    is_long, is_short = _signal_flags(setup_tag)
+    if not (is_long or is_short):
+        return None
+
+    entry_idx = i + 1
+    if entry_idx >= len(computed_df):
+        return None
+
+    entry_row = computed_df.iloc[entry_idx]
+    entry_price = _safe_float(entry_row.get('Open', None), 0.0) if bool(PARAMS.get('LABEL_USE_NEXT_OPEN', True)) else _safe_float(computed_df.iloc[i].get('Close', None), 0.0)
+    if entry_price <= 0:
+        return None
+
+    future_window = computed_df.iloc[entry_idx: entry_idx + hold_days].copy()
+    if future_window.empty:
+        return None
+
+    sl_pct = float(PARAMS.get('SL_MIN_PCT', 0.03))
+    round_trip_cost = _round_trip_cost()
+
+    if is_short:
+        max_adverse_excursion = max((_safe_float(future_window['High'].max(), entry_price) - entry_price) / entry_price, 0.0)
+        max_favorable_excursion = max((entry_price - _safe_float(future_window['Low'].min(), entry_price)) / entry_price, 0.0)
+        stop_hit = max_adverse_excursion > sl_pct
+        touched_sl = int(stop_hit)
+        touched_tp = int(max_favorable_excursion > sl_pct)
+        exit_price = _safe_float(future_window.iloc[-1].get('Close', entry_price), entry_price)
+        realized_return = ((entry_price - exit_price) / entry_price) - round_trip_cost
+        favorable_move = max_favorable_excursion
+        adverse_move = max_adverse_excursion
+    else:
+        max_adverse_excursion = max((entry_price - _safe_float(future_window['Low'].min(), entry_price)) / entry_price, 0.0)
+        max_favorable_excursion = max((_safe_float(future_window['High'].max(), entry_price) - entry_price) / entry_price, 0.0)
+        stop_hit = max_adverse_excursion > sl_pct
+        touched_sl = int(stop_hit)
+        touched_tp = int(max_favorable_excursion > sl_pct)
+        exit_price = _safe_float(future_window.iloc[-1].get('Close', entry_price), entry_price)
+        realized_return = ((exit_price - entry_price) / entry_price) - round_trip_cost
+        favorable_move = max_favorable_excursion
+        adverse_move = max_adverse_excursion
+
+    label_y = 1 if ((not stop_hit) and (realized_return > 0 or favorable_move > sl_pct)) else 0
+    if stop_hit:
+        label_reason = 'stop_hit_before_target'
+        label_exit_type = 'STOP'
+    elif realized_return > 0:
+        label_reason = 'positive_realized_return_after_cost'
+        label_exit_type = 'TIME_EXIT_PROFIT'
+    elif favorable_move > sl_pct:
+        label_reason = 'favorable_move_exceeded_stop_threshold'
+        label_exit_type = 'TP_TOUCH'
+    else:
+        label_reason = 'insufficient_edge'
+        label_exit_type = 'TIME_EXIT_LOSS'
+
+    entry_dt = pd.to_datetime(entry_row.name, errors='coerce')
+    exit_dt = pd.to_datetime(future_window.index[-1], errors='coerce')
+
+    return {
+        'Label': int(label_y),
+        'Label_Y': int(label_y),
+        'Target_Return': round(float(realized_return * 100.0), 4),
+        'Future_Return_Pct': round(float(realized_return * 100.0), 4),
+        'Entry_Price': round(float(entry_price), 4),
+        'Entry_Price_Basis': 'next_open' if bool(PARAMS.get('LABEL_USE_NEXT_OPEN', True)) else 'signal_close',
+        'Exit_Price': round(float(exit_price), 4),
+        'Entry_Date': entry_dt.strftime('%Y-%m-%d') if pd.notna(entry_dt) else None,
+        'Exit_Date': exit_dt.strftime('%Y-%m-%d') if pd.notna(exit_dt) else None,
+        'Stop_Hit': int(stop_hit),
+        'Hold_Days': int(hold_days),
+        'Touched_TP': int(touched_tp),
+        'Touched_SL': int(touched_sl),
+        'Label_Reason': label_reason,
+        'Label_Exit_Type': label_exit_type,
+        'Favorable_Move_Pct': round(float(favorable_move * 100.0), 4),
+        'Adverse_Move_Pct': round(float(adverse_move * 100.0), 4),
+        'Max_Favorable_Excursion': round(float(max_favorable_excursion * 100.0), 4),
+        'Max_Adverse_Excursion': round(float(max_adverse_excursion * 100.0), 4),
+        'Realized_Return_After_Cost': round(float(realized_return * 100.0), 4),
+        'Direction': 'SHORT' if is_short else 'LONG',
+    }
 
 
 def generate_ml_dataset(tickers=None):
@@ -61,25 +161,34 @@ def generate_ml_dataset(tickers=None):
             computed_df = result['計算後資料'].copy()
             if len(computed_df) <= hold_days + 2:
                 continue
+
             for i in range(len(computed_df) - hold_days - 1):
                 row = computed_df.iloc[i]
                 setup_tag = str(row.get('Golden_Type', '無')).strip()
                 regime = str(row.get('Regime', '區間盤整')).strip()
                 if setup_tag == '無':
                     continue
-                is_long, is_short = _signal_flags(setup_tag)
-                if not (is_long or is_short):
+
+                label_block = _build_execution_aware_label(computed_df, i, hold_days, setup_tag)
+                if not label_block:
                     continue
-                entry_px = float(row.get('Close', 0))
-                exit_row = computed_df.iloc[min(i + hold_days, len(computed_df) - 1)]
-                exit_px = float(exit_row.get('Close', entry_px))
-                future_ret = ((exit_px / entry_px) - 1.0) * 100 if entry_px > 0 else 0.0
-                if is_short:
-                    future_ret *= -1
-                label = 1 if future_ret > 0 else 0
-                feats = _features.extract_ai_features(row.to_dict(), history_df=computed_df.iloc[:i+1].copy(), ticker=ticker, as_of_date=row.name if hasattr(row, 'name') else None)
+
+                feats = _features.extract_ai_features(
+                    row.to_dict(),
+                    history_df=computed_df.iloc[:i + 1].copy(),
+                    ticker=ticker,
+                    as_of_date=row.name if hasattr(row, 'name') else None,
+                )
                 mounted = _features.select_live_features(feats)
-                sample = {'Ticker SYMBOL': ticker, 'Date': pd.to_datetime(row.name, errors='coerce').strftime('%Y-%m-%d') if hasattr(row, 'name') and pd.notna(row.name) else None, 'Label': label, 'Label_Y': label, 'Future_Return_Pct': round(future_ret, 4), 'Target_Return': round(future_ret, 4), 'Setup_Tag': setup_tag, 'Regime': regime}
+                sample = {
+                    'Ticker SYMBOL': ticker,
+                    'Ticker': ticker,
+                    'Date': pd.to_datetime(row.name, errors='coerce').strftime('%Y-%m-%d') if hasattr(row, 'name') and pd.notna(row.name) else None,
+                    'Setup_Tag': setup_tag,
+                    'Setup': setup_tag,
+                    'Regime': regime,
+                }
+                sample.update(label_block)
                 sample.update(feats)
                 for k, v in mounted.items():
                     sample[f'MOUNT__{k}'] = v
@@ -91,5 +200,13 @@ def generate_ml_dataset(tickers=None):
     df_out, quality_report = sanitize_generated_training_df(df_out)
     df_out.to_csv(dataset_path, index=False, encoding='utf-8-sig')
     if not df_out.empty:
-        _features.write_training_feature_registry(df_out.iloc[0].to_dict())
+        _features.write_training_feature_registry(
+            sample_row=df_out.iloc[0].to_dict(),
+            dataset_columns=df_out.columns.tolist(),
+        )
     return df_out
+
+
+if __name__ == '__main__':
+    tickers = get_dynamic_watchlist()
+    generate_ml_dataset(tickers)

@@ -467,10 +467,106 @@
       "metrics": {},
       "note": "重訓前自動備份（防過擬合版）",
       "status": "snapshot"
+    },
+    {
+      "version": "pretrain_20260411_003513",
+      "timestamp": "2026-04-11 00:35:13",
+      "files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "artifacts": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 13,
+          "sha256": "58d5c194a14d16f4a8d16b50ea223d398446dd59064c42106e4ff6fd4ccc3f48"
+        }
+      ],
+      "metrics": {},
+      "note": "重訓前自動備份（防過擬合版）",
+      "status": "snapshot"
+    },
+    {
+      "version": "trained_20260411_003519",
+      "timestamp": "2026-04-11 00:35:19",
+      "files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "artifacts": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 87,
+          "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": true,
+          "size_bytes": 2177417,
+          "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 1293737,
+          "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 1641577,
+          "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+        }
+      ],
+      "metrics": {
+        "overall_score": -27.5985,
+        "out_of_time": {
+          "hit_rate": 0.20862676056338028,
+          "avg_return": -0.3039169894366197,
+          "pred_accuracy": 0.4762323943661972,
+          "profit_factor": 0.7069591594503442,
+          "coverage": 0.5096830985915493
+        },
+        "walk_forward": {
+          "ret_mean": -0.06411746367239106,
+          "hit_rate_mean": 0.20026420079260238,
+          "pf_mean": 0.9692084997902753,
+          "coverage_mean": 0.4520475561426684,
+          "effective_splits": 5,
+          "score": -5.442537867448831
+        },
+        "feature_count": 4
+      },
+      "note": "防過擬合版訓練完成快照",
+      "status": "snapshot"
     }
   ],
-  "current_version": "pretrain_20260410_165903",
-  "best_version": null,
+  "current_version": "trained_20260411_003519",
+  "best_version": "trained_20260411_003519",
   "last_candidate_version": null,
   "last_shadow_version": null,
   "active_deployment": null

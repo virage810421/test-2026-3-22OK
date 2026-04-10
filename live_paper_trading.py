@@ -11,6 +11,9 @@ import pyodbc
 from config import PARAMS
 from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
 from strategies import get_active_strategy
+from fts_strategy_policy_layer import get_strategy_policy
+from fts_model_layer import evaluate_model_signal
+from fts_execution_layer import build_entry_metrics as _build_entry_metrics_layer, signal_gate as _signal_gate_layer, portfolio_gate as _portfolio_gate_layer, compute_position_plan
 from sector_classifier import get_stock_sector
 try:
     from fts_level3_runtime_loader import build_level3_services
@@ -24,8 +27,8 @@ except Exception:
 # ==========================================
 IS_TEST_MODE = True
 
-LINE_BOT_TOKEN = ""
-LINE_USER_ID = ""
+LINE_BOT_TOKEN = PARAMS.get("ALERT_LINE_BOT_TOKEN", "")
+LINE_USER_ID = PARAMS.get("ALERT_LINE_USER_ID", "")
 
 DB_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
@@ -161,123 +164,30 @@ def _current_portfolio_state(active_df, total_nav):
 
 
 def _build_entry_metrics(row):
-    structure = row.get("Structure", "AI訊號")
-    regime = row.get("Regime", "未知")
-    realized_ev = _safe_float(row.get("Realized_EV", 0.0), 0.0)
-    sample_size = _safe_int(row.get("Sample_Size", 0), 0)
-    ai_proba = _safe_float(row.get("AI_Proba", 0.5), 0.5)
-    weighted_buy = _safe_float(row.get("Weighted_Buy_Score", 0.0), 0.0)
-    weighted_sell = _safe_float(row.get("Weighted_Sell_Score", 0.0), 0.0)
-    score_gap = _safe_float(row.get("Score_Gap", 0.0), 0.0)
-
-    try:
-        dummy_vol = 0.05
-        trend_is_with_me = "多頭" in str(regime)
-        adx_is_strong = ai_proba >= 0.55
-        active_strategy = get_active_strategy(structure)
-        dynamic_sl, dynamic_tp, _ = active_strategy.get_exit_rules(
-            PARAMS, dummy_vol, trend_is_with_me, adx_is_strong, 0
-        )
-    except Exception:
-        dynamic_sl = float(PARAMS.get("SL_MIN_PCT", 0.03))
-        dynamic_tp = float(PARAMS.get("TP_BASE_PCT", 0.10))
-
-    rr_ratio = (dynamic_tp / dynamic_sl) if dynamic_sl > 0 else 0.0
-
-    risk_budget_ratio = 0.05
-    if sample_size < 8:
-        risk_budget_ratio = 0.03
-    if realized_ev <= 0 or ai_proba < 0.5:
-        risk_budget_ratio = min(risk_budget_ratio, 0.02)
-    if score_gap <= 0:
-        risk_budget_ratio = min(risk_budget_ratio, 0.015)
-
-    return {
-        "市場狀態": regime,
-        "進場陣型": structure,
-        "期望值": realized_ev,
-        "預期停損(%)": round(dynamic_sl * 100, 3),
-        "預期停利(%)": round(dynamic_tp * 100, 3),
-        "風報比(RR)": round(rr_ratio, 3),
-        "風險金額比率": risk_budget_ratio,
-        "Weighted_Buy_Score": weighted_buy,
-        "Weighted_Sell_Score": weighted_sell,
-        "Score_Gap": score_gap,
-    }
+    return _build_entry_metrics_layer(row, params=PARAMS)
 
 
 def _passes_signal_gate(row):
-    kelly_pct = _safe_float(row.get("Kelly_Pos", 0.0), 0.0)
-    weighted_buy = _safe_float(row.get("Weighted_Buy_Score", 0.0), 0.0)
-    weighted_sell = _safe_float(row.get("Weighted_Sell_Score", 0.0), 0.0)
-    score_gap = _safe_float(row.get("Score_Gap", 0.0), 0.0)
-    ai_proba = _safe_float(row.get("AI_Proba", 0.0), 0.0)
-    realized_ev = _safe_float(row.get("Realized_EV", 0.0), 0.0)
-    health = str(row.get("Health", "KEEP")).upper()
-
-    if kelly_pct <= 0:
-        return False, "Kelly 倉位為 0"
-    if health == "KILL":
-        return False, "策略健康度阻斷"
-    if realized_ev <= 0:
-        return False, "Realized EV <= 0"
-    if ai_proba < 0.50:
-        return False, "AI 勝率不足"
-    if score_gap <= 0:
-        return False, "加權分數差為負"
-    if weighted_buy < max(2.0, float(PARAMS.get("TRIGGER_SCORE", 2))):
-        return False, "多方加權分數不足"
-    if weighted_sell >= weighted_buy:
-        return False, "空方壓力未解除"
-
-    return True, "通過訊號閘門"
+    regime = row.get("Regime", "未知")
+    structure = row.get("Structure", row.get("Setup_Tag", "AI訊號"))
+    policy = get_strategy_policy(structure, regime=regime)
+    model_decision = evaluate_model_signal(
+        row,
+        regime,
+        min_proba=float(policy.get("min_proba", 0.5)),
+        base_multiplier=float(policy.get("multiplier", 1.0)),
+    )
+    gate = _signal_gate_layer(row, model_decision=model_decision, params=PARAMS)
+    reason = "通過訊號閘門" if gate.allowed else " | ".join(gate.reasons)
+    return gate.allowed, reason
 
 
 def _passes_portfolio_gate(row, total_nav, portfolio_state):
-    """
-    最終下單審核層：
-    依當下 active_positions / 現金 / 產業集中度重新檢查。
-    """
-    if total_nav <= 0:
-        return False, "總資產異常"
-
-    direction = _direction_bucket(row.get("Direction", ""))
     ticker = str(row.get("Ticker", "")).strip()
     sector = get_stock_sector(ticker)
-
-    requested_alloc = _safe_float(row.get("Kelly_Pos", 0.0), 0.0)
-
-    max_sector_positions = int(PARAMS.get("PORT_MAX_SECTOR_POSITIONS", 2))
-    max_sector_alloc = float(PARAMS.get("PORT_MAX_SECTOR_ALLOC", 0.35))
-    max_total_alloc = float(PARAMS.get("PORT_MAX_TOTAL_ALLOC", 0.60))
-    max_direction_alloc = float(PARAMS.get("PORT_MAX_DIRECTION_ALLOC", 0.45))
-    max_single_pos = float(PARAMS.get("PORT_MAX_SINGLE_POS", 0.12))
-    min_position = float(PARAMS.get("PORT_MIN_POSITION", 0.01))
-
-    if requested_alloc < min_position:
-        return False, "倉位低於最小門檻"
-
-    if requested_alloc > max_single_pos:
-        return False, "單筆倉位超過上限"
-
-    current_total = portfolio_state["total_alloc"]
-    current_sector_alloc = portfolio_state["sector_alloc"].get(sector, 0.0)
-    current_sector_count = portfolio_state["sector_count"].get(sector, 0)
-    current_direction_alloc = portfolio_state["direction_alloc"].get(direction, 0.0)
-
-    if current_sector_count >= max_sector_positions:
-        return False, f"{sector} 產業持倉數已達上限"
-
-    if current_total + requested_alloc > max_total_alloc:
-        return False, "總配置上限不足"
-
-    if current_sector_alloc + requested_alloc > max_sector_alloc:
-        return False, f"{sector} 產業資金占比將超限"
-
-    if current_direction_alloc + requested_alloc > max_direction_alloc:
-        return False, f"{direction} 方向曝險將超限"
-
-    return True, "通過組合閘門"
+    gate = _portfolio_gate_layer(row, total_nav, portfolio_state, sector_name=sector, params=PARAMS)
+    reason = "通過組合閘門" if gate.allowed else " | ".join(gate.reasons)
+    return gate.allowed, reason
 
 
 def run_eod_broker():
@@ -342,7 +252,7 @@ def run_eod_broker():
             )
             adx_is_strong = latest_row.get("ADX14", 0) > PARAMS.get("ADX_TREND_THRESHOLD", 20)
 
-            active_strategy = get_active_strategy(setup_tag)
+            active_strategy = get_active_strategy(setup_tag, regime=latest_row.get('Regime', '未知'))
             dynamic_sl, dynamic_tp, ignore_tp = active_strategy.get_exit_rules(
                 PARAMS, volatility_pct, trend_is_with_me, adx_is_strong, 0
             )
@@ -523,24 +433,25 @@ def run_eod_broker():
 
             curr_price = float(df["Close"].iloc[-1])
 
-            shares = int((total_nav * kelly_pct) / curr_price)
-            shares = int(shares // 1000) * 1000 if shares >= 1000 else shares
-            if shares < 1:
-                daily_log.append(f"⚠️ 略過 {ticker}: 換算股數不足")
+            entry_metrics = _build_entry_metrics(row)
+            plan = compute_position_plan(
+                row=row,
+                curr_price=curr_price,
+                total_nav=total_nav,
+                current_cash=current_cash,
+                entry_metrics=entry_metrics,
+                params=PARAMS,
+            )
+            if not plan.allowed:
+                daily_log.append(f"⚠️ 略過 {ticker}: {plan.reason}")
                 continue
 
-            total_cost = curr_price * shares * (1 + PARAMS["FEE_RATE"] * PARAMS["FEE_DISCOUNT"])
-            can_afford = current_cash >= total_cost or PARAMS.get("IGNORE_CASH_LIMIT", False)
-
-            if not can_afford:
-                daily_log.append(f"⛔ 略過 {ticker}: 現金不足")
-                continue
+            shares = int(plan.shares)
+            total_cost = float(plan.total_cost)
+            risk_amount = float(plan.risk_amount)
 
             if not PARAMS.get("IGNORE_CASH_LIMIT", False):
                 current_cash -= total_cost
-
-            entry_metrics = _build_entry_metrics(row)
-            risk_amount = total_cost * entry_metrics["風險金額比率"]
 
             cursor.execute(
                 """
@@ -581,7 +492,7 @@ def run_eod_broker():
             action_icon = "🟢 做多" if "Long" in str(trade_direction) else "🔴 放空"
             daily_log.append(
                 f"{action_icon} {ticker}: {shares}股 "
-                f"(花費 ${total_cost:,.0f} | EV {entry_metrics['期望值']:.3f} | "
+                f"(花費 ${total_cost:,.0f} | 策略 {entry_metrics['策略名稱']} | EV {entry_metrics['期望值']:.3f} | "
                 f"WB {entry_metrics['Weighted_Buy_Score']:.2f} | "
                 f"WS {entry_metrics['Weighted_Sell_Score']:.2f} | Gap {entry_metrics['Score_Gap']:.2f})"
             )

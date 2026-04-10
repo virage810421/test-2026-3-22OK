@@ -58,7 +58,7 @@ def simulate_trade_path(
         return None
 
     direction = _direction_from_setup(setup_tag)
-    strategy = get_active_strategy(setup_tag)
+    strategy = get_active_strategy(setup_tag, regime=regime)
 
     # 用訊號日最後一根資料作為策略出場規則參考
     signal_row = price_df.iloc[entry_idx]

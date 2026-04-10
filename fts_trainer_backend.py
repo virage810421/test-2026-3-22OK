@@ -40,7 +40,7 @@ def _evaluate_alpha(signal: pd.Series, future_return: pd.Series) -> dict[str, fl
 
 
 def _build_feature_columns(df: pd.DataFrame) -> tuple[list[str], list[str]]:
-    drop_cols = ['Ticker', 'Date', 'Setup', 'Regime', 'Label_Y', 'Target_Return', 'Stop_Hit', 'Hold_Days']
+    drop_cols = ['Ticker', 'Ticker SYMBOL', 'Date', 'Setup', 'Setup_Tag', 'Regime', 'Label', 'Label_Y', 'Target_Return', 'Future_Return_Pct', 'Entry_Price', 'Entry_Price_Basis', 'Exit_Price', 'Entry_Date', 'Exit_Date', 'Direction', 'Stop_Hit', 'Hold_Days', 'Touched_TP', 'Touched_SL', 'Label_Reason', 'Label_Exit_Type', 'Favorable_Move_Pct', 'Adverse_Move_Pct', 'Max_Favorable_Excursion', 'Max_Adverse_Excursion', 'Realized_Return_After_Cost']
     raw_features = [c for c in df.columns if c not in drop_cols]
     old_features: list[str] = []
     pkl = Path('models') / 'selected_features.pkl'

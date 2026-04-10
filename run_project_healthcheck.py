@@ -1,4 +1,3 @@
-
 from fts_project_healthcheck import main
 
 if __name__ == "__main__":
