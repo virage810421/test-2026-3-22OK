@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 18:19:36",
+  "generated_at": "2026-04-10 19:34:32",
   "module_version": "v83_fundamentals_etl_mainline_builtin",
   "csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
   "table_name": "fundamentals_clean",

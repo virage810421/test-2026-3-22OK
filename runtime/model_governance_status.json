@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 18:19:50",
+  "generated_at": "2026-04-10 19:34:59",
   "system_name": "正式交易主控版_v83_official_main",
   "thresholds": {
     "min_win_rate": 0.5,
@@ -25,7 +25,7 @@
     "walk_forward_not_strong_enough"
   ],
   "warnings": [],
-  "rollback_version": "fallback_stub_20260410_181950",
+  "rollback_version": "fallback_stub_20260410_193459",
   "candidate_ready": false,
   "status": "candidate_blocked"
 }

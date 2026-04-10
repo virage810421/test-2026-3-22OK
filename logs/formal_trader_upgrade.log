@@ -19,3 +19,13 @@
 [18:19:50] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
 [18:19:50] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
 [18:19:50] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[19:23:12] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[19:23:12] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[19:23:12] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[19:23:12] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[19:23:12] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[19:34:59] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[19:34:59] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[19:34:59] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[19:34:59] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[19:34:59] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json

@@ -116,3 +116,63 @@
 [18:19:50] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
 [18:19:50] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
 [18:19:50] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[19:22:00] ========================================================================
+[19:22:00] 🚀 啟動 正式交易主控版_v83_official_main
+[19:22:00] 🧭 模式：BOOTSTRAP
+[19:22:00] ========================================================================
+[19:22:08] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[19:22:09] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[19:22:12] ========================================================================
+[19:22:12] 🚀 啟動 正式交易主控版_v83_official_main
+[19:22:12] 🧭 模式：DAILY
+[19:22:12] ========================================================================
+[19:22:35] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[19:22:41] 🔁 mainline stage | monthly_revenue_simple.py | ok=True | skipped=False
+[19:22:52] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:22:52] ✅ yahoo_csv_to_sql 第二級主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:22:52] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=False | skipped=False
+[19:23:10] 🧠 legacy decision engine | ok=True
+[19:23:12] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[19:23:12] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[19:23:12] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[19:23:12] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[19:23:12] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[19:23:12] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[19:23:12] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[19:23:13] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[19:23:13] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[19:23:13] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[19:23:13] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json
+[19:26:43] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:26:43] ✅ yahoo_csv_to_sql 第二級主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:28:43] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:28:43] ✅ yahoo_csv_to_sql 第二級主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:33:54] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:33:54] ✅ yahoo_csv_to_sql 第二級主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:33:55] ========================================================================
+[19:33:55] 🚀 啟動 正式交易主控版_v83_official_main
+[19:33:55] 🧭 模式：BOOTSTRAP
+[19:33:55] ========================================================================
+[19:34:03] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[19:34:04] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[19:34:08] ========================================================================
+[19:34:08] 🚀 啟動 正式交易主控版_v83_official_main
+[19:34:08] 🧭 模式：DAILY
+[19:34:08] ========================================================================
+[19:34:29] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[19:34:31] 🔁 mainline stage | monthly_revenue_simple.py | ok=True | skipped=False
+[19:34:44] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:34:44] ✅ yahoo_csv_to_sql 第二級主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[19:34:44] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[19:34:59] 🧠 legacy decision engine | ok=True
+[19:34:59] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[19:34:59] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[19:34:59] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[19:34:59] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[19:34:59] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[19:34:59] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[19:34:59] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[19:35:00] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[19:35:00] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[19:35:00] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[19:35:00] 🧩 已輸出 interface audit：C:\test\test-2026-3-22OK\runtime\interface_audit.json

@@ -6,6 +6,7 @@
 """
 
 import os
+from pathlib import Path
 import json
 import time
 import requests
@@ -494,14 +495,19 @@ def reconcile_local_fundamentals_csv_to_sql():
     print(f"📂 季財報本地 CSV 已找到：{fundamentals_path}")
 
     try:
-        from yahoo_csv_to_sql import load_existing_csv, import_df_to_sql
-        df = load_existing_csv()
+        from fts_fundamentals_etl_mainline import FundamentalsETLMainline
+
+        mainline = FundamentalsETLMainline()
+        df = mainline.load_existing_csv(Path(fundamentals_path))
         if df is None or df.empty:
             print("📂 季財報本地 CSV 為空，無需補 SQL。")
             return True
 
-        import_df_to_sql(df, stage_name="季財報 CSV補SQL")
-        print("🎉 季財報本地 CSV 已補進 SQL。")
+        sql_result = mainline.import_df_to_sql(df)
+        if sql_result.get("sql_error"):
+            raise RuntimeError(sql_result.get("sql_error"))
+
+        print(f"🎉 季財報本地 CSV 已補進 SQL。共 {sql_result.get('sql_imported_rows', 0)} 筆")
         return True
     except Exception as e:
         print(f"❌ 季財報本地 CSV 補 SQL 失敗：{e}")

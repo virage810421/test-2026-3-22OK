@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10 18:19:50",
+  "generated_at": "2026-04-10 19:34:59",
   "system_name": "正式交易主控版_v83_official_main",
   "models_dir": "C:\\test\\test-2026-3-22OK\\models",
   "candidates": [
@@ -29,7 +29,7 @@
       "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 5319
+      "size_bytes": 6869
     },
     {
       "name": "model_registry.json",
