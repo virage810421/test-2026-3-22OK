@@ -1,0 +1,21 @@
+第二級整合：advanced_chart(1).zip 非破壞式 Runtime Variant 收編
+
+這次完成：
+1. 修正 absorbed_references/advanced_chart1_original/paper_broker.py 的 duplicated future import 語法錯
+2. 將 advanced_chart(1).zip 的 27 支 py 全數收編到 advanced_chart1_runtime_variants/
+3. 對本地同名模組 import 改成相對匯入，使變體包可自洽載入
+4. 新增 fts_level2_variant_registry.py / fts_level2_variant_loader.py
+5. 新增 fts_level2_bridge_selftest.py 與 runtime/level2_variant_manifest.json
+
+這次完整升級段落：
+- 第一級橋接主線：advanced_chart.py / screening.py / ml_data_generator.py / ml_trainer.py（沿用上一版）
+- 第二級非破壞式 Runtime Variant 收編：advanced_chart(1).zip 全 27 支 py（本次完成）
+
+目前仍未直接切換接管的高風險主幹：
+- execution_engine.py
+- paper_broker.py
+- risk_gateway.py
+- live_paper_trading.py
+- master_pipeline.py
+
+這些已完成最大量整合，但仍保持主線不被覆蓋。

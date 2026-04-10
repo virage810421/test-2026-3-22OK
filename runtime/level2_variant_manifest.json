@@ -1,0 +1,170 @@
+{
+  "package": "advanced_chart1_runtime_variants",
+  "source_zip": "advanced_chart(1).zip",
+  "integration_level": "level_2",
+  "strategy": "non_destructive_runtime_variants",
+  "modules": [
+    {
+      "module": "advanced_chart",
+      "path": "advanced_chart1_runtime_variants/advanced_chart.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "alert_manager",
+      "path": "advanced_chart1_runtime_variants/alert_manager.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "broker_base",
+      "path": "advanced_chart1_runtime_variants/broker_base.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "config",
+      "path": "advanced_chart1_runtime_variants/config.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "daily_chip_etl",
+      "path": "advanced_chart1_runtime_variants/daily_chip_etl.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "db_logger",
+      "path": "advanced_chart1_runtime_variants/db_logger.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "db_setup",
+      "path": "advanced_chart1_runtime_variants/db_setup.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "event_backtester",
+      "path": "advanced_chart1_runtime_variants/event_backtester.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "execution_engine",
+      "path": "advanced_chart1_runtime_variants/execution_engine.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "fundamental_screener",
+      "path": "advanced_chart1_runtime_variants/fundamental_screener.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "launcher",
+      "path": "advanced_chart1_runtime_variants/launcher.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "live_paper_trading",
+      "path": "advanced_chart1_runtime_variants/live_paper_trading.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "master_pipeline",
+      "path": "advanced_chart1_runtime_variants/master_pipeline.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "ml_data_generator",
+      "path": "advanced_chart1_runtime_variants/ml_data_generator.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "ml_trainer",
+      "path": "advanced_chart1_runtime_variants/ml_trainer.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "model_governance",
+      "path": "advanced_chart1_runtime_variants/model_governance.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "monitor_center",
+      "path": "advanced_chart1_runtime_variants/monitor_center.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "monthly_revenue_simple",
+      "path": "advanced_chart1_runtime_variants/monthly_revenue_simple.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "paper_broker",
+      "path": "advanced_chart1_runtime_variants/paper_broker.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "performance",
+      "path": "advanced_chart1_runtime_variants/performance.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "portfolio_risk",
+      "path": "advanced_chart1_runtime_variants/portfolio_risk.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "risk_gateway",
+      "path": "advanced_chart1_runtime_variants/risk_gateway.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "screening",
+      "path": "advanced_chart1_runtime_variants/screening.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "sector_classifier",
+      "path": "advanced_chart1_runtime_variants/sector_classifier.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "strategies",
+      "path": "advanced_chart1_runtime_variants/strategies.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "system_guard",
+      "path": "advanced_chart1_runtime_variants/system_guard.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    },
+    {
+      "module": "yahoo_csv_to_sql",
+      "path": "advanced_chart1_runtime_variants/yahoo_csv_to_sql.py",
+      "status": "absorbed_as_level_2_runtime_variant",
+      "conflicts_with_mainline": true
+    }
+  ]
+}

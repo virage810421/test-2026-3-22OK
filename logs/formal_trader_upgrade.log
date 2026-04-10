@@ -121,3 +121,35 @@
 [23:20:14] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
 [23:20:14] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
 [23:20:14] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[11:47:33] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[11:47:33] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[11:47:33] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[11:47:33] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[11:48:18] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[11:48:18] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[11:48:18] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[11:48:18] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[12:04:39] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[12:04:39] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[12:04:39] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[12:04:39] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[12:05:05] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[12:05:05] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[12:05:06] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[12:05:06] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[12:25:35] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[12:25:35] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[12:25:35] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[12:25:35] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[12:39:08] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[12:39:08] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[12:39:09] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[12:39:09] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[12:49:29] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[12:49:29] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[12:49:29] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[12:49:29] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[12:54:30] 🚦 已輸出 trainer promotion policy：C:\test\test-2026-3-22OK\runtime\trainer_promotion_policy.json
+[12:54:30] 🧠 已輸出 trainer promotion decision：C:\test\test-2026-3-22OK\runtime\trainer_promotion_decision.json
+[12:54:31] 🛡️ Live Safety Gate | paper_live_safe=True | failures=0 | warnings=0 | blocked_orders=0
+[12:54:31] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json

@@ -1,7 +1,7 @@
 {
   "project_root": "C:\\test\\test-2026-3-22OK",
   "summary": {
-    "python_files_total": 217,
+    "python_files_total": 280,
     "compile_failures": 0,
     "core_import_failures": 0,
     "missing_local_import_edges": 0,
@@ -9,7 +9,282 @@
   },
   "compile_results": [
     {
+      "file": "absorbed_references\\advanced_chart1_original\\advanced_chart.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\alert_manager.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\broker_base.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\config.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\daily_chip_etl.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\db_logger.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\db_setup.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\event_backtester.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\fundamental_screener.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\launcher.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\master_pipeline.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\ml_data_generator.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\ml_trainer.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\model_governance.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\monitor_center.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\monthly_revenue_simple.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\paper_broker.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\performance.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\portfolio_risk.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\risk_gateway.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\screening.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\sector_classifier.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\strategies.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\system_guard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "absorbed_references\\advanced_chart1_original\\yahoo_csv_to_sql.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "advanced_chart.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\__init__.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\advanced_chart.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\alert_manager.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\broker_base.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\config.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\daily_chip_etl.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\db_logger.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\db_setup.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\event_backtester.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\fundamental_screener.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\launcher.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\master_pipeline.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\ml_data_generator.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\ml_trainer.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\model_governance.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\monitor_center.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\monthly_revenue_simple.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\paper_broker.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\performance.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\portfolio_risk.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\risk_gateway.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\screening.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\sector_classifier.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\strategies.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\system_guard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "advanced_chart1_runtime_variants\\yahoo_csv_to_sql.py",
       "ok": true,
       "error": ""
     },
@@ -205,6 +480,11 @@
     },
     {
       "file": "fts_chart_interface_audit.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chart_level1_bridge_selftest.py",
       "ok": true,
       "error": ""
     },
@@ -430,6 +710,36 @@
     },
     {
       "file": "fts_legacy_inventory.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_level1_bridge_selftest.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_level2_bridge_selftest.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_level2_variant_loader.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_level2_variant_registry.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_level3_bridge_selftest.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_level3_runtime_loader.py",
       "ok": true,
       "error": ""
     },
@@ -745,6 +1055,11 @@
     },
     {
       "file": "fts_screening_engine.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_screening_legacy_compat.py",
       "ok": true,
       "error": ""
     },
@@ -1099,85 +1414,252 @@
       "module": "formal_trading_system_v83_official_main",
       "ok": true,
       "error": "",
-      "seconds": 0.053
+      "seconds": 0.065
     },
     {
       "module": "fts_fundamentals_etl_mainline",
       "ok": true,
       "error": "",
-      "seconds": 0.84
+      "seconds": 4.801
     },
     {
       "module": "fts_training_governance_mainline",
       "ok": true,
       "error": "",
-      "seconds": 1.488
+      "seconds": 12.785
     },
     {
       "module": "fts_feature_service",
       "ok": true,
       "error": "",
-      "seconds": 0.404
+      "seconds": 0.457
     },
     {
       "module": "fts_screening_engine",
       "ok": true,
       "error": "",
-      "seconds": 0.731
+      "seconds": 0.71
     },
     {
       "module": "fts_cross_sectional_percentile_service",
       "ok": true,
       "error": "",
-      "seconds": 0.679
+      "seconds": 0.718
     },
     {
       "module": "fts_event_calendar_service",
       "ok": true,
       "error": "",
-      "seconds": 0.423
+      "seconds": 0.422
     },
     {
       "module": "fts_decision_execution_bridge",
       "ok": true,
       "error": "",
-      "seconds": 0.405
+      "seconds": 0.421
     },
     {
       "module": "fts_phase1_upgrade",
       "ok": true,
       "error": "",
-      "seconds": 0.424
+      "seconds": 0.408
     },
     {
       "module": "fts_phase2_mock_broker_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.428
+      "seconds": 0.409
     },
     {
       "module": "fts_phase3_real_cutover_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.528
+      "seconds": 0.513
     },
     {
       "module": "model_governance",
       "ok": true,
       "error": "",
-      "seconds": 0.074
+      "seconds": 0.069
     },
     {
       "module": "db_setup",
       "ok": true,
       "error": "",
-      "seconds": 0.032
+      "seconds": 0.051
     }
   ],
   "local_imports_by_file": {
+    "absorbed_references\\advanced_chart1_original\\advanced_chart.py": [
+      "config"
+    ],
+    "absorbed_references\\advanced_chart1_original\\alert_manager.py": [],
+    "absorbed_references\\advanced_chart1_original\\broker_base.py": [],
+    "absorbed_references\\advanced_chart1_original\\config.py": [],
+    "absorbed_references\\advanced_chart1_original\\daily_chip_etl.py": [
+      "config",
+      "monthly_revenue_simple",
+      "yahoo_csv_to_sql"
+    ],
+    "absorbed_references\\advanced_chart1_original\\db_logger.py": [],
+    "absorbed_references\\advanced_chart1_original\\db_setup.py": [],
+    "absorbed_references\\advanced_chart1_original\\event_backtester.py": [
+      "config",
+      "screening",
+      "strategies"
+    ],
+    "absorbed_references\\advanced_chart1_original\\execution_engine.py": [
+      "broker_base",
+      "db_logger",
+      "paper_broker",
+      "risk_gateway"
+    ],
+    "absorbed_references\\advanced_chart1_original\\fundamental_screener.py": [
+      "config"
+    ],
+    "absorbed_references\\advanced_chart1_original\\launcher.py": [],
+    "absorbed_references\\advanced_chart1_original\\live_paper_trading.py": [
+      "config",
+      "screening",
+      "sector_classifier",
+      "strategies"
+    ],
+    "absorbed_references\\advanced_chart1_original\\master_pipeline.py": [
+      "fundamental_screener",
+      "performance",
+      "portfolio_risk",
+      "screening",
+      "system_guard"
+    ],
+    "absorbed_references\\advanced_chart1_original\\ml_data_generator.py": [
+      "config",
+      "screening"
+    ],
+    "absorbed_references\\advanced_chart1_original\\ml_trainer.py": [
+      "config",
+      "model_governance"
+    ],
+    "absorbed_references\\advanced_chart1_original\\model_governance.py": [],
+    "absorbed_references\\advanced_chart1_original\\monitor_center.py": [
+      "config",
+      "performance"
+    ],
+    "absorbed_references\\advanced_chart1_original\\monthly_revenue_simple.py": [],
+    "absorbed_references\\advanced_chart1_original\\paper_broker.py": [
+      "broker_base"
+    ],
+    "absorbed_references\\advanced_chart1_original\\performance.py": [
+      "config"
+    ],
+    "absorbed_references\\advanced_chart1_original\\portfolio_risk.py": [
+      "config",
+      "sector_classifier"
+    ],
+    "absorbed_references\\advanced_chart1_original\\risk_gateway.py": [
+      "broker_base",
+      "paper_broker"
+    ],
+    "absorbed_references\\advanced_chart1_original\\screening.py": [
+      "advanced_chart",
+      "config"
+    ],
+    "absorbed_references\\advanced_chart1_original\\sector_classifier.py": [],
+    "absorbed_references\\advanced_chart1_original\\strategies.py": [
+      "screening"
+    ],
+    "absorbed_references\\advanced_chart1_original\\system_guard.py": [
+      "alert_manager",
+      "config",
+      "performance"
+    ],
+    "absorbed_references\\advanced_chart1_original\\yahoo_csv_to_sql.py": [],
     "advanced_chart.py": [
       "fts_chart_service"
     ],
+    "advanced_chart1_runtime_variants\\__init__.py": [],
+    "advanced_chart1_runtime_variants\\advanced_chart.py": [
+      "config"
+    ],
+    "advanced_chart1_runtime_variants\\alert_manager.py": [],
+    "advanced_chart1_runtime_variants\\broker_base.py": [],
+    "advanced_chart1_runtime_variants\\config.py": [],
+    "advanced_chart1_runtime_variants\\daily_chip_etl.py": [
+      "config",
+      "monthly_revenue_simple",
+      "yahoo_csv_to_sql"
+    ],
+    "advanced_chart1_runtime_variants\\db_logger.py": [],
+    "advanced_chart1_runtime_variants\\db_setup.py": [],
+    "advanced_chart1_runtime_variants\\event_backtester.py": [
+      "config",
+      "screening",
+      "strategies"
+    ],
+    "advanced_chart1_runtime_variants\\execution_engine.py": [
+      "broker_base",
+      "db_logger",
+      "paper_broker",
+      "risk_gateway"
+    ],
+    "advanced_chart1_runtime_variants\\fundamental_screener.py": [
+      "config"
+    ],
+    "advanced_chart1_runtime_variants\\launcher.py": [],
+    "advanced_chart1_runtime_variants\\live_paper_trading.py": [
+      "config",
+      "screening",
+      "sector_classifier",
+      "strategies"
+    ],
+    "advanced_chart1_runtime_variants\\master_pipeline.py": [
+      "fundamental_screener",
+      "performance",
+      "portfolio_risk",
+      "screening",
+      "system_guard"
+    ],
+    "advanced_chart1_runtime_variants\\ml_data_generator.py": [
+      "config",
+      "screening"
+    ],
+    "advanced_chart1_runtime_variants\\ml_trainer.py": [
+      "config",
+      "model_governance"
+    ],
+    "advanced_chart1_runtime_variants\\model_governance.py": [],
+    "advanced_chart1_runtime_variants\\monitor_center.py": [
+      "config",
+      "performance"
+    ],
+    "advanced_chart1_runtime_variants\\monthly_revenue_simple.py": [],
+    "advanced_chart1_runtime_variants\\paper_broker.py": [
+      "broker_base"
+    ],
+    "advanced_chart1_runtime_variants\\performance.py": [
+      "config"
+    ],
+    "advanced_chart1_runtime_variants\\portfolio_risk.py": [
+      "config",
+      "sector_classifier"
+    ],
+    "advanced_chart1_runtime_variants\\risk_gateway.py": [
+      "broker_base",
+      "paper_broker"
+    ],
+    "advanced_chart1_runtime_variants\\screening.py": [
+      "advanced_chart",
+      "config"
+    ],
+    "advanced_chart1_runtime_variants\\sector_classifier.py": [],
+    "advanced_chart1_runtime_variants\\strategies.py": [
+      "screening"
+    ],
+    "advanced_chart1_runtime_variants\\system_guard.py": [
+      "alert_manager",
+      "config",
+      "performance"
+    ],
+    "advanced_chart1_runtime_variants\\yahoo_csv_to_sql.py": [],
     "alert_manager.py": [],
     "broker_base.py": [],
     "config.py": [],
@@ -1196,13 +1678,19 @@
       "broker_base",
       "db_logger",
       "fts_broker_paper",
+      "fts_level3_runtime_loader",
       "paper_broker",
       "risk_gateway"
     ],
     "formal_trading_system.py": [
       "formal_trading_system_v83_official_main"
     ],
-    "formal_trading_system_v83_official_main.py": [],
+    "formal_trading_system_v83_official_main.py": [
+      "config",
+      "fts_config",
+      "fts_screening_engine",
+      "fts_watchlist_service"
+    ],
     "fts_ab_diff_audit.py": [
       "fts_config",
       "fts_utils"
@@ -1327,6 +1815,7 @@
       "fts_config",
       "fts_utils"
     ],
+    "fts_chart_level1_bridge_selftest.py": [],
     "fts_chart_quality_gate.py": [
       "fts_config",
       "fts_utils"
@@ -1503,6 +1992,16 @@
       "fts_config",
       "fts_utils"
     ],
+    "fts_level1_bridge_selftest.py": [],
+    "fts_level2_bridge_selftest.py": [
+      "fts_level2_variant_loader"
+    ],
+    "fts_level2_variant_loader.py": [
+      "fts_level2_variant_registry"
+    ],
+    "fts_level2_variant_registry.py": [],
+    "fts_level3_bridge_selftest.py": [],
+    "fts_level3_runtime_loader.py": [],
     "fts_live_adapter_stub.py": [
       "fts_config",
       "fts_utils"
@@ -1749,6 +2248,9 @@
       "fts_market_data_service",
       "fts_utils"
     ],
+    "fts_screening_legacy_compat.py": [
+      "config"
+    ],
     "fts_sector_service.py": [
       "fts_config",
       "fts_utils"
@@ -1942,6 +2444,7 @@
     "launcher.py": [],
     "live_paper_trading.py": [
       "config",
+      "fts_level3_runtime_loader",
       "screening",
       "sector_classifier",
       "strategies"
@@ -1981,8 +2484,7 @@
       "sector_classifier"
     ],
     "risk_gateway.py": [
-      "broker_base",
-      "paper_broker"
+      "broker_base"
     ],
     "run_backfill_resilience_audit.py": [
       "fts_backfill_resilience_audit"
@@ -2006,10 +2508,12 @@
       "fts_training_stress_audit"
     ],
     "screening.py": [
+      "config",
       "fts_chip_enrichment_service",
       "fts_feature_service",
       "fts_market_data_service",
-      "fts_screening_engine"
+      "fts_screening_engine",
+      "fts_screening_legacy_compat"
     ],
     "sector_classifier.py": [],
     "strategies.py": [
@@ -2105,22 +2609,22 @@
       "args": [
         "formal_trading_system_v83_official_main.py"
       ],
-      "ok": false,
-      "seconds": 0.069,
-      "stdout_tail": "[21:18:19] ========================================================================\n",
-      "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 234, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 219, in main\n    _run_mode_daily()\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 108, in _run_mode_daily\n    log('\\U0001f680 啟動 正式交易主控版_v83_official_main')\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 24, in log\n    print(f'[{now_str()[11:19]}] {msg}')\nUnicodeEncodeError: 'cp950' codec can't encode character '\\U0001f680' in position 11: illegal multibyte sequence\n",
-      "returncode": 1
+      "ok": true,
+      "seconds": 2.876,
+      "stdout_tail": "[12:39:06] ========================================================================\n[12:39:06] ? 啟動 正式交易主控版_v83_official_main\n[12:39:06] ? 模式：DAILY\n[12:39:06] ========================================================================\n[12:39:07] ? fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[12:39:08] ? training governance 主線盤點完成：C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json\n[12:39:08] ? training stress audit：C:\\test\\test-2026-3-22OK\\runtime\\training_stress_audit.json\n[12:39:08] ? backfill resilience audit：C:\\test\\test-2026-3-22OK\\runtime\\backfill_resilience_audit.json\n[12:39:08] ? feature stack audit：C:\\test\\test-2026-3-22OK\\runtime\\feature_stack_audit.json\n[12:39:08] ? 全市場 percentile 狀態：C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n[12:39:08] ?? event calendar ready：C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n[12:39:08] ? 主線串聯檢查：C:\\test\\test-2026-3-22OK\\runtime\\mainline_linkage.json\n[12:39:08] ? 專案完成度稽核：C:\\test\\test-2026-3-22OK\\runtime\\project_completion_audit.json\n[12:39:08] ?? file classification updated：C:\\test\\test-2026-3-22OK\\runtime\\file_classification.json\n[12:39:09] ? Phase1 完成：C:\\test\\test-2026-3-22OK\\runtime\\phase1_upgrade.json\n[12:39:09] ? Phase2 完成：C:\\test\\test-2026-3-22OK\\runtime\\phase2_mock_real_broker.json\n[12:39:09] ? Phase3 完成：C:\\test\\test-2026-3-22OK\\runtime\\phase3_real_cutover.json\n[12:39:09] ? v83 正式主控版完成：C:\\test\\test-2026-3-22OK\\runtime\\formal_trading_system_v83_official_main.json\n",
+      "stderr_tail": "",
+      "returncode": 0
     },
     {
       "args": [
         "formal_trading_system_v83_official_main.py",
         "--train"
       ],
-      "ok": false,
-      "seconds": 0.073,
-      "stdout_tail": "[21:18:19] ========================================================================\n",
-      "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 234, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 217, in main\n    _run_mode_train()\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 175, in _run_mode_train\n    log('\\U0001f680 啟動 正式交易主控版_v83_official_main')\n  File \"C:\\test\\test-2026-3-22OK\\formal_trading_system_v83_official_main.py\", line 24, in log\n    print(f'[{now_str()[11:19]}] {msg}')\nUnicodeEncodeError: 'cp950' codec can't encode character '\\U0001f680' in position 11: illegal multibyte sequence\n",
-      "returncode": 1
+      "ok": true,
+      "seconds": 4.16,
+      "stdout_tail": "[12:39:09] ========================================================================\n[12:39:09] ? 啟動 正式交易主控版_v83_official_main\n[12:39:09] ? 模式：TRAIN\n[12:39:09] ========================================================================\n[12:39:13] ? training governance 主線盤點完成：C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json\n[12:39:13] ? training stress audit：C:\\test\\test-2026-3-22OK\\runtime\\training_stress_audit.json\n[12:39:13] ? train 完成：C:\\test\\test-2026-3-22OK\\runtime\\formal_trading_system_v83_train.json\n",
+      "stderr_tail": "",
+      "returncode": 0
     }
   ]
 }

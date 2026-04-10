@@ -12,6 +12,12 @@ from config import PARAMS
 from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
 from strategies import get_active_strategy
 from sector_classifier import get_stock_sector
+try:
+    from fts_level3_runtime_loader import build_level3_services
+    _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()
+except Exception:
+    _LEVEL3_SERVICES, _LEVEL3_META = ({}, {'status': 'level3_unavailable'})
+
 
 # ==========================================
 # ⚙️ 系統環境設定
@@ -120,6 +126,12 @@ def _current_portfolio_state(active_df, total_nav):
     """
     從目前持倉估算組合曝險狀態，給最終下單審核用。
     """
+    service = _LEVEL3_SERVICES.get("PositionStateService")
+    if service is not None:
+        try:
+            return service.current_portfolio_state(active_df, total_nav)
+        except Exception:
+            pass
     state = {
         "total_alloc": 0.0,
         "sector_alloc": {},
@@ -279,6 +291,13 @@ def run_eod_broker():
     except Exception as e:
         print(f"🛑 無法連線 SQL 資料庫: {e}")
         return
+
+    try:
+        gate = _LEVEL3_SERVICES.get("LiveReadinessGate")
+        if gate is not None:
+            gate.evaluate(None)
+    except Exception:
+        pass
 
     current_cash = get_available_cash(cursor)
     active_df = _read_active_positions(conn)
@@ -452,11 +471,33 @@ def run_eod_broker():
         decisions = pd.read_csv("daily_decision_desk.csv")
     except Exception:
         decisions = pd.DataFrame()
+    if decisions.empty:
+        try:
+            builder = _LEVEL3_SERVICES.get("DecisionExecutionBridge")
+            if builder is not None:
+                out_path, _ = builder.build()
+                decisions = pd.read_csv(out_path, encoding="utf-8-sig")
+                if "Ticker SYMBOL" in decisions.columns and "Ticker" not in decisions.columns:
+                    decisions["Ticker"] = decisions["Ticker SYMBOL"]
+                if "Action" in decisions.columns and "Direction" not in decisions.columns:
+                    decisions["Direction"] = decisions["Action"].map({"BUY": "做多(Long)", "SELL": "做空(Short)", "SHORT": "做空(Short)", "COVER": "做多(Long)"}).fillna("做多(Long)")
+        except Exception:
+            pass
 
     if not decisions.empty:
         for _, row in decisions.iterrows():
             ticker = row.get("Ticker", "Unknown")
             trade_direction = row.get("Direction", "做多(Long)")
+
+            try:
+                kill_manager = _LEVEL3_SERVICES.get("KillSwitchManager")
+                if kill_manager is not None:
+                    blocked, reasons = kill_manager.is_blocked(symbol=ticker, strategy=str(row.get("Structure", "")))
+                    if blocked:
+                        daily_log.append(f"🛑 略過 {ticker}: {' | '.join(reasons)}")
+                        continue
+            except Exception:
+                pass
 
             allow_signal, reason_signal = _passes_signal_gate(row)
             if not allow_signal:

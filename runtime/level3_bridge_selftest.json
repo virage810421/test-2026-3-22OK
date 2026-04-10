@@ -1,0 +1,17 @@
+{
+  "execution_engine.py": {
+    "compile_ok": true
+  },
+  "paper_broker.py": {
+    "compile_ok": true
+  },
+  "risk_gateway.py": {
+    "compile_ok": true
+  },
+  "live_paper_trading.py": {
+    "compile_ok": true
+  },
+  "fts_level3_runtime_loader.py": {
+    "compile_ok": true
+  }
+}

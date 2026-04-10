@@ -181,10 +181,66 @@
       "operator": "system_v83",
       "approved": false,
       "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 11:47:34",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 11:48:19",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 12:04:40",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 12:05:06",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 12:25:36",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 12:39:09",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 12:49:29",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
+    },
+    {
+      "ts": "2026-04-10 12:54:31",
+      "stage": "live_cutover",
+      "operator": "system_v83",
+      "approved": false,
+      "note": "尚未完成真券商開戶，但 broker adapter / contract / cutover skeleton 已補齊"
     }
   ],
   "last": {
-    "ts": "2026-04-09 23:20:14",
+    "ts": "2026-04-10 12:54:31",
     "stage": "live_cutover",
     "operator": "system_v83",
     "approved": false,

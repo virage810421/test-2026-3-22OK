@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from broker_base import BrokerBase, FillEvent, OrderRecord, OrderRequest, OrderSide, OrderStatus, OrderType
 
@@ -25,6 +25,7 @@ class PaperBroker(BrokerBase):
         self.last_prices: Dict[str, float] = {}
         self.open_orders: Dict[str, OrderRecord] = {}
         self.pending_fills: List[FillEvent] = []
+        self.fill_history: List[FillEvent] = []
         self.supports_short = self.allow_short
 
     def update_market_prices(self, price_map: Dict[str, float]) -> None:

@@ -1,0 +1,9 @@
+{
+  "advanced_chart_has_draw_chart": true,
+  "advanced_chart_has_render_trade_chart": true,
+  "service_has_draw_chart": true,
+  "service_has_render_trade_chart": true,
+  "renderer_source": "fts_chart_service",
+  "bridge_level": 1,
+  "integration_status": "complete_for_level_1"
+}

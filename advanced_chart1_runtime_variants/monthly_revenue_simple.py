@@ -1,0 +1,563 @@
+import os
+import time
+import json
+import calendar
+import pandas as pd
+import pyodbc
+import requests
+import urllib3
+from io import StringIO
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# ==========================================
+# 🌟 全域設定
+# ==========================================
+DB_CONN_STR = (
+    r"DRIVER={ODBC Driver 17 for SQL Server};"
+    r"SERVER=localhost;"
+    r"DATABASE=股票online;"
+    r"Trusted_Connection=yes;"
+)
+
+TABLE_NAME = "monthly_revenue_simple"
+
+CSV_OUTPUT = "monthly_revenue_simple.csv"
+CSV_STOCK_CACHE = "stock_list_cache_listed.csv"
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0"
+}
+
+REQUEST_TIMEOUT = 20
+RETRY_TIMES = 5
+RETRY_SLEEP = 2
+
+STOCK_CSV_URL = "https://mopsfin.twse.com.tw/opendata/t187ap03_L.csv"
+MONTHLY_REVENUE_API = "https://openapi.twse.com.tw/v1/opendata/t187ap05_L"
+TICKER_SUFFIX = ".TW"
+
+# ==========================================
+# 欄位名稱
+# ==========================================
+COL_TICKER = "Ticker SYMBOL"
+COL_COMPANY_NAME = "公司名稱"
+COL_INDUSTRY = "產業類別"
+COL_INDUSTRY_NAME = "產業類別名稱"
+COL_YMD = "資料年月日"
+COL_YOY = "單月營收年增率(%)"
+
+# ==========================================
+# 產業代碼對照表
+# ==========================================
+INDUSTRY_CODE_MAP = {
+    "01": "水泥工業",
+    "02": "食品工業",
+    "03": "塑膠工業",
+    "04": "紡織纖維",
+    "05": "電機機械",
+    "06": "電器電纜",
+    "08": "玻璃陶瓷",
+    "09": "造紙工業",
+    "10": "鋼鐵工業",
+    "11": "橡膠工業",
+    "12": "汽車工業",
+    "13": "電子工業",
+    "14": "建材營造業",
+    "15": "航運業",
+    "16": "觀光餐旅",
+    "17": "金融保險業",
+    "18": "貿易百貨業",
+    "19": "綜合",
+    "20": "其他業",
+    "21": "化學工業",
+    "22": "生技醫療業",
+    "23": "油電燃氣業",
+    "24": "半導體業",
+    "25": "電腦及週邊設備業",
+    "26": "光電業",
+    "27": "通信網路業",
+    "28": "電子零組件業",
+    "29": "電子通路業",
+    "30": "資訊服務業",
+    "31": "其他電子業",
+    "32": "文化創意業",
+    "33": "農業科技業",
+    "35": "綠能環保",
+    "36": "數位雲端",
+    "37": "運動休閒",
+    "38": "居家生活"
+}
+INDUSTRY_NAME_TO_CODE = {v: k for k, v in INDUSTRY_CODE_MAP.items()}
+
+# ==========================================
+# 工具
+# ==========================================
+def safe_float(x):
+    try:
+        x = str(x).replace(",", "").replace("%", "").strip()
+        if x in ["", "--", "nan", "None", "null"]:
+            return None
+        return float(x)
+    except:
+        return None
+
+
+def round_or_none(x, digits=2):
+    val = safe_float(x)
+    if val is None:
+        return None
+    return round(val, digits)
+
+
+def normalize_code(x):
+    s = str(x).strip().replace(".0", "")
+    s = "".join(ch for ch in s if ch.isdigit())
+    return s
+
+
+def normalize_ym_to_str(x):
+    s = str(x).strip()
+
+    if s in ["", "None", "nan", "null"]:
+        return None
+
+    if len(s) == 7 and s[4] == "-":
+        return s
+
+    if s.isdigit():
+        n = int(s)
+
+        # 民國年月，例如 11502 -> 2026-02
+        if 10000 <= n <= 99999:
+            roc_year = n // 100
+            month = n % 100
+            ad_year = roc_year + 1911
+            if 1 <= month <= 12:
+                return f"{ad_year}-{str(month).zfill(2)}"
+
+        # 西元年月，例如 202602 -> 2026-02
+        if 190001 <= n <= 299912:
+            year = n // 100
+            month = n % 100
+            if 1 <= month <= 12:
+                return f"{year}-{str(month).zfill(2)}"
+
+    return None
+
+
+def ym_to_date_str(ym_str, use_month_end=False):
+    if not ym_str or len(ym_str) != 7:
+        return None
+
+    try:
+        year = int(ym_str[:4])
+        month = int(ym_str[5:7])
+
+        if use_month_end:
+            last_day = calendar.monthrange(year, month)[1]
+            return f"{year}-{str(month).zfill(2)}-{str(last_day).zfill(2)}"
+        return f"{year}-{str(month).zfill(2)}-01"
+    except:
+        return None
+
+
+def find_existing_col(df, candidates):
+    cols = [str(c).strip() for c in df.columns]
+    for cand in candidates:
+        if cand in cols:
+            return cand
+    return None
+
+
+def request_text(url, encoding=None, timeout=REQUEST_TIMEOUT):
+    last_err = None
+
+    for i in range(RETRY_TIMES):
+        try:
+            res = requests.get(url, headers=HEADERS, timeout=timeout, verify=False)
+
+            if res.status_code != 200:
+                raise Exception(f"HTTP {res.status_code}")
+
+            if encoding:
+                res.encoding = encoding
+
+            text = res.text
+            if not text or not text.strip():
+                raise ValueError("Empty response")
+
+            return text
+
+        except Exception as e:
+            last_err = e
+            print(f"⚠️ 讀取失敗，第 {i+1} 次: {url} | {e}")
+            time.sleep(RETRY_SLEEP)
+
+    raise last_err
+
+
+def request_json(url, timeout=REQUEST_TIMEOUT):
+    last_err = None
+
+    for i in range(RETRY_TIMES):
+        try:
+            res = requests.get(url, headers=HEADERS, timeout=timeout, verify=False)
+
+            if res.status_code != 200:
+                raise Exception(f"HTTP {res.status_code}")
+
+            text = res.text.strip()
+            if not text:
+                raise ValueError("Empty response")
+
+            return json.loads(text)
+
+        except Exception as e:
+            last_err = e
+            print(f"⚠️ JSON 讀取失敗，第 {i+1} 次: {url} | {e}")
+            time.sleep(RETRY_SLEEP)
+
+    raise last_err
+
+
+def get_industry_code_and_name(raw_value):
+    if raw_value is None:
+        return None, None
+
+    s = str(raw_value).strip()
+    if s in ["", "nan", "None", "null"]:
+        return None, None
+
+    digits = "".join(ch for ch in s if ch.isdigit())
+    code = None
+    name = None
+
+    if digits:
+        code = digits[:2].zfill(2)
+        if code in INDUSTRY_CODE_MAP:
+            name = INDUSTRY_CODE_MAP[code]
+
+    if not name:
+        for ind_name, ind_code in INDUSTRY_NAME_TO_CODE.items():
+            if ind_name in s or s == ind_name:
+                code = ind_code
+                name = ind_name
+                break
+
+    if not name:
+        name = s
+
+    return code, name
+
+
+
+# ==========================================
+# 股票主檔
+# ==========================================
+def load_stock_list():
+    cache_df = pd.DataFrame()
+
+    if os.path.exists(CSV_STOCK_CACHE):
+        try:
+            cache_df = pd.read_csv(CSV_STOCK_CACHE, encoding="utf-8-sig")
+            cache_df = cache_df.where(pd.notnull(cache_df), None)
+
+            if not cache_df.empty:
+                print(f"✅ 先讀本地快取成功：{CSV_STOCK_CACHE} | {len(cache_df)} 筆")
+
+                needed_cols = [COL_TICKER, COL_COMPANY_NAME, COL_INDUSTRY]
+                if set(needed_cols).issubset(cache_df.columns):
+                    if COL_INDUSTRY_NAME not in cache_df.columns:
+                        cache_df[COL_INDUSTRY_NAME] = cache_df[COL_INDUSTRY].apply(
+                            lambda x: get_industry_code_and_name(x)[1]
+                        )
+
+                    return cache_df[
+                        [COL_TICKER, COL_COMPANY_NAME, COL_INDUSTRY, COL_INDUSTRY_NAME]
+                    ].drop_duplicates(subset=[COL_TICKER]).reset_index(drop=True)
+
+        except Exception as e:
+            print(f"⚠️ 本地快取讀取失敗，改抓遠端：{e}")
+            cache_df = pd.DataFrame()
+
+    df = pd.DataFrame()
+    for enc in ["utf-8-sig", "utf-8", "big5", "cp950"]:
+        try:
+            text = request_text(STOCK_CSV_URL, encoding=enc)
+            df = pd.read_csv(StringIO(text))
+            if not df.empty:
+                break
+        except Exception:
+            df = pd.DataFrame()
+
+    if df.empty and not cache_df.empty:
+        print("⚠️ 遠端失敗，改用本地快取轉換")
+
+        code_col = find_existing_col(cache_df, ["公司代號", "代號", "stock_id"])
+        name_col = find_existing_col(cache_df, [COL_COMPANY_NAME, "公司名稱", "名稱", "公司簡稱"])
+        industry_col = find_existing_col(cache_df, ["產業別", COL_INDUSTRY])
+
+        if COL_TICKER not in cache_df.columns and code_col:
+            cache_df[COL_TICKER] = cache_df[code_col].apply(normalize_code) + TICKER_SUFFIX
+
+        if COL_COMPANY_NAME not in cache_df.columns and name_col:
+            cache_df[COL_COMPANY_NAME] = cache_df[name_col]
+
+        if COL_INDUSTRY not in cache_df.columns and industry_col:
+            cache_df[COL_INDUSTRY] = cache_df[industry_col]
+
+        if COL_INDUSTRY_NAME not in cache_df.columns:
+            cache_df[COL_INDUSTRY_NAME] = cache_df[COL_INDUSTRY].apply(
+                lambda x: get_industry_code_and_name(x)[1]
+            )
+
+        return cache_df[
+            [COL_TICKER, COL_COMPANY_NAME, COL_INDUSTRY, COL_INDUSTRY_NAME]
+        ].drop_duplicates(subset=[COL_TICKER]).reset_index(drop=True)
+
+    if df.empty:
+        raise Exception("股票主檔讀取失敗：本地與遠端都無法取得")
+
+    df.columns = [str(c).strip() for c in df.columns]
+
+    code_col = find_existing_col(df, ["公司代號", "代號"])
+    name_col = find_existing_col(df, ["公司名稱", "名稱", "公司簡稱"])
+    industry_col = find_existing_col(df, ["產業別"])
+
+    if not code_col:
+        raise Exception(f"找不到公司代號欄位，現有欄位: {list(df.columns)}")
+
+    result = pd.DataFrame()
+    result["stock_id"] = df[code_col].apply(normalize_code)
+    result = result[result["stock_id"].str.fullmatch(r"\d{4}", na=False)].copy()
+    result[COL_TICKER] = result["stock_id"] + TICKER_SUFFIX
+
+    if name_col:
+        result[COL_COMPANY_NAME] = df.loc[result.index, name_col].astype(str).str.strip()
+        result.loc[result[COL_COMPANY_NAME].isin(["", "nan", "None"]), COL_COMPANY_NAME] = None
+    else:
+        result[COL_COMPANY_NAME] = None
+
+    if industry_col:
+        result[COL_INDUSTRY] = df.loc[result.index, industry_col].astype(str).str.strip()
+        result.loc[result[COL_INDUSTRY].isin(["", "nan", "None"]), COL_INDUSTRY] = None
+    else:
+        result[COL_INDUSTRY] = None
+
+    result[COL_INDUSTRY_NAME] = result[COL_INDUSTRY].apply(
+        lambda x: get_industry_code_and_name(x)[1]
+    )
+
+    result = result[
+        [COL_TICKER, COL_COMPANY_NAME, COL_INDUSTRY, COL_INDUSTRY_NAME]
+    ].drop_duplicates(subset=[COL_TICKER]).reset_index(drop=True)
+
+    result.to_csv(CSV_STOCK_CACHE, index=False, encoding="utf-8-sig")
+    print(f"✅ 股票清單載入完成：{len(result)} 檔")
+    print(f"💾 股票主檔快取已更新：{CSV_STOCK_CACHE}")
+
+    return result
+
+
+# ==========================================
+# 月營收 API
+# ==========================================
+def parse_monthly_revenue_api_data(data):
+    if not data:
+        raise Exception("月營收 API 回傳空資料")
+
+    df = pd.DataFrame(data)
+    if df.empty:
+        raise Exception("月營收 API DataFrame 為空")
+
+    df.columns = [str(c).strip() for c in df.columns]
+
+    code_col = find_existing_col(df, ["公司代號", "代號"])
+    ym_col = find_existing_col(df, ["資料年月"])
+    yoy_col = find_existing_col(df, [
+        "營業收入-去年同月增減(%)",
+        "去年同月增減(%)",
+        "與去年同期增減(%)"
+    ])
+    rev_col = find_existing_col(df, ["營業收入-當月營收", "當月營收"])
+    prev_col = find_existing_col(df, ["營業收入-去年當月營收", "去年當月營收"])
+
+    if not code_col:
+        raise Exception(f"月營收資料找不到公司代號欄位，現有欄位: {list(df.columns)}")
+
+    if not yoy_col and not (rev_col and prev_col):
+        raise Exception(f"月營收資料找不到 YoY 欄位，也無法自行計算，現有欄位: {list(df.columns)}")
+
+    temp = df.copy()
+    temp[code_col] = temp[code_col].apply(normalize_code)   
+    temp = temp[temp[code_col].str.fullmatch(r"\d{4}", na=False)].copy()
+
+    if ym_col:
+        temp["資料年月_暫存"] = temp[ym_col].apply(normalize_ym_to_str)
+    else:
+        temp["資料年月_暫存"] = None
+
+    yoy_values = []
+    for _, row in temp.iterrows():
+        yoy = None
+
+        if yoy_col:
+            yoy = round_or_none(row.get(yoy_col), 2)
+
+        if yoy is None and rev_col and prev_col:
+            rev = safe_float(row.get(rev_col))
+            prev = safe_float(row.get(prev_col))
+            if rev is not None and prev is not None and prev != 0:
+                yoy = round(((rev - prev) / prev) * 100, 2)
+
+        yoy_values.append(yoy)
+
+    temp[COL_YOY] = yoy_values
+    temp = temp[temp[COL_YOY].notna()].copy()
+
+    if temp.empty:
+        raise Exception("清理後沒有有效月營收年增率資料")
+
+    latest_ym = None
+    if temp["資料年月_暫存"].notna().any():
+        latest_ym = sorted(temp["資料年月_暫存"].dropna().unique())[-1]
+        temp = temp[temp["資料年月_暫存"] == latest_ym].copy()
+
+    result = temp[[code_col, COL_YOY, "資料年月_暫存"]].copy()
+    result = result.rename(columns={code_col: "stock_id"})
+    result["stock_id"] = result["stock_id"].apply(normalize_code)
+    result[COL_YMD] = result["資料年月_暫存"].apply(lambda x: ym_to_date_str(x, use_month_end=False))
+    result[COL_YOY] = result[COL_YOY].apply(lambda x: round_or_none(x, 2))
+
+    result = result.drop(columns=["資料年月_暫存"])
+    result = result.drop_duplicates(subset=["stock_id"]).reset_index(drop=True)
+
+    return latest_ym, result
+
+
+def fetch_latest_available_revenue():
+    print("⏳ 讀取官方 OpenAPI 月營收資料...")
+    data = request_json(MONTHLY_REVENUE_API)
+    latest_ym, df_rev = parse_monthly_revenue_api_data(data)
+
+    print(f"✅ 最新可用月份：{latest_ym}")
+    print(f"✅ 月營收筆數：{len(df_rev)}")
+
+    return latest_ym, df_rev
+
+
+# ==========================================
+# 合併主檔 + 月營收
+# ==========================================
+def build_final_dataframe():
+    df_stocks = load_stock_list()
+    latest_ym, df_rev = fetch_latest_available_revenue()
+
+    # 從 ticker 還原 stock_id 方便 merge
+    df_stocks["stock_id"] = df_stocks[COL_TICKER].astype(str).str.replace(".TW", "", regex=False)
+    df_rev["stock_id"] = df_rev["stock_id"].apply(normalize_code)
+
+    df_final = df_stocks.merge(df_rev, on="stock_id", how="inner")
+
+    df_final[COL_YOY] = df_final[COL_YOY].apply(lambda x: round_or_none(x, 2))
+
+    df_final = df_final[
+        [
+            COL_TICKER,
+            COL_COMPANY_NAME,
+            COL_INDUSTRY,
+            COL_INDUSTRY_NAME,
+            COL_YMD,
+            COL_YOY
+        ]
+    ].drop_duplicates(subset=[COL_TICKER, COL_YMD]).reset_index(drop=True)
+
+    df_final.to_csv(CSV_OUTPUT, index=False, encoding="utf-8-sig")
+    print(f"💾 CSV 已輸出：{CSV_OUTPUT}")
+    print(f"✅ 有效資料：{len(df_final)} 筆")
+
+    return df_final
+
+
+# ==========================================
+# 寫入 SQL
+# ==========================================
+def write_to_sql(df):
+    if df.empty:
+        print("⚠️ DataFrame 為空，停止寫入 SQL")
+        return
+
+    with pyodbc.connect(DB_CONN_STR) as conn:
+        cursor = conn.cursor()
+        count = 0
+
+        for _, row in df.iterrows():
+            ticker = row[COL_TICKER]
+            company_name = row[COL_COMPANY_NAME]
+            industry = row[COL_INDUSTRY]
+            industry_name = row[COL_INDUSTRY_NAME]
+            ymd = row[COL_YMD]
+            yoy = row[COL_YOY]
+
+            cursor.execute(f"""
+                IF EXISTS (
+                    SELECT 1
+                    FROM dbo.{TABLE_NAME}
+                    WHERE [{COL_TICKER}] = ? AND [{COL_YMD}] = ?
+                )
+                BEGIN
+                    UPDATE dbo.{TABLE_NAME}
+                    SET
+                        [{COL_COMPANY_NAME}] = ?,
+                        [{COL_INDUSTRY}] = ?,
+                        [{COL_INDUSTRY_NAME}] = ?,
+                        [{COL_YOY}] = ?
+                    WHERE [{COL_TICKER}] = ? AND [{COL_YMD}] = ?
+                END
+                ELSE
+                BEGIN
+                    INSERT INTO dbo.{TABLE_NAME}
+                    (
+                        [{COL_TICKER}],
+                        [{COL_COMPANY_NAME}],
+                        [{COL_INDUSTRY}],
+                        [{COL_INDUSTRY_NAME}],
+                        [{COL_YMD}],
+                        [{COL_YOY}]
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?)
+                END
+            """,
+                ticker, ymd,
+                company_name, industry, industry_name, yoy, ticker, ymd,
+                ticker, company_name, industry, industry_name, ymd, yoy
+            )
+
+            count += 1
+            if count % 200 == 0:
+                conn.commit()
+                print(f"⏳ 已寫入 {count} 筆...")
+
+        conn.commit()
+
+    print(f"🎉 SQL 寫入完成：{count} 筆 -> {TABLE_NAME}")
+
+
+# ==========================================
+# 主程式
+# ==========================================
+def main():
+    print("==========================================================")
+    print("📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入")
+    print("==========================================================")
+
+    
+    df_final = build_final_dataframe()
+    write_to_sql(df_final)
+
+    print("✅ 全部完成")
+
+
+if __name__ == "__main__":
+    main()

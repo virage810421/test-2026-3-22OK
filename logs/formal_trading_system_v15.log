@@ -512,3 +512,177 @@
 [23:20:14] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
 [23:20:14] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
 [23:20:14] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[11:47:20] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[11:47:32] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[11:47:32] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[11:47:32] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[11:47:32] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[11:47:33] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:47:33] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[11:47:33] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:47:33] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:47:33] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:47:33] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[11:47:33] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[11:47:33] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[11:47:33] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[11:47:33] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[11:47:33] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[11:47:33] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[11:47:33] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[11:47:34] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[11:47:34] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[11:48:17] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[11:48:18] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[11:48:18] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[11:48:18] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[11:48:18] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[11:48:18] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:48:18] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[11:48:18] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:48:18] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:48:18] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:48:18] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[11:48:18] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[11:48:18] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[11:48:18] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[11:48:18] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[11:48:18] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[11:48:18] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[11:48:18] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[11:48:19] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[11:48:19] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[11:48:29] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[11:48:29] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[11:48:29] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:04:38] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[12:04:39] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:04:39] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:04:39] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:04:39] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[12:04:39] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:04:39] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:04:39] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:04:39] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:04:39] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:04:39] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:04:39] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[12:04:39] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[12:04:39] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:04:39] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[12:04:39] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[12:04:39] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[12:04:39] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[12:04:39] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[12:04:40] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[12:04:43] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:04:43] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:04:43] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:05:04] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[12:05:05] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:05:05] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:05:05] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:05:05] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[12:05:05] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:05:05] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:05:05] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:05:05] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:05:05] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:05:05] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:05:05] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[12:05:05] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[12:05:05] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:05:05] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[12:05:06] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[12:05:06] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[12:05:06] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[12:05:06] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[12:05:06] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[12:25:34] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[12:25:35] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:25:35] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:25:35] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:25:35] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[12:25:35] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:25:35] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:25:35] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:25:35] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:25:35] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:25:35] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:25:35] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[12:25:35] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[12:25:35] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:25:35] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[12:25:35] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[12:25:35] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[12:25:35] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[12:25:36] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[12:25:36] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[12:25:39] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:25:39] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:25:39] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:39:07] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[12:39:08] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:39:08] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:39:08] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:39:08] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[12:39:08] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:39:08] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:39:08] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:39:08] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:39:08] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:39:08] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:39:08] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[12:39:08] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[12:39:08] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:39:08] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[12:39:09] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[12:39:09] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[12:39:09] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[12:39:09] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[12:39:09] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[12:39:13] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:39:13] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:39:13] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:49:16] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[12:49:28] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:49:28] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:49:28] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:49:28] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[12:49:29] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:49:29] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:49:29] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:49:29] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:49:29] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:49:29] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:49:29] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[12:49:29] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[12:49:29] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:49:29] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[12:49:29] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[12:49:29] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[12:49:29] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[12:49:29] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[12:49:29] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json
+[12:54:18] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[12:54:19] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:54:28] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[12:54:30] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:54:30] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:54:30] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[12:54:30] 🧪 已輸出 backfill resilience audit：C:\test\test-2026-3-22OK\runtime\backfill_resilience_audit.json
+[12:54:30] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:54:30] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:54:30] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:54:30] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:54:30] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:54:30] 🧪 feature stack audit ready: C:\test\test-2026-3-22OK\runtime\feature_stack_audit.json
+[12:54:30] 🗂️ file classification updated: C:\test\test-2026-3-22OK\runtime\file_classification.json
+[12:54:30] 🧪 screening detachment audited: C:\test\test-2026-3-22OK\runtime\screening_detachment_audit.json
+[12:54:30] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:54:30] 🎓 已輸出 training prod readiness：C:\test\test-2026-3-22OK\runtime\training_prod_readiness.json
+[12:54:31] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[12:54:31] 🥇 Phase1 完成：C:\test\test-2026-3-22OK\runtime\phase1_upgrade.json
+[12:54:31] 🧮 已輸出 reconciliation engine：C:\test\test-2026-3-22OK\runtime\reconciliation_engine.json | all_green=True
+[12:54:31] 🥈 Phase2 完成：C:\test\test-2026-3-22OK\runtime\phase2_mock_real_broker.json
+[12:54:31] 🥉 Phase3 完成：C:\test\test-2026-3-22OK\runtime\phase3_real_cutover.json

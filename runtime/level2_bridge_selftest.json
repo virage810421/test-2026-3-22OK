@@ -1,0 +1,83 @@
+{
+  "advanced_chart": {
+    "compile_ok": true
+  },
+  "alert_manager": {
+    "compile_ok": true
+  },
+  "broker_base": {
+    "compile_ok": true
+  },
+  "config": {
+    "compile_ok": true
+  },
+  "daily_chip_etl": {
+    "compile_ok": true
+  },
+  "db_logger": {
+    "compile_ok": true
+  },
+  "db_setup": {
+    "compile_ok": true
+  },
+  "event_backtester": {
+    "compile_ok": true
+  },
+  "execution_engine": {
+    "compile_ok": true
+  },
+  "fundamental_screener": {
+    "compile_ok": true
+  },
+  "launcher": {
+    "compile_ok": true
+  },
+  "live_paper_trading": {
+    "compile_ok": true
+  },
+  "master_pipeline": {
+    "compile_ok": true
+  },
+  "ml_data_generator": {
+    "compile_ok": true
+  },
+  "ml_trainer": {
+    "compile_ok": true
+  },
+  "model_governance": {
+    "compile_ok": true
+  },
+  "monitor_center": {
+    "compile_ok": true
+  },
+  "monthly_revenue_simple": {
+    "compile_ok": true
+  },
+  "paper_broker": {
+    "compile_ok": true
+  },
+  "performance": {
+    "compile_ok": true
+  },
+  "portfolio_risk": {
+    "compile_ok": true
+  },
+  "risk_gateway": {
+    "compile_ok": true
+  },
+  "screening": {
+    "compile_ok": true
+  },
+  "sector_classifier": {
+    "compile_ok": true
+  },
+  "strategies": {
+    "compile_ok": true
+  },
+  "system_guard": {
+    "compile_ok": true
+  },
+  "yahoo_csv_to_sql": {
+    "compile_ok": true
+  }
+}

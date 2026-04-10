@@ -1,0 +1,22 @@
+{
+  "advanced_chart": {
+    "import_ok": true,
+    "bridge_level": "level_1",
+    "bridge_target": "fts_chart_service.draw_chart"
+  },
+  "screening": {
+    "import_ok": true,
+    "bridge_level": "level_1",
+    "bridge_target": "fts_* screening services"
+  },
+  "ml_data_generator": {
+    "import_ok": true,
+    "bridge_level": "level_1",
+    "bridge_target": "fts_training_data_builder.generate_ml_dataset"
+  },
+  "ml_trainer": {
+    "import_ok": true,
+    "bridge_level": "level_1",
+    "bridge_target": "fts_trainer_backend.train_models"
+  }
+}
