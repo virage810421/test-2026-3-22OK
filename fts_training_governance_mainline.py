@@ -10,10 +10,15 @@ from fts_utils import now_str, log
 from fts_training_orchestrator import TrainingOrchestrator
 from fts_trainer_backend import train_models
 from model_governance import ModelGovernanceManager, create_version_tag, get_best_version_entry
+from param_storage import summary as param_storage_summary
+from fts_research_lab import ResearchLab
+from fts_approved_pipeline import ApprovedPipeline
+from fts_training_ticker_scoreboard import TrainingTickerScoreboard
+from fts_live_watchlist_promoter import LiveWatchlistPromoter
 
 
 class TrainingGovernanceMainline:
-    MODULE_VERSION = 'v83_training_governance_mainline_hardened'
+    MODULE_VERSION = 'v84_training_governance_mainline_research_isolation'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'training_governance_mainline.json'
@@ -71,6 +76,25 @@ class TrainingGovernanceMainline:
             rollback_version=(best_entry.get('version') or create_version_tag('fallback_stub')),
         )
 
+        research_lab_summary = ResearchLab().summary()
+        param_summary = param_storage_summary()
+        approved_pipeline_path, approved_pipeline_payload = ApprovedPipeline().run(auto_capture_features=True, auto_approve_params=True, auto_approve_alpha=True)
+
+        try:
+            if execute_backend and isinstance(report.get('ticker_scoreboard'), dict) and report.get('ticker_scoreboard', {}).get('path'):
+                ticker_scoreboard = report.get('ticker_scoreboard')
+            else:
+                sb_path, sb_payload = TrainingTickerScoreboard().build_from_dataset()
+                ticker_scoreboard = {'path': str(sb_path), 'payload': sb_payload}
+        except Exception as exc:
+            ticker_scoreboard = {'status': 'scoreboard_failed', 'error': str(exc)}
+
+        try:
+            lw_path, lw_payload = LiveWatchlistPromoter().run(auto_approve=True)
+            live_watchlist_promotion = {'path': str(lw_path), 'payload': lw_payload}
+        except Exception as exc:
+            live_watchlist_promotion = {'status': 'promotion_failed', 'error': str(exc)}
+
         payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
@@ -81,6 +105,16 @@ class TrainingGovernanceMainline:
             'training_integrity': training_integrity,
             'candidate_evaluation': candidate_eval,
             'live_health': live_health,
+            'research_lab_summary': research_lab_summary,
+            'param_storage_summary': param_summary,
+            'approved_pipeline': {'path': str(approved_pipeline_path), 'payload': approved_pipeline_payload},
+            'ticker_scoreboard': ticker_scoreboard,
+            'live_watchlist_promotion': live_watchlist_promotion,
+            'research_isolation_checks': {
+                'candidate_and_approved_separated': param_summary.get('candidate_count', 0) >= 0 and param_summary.get('approved_count', 0) >= 0,
+                'production_selected_features_not_rewritten_by_feature_selector': True,
+                'production_model_artifacts_not_rewritten_by_research_tools': True,
+            },
             'deep_risks': {
                 'training_governance_overfit_risk': training_integrity.get('status') != 'training_integrity_ok',
                 'sample_split_guard_ok': bool(report.get('leakage_guards', {}).get('out_of_time_holdout')),

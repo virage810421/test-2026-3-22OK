@@ -89,6 +89,14 @@ FEATURE_SPECS: Dict[str, FeatureSpec] = {
     'Earnings_Window_7': _fs('Earnings_Window_7', 'events', 'quarterly fundamentals calendar', 'Earnings event window 7 day.', True, True, False, True),
     'Earnings_Window_14': _fs('Earnings_Window_14', 'events', 'quarterly fundamentals calendar', 'Earnings event window 14 day.', True, True, False, True),
     'Dividend_Window_7': _fs('Dividend_Window_7', 'events', 'dividend calendar', 'Dividend event window 7 day.', True, True, False, True),
+    'ML_Regime_Code': _fs('ML_Regime_Code', 'market_language', 'market_language.py', 'Rule-based market language regime code: bull=1, bear=-1, side=0.', True),
+    'ML_Trend_Bull': _fs('ML_Trend_Bull', 'market_language', 'market_language.py', 'Market language bullish regime flag.', True),
+    'ML_Trend_Bear': _fs('ML_Trend_Bear', 'market_language', 'market_language.py', 'Market language bearish regime flag.', True),
+    'ML_Trend_Side': _fs('ML_Trend_Side', 'market_language', 'market_language.py', 'Market language sideways regime flag.', True),
+    'ML_Volume_Breakout': _fs('ML_Volume_Breakout', 'market_language', 'market_language.py', 'Market language volume breakout flag.', True),
+    'ML_Price_Breakout': _fs('ML_Price_Breakout', 'market_language', 'market_language.py', 'Market language price breakout flag.', True),
+    'ML_Oversold': _fs('ML_Oversold', 'market_language', 'market_language.py', 'Market language oversold flag.', True),
+    'ML_SmartMoney_Buying': _fs('ML_SmartMoney_Buying', 'market_language', 'market_language.py', 'Market language smart-money-buying flag.', True),
 }
 
 FEATURE_BUCKETS: Dict[str, List[str]] = {}
@@ -101,4 +109,5 @@ PRIORITY_NEW_FEATURES_20: List[str] = [
     'DollarVol20_Proxy', 'Volume_Z20', 'Return_Z20', 'RS_vs_Market_20', 'RS_vs_Sector_20',
     'Revenue_YoY_Rank', 'Chip_Total_Ratio_Rank', 'Event_Days_Since_Revenue',
     'Earnings_Window_Flag', 'Regime_TrendStrength_X_ScoreGap',
+    'ML_Regime_Code', 'ML_Volume_Breakout', 'ML_SmartMoney_Buying',
 ]

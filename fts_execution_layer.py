@@ -10,6 +10,7 @@ import pandas as pd
 
 from config import PARAMS
 from fts_strategy_policy_layer import get_active_strategy, get_strategy_policy
+from param_storage import resolve_params_for_context
 
 try:
     from fts_config import PATHS  # type: ignore
@@ -69,7 +70,23 @@ def direction_bucket(direction_text: str) -> str:
     return 'SHORT' if ('空' in s or 'Short' in s or 'SELL' in s.upper()) else 'LONG'
 
 
+def _resolve_params_for_row(row, params):
+    try:
+        from config import PARAMS as CONFIG_PARAMS  # type: ignore
+        allow_live = bool(CONFIG_PARAMS.get('APPROVED_PARAMS_USE_IN_LIVE', False))
+    except Exception:
+        allow_live = False
+    if not allow_live:
+        return params
+    ticker = str(row.get('Ticker', row.get('Ticker SYMBOL', ''))).strip()
+    sector_name = str(row.get('產業類別', row.get('industry', '未知'))).strip()
+    regime = str(row.get('Regime', '未知')).strip()
+    strategy_name = str(row.get('Structure', row.get('Setup_Tag', 'AI訊號'))).strip()
+    return resolve_params_for_context(base_params=params, sector_name=sector_name, regime=regime, strategy_name=strategy_name)
+
+
 def build_entry_metrics(row, params=PARAMS):
+    active_params = _resolve_params_for_row(row, params)
     structure = row.get('Structure', row.get('Setup_Tag', 'AI訊號'))
     regime = row.get('Regime', '未知')
     realized_ev = _safe_float(row.get('Realized_EV', 0.0), 0.0)
@@ -84,11 +101,11 @@ def build_entry_metrics(row, params=PARAMS):
         trend_is_with_me = '多頭' in str(regime)
         adx_is_strong = ai_proba >= 0.55
         active_strategy = get_active_strategy(structure, regime=regime)
-        dynamic_sl, dynamic_tp, _ = active_strategy.get_exit_rules(params, dummy_vol, trend_is_with_me, adx_is_strong, 0)
+        dynamic_sl, dynamic_tp, _ = active_strategy.get_exit_rules(active_params, dummy_vol, trend_is_with_me, adx_is_strong, 0)
         policy = get_strategy_policy(structure, regime=regime)
     except Exception:
-        dynamic_sl = float(params.get('SL_MIN_PCT', 0.03))
-        dynamic_tp = float(params.get('TP_BASE_PCT', 0.10))
+        dynamic_sl = float(active_params.get('SL_MIN_PCT', 0.03))
+        dynamic_tp = float(active_params.get('TP_BASE_PCT', 0.10))
         policy = {'name': 'fallback'}
 
     rr_ratio = (dynamic_tp / dynamic_sl) if dynamic_sl > 0 else 0.0
@@ -117,6 +134,7 @@ def build_entry_metrics(row, params=PARAMS):
 
 
 def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
+    active_params = _resolve_params_for_row(row, params)
     reasons: list[str] = []
     kelly_pct = _safe_float(row.get('Kelly_Pos', 0.0), 0.0)
     weighted_buy = _safe_float(row.get('Weighted_Buy_Score', 0.0), 0.0)
@@ -128,7 +146,7 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
         reasons.append('kelly_zero')
     if health == 'KILL':
         reasons.append('health_kill')
-    if weighted_buy < max(2.0, float(params.get('TRIGGER_SCORE', 2))):
+    if weighted_buy < max(2.0, float(active_params.get('TRIGGER_SCORE', 2))):
         reasons.append('weighted_buy_below_trigger')
     if weighted_sell >= weighted_buy:
         reasons.append('sell_pressure_not_cleared')
@@ -149,6 +167,7 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
 
 
 def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', params=PARAMS) -> GateDecision:
+    active_params = _resolve_params_for_row(row, params)
     reasons: list[str] = []
     if total_nav <= 0:
         reasons.append('total_nav_invalid')
@@ -157,12 +176,12 @@ def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', 
     direction = direction_bucket(row.get('Direction', ''))
     requested_alloc = _safe_float(row.get('Kelly_Pos', 0.0), 0.0)
 
-    max_sector_positions = int(params.get('PORT_MAX_SECTOR_POSITIONS', 2))
-    max_sector_alloc = float(params.get('PORT_MAX_SECTOR_ALLOC', 0.35))
-    max_total_alloc = float(params.get('PORT_MAX_TOTAL_ALLOC', 0.60))
-    max_direction_alloc = float(params.get('PORT_MAX_DIRECTION_ALLOC', 0.45))
-    max_single_pos = float(params.get('PORT_MAX_SINGLE_POS', 0.12))
-    min_position = float(params.get('PORT_MIN_POSITION', 0.01))
+    max_sector_positions = int(active_params.get('PORT_MAX_SECTOR_POSITIONS', 2))
+    max_sector_alloc = float(active_params.get('PORT_MAX_SECTOR_ALLOC', 0.35))
+    max_total_alloc = float(active_params.get('PORT_MAX_TOTAL_ALLOC', 0.60))
+    max_direction_alloc = float(active_params.get('PORT_MAX_DIRECTION_ALLOC', 0.45))
+    max_single_pos = float(active_params.get('PORT_MAX_SINGLE_POS', 0.12))
+    min_position = float(active_params.get('PORT_MIN_POSITION', 0.01))
 
     current_total = float(portfolio_state.get('total_alloc', 0.0))
     current_sector_alloc = float(portfolio_state.get('sector_alloc', {}).get(sector_name, 0.0))
@@ -186,6 +205,7 @@ def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', 
 
 
 def compute_position_plan(row, curr_price: float, total_nav: float, current_cash: float, entry_metrics: dict[str, Any], params=PARAMS) -> PositionPlan:
+    active_params = _resolve_params_for_row(row, params)
     if curr_price <= 0:
         return PositionPlan(False, 'price_invalid', 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     requested_alloc = _safe_float(row.get('Kelly_Pos', 0.0), 0.0)
@@ -199,11 +219,11 @@ def compute_position_plan(row, curr_price: float, total_nav: float, current_cash
     shares = min(q for q in [qty_by_cap, qty_by_risk] if q > 0) if any(q > 0 for q in [qty_by_cap, qty_by_risk]) else 0
     if shares >= 1000:
         shares = int(shares // 1000) * 1000
-    total_cost = curr_price * shares * (1 + float(params.get('FEE_RATE', 0.001425)) * float(params.get('FEE_DISCOUNT', 1.0)))
+    total_cost = curr_price * shares * (1 + float(active_params.get('FEE_RATE', 0.001425)) * float(active_params.get('FEE_DISCOUNT', 1.0)))
 
     if shares < 1:
         return PositionPlan(False, 'shares_below_minimum', 0, 0.0, requested_alloc, 0.0, 0.0, stop_pct, tp_pct)
-    if total_cost > current_cash and not bool(params.get('IGNORE_CASH_LIMIT', False)):
+    if total_cost > current_cash and not bool(active_params.get('IGNORE_CASH_LIMIT', False)):
         return PositionPlan(False, 'cash_insufficient', 0, total_cost, requested_alloc, 0.0, 0.0, stop_pct, tp_pct)
 
     applied_alloc = total_cost / total_nav if total_nav > 0 else 0.0

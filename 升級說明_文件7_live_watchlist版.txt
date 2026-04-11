@@ -1,0 +1,28 @@
+文件7升級重點
+1. approved live watchlist pipeline
+- 新增 candidate live watchlist 產出
+- 新增 approved live watchlist registry
+- live 端先讀 approved_live_watchlist.json，沒有才 fallback WATCH_LIST
+- 已實作 registry rollback function
+
+2. training per-ticker scoreboard
+- 新增 training_ticker_scoreboard.csv / .json
+- 每支股票輸出：ticker / industry / sector / regime / train_samples / oot_samples / oot_hit_rate / oot_ev / walk_forward_ev / avg_return / max_drawdown / profit_factor / stability_score / selected_feature_coverage / recent_20d_score_trend
+- 訓練器執行後自動輸出 scoreboard
+
+3. sector-aware ranking
+- scoreboard 內新增 global_rank / sector_rank / regime_rank
+- live watchlist promoter 依 sector-aware ranking 做 promotion score 與審批
+
+本輪完整升級
+- approved live watchlist candidate / approval / loader 主線
+- training per-ticker scoreboard
+- sector-aware ranking
+- watchlist service 掛 approved live watchlist
+- training governance summary 掛 scoreboard 與 live watchlist promotion
+- control tower summary 掛 scoreboard / promotion / loader
+
+本輪尚未完全升級
+- approved live watchlist 的自動績效監控後自動 rollback 觸發器（目前有 rollback function，但未自動掛每日績效守門）
+- liquidity / tradability 仍為簡化評分，尚未接真實委託簿/成交衝擊模型
+- sector-specific model 尚未獨立拆模，目前仍是混合訓練 + sector-aware ranking

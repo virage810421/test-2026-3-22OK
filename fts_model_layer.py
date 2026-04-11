@@ -31,6 +31,7 @@ AI_MODELS: dict[str, Any] = {}
 SELECTED_FEATURES: list[str] = []
 STRICT_PARITY = bool(PARAMS.get('LIVE_REQUIRE_SELECTED_FEATURES', True)) or bool(getattr(CONFIG, 'strict_feature_parity', True))
 MIN_LIVE_FEATURES = int(getattr(CONFIG, 'selected_features_min_count_for_live', 6))
+SELECTED_SOURCE = str(SELECTED_PATH)
 
 
 @dataclass
@@ -62,13 +63,26 @@ def _safe_float(v: Any, default: float = 0.0) -> float:
 
 
 def _load_artifacts() -> None:
-    global SELECTED_FEATURES, AI_MODELS
+    global SELECTED_FEATURES, AI_MODELS, SELECTED_SOURCE
     SELECTED_FEATURES = []
     AI_MODELS = {}
-    if SELECTED_PATH.exists():
+    SELECTED_SOURCE = str(SELECTED_PATH)
+    try:
+        from fts_approved_artifact_loader import ApprovedArtifactLoader  # type: ignore
+        if bool(PARAMS.get('APPROVED_FEATURE_SNAPSHOT_USE_IN_LIVE', True)):
+            loader = ApprovedArtifactLoader()
+            scope = str(PARAMS.get('APPROVED_DEFAULT_SCOPE', 'default'))
+            approved = loader.load_approved_selected_features(scope=scope)
+            if approved:
+                SELECTED_FEATURES = approved
+                SELECTED_SOURCE = str(loader.preferred_selected_features_path(True, scope))
+    except Exception:
+        pass
+    if not SELECTED_FEATURES and SELECTED_PATH.exists():
         try:
             SELECTED_FEATURES = [str(x) for x in joblib.load(SELECTED_PATH) if str(x).strip()]
             SELECTED_FEATURES = list(dict.fromkeys(SELECTED_FEATURES))
+            SELECTED_SOURCE = str(SELECTED_PATH)
         except Exception:
             SELECTED_FEATURES = []
     for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
@@ -91,6 +105,7 @@ def refresh_model_runtime() -> Path:
         'selected_features_present': bool(SELECTED_FEATURES),
         'selected_feature_count': len(SELECTED_FEATURES),
         'selected_features_ready': selected_features_ready(),
+        'selected_features_source': SELECTED_SOURCE,
         'selected_features_min_required': MIN_LIVE_FEATURES,
         'loaded_regimes': sorted(list(AI_MODELS.keys())),
         'strict_parity': bool(STRICT_PARITY),

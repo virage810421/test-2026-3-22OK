@@ -13,6 +13,19 @@ import numpy as np
 import pandas as pd
 
 try:
+    from config import PARAMS as LEGACY_PARAMS  # type: ignore
+except Exception:  # pragma: no cover
+    LEGACY_PARAMS = {}
+
+try:
+    from market_language import apply_market_language_features, latest_feature_vector as market_language_feature_vector  # type: ignore
+except Exception:  # pragma: no cover
+    def apply_market_language_features(df, p=None):
+        return df
+    def market_language_feature_vector(df, p=None):
+        return {}
+
+try:
     from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # pragma: no cover
     class _Paths:
@@ -52,7 +65,7 @@ from fts_feature_catalog import FEATURE_BUCKETS, PRIORITY_NEW_FEATURES_20
 
 
 class FeatureService:
-    MODULE_VERSION = 'v84_feature_service_execaware_registry_strict'
+    MODULE_VERSION = 'v85_feature_service_market_language_safe_merge'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'feature_service.json'
@@ -104,6 +117,15 @@ class FeatureService:
         return tr.rolling(window, min_periods=1).mean().fillna(0.0)
 
     def load_selected_features(self) -> list[str]:
+        try:
+            from config import PARAMS  # type: ignore
+            from fts_approved_artifact_loader import ApprovedArtifactLoader  # type: ignore
+            if bool(PARAMS.get('APPROVED_FEATURE_SNAPSHOT_USE_IN_TRAINING', True) or PARAMS.get('APPROVED_FEATURE_SNAPSHOT_USE_IN_LIVE', True)):
+                approved = ApprovedArtifactLoader().load_approved_selected_features(scope=str(PARAMS.get('APPROVED_DEFAULT_SCOPE', 'default')))
+                if approved:
+                    return approved
+        except Exception:
+            pass
         if not self.selected_features_path.exists():
             return []
         try:
@@ -266,6 +288,7 @@ class FeatureService:
         out['ADV20_Pctl'] = self._rolling_percentile(out['ADV20_Proxy'], 252)
         out['ATR_Pct_Pctl'] = self._rolling_percentile(out['ATR_Pct'], 252)
         out['RealizedVol_20_Pctl'] = self._rolling_percentile(out['RealizedVol_20'], 252)
+        out = apply_market_language_features(out, LEGACY_PARAMS)
         return out
 
     def extract_ai_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:
@@ -316,7 +339,9 @@ class FeatureService:
             latest = enriched.iloc[-1].to_dict()
             for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20']:
                 features[k] = safe_float(latest.get(k, features.get(k, 0.0)), features.get(k, 0.0))
-        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7']
+            for k, v in market_language_feature_vector(history_df, LEGACY_PARAMS).items():
+                features[k] = safe_float(v, 0.0)
+        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7','ML_Regime_Code','ML_Trend_Bull','ML_Trend_Bear','ML_Trend_Side','ML_Volume_Breakout','ML_Price_Breakout','ML_Oversold','ML_SmartMoney_Buying']
         for k in passthrough:
             if k in row:
                 features[k] = safe_float(row.get(k, 0), 0)

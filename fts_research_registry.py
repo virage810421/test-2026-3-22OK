@@ -3,6 +3,7 @@ import json
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
 
+
 class ResearchSelectionRegistry:
     def __init__(self):
         self.path = PATHS.runtime_dir / "research_selection_registry.json"
@@ -12,23 +13,24 @@ class ResearchSelectionRegistry:
             "generated_at": now_str(),
             "system_name": CONFIG.system_name,
             "research_selection_layer": {
-                "role": "把 ETL / AI / 基本面 / 技術面 / 風險偏好 整合成 decision 輸出",
-                "current_status": "registered_but_not_fully_governed",
-                "importance": {
-                    "what_it_affects": [
-                        "選股品質",
-                        "進出場品質",
-                        "報酬分佈",
-                        "策略穩定性"
+                "role": "研究層/選股層候選輸出登錄，不直接覆蓋真倉",
+                "current_status": "registered_and_isolated_from_live",
+                "isolation_rules": [
+                    "candidate params 與 approved params 分離",
+                    "candidate features 不覆蓋 models/selected_features.pkl",
+                    "alpha 候選需經 validation/OOT/promotion",
+                    "研究模組不得直接寫 production config 或正式模型檔"
+                ],
+                "merged_old_modules": {
+                    "research_only": [
+                        "advanced_optimizer.py", "optimizer.py", "auto_optimizer.py",
+                        "feature_selector.py", "alpha_miner.py"
                     ],
-                    "what_it_does_not_replace": [
-                        "風控",
-                        "實盤保護",
-                        "恢復機制",
-                        "驗證閘門"
+                    "serviceized_into_mainline": [
+                        "market_language.py", "kline_cache.py", "param_storage.py"
                     ]
                 },
-                "notes": "研究/選股層很重要，但它主要決定 alpha 品質；系統安全層則決定你會不會先因工程事故出事。"
+                "artifact_root": str(PATHS.runtime_dir / 'research_lab'),
             }
         }
         with open(self.path, "w", encoding="utf-8") as f:

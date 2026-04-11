@@ -1,0 +1,85 @@
+升級主題：舊研究模組安全收編到新模組（避免真倉/訓練失真）
+
+一、這次已完成的完整升級
+1. param_storage.py
+- 升級為 research_lab/param_storage 的版本化快照儲存
+- candidate_params 與 approved_params 分離
+- 不直接覆蓋 config.py / 正式 live 參數
+
+2. market_language.py + fts_feature_service.py + fts_feature_catalog.py
+- 舊 market_language 邏輯已服務化
+- 已併入 fts_feature_service.enrich_from_history / extract_ai_features
+- 新增市場語言特徵：ML_Regime_Code / ML_Trend_Bull / ML_Trend_Bear / ML_Trend_Side /
+  ML_Volume_Breakout / ML_Price_Breakout / ML_Oversold / ML_SmartMoney_Buying
+
+3. kline_cache.py + fts_market_data_service.py
+- 舊 kline_cache 已安全收編成 research-safe wrapper
+- fts_market_data_service 新增 get_incremental_history / get_smart_klines
+- 只做 OHLCV 快取與增量下載，不寫 live config
+
+4. 研究層舊模組安全橋接
+- advanced_optimizer.py：研究用 Pareto candidate 產生器
+- optimizer.py：研究用 walk-forward candidate 產生器
+- auto_optimizer.py：研究用分產業 candidate 流水線
+- feature_selector.py：研究用 candidate feature 選擇，不覆蓋 models/selected_features.pkl
+- alpha_miner.py：研究用 alpha candidate 挖掘，不直接進正式 live
+
+5. 治理與登錄
+- fts_research_lab.py：新增 research artifact 基礎設施
+- fts_research_registry.py：標示 research_only 與 serviceized_into_mainline
+- fts_training_governance_mainline.py：新增 research_lab_summary / param_storage_summary /
+  research_isolation_checks
+
+二、這次屬於「安全橋接完成，但不是最終深度升級」的部分
+1. advanced_optimizer.py
+- 已能研究產生 candidate，但尚未接到完整 Bayesian/GP 舊版深優化細節
+
+2. optimizer.py
+- 已能做 research-only walk-forward candidate 搜尋
+- 但尚未完全重建舊版所有 scoring 細節與壓力測試項
+
+3. auto_optimizer.py
+- 已能做 sector candidate orchestration
+- 但尚未做完整批次治理報表與失敗重試策略
+
+4. feature_selector.py / alpha_miner.py
+- 已完成「不碰 production artifacts」的隔離收編
+- 但尚未串完整 promotion gate 自動核准流程
+
+三、目前還沒完全升級的段落
+1. 研究 candidate -> 正式 approved -> 正式模型升版 的全自動 promote pipeline
+2. approved feature snapshot 自動進入 trainer backend 的明確載入流程
+3. approved params 依 regime / sector / strategy layer 的正式讀取器
+4. control tower / live_paper_trading 對 approved research artifacts 的顯式掛載開關
+5. 舊 advanced_optimizer 的完整 GP/Bayesian 細節重建
+6. alpha 候選自動 OOT + promotion 的完整審批鏈
+
+四、這次 smoke test 已驗證
+- py_compile 全數通過
+- fts_research_registry.py 可正常輸出 JSON
+- fts_feature_service.py 可正常 build_summary
+- fts_market_data_service.py 可正常 build_summary
+- fts_training_governance_mainline.py 可正常 build_summary(execute_backend=False)
+
+五、你現在可以怎麼用
+- 真倉主線維持讀正式主線 artifacts
+- 研究工具只會把候選結果丟到 runtime/research_lab
+- 若要正式採用，需再加 manual approval / promotion gate
+
+
+==============================
+本輪追加升級（config 安全收編）
+==============================
+1. 新增 config.py 安全收編版
+   - 保留新模組 governance / parity / promotion 主線參數
+   - 安全併入舊 config 的擴大型 WATCH_LIST / LOSERS_LIST / CSV 動態名單樞紐
+   - 不再把 sector override 直接接進 live，而是保留為 sector candidate presets
+
+2. 新增 fts_watchlist_service.py 更新版
+   - 讓 watchlist service 能直接讀取新的 get_dynamic_watch_list()
+   - 產出 watch / training / break_test / dynamic 統計摘要
+
+3. 本輪刻意未直接併入的內容
+   - 舊 config 的 feature toggles（USE_RSI / USE_MACD / USE_DMI...）
+   - 舊 config 的 sector override 自動套用 live
+   - 任一會直接覆蓋正式模型/正式特徵/正式參數的自動 promote 行為
