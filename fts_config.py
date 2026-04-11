@@ -153,6 +153,11 @@ class SystemConfig:
     model_layer_status_filename: str = 'model_layer_status.json'
     execution_layer_status_filename: str = 'execution_layer_status.json'
     strategy_layer_status_filename: str = 'strategy_policy_book.json'
+    selected_features_min_count_for_live: int = 6
+    selected_features_min_count_for_training: int = 8
+    model_min_oot_pf: float = 1.0
+    model_min_oot_hit_rate: float = 0.45
+    model_min_promotion_score: float = 0.0
 
 
 @dataclass

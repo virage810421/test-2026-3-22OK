@@ -19,6 +19,7 @@ except Exception:  # pragma: no cover
         models_dir = model_dir
     class _Config:
         strict_feature_parity = True
+        selected_features_min_count_for_live = 6
     PATHS = _Paths()
     CONFIG = _Config()
 
@@ -29,6 +30,7 @@ SELECTED_PATH = MODEL_DIR / 'selected_features.pkl'
 AI_MODELS: dict[str, Any] = {}
 SELECTED_FEATURES: list[str] = []
 STRICT_PARITY = bool(PARAMS.get('LIVE_REQUIRE_SELECTED_FEATURES', True)) or bool(getattr(CONFIG, 'strict_feature_parity', True))
+MIN_LIVE_FEATURES = int(getattr(CONFIG, 'selected_features_min_count_for_live', 6))
 
 
 @dataclass
@@ -66,6 +68,7 @@ def _load_artifacts() -> None:
     if SELECTED_PATH.exists():
         try:
             SELECTED_FEATURES = [str(x) for x in joblib.load(SELECTED_PATH) if str(x).strip()]
+            SELECTED_FEATURES = list(dict.fromkeys(SELECTED_FEATURES))
         except Exception:
             SELECTED_FEATURES = []
     for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
@@ -77,15 +80,21 @@ def _load_artifacts() -> None:
                 pass
 
 
+def selected_features_ready() -> bool:
+    return len(SELECTED_FEATURES) >= MIN_LIVE_FEATURES
+
+
 def refresh_model_runtime() -> Path:
     _load_artifacts()
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         'selected_features_present': bool(SELECTED_FEATURES),
         'selected_feature_count': len(SELECTED_FEATURES),
+        'selected_features_ready': selected_features_ready(),
+        'selected_features_min_required': MIN_LIVE_FEATURES,
         'loaded_regimes': sorted(list(AI_MODELS.keys())),
         'strict_parity': bool(STRICT_PARITY),
-        'status': 'model_layer_ready',
+        'status': 'model_layer_ready' if selected_features_ready() else 'model_layer_degraded',
     }
     RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     return RUNTIME_PATH
@@ -94,7 +103,7 @@ def refresh_model_runtime() -> Path:
 def _feature_input_from_row(latest_row, regime: str) -> tuple[dict[str, float], str]:
     signal_conf = _safe_float(latest_row.get('訊號信心分數(%)', 50.0), 50.0) / 100.0
     source = 'signal_confidence_fallback'
-    if regime in AI_MODELS and SELECTED_FEATURES:
+    if regime in AI_MODELS and selected_features_ready():
         try:
             from screening import extract_ai_features  # lazy import
             features_dict = extract_ai_features(latest_row)
@@ -115,10 +124,11 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
     signal_conf = _safe_float(latest_row.get('訊號信心分數(%)', latest_row.get('AI_Proba', 0.5) * 100.0), 50.0) / 100.0
 
     veto_reasons: list[str] = []
-    selected_ready = bool(SELECTED_FEATURES)
+    selected_ready = selected_features_ready()
     if STRICT_PARITY and not selected_ready:
         model_source = 'parity_locked_signal_confidence'
         proba = max(0.01, min(0.99, signal_conf))
+        veto_reasons.append(f'selected_features_not_ready:min_required_{MIN_LIVE_FEATURES}')
     else:
         payload, model_source = _feature_input_from_row(latest_row, regime)
         proba = float(payload.get('proba', signal_conf))

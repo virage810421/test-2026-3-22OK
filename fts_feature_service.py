@@ -63,6 +63,7 @@ class FeatureService:
         self.training_registry_csv = PATHS.runtime_dir / 'training_feature_registry.csv'
         self.training_registry_json = PATHS.runtime_dir / 'training_feature_registry.json'
         self.parity_status_path = PATHS.runtime_dir / 'feature_parity_status.json'
+        self.min_live_feature_count = int(getattr(CONFIG, 'selected_features_min_count_for_live', 6))
         Path(PATHS.runtime_dir).mkdir(parents=True, exist_ok=True)
         Path(PATHS.data_dir).mkdir(parents=True, exist_ok=True)
         if not self.live_mount_csv.exists():
@@ -109,7 +110,8 @@ class FeatureService:
             with self.selected_features_path.open('rb') as fh:
                 obj = pickle.load(fh)
             if isinstance(obj, (list, tuple)):
-                return [str(x) for x in obj if str(x).strip()]
+                out = [str(x) for x in obj if str(x).strip()]
+                return list(dict.fromkeys(out))
         except Exception:
             return []
         return []
@@ -188,13 +190,15 @@ class FeatureService:
         picked = [str(x) for x in (selected_features or self.load_selected_features()) if str(x).strip()]
         strict_mode = bool(getattr(CONFIG, 'strict_feature_parity', True)) if strict is None else bool(strict)
 
-        if not picked:
+        if not picked or len(picked) < self.min_live_feature_count:
             payload = {
                 'generated_at': now_str(),
                 'module_version': self.MODULE_VERSION,
                 'strict_feature_parity': strict_mode,
-                'selected_features_present': False,
+                'selected_features_present': False if not picked else True,
                 'fallback_all_features_blocked': bool(strict_mode),
+                'selected_feature_count': int(len(picked)),
+                'selected_feature_min_required': int(self.min_live_feature_count),
                 'status': 'selected_features_missing',
             }
             self._write_parity_status(payload)

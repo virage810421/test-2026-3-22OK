@@ -222,3 +222,22 @@
 [00:33:44] ========================================================================
 [00:35:21] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
 [00:35:21] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[01:22:00] ========================================================================
+[01:22:00] 🚀 啟動 正式交易主控版_v83_official_main
+[01:22:00] 🧭 模式：DAILY
+[01:22:00] ========================================================================
+[01:22:27] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[01:22:29] 🔁 mainline stage | monthly_revenue_simple.py | ok=True | skipped=False
+[01:22:40] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[01:22:40] ✅ yahoo_csv_to_sql 第二級主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[01:22:40] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[01:22:43] 🧠 legacy decision engine | ok=False
+[01:22:43] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[01:22:43] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[01:22:43] ❌ control tower failure: 'cp950' codec can't encode character '\U0001f9ec' in position 11: illegal multibyte sequence
+[01:22:44] ========================================================================
+[01:22:44] 🚀 啟動 正式交易主控版_v83_official_main
+[01:22:44] 🧭 模式：TRAIN
+[01:22:44] ========================================================================
+[01:22:49] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[01:22:49] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json

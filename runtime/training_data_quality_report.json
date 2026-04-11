@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-04-11 00:35:13",
+  "generated_at": "2026-04-11 01:22:45",
   "dataset_name": "ml_training_generated",
-  "rows": 5682,
-  "columns": 84,
-  "missing_required_columns": [],
+  "rows": 0,
+  "columns": 0,
+  "missing_required_columns": [
+    "Label_Y",
+    "Target_Return",
+    "Regime"
+  ],
   "required_columns_with_null_rate": {},
   "columns_with_null_rate": {},
-  "status": "ok",
-  "missing_flag_columns_added": [],
-  "validation_failures": [],
-  "validation_warnings": [],
-  "validated_rows": 5682
+  "status": "empty"
 }

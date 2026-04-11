@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-11 00:35:21",
+  "generated_at": "2026-04-11 01:22:49",
   "mode": "train",
   "module_version": "v83_level3_control_tower_integrated",
   "outputs": {
@@ -10,26 +10,26 @@
         "returncode": 0,
         "args": [],
         "stdout_tail": "",
-        "stderr_tail": "C:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))"
+        "stderr_tail": "C:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))\nC:\\test\\test-2026-3-22OK\\fts_chip_enrichment_service.py:98: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.\n  chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))"
       },
       {
-        "status": "ok",
+        "status": "error",
         "script": "ml_trainer.py",
-        "returncode": 0,
+        "returncode": 1,
         "args": [],
         "stdout_tail": "",
-        "stderr_tail": ""
+        "stderr_tail": "  File \"C:\\test\\test-2026-3-22OK\\fts_trainer_backend.py\", line 257, in train_models\n    df = pd.read_csv(dataset_path)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 873, in read_csv\n    return _read(filepath_or_buffer, kwds)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 300, in _read\n    parser = TextFileReader(filepath_or_buffer, **kwds)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1645, in __init__\n    self._engine = self._make_engine(f, self.engine)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1922, in _make_engine\n    return mapping[engine](f, **self.options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\c_parser_wrapper.py\", line 95, in __init__\n    self._reader = parsers.TextReader(src, **kwds)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"pandas/_libs/parsers.pyx\", line 575, in pandas._libs.parsers.TextReader.__cinit__\npandas.errors.EmptyDataError: No columns to parse from file"
       }
     ],
     "training_governance_mainline": {
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
       "payload": {
-        "generated_at": "2026-04-11 00:35:21",
+        "generated_at": "2026-04-11 01:22:49",
         "module_version": "v83_training_governance_mainline_hardened",
         "system_name": "正式交易主控版_v83_official_main",
         "orchestrator_status": "training_governed_v83",
-        "training_readiness_pct": 78,
+        "training_readiness_pct": 49,
         "backend": {
           "executed": false,
           "status": "summary_only",
@@ -133,7 +133,7 @@
           }
         },
         "training_integrity": {
-          "generated_at": "2026-04-11 00:35:21",
+          "generated_at": "2026-04-11 01:22:49",
           "thresholds": {
             "min_oot_hit_rate": 0.5,
             "min_oot_profit_factor": 1.0,
@@ -248,7 +248,7 @@
           "status": "training_integrity_blocked"
         },
         "candidate_evaluation": {
-          "generated_at": "2026-04-11 00:35:21",
+          "generated_at": "2026-04-11 01:22:49",
           "system_name": "正式交易主控版_v83_official_main",
           "thresholds": {
             "min_win_rate": 0.5,
@@ -281,7 +281,7 @@
           "status": "candidate_blocked"
         },
         "live_health": {
-          "generated_at": "2026-04-11 00:35:21",
+          "generated_at": "2026-04-11 01:22:49",
           "thresholds": {
             "min_live_win_rate": 0.42,
             "max_consecutive_losses": 5,
@@ -315,7 +315,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_registry_runtime.json",
       "payload": {
-        "generated_at": "2026-04-11 00:35:21",
+        "generated_at": "2026-04-11 01:22:49",
         "system_name": "正式交易主控版_v83_official_main",
         "models_dir": "C:\\test\\test-2026-3-22OK\\models",
         "candidates": [
@@ -345,14 +345,14 @@
             "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
             "is_file": true,
             "is_dir": false,
-            "size_bytes": 9910
+            "size_bytes": 11342
           },
           {
             "name": "model_registry.json",
             "path": "C:\\test\\test-2026-3-22OK\\models\\model_registry.json",
             "is_file": true,
             "is_dir": false,
-            "size_bytes": 18482
+            "size_bytes": 19757
           },
           {
             "name": "model_區間盤整.pkl",
@@ -972,9 +972,48 @@
               },
               "note": "防過擬合版訓練完成快照",
               "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260411_012247",
+              "timestamp": "2026-04-11 01:22:47",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
             }
           ],
-          "current_version": "trained_20260411_003519",
+          "current_version": "pretrain_20260411_012247",
           "best_version": "trained_20260411_003519",
           "last_candidate_version": null,
           "last_shadow_version": null,

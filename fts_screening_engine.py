@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 try:
@@ -35,7 +36,7 @@ from fts_screening_legacy_compat import (
 
 
 class ScreeningEngine:
-    MODULE_VERSION = 'v83_screening_engine_percentile_mount_full'
+    MODULE_VERSION = 'v85_screening_engine_regime_upgrade'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'screening_engine.json'
@@ -65,20 +66,86 @@ class ScreeningEngine:
         dx = ((plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, pd.NA) * 100).fillna(0)
         return dx.rolling(window, min_periods=1).mean().fillna(25)
 
+    @staticmethod
+    def _atr(high: pd.Series, low: pd.Series, close: pd.Series, window: int = 14) -> pd.Series:
+        tr = pd.concat([high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()], axis=1).max(axis=1)
+        return tr.rolling(window, min_periods=1).mean().fillna(0.0)
+
+    @staticmethod
+    def _rolling_percentile(series: pd.Series, window: int = 252) -> pd.Series:
+        s = pd.to_numeric(series, errors='coerce').astype(float)
+        return s.rolling(window, min_periods=min(30, window)).rank(pct=True).fillna(0.5)
+
+    @staticmethod
+    def _infer_regime(df: pd.DataFrame, params: dict[str, Any]) -> pd.DataFrame:
+        out = df.copy()
+        close = pd.to_numeric(out['Close'], errors='coerce').fillna(0.0)
+        ma20 = pd.to_numeric(out['MA20'], errors='coerce').fillna(method='bfill').fillna(close)
+        ma60 = pd.to_numeric(out['MA60'], errors='coerce').fillna(method='bfill').fillna(ma20)
+        adx = pd.to_numeric(out['ADX14'], errors='coerce').fillna(20.0)
+        atr_pct = pd.to_numeric(out['ATR_Pct'], errors='coerce').fillna(0.0)
+        atr_pctl = pd.to_numeric(out['ATR_Pct_Pctl'], errors='coerce').fillna(0.5)
+        bb_width = pd.to_numeric(out['BB_Width'], errors='coerce').fillna(0.0)
+        macd_hist = pd.to_numeric(out['MACD_Hist'], errors='coerce').fillna(0.0)
+        macd_line = pd.to_numeric(out['MACD'], errors='coerce').fillna(0.0)
+
+        ma20_slope = ma20.diff(5).fillna(0.0) / ma20.shift(5).replace(0, pd.NA)
+        ma60_slope = ma60.diff(10).fillna(0.0) / ma60.shift(10).replace(0, pd.NA)
+        price_vs_ma60 = (close / ma60.replace(0, pd.NA) - 1.0).fillna(0.0)
+        price_vs_ma20 = (close / ma20.replace(0, pd.NA) - 1.0).fillna(0.0)
+        width_mean = bb_width.rolling(30, min_periods=10).mean().replace(0, pd.NA)
+        squeeze_flag = (bb_width < width_mean * 0.85).fillna(False)
+
+        direction_score = (
+            np.sign(price_vs_ma60) * 1.6
+            + np.sign(ma20_slope.fillna(0.0)) * 1.1
+            + np.sign(ma60_slope.fillna(0.0)) * 0.9
+            + np.sign(macd_hist) * 0.8
+            + np.sign(macd_line) * 0.6
+            + np.sign(price_vs_ma20) * 0.5
+        )
+        strength_score = (
+            ((adx - float(params.get('ADX_TREND_THRESHOLD', 20))) / 10.0).clip(-1.5, 2.5)
+            + ((atr_pctl - 0.5) * 1.2)
+            + ((bb_width / width_mean).replace([np.inf, -np.inf], np.nan).fillna(1.0) - 1.0).clip(-0.8, 1.2)
+        )
+        environment_score = (
+            (atr_pct * 100.0).clip(0.0, 8.0) * 0.08
+            + squeeze_flag.astype(float) * -0.7
+        )
+        composite = direction_score + strength_score + environment_score
+
+        bull = (direction_score >= 1.6) & (adx >= float(params.get('ADX_TREND_THRESHOLD', 20))) & (price_vs_ma60 > -0.01)
+        bear = (direction_score <= -1.6) & (adx >= float(params.get('ADX_TREND_THRESHOLD', 20))) & (price_vs_ma60 < 0.01)
+        side = (~bull & ~bear) | ((adx < max(18.0, float(params.get('ADX_TREND_THRESHOLD', 20)) - 2.0)) & squeeze_flag)
+
+        out['Regime_Direction_Score'] = direction_score.round(4)
+        out['Regime_Strength_Score'] = strength_score.round(4)
+        out['Regime_Environment_Score'] = environment_score.round(4)
+        out['Regime_Composite_Score'] = composite.round(4)
+        out['Regime_Source'] = 'direction_strength_environment_v2'
+        out['Regime'] = np.where(bull, '趨勢多頭', np.where(bear, '趨勢空頭', '區間盤整'))
+        out.loc[side, 'Regime'] = '區間盤整'
+        out['Regime_Intensity'] = np.where(
+            out['Regime'] == '區間盤整',
+            'sideways',
+            np.where((adx >= 30) & (atr_pctl >= 0.55), 'aggressive', 'balanced')
+        )
+        return out
+
     def _prepare(self, df: pd.DataFrame, p: dict[str, Any] | None = None) -> pd.DataFrame:
         params = p or {}
         out = df.copy()
         if out.empty or 'Close' not in out.columns:
             return pd.DataFrame()
 
-        # 基本欄位正規化
         for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
             if col not in out.columns:
                 out[col] = 0.0
         out = out.sort_index()
 
-        # 主技術欄位
         out['MA20'] = out['Close'].rolling(20, min_periods=1).mean()
+        out['MA60'] = out['Close'].rolling(60, min_periods=1).mean()
         out['STD20'] = out['Close'].rolling(20, min_periods=1).std().fillna(0)
         out['BB_std'] = out['STD20']
         out['BB_Upper'] = out['MA20'] + out['STD20'] * 2
@@ -94,8 +161,10 @@ class ScreeningEngine:
         high = out['High'] if 'High' in out.columns else out['Close']
         low = out['Low'] if 'Low' in out.columns else out['Close']
         out['ADX14'] = self._adx(high, low, out['Close'])
+        out['ATR14'] = self._atr(high, low, out['Close'])
+        out['ATR_Pct'] = (out['ATR14'] / out['Close'].replace(0, pd.NA)).fillna(0.0)
+        out['ATR_Pct_Pctl'] = self._rolling_percentile(out['ATR_Pct'], 252)
 
-        # BBI 與基礎 score 燈號
         out['BBI'] = (
             out['Close'].rolling(3, min_periods=1).mean()
             + out['Close'].rolling(6, min_periods=1).mean()
@@ -133,9 +202,9 @@ class ScreeningEngine:
         out['MR_Short_Trap'] = ((out['High'] > out['BB_Upper']) & (out['RSI'] > 65)).fillna(False).astype(int)
         out['MR_Long_Accumulation'] = ((out['Close'] > out['MA20']) & (pd.to_numeric(out.get('Total_Ratio', 0), errors='coerce').fillna(0) > 0)).astype(int)
         out['MR_Short_Distribution'] = ((out['Close'] < out['MA20']) & (pd.to_numeric(out.get('Total_Ratio', 0), errors='coerce').fillna(0) < 0)).astype(int)
-        out['Regime'] = out['ADX14'].apply(lambda x: '趨勢多頭' if x >= 30 else ('區間盤整' if x < 20 else '趨勢空頭'))
+        out = self._infer_regime(out, params)
         out['AI_Proba'] = (0.5 + out['Score_Gap'].clip(-2, 2) * 0.1).clip(0.01, 0.99)
-        out['Realized_EV'] = (out['Close'].shift(-5) / out['Close'] - 1).fillna(0.0)
+        out['Realized_EV'] = (out['Close'].shift(-int(params.get('ML_LABEL_HOLD_DAYS', 5))) / out['Close'] - 1).fillna(0.0)
 
         stats = _compute_realized_signal_stats(out, params, hold_days=int(params.get('ML_LABEL_HOLD_DAYS', 5)))
         for k, v in stats.items():
@@ -150,7 +219,6 @@ class ScreeningEngine:
         if hist.empty or 'Close' not in hist.columns:
             return None
 
-        # 若預載資料尚未補籌碼，這裡補一次；若已存在則略過。
         if not any(col in hist.columns for col in ['Foreign_Ratio', 'Total_Ratio', 'Trust_Ratio']):
             try:
                 hist = self.chips.add_chip_data(hist, ticker)
@@ -173,7 +241,16 @@ class ScreeningEngine:
         return latest
 
     def build_summary(self) -> tuple[Path, dict[str, Any]]:
-        payload = {'generated_at': now_str(), 'module_version': self.MODULE_VERSION, 'legacy_screening_dependency': False, 'official_percentile_mode': True, 'precise_event_calendar_mode': True, 'selected_features_driven_live': bool(self.features.load_selected_features()), 'status': 'screening_engine_ready'}
+        payload = {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'legacy_screening_dependency': False,
+            'official_percentile_mode': True,
+            'precise_event_calendar_mode': True,
+            'selected_features_driven_live': bool(self.features.load_selected_features()),
+            'regime_engine': 'direction_strength_environment_v2',
+            'status': 'screening_engine_ready',
+        }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🛰️ screening engine detached: {self.runtime_path}')
         return self.runtime_path, payload

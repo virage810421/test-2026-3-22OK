@@ -1,0 +1,76 @@
+{
+  "folder": "patch_verified",
+  "file_count": 14,
+  "files": [
+    {
+      "name": "config.py",
+      "size_bytes": 3582,
+      "sha256_16": "9cfff1dfe3567dfe"
+    },
+    {
+      "name": "event_backtester.py",
+      "size_bytes": 10533,
+      "sha256_16": "a7eb2b9e8dd31fa8"
+    },
+    {
+      "name": "fts_config.py",
+      "size_bytes": 6224,
+      "sha256_16": "dee94f8dc4d8ebc3"
+    },
+    {
+      "name": "fts_execution_layer.py",
+      "size_bytes": 8679,
+      "sha256_16": "65a6f710611a934b"
+    },
+    {
+      "name": "fts_feature_service.py",
+      "size_bytes": 21578,
+      "sha256_16": "d4873051c82d23ac"
+    },
+    {
+      "name": "fts_model_layer.py",
+      "size_bytes": 6344,
+      "sha256_16": "8997302f5fd6e78a"
+    },
+    {
+      "name": "fts_screening_engine.py",
+      "size_bytes": 13884,
+      "sha256_16": "c8cc739cd4819a06"
+    },
+    {
+      "name": "fts_strategy_policy_layer.py",
+      "size_bytes": 8117,
+      "sha256_16": "be10fce34420fa3d"
+    },
+    {
+      "name": "fts_trainer_backend.py",
+      "size_bytes": 19275,
+      "sha256_16": "7a7201483f654a57"
+    },
+    {
+      "name": "fts_training_data_builder.py",
+      "size_bytes": 8477,
+      "sha256_16": "f3dadfa5b15fbe92"
+    },
+    {
+      "name": "fts_training_orchestrator.py",
+      "size_bytes": 10194,
+      "sha256_16": "082656d0019dd169"
+    },
+    {
+      "name": "live_paper_trading.py",
+      "size_bytes": 21534,
+      "sha256_16": "54a7d5f8d836b7e3"
+    },
+    {
+      "name": "strategies.py",
+      "size_bytes": 871,
+      "sha256_16": "c76abb725385cc3a"
+    },
+    {
+      "name": "升級說明_更新檔版本_任務100版.txt",
+      "size_bytes": 2118,
+      "sha256_16": "13ef660c2a350d9f"
+    }
+  ]
+}

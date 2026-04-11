@@ -1455,79 +1455,79 @@
       "module": "formal_trading_system_v83_official_main",
       "ok": true,
       "error": "",
-      "seconds": 0.892
+      "seconds": 1.085
     },
     {
       "module": "fts_fundamentals_etl_mainline",
       "ok": true,
       "error": "",
-      "seconds": 0.782
+      "seconds": 0.921
     },
     {
       "module": "fts_training_governance_mainline",
       "ok": true,
       "error": "",
-      "seconds": 1.318
+      "seconds": 1.725
     },
     {
       "module": "fts_feature_service",
       "ok": true,
       "error": "",
-      "seconds": 0.428
+      "seconds": 0.487
     },
     {
       "module": "fts_screening_engine",
       "ok": true,
       "error": "",
-      "seconds": 0.935
+      "seconds": 1.368
     },
     {
       "module": "fts_cross_sectional_percentile_service",
       "ok": true,
       "error": "",
-      "seconds": 0.742
+      "seconds": 0.823
     },
     {
       "module": "fts_event_calendar_service",
       "ok": true,
       "error": "",
-      "seconds": 0.423
+      "seconds": 0.49
     },
     {
       "module": "fts_decision_execution_bridge",
       "ok": true,
       "error": "",
-      "seconds": 0.442
+      "seconds": 0.472
     },
     {
       "module": "fts_phase1_upgrade",
       "ok": true,
       "error": "",
-      "seconds": 0.405
+      "seconds": 0.492
     },
     {
       "module": "fts_phase2_mock_broker_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.409
+      "seconds": 0.459
     },
     {
       "module": "fts_phase3_real_cutover_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.51
+      "seconds": 0.588
     },
     {
       "module": "model_governance",
       "ok": true,
       "error": "",
-      "seconds": 0.064
+      "seconds": 0.081
     },
     {
       "module": "db_setup",
       "ok": true,
       "error": "",
-      "seconds": 0.05
+      "seconds": 0.051
     }
   ],
   "local_imports_by_file": {
@@ -2450,6 +2450,7 @@
     "fts_trainer_backend.py": [
       "config",
       "fts_data_quality_guard",
+      "fts_feature_catalog",
       "model_governance"
     ],
     "fts_trainer_promotion_policy.py": [
@@ -2751,8 +2752,8 @@
         "formal_trading_system_v83_official_main.py"
       ],
       "ok": false,
-      "seconds": 39.085,
-      "stdout_tail": "[00:33:05] ========================================================================\n[00:33:05] ? 啟動 正式交易主控版_v83_official_main\n[00:33:05] ? 模式：DAILY\n[00:33:05] ========================================================================\n[00:33:27] ? mainline stage | daily_chip_etl.py | ok=True | skipped=False\n[00:33:29] ? mainline stage | monthly_revenue_simple.py | ok=True | skipped=False\n[00:33:41] ? mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False\n[00:33:43] ? legacy decision engine | ok=True\n[00:33:43] ? control tower failure: 'cp950' codec can't encode character '\\U0001f9ec' in position 11: illegal multibyte sequence\n",
+      "seconds": 44.632,
+      "stdout_tail": "[01:22:00] ========================================================================\n[01:22:00] ? 啟動 正式交易主控版_v83_official_main\n[01:22:00] ? 模式：DAILY\n[01:22:00] ========================================================================\n[01:22:27] ? mainline stage | daily_chip_etl.py | ok=True | skipped=False\n[01:22:29] ? mainline stage | monthly_revenue_simple.py | ok=True | skipped=False\n[01:22:40] ? mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False\n[01:22:43] ? legacy decision engine | ok=False\n[01:22:43] ? control tower failure: 'cp950' codec can't encode character '\\U0001f9ec' in position 11: illegal multibyte sequence\n",
       "stderr_tail": "",
       "returncode": 1
     },
@@ -2762,8 +2763,8 @@
         "--train"
       ],
       "ok": true,
-      "seconds": 98.075,
-      "stdout_tail": "[00:33:44] ========================================================================\n[00:33:44] ? 啟動 正式交易主控版_v83_official_main\n[00:33:44] ? 模式：TRAIN\n[00:33:44] ========================================================================\n",
+      "seconds": 5.897,
+      "stdout_tail": "[01:22:44] ========================================================================\n[01:22:44] ? 啟動 正式交易主控版_v83_official_main\n[01:22:44] ? 模式：TRAIN\n[01:22:44] ========================================================================\n",
       "stderr_tail": "",
       "returncode": 0
     }
