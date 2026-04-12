@@ -1,0 +1,26 @@
+文件 7(1) 安全收編版說明
+
+本包依照「不失真、不直接影響真倉」原則，先完成：
+1. Long / Short / Range 三向標籤欄位骨架
+2. 三向 training ticker scoreboard
+3. 三向 watchlist promotion / registry / loader 骨架
+4. 三向 policy 參數骨架
+5. training governance / control tower 摘要掛載
+
+預設安全值：
+- ENABLE_DIRECTIONAL_WATCHLIST_PROMOTION = False
+- ENABLE_DIRECTIONAL_WATCHLIST_IN_LIVE = False
+
+所以這版會產生 runtime 摘要與 candidate/approved JSON，
+但不會直接改 live 真倉名單。
+
+建議覆蓋後先跑：
+python fts_training_data_builder.py
+python fts_training_ticker_scoreboard.py
+python fts_live_watchlist_promoter.py
+python fts_training_governance_mainline.py
+
+再看 runtime/:
+- training_ticker_scoreboard.csv
+- live_watchlist_promoter.json
+- training_governance_mainline.json

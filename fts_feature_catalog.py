@@ -15,12 +15,21 @@ class FeatureSpec:
     mounted_in_live_path: bool = True
     percentile_backed: bool = False
     event_calendar_precise: bool = False
+    feature_family: str = 'shared'
+    strategy_scope: str = 'SHARED'
+    approval_scope: str = 'candidate_only'
+    is_live_safe: bool = True
 
 
 def _fs(name: str, bucket: str, source: str, description: str,
         is_new: bool = False, mounted: bool = True,
-        percentile_backed: bool = False, event_calendar_precise: bool = False) -> FeatureSpec:
-    return FeatureSpec(name, bucket, source, description, is_new, mounted, percentile_backed, event_calendar_precise)
+        percentile_backed: bool = False, event_calendar_precise: bool = False,
+        feature_family: str = 'shared', strategy_scope: str = 'SHARED',
+        approval_scope: str = 'candidate_only', is_live_safe: bool = True) -> FeatureSpec:
+    return FeatureSpec(
+        name, bucket, source, description, is_new, mounted, percentile_backed, event_calendar_precise,
+        feature_family, strategy_scope, approval_scope, is_live_safe
+    )
 
 
 FEATURE_SPECS: Dict[str, FeatureSpec] = {
@@ -89,14 +98,6 @@ FEATURE_SPECS: Dict[str, FeatureSpec] = {
     'Earnings_Window_7': _fs('Earnings_Window_7', 'events', 'quarterly fundamentals calendar', 'Earnings event window 7 day.', True, True, False, True),
     'Earnings_Window_14': _fs('Earnings_Window_14', 'events', 'quarterly fundamentals calendar', 'Earnings event window 14 day.', True, True, False, True),
     'Dividend_Window_7': _fs('Dividend_Window_7', 'events', 'dividend calendar', 'Dividend event window 7 day.', True, True, False, True),
-    'ML_Regime_Code': _fs('ML_Regime_Code', 'market_language', 'market_language.py', 'Rule-based market language regime code: bull=1, bear=-1, side=0.', True),
-    'ML_Trend_Bull': _fs('ML_Trend_Bull', 'market_language', 'market_language.py', 'Market language bullish regime flag.', True),
-    'ML_Trend_Bear': _fs('ML_Trend_Bear', 'market_language', 'market_language.py', 'Market language bearish regime flag.', True),
-    'ML_Trend_Side': _fs('ML_Trend_Side', 'market_language', 'market_language.py', 'Market language sideways regime flag.', True),
-    'ML_Volume_Breakout': _fs('ML_Volume_Breakout', 'market_language', 'market_language.py', 'Market language volume breakout flag.', True),
-    'ML_Price_Breakout': _fs('ML_Price_Breakout', 'market_language', 'market_language.py', 'Market language price breakout flag.', True),
-    'ML_Oversold': _fs('ML_Oversold', 'market_language', 'market_language.py', 'Market language oversold flag.', True),
-    'ML_SmartMoney_Buying': _fs('ML_SmartMoney_Buying', 'market_language', 'market_language.py', 'Market language smart-money-buying flag.', True),
 }
 
 FEATURE_BUCKETS: Dict[str, List[str]] = {}
@@ -109,5 +110,58 @@ PRIORITY_NEW_FEATURES_20: List[str] = [
     'DollarVol20_Proxy', 'Volume_Z20', 'Return_Z20', 'RS_vs_Market_20', 'RS_vs_Sector_20',
     'Revenue_YoY_Rank', 'Chip_Total_Ratio_Rank', 'Event_Days_Since_Revenue',
     'Earnings_Window_Flag', 'Regime_TrendStrength_X_ScoreGap',
-    'ML_Regime_Code', 'ML_Volume_Breakout', 'ML_SmartMoney_Buying',
 ]
+
+
+# ----- 文件8：safe directional/range feature overlay (training/research first, no direct live default) -----
+FEATURE_SPECS.update({
+    'Short_Failed_Rebound': _fs('Short_Failed_Rebound', 'directional_short', 'OHLCV + MA/RSI', 'Failed rebound below MA20 with weak close.', True, False, False, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Short_Weak_Bounce': _fs('Short_Weak_Bounce', 'directional_short', 'OHLCV', 'Weak intraday bounce with soft close.', True, False, False, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Short_Distribution_Pressure': _fs('Short_Distribution_Pressure', 'directional_short', 'OHLCV + chip', 'Distribution pressure under negative chip flow.', True, False, False, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Short_Breakdown_Followthrough': _fs('Short_Breakdown_Followthrough', 'directional_short', 'OHLCV', 'Breakdown continuation under MA20.', True, False, False, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Short_Upper_Shadow_Pressure': _fs('Short_Upper_Shadow_Pressure', 'directional_short', 'OHLCV', 'Upper-shadow selling pressure.', True, False, False, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Short_GapDown_Continuation': _fs('Short_GapDown_Continuation', 'directional_short', 'OHLCV', 'Gap-down with weak intraday recovery.', True, False, False, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Short_Below_MA20_FailedRetake': _fs('Short_Below_MA20_FailedRetake', 'directional_short', 'OHLCV + MA', 'Below-MA20 failed retake.', True, False, False, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Short_RS_Weakness': _fs('Short_RS_Weakness', 'directional_short', 'cross_sectional', 'Relative-strength weakness.', True, False, True, False, 'directional', 'SHORT_ONLY', 'research_and_training', False),
+    'Range_Position_Pct': _fs('Range_Position_Pct', 'directional_range', 'OHLCV rolling range', 'Position of close inside rolling range.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Distance_To_Range_Top': _fs('Distance_To_Range_Top', 'directional_range', 'OHLCV rolling range', 'Distance to rolling range top.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Distance_To_Range_Bottom': _fs('Distance_To_Range_Bottom', 'directional_range', 'OHLCV rolling range', 'Distance to rolling range bottom.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Range_Mean_Reversion_Score': _fs('Range_Mean_Reversion_Score', 'directional_range', 'OHLCV + RSI + Bollinger', 'Mean-reversion score inside range.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Range_Exhaustion_Score': _fs('Range_Exhaustion_Score', 'directional_range', 'OHLCV + RSI', 'Exhaustion score near range edge.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Range_Width_Pct': _fs('Range_Width_Pct', 'directional_range', 'OHLCV rolling range', 'Normalized rolling range width.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Range_Center_Distance': _fs('Range_Center_Distance', 'directional_range', 'OHLCV rolling range', 'Distance from rolling range center.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Range_Bounce_Quality': _fs('Range_Bounce_Quality', 'directional_range', 'OHLCV', 'Bounce quality near range bottom.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Range_Fade_Quality': _fs('Range_Fade_Quality', 'directional_range', 'OHLCV', 'Fade quality near range top.', True, False, False, False, 'directional', 'RANGE_ONLY', 'research_and_training', False),
+    'Range_Confidence': _fs('Range_Confidence', 'regime_confidence', 'regime service', 'Probability-like confidence that current state is range-bound.', True, False, False, False, 'regime', 'RANGE_ONLY', 'research_and_training', False),
+    'Trend_Confidence': _fs('Trend_Confidence', 'regime_confidence', 'regime service', 'Probability-like confidence that current state is trending.', True, False, False, False, 'regime', 'SHARED', 'research_and_training', False),
+    'Range_Width_Pctl': _fs('Range_Width_Pctl', 'regime_confidence', 'regime service', 'Percentile of range width.', True, False, True, False, 'regime', 'RANGE_ONLY', 'research_and_training', False),
+    'MA_Slope_Flatness': _fs('MA_Slope_Flatness', 'regime_confidence', 'regime service', 'Flatness of MA slope.', True, False, False, False, 'regime', 'RANGE_ONLY', 'research_and_training', False),
+    'BB_Width_Pctl': _fs('BB_Width_Pctl', 'regime_confidence', 'regime service', 'Percentile of Bollinger width.', True, False, True, False, 'regime', 'RANGE_ONLY', 'research_and_training', False),
+    'ADX_Low_Regime_Flag': _fs('ADX_Low_Regime_Flag', 'regime_confidence', 'regime service', 'Flag for low-ADX range-like regime.', True, False, False, False, 'regime', 'RANGE_ONLY', 'research_and_training', False),
+})
+
+FEATURE_BUCKETS = {}
+for name, spec in FEATURE_SPECS.items():
+    FEATURE_BUCKETS.setdefault(spec.bucket, []).append(name)
+
+STRATEGY_SCOPE_GROUPS: Dict[str, List[str]] = {'SHARED': [], 'LONG_ONLY': [], 'SHORT_ONLY': [], 'RANGE_ONLY': []}
+for name, spec in FEATURE_SPECS.items():
+    STRATEGY_SCOPE_GROUPS.setdefault(spec.strategy_scope, []).append(name)
+
+LIVE_SAFE_FEATURES: List[str] = [name for name, spec in FEATURE_SPECS.items() if spec.is_live_safe]
+
+def get_feature_list(strategy_scope: str = 'ALL', live_safe_only: bool = False) -> List[str]:
+    if strategy_scope == 'ALL':
+        names = list(FEATURE_SPECS.keys())
+    else:
+        names = list(STRATEGY_SCOPE_GROUPS.get(strategy_scope, [])) + STRATEGY_SCOPE_GROUPS.get('SHARED', [])
+        names = list(dict.fromkeys(names))
+    if live_safe_only:
+        names = [n for n in names if n in LIVE_SAFE_FEATURES]
+    return names
+
+def get_training_feature_groups() -> Dict[str, List[str]]:
+    return {k: get_feature_list(k, live_safe_only=False) for k in ['SHARED', 'LONG_ONLY', 'SHORT_ONLY', 'RANGE_ONLY']}
+
+def get_live_feature_groups() -> Dict[str, List[str]]:
+    return {k: get_feature_list(k, live_safe_only=True) for k in ['SHARED', 'LONG_ONLY', 'SHORT_ONLY', 'RANGE_ONLY']}

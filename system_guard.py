@@ -8,6 +8,7 @@ import pyodbc
 from config import PARAMS
 from performance import check_strategy_health, get_strategy_summary
 from alert_manager import AlertManager
+from fts_sql_table_name_map import sql_table
 
 DB_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
@@ -15,6 +16,9 @@ DB_CONN_STR = (
     r"DATABASE=股票online;"
     r"Trusted_Connection=yes;"
 )
+
+
+TABLE_TRADE_HISTORY = sql_table('trade_history')
 
 
 def _safe_float(x, default=0.0):
@@ -110,7 +114,7 @@ def check_decision_desk():
 def check_recent_trades(limit=100):
     df = _read_sql(f"""
         SELECT TOP {int(limit)} [報酬率(%)], [淨損益金額]
-        FROM trade_history
+        FROM {TABLE_TRADE_HISTORY}
         ORDER BY [出場時間] DESC
     """)
 

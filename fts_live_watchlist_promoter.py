@@ -1,140 +1,79 @@
+
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
-
-import numpy as np
 import pandas as pd
 
+from fts_prelive_runtime import PATHS, now_str, write_json, normalize_key
+from fts_live_watchlist_registry import LiveWatchlistRegistry
 from config import PARAMS
-from fts_config import PATHS
-from fts_utils import now_str, log
-from fts_training_ticker_scoreboard import TrainingTickerScoreboard
-from fts_live_watchlist_registry import save_candidate, approve_latest_candidate, summary as registry_summary
 
+LANES = ['LONG', 'SHORT', 'RANGE']
+LANE_SCORE_COL = {
+    'LONG': 'Ticker_Promotion_Score_Long',
+    'SHORT': 'Ticker_Promotion_Score_Short',
+    'RANGE': 'Ticker_Promotion_Score_Range',
+}
+LANE_HR_COL = {'LONG': 'Long_HitRate', 'SHORT': 'Short_HitRate', 'RANGE': 'Range_HitRate'}
+LANE_EV_COL = {'LONG': 'Long_OOT_EV', 'SHORT': 'Short_OOT_EV', 'RANGE': 'Range_OOT_EV'}
 
 class LiveWatchlistPromoter:
-    MODULE_VERSION = 'v86_live_watchlist_promoter'
-
     def __init__(self):
-        self.runtime_path = PATHS.runtime_dir / 'live_watchlist_promoter.json'
-        self.scoreboard = TrainingTickerScoreboard()
+        self.runtime_dir = PATHS.runtime_dir
+        self.registry = LiveWatchlistRegistry()
+        self.summary_path = self.runtime_dir / 'live_watchlist_promoter.json'
 
-    def _load_scoreboard(self) -> pd.DataFrame:
-        df = self.scoreboard.load_scoreboard()
-        if df.empty:
-            self.scoreboard.build_from_dataset()
-            df = self.scoreboard.load_scoreboard()
-        return df
+    def _scoreboard(self) -> pd.DataFrame:
+        for p in [self.runtime_dir / 'training_ticker_scoreboard.csv', PATHS.base_dir / 'training_ticker_scoreboard.csv']:
+            if p.exists():
+                try:
+                    return pd.read_csv(p)
+                except Exception:
+                    continue
+        return pd.DataFrame()
 
-    @staticmethod
-    def _bounded(series: pd.Series, denom: float) -> pd.Series:
-        return series.clip(lower=0.0).div(max(float(denom), 1e-9)).clip(upper=1.0)
-
-    def _rank(self, df: pd.DataFrame) -> pd.DataFrame:
-        ranked = df.copy()
-        for col in ['oot_ev', 'oot_hit_rate', 'walk_forward_ev', 'stability_score', 'liquidity_score', 'selected_feature_coverage']:
-            ranked[col] = pd.to_numeric(ranked.get(col, 0.0), errors='coerce').fillna(0.0)
-        for col in ['oot_samples', 'train_samples']:
-            ranked[col] = pd.to_numeric(ranked.get(col, 0), errors='coerce').fillna(0).astype(int)
-        ranked['promotion_score'] = (
-            30.0 * self._bounded(ranked['oot_ev'], 0.05)
-            + 20.0 * ranked['oot_hit_rate'].clip(0.0, 1.0)
-            + 20.0 * self._bounded(ranked['walk_forward_ev'], 0.05)
-            + 10.0 * ((ranked['oot_samples'] + ranked['train_samples']).clip(lower=0).div(60.0).clip(upper=1.0))
-            + 10.0 * ranked['stability_score'].clip(0.0, 1.0)
-            + 10.0 * ranked['liquidity_score'].clip(0.0, 1.0)
-        )
-        ranked = ranked.sort_values(['promotion_score', 'oot_ev', 'oot_hit_rate'], ascending=[False, False, False]).reset_index(drop=True)
-        ranked['global_rank'] = np.arange(1, len(ranked) + 1)
-        ranked['sector_rank'] = ranked.groupby('sector')['promotion_score'].rank(method='dense', ascending=False).astype(int)
-        ranked['regime_rank'] = ranked.groupby('regime')['promotion_score'].rank(method='dense', ascending=False).astype(int)
-        ranked['feature_integrity_ok'] = ranked['selected_feature_coverage'] >= float(PARAMS.get('LIVE_WATCHLIST_MIN_FEATURE_COVERAGE', 0.95))
-        ranked['liquidity_ok'] = ranked['liquidity_score'] >= float(PARAMS.get('LIVE_WATCHLIST_MIN_LIQUIDITY_SCORE', 0.10))
-        return ranked
-
-    def _approve_gate(self, ranked: pd.DataFrame) -> pd.DataFrame:
-        gated = ranked.copy()
-        min_hit = float(PARAMS.get('LIVE_WATCHLIST_MIN_OOT_HIT_RATE', 0.52))
-        min_ev = float(PARAMS.get('LIVE_WATCHLIST_MIN_OOT_EV', 0.0))
-        min_samples = int(PARAMS.get('LIVE_WATCHLIST_MIN_TOTAL_SAMPLES', 30))
-        max_mdd = float(PARAMS.get('LIVE_WATCHLIST_MAX_DRAWDOWN', 0.25))
-        recent_floor = float(PARAMS.get('LIVE_WATCHLIST_MIN_RECENT_TREND', -0.02))
-        gated = gated[
-            (gated['oot_ev'] > min_ev)
-            & (gated['oot_hit_rate'] >= min_hit)
-            & ((gated['oot_samples'] + gated['train_samples']) >= min_samples)
-            & (gated['max_drawdown'] <= max_mdd)
-            & (gated['recent_20d_score_trend'] >= recent_floor)
-            & (gated['feature_integrity_ok'])
-        ].copy()
-        max_total = int(PARAMS.get('LIVE_WATCHLIST_MAX_NAMES', 12))
-        max_per_sector = int(PARAMS.get('LIVE_WATCHLIST_MAX_PER_SECTOR', 3))
-        if gated.empty:
-            return gated
-        chosen_rows: list[pd.Series] = []
-        sector_counts: dict[str, int] = {}
-        for _, row in gated.sort_values(['promotion_score', 'sector_rank', 'global_rank'], ascending=[False, True, True]).iterrows():
-            sector = str(row.get('sector', 'OTHERS'))
-            if sector_counts.get(sector, 0) >= max_per_sector:
+    def _records_for_lane(self, df: pd.DataFrame, lane: str) -> list[dict[str, Any]]:
+        if df is None or df.empty:
+            return []
+        score_col = LANE_SCORE_COL[lane]
+        hr_col = LANE_HR_COL[lane]
+        ev_col = LANE_EV_COL[lane]
+        if score_col not in df.columns:
+            df = df.copy()
+            df[score_col] = df.get('training_universe_score', 0.0)
+        items = []
+        lane_max = int(PARAMS.get(f'LIVE_WATCHLIST_{lane}_MAX_NAMES', 8))
+        for _, row in df.sort_values(score_col, ascending=False).head(max(lane_max * 3, lane_max)).iterrows():
+            ticker = str(row.get('ticker') or row.get('Ticker') or row.get('Ticker SYMBOL') or row.get('股票代號') or '').strip()
+            if not ticker:
                 continue
-            chosen_rows.append(row)
-            sector_counts[sector] = sector_counts.get(sector, 0) + 1
-            if len(chosen_rows) >= max_total:
-                break
-        return pd.DataFrame(chosen_rows)
-
-    def run(self, auto_approve: bool = True) -> tuple[Path, dict[str, Any]]:
-        scoreboard = self._load_scoreboard()
-        if scoreboard.empty:
-            payload = {
-                'generated_at': now_str(),
-                'module_version': self.MODULE_VERSION,
-                'status': 'scoreboard_missing',
+            item = {
+                'ticker': ticker,
+                'lane': lane,
+                'promotion_score': float(row.get(score_col, 0.0) or 0.0),
+                'oot_ev': float(row.get(ev_col, 0.0) or 0.0),
+                'hit_rate': float(row.get(hr_col, 0.0) or 0.0),
+                'sector': str(row.get('industry') or row.get('產業類別') or row.get('sector') or '未知'),
+                'liquidity_score': float(row.get('流動性分數', row.get('Liquidity_Score', 1.0)) or 0.0),
+                'feature_coverage': float(row.get('selected_feature_coverage', row.get('feature_coverage', 1.0)) or 0.0),
+                'approval_reason': 'scoreboard_promotion',
             }
-            self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-            return self.runtime_path, payload
+            items.append(item)
+        return items[:lane_max]
 
-        ranked = self._rank(scoreboard)
-        approved_df = self._approve_gate(ranked)
-        candidate_summary = {
-            'row_count': int(len(ranked)),
-            'approved_count': int(len(approved_df)),
-            'top_tickers': ranked['ticker'].head(10).tolist(),
-            'top_by_sector': {
-                str(sec): grp.sort_values('promotion_score', ascending=False)['ticker'].head(3).tolist()
-                for sec, grp in ranked.groupby('sector')
-            },
-        }
-        candidate_payload = {
-            'generated_at': now_str(),
-            'module_version': self.MODULE_VERSION,
-            'candidate_summary': candidate_summary,
-            'rows': ranked.to_dict(orient='records'),
-            'approved_rows': approved_df.to_dict(orient='records'),
-            'status': 'candidate_live_watchlist_ready',
-        }
-        saved = save_candidate(candidate_payload, source_module='fts_live_watchlist_promoter')
-        approved = None
-        if auto_approve:
-            approved = approve_latest_candidate(approver='auto_pipeline', note='training winners promoted after approval gate')
-        payload = {
-            'generated_at': now_str(),
-            'module_version': self.MODULE_VERSION,
-            'candidate_id': saved.get('candidate_id'),
-            'candidate_summary': candidate_summary,
-            'approved_ticker_count': len((approved or {}).get('rows', [])) if approved else 0,
-            'registry_summary': registry_summary(),
-            'status': 'live_watchlist_promoter_ready',
-        }
-        self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        log(f'🚦 live watchlist promoter ready: {self.runtime_path}')
-        return self.runtime_path, payload
-
-
-if __name__ == '__main__':
-    path, payload = LiveWatchlistPromoter().run(auto_approve=True)
-    print(path)
-    print(payload.get('status'))
+    def build(self) -> tuple[str, dict[str, Any]]:
+        df = self._scoreboard()
+        payload = {'generated_at': now_str(), 'status': 'directional_watchlists_promoted', 'lanes': {}}
+        for lane in LANES:
+            items = self._records_for_lane(df, lane)
+            candidate_path = self.runtime_dir / f'candidate_live_watchlist_{lane.lower()}.json'
+            approved_path = self.runtime_dir / f'approved_live_watchlist_{lane.lower()}.json'
+            candidate_payload = {'generated_at': now_str(), 'lane': lane, 'items': items, 'count': len(items), 'promotion_batch_id': now_str()}
+            approved_payload = {'generated_at': now_str(), 'lane': lane, 'items': items, 'count': len(items), 'approved_version': now_str(), 'promotion_batch_id': now_str()}
+            write_json(candidate_path, candidate_payload)
+            write_json(approved_path, approved_payload)
+            self.registry.register_watchlist(lane, approved_payload, str(approved_path))
+            payload['lanes'][lane] = {'candidate_path': str(candidate_path), 'approved_path': str(approved_path), 'count': len(items)}
+        write_json(self.summary_path, payload)
+        return str(self.summary_path), payload

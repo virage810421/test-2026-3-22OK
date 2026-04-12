@@ -1,0 +1,10 @@
+文件 10(1) 最後兩類補強版
+
+本包重點：
+1. fts_control_tower.py 進一步接入 tri-lane orchestrator，輸出每個 lane 的 stage runner 狀態。
+2. broker/callback/reconciliation 更深層的 bookkeeping：callback -> state machine -> ledger -> reconciliation -> repair workflow。
+
+注意：
+- 這版屬於「大幅升級但未達 100% fully done」的版本。
+- tri-lane stage status 已有，但既有所有 legacy stage 尚未全部重寫成完全獨立的 long/short/range runner。
+- repair_workflow_engine 目前輸出 per-lane repair 計畫與摘要，尚非直接操作底層 broker ledger 的 fully automated mutator。

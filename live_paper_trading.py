@@ -15,6 +15,7 @@ from fts_strategy_policy_layer import get_strategy_policy
 from fts_model_layer import evaluate_model_signal
 from fts_execution_layer import build_entry_metrics as _build_entry_metrics_layer, signal_gate as _signal_gate_layer, portfolio_gate as _portfolio_gate_layer, compute_position_plan
 from sector_classifier import get_stock_sector
+from fts_execution_ledger import ExecutionLedger
 try:
     from fts_level3_runtime_loader import build_level3_services
     _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()
@@ -536,3 +537,11 @@ def run_eod_broker():
 
 if __name__ == "__main__":
     run_eod_broker()
+
+
+
+def _record_directional_execution_event(event_type: str, payload: dict):
+    try:
+        ExecutionLedger().record(event_type, payload)
+    except Exception:
+        pass

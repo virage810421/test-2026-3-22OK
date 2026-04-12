@@ -7,6 +7,7 @@ import pyodbc
 
 from config import PARAMS
 from performance import check_strategy_health, get_strategy_summary
+from fts_sql_table_name_map import sql_table
 
 DB_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
@@ -14,6 +15,10 @@ DB_CONN_STR = (
     r"DATABASE=股票online;"
     r"Trusted_Connection=yes;"
 )
+
+
+TABLE_ACTIVE_POSITIONS = sql_table('active_positions')
+TABLE_TRADE_HISTORY = sql_table('trade_history')
 
 
 def _safe_float(x, default=0.0):
@@ -37,7 +42,7 @@ def load_decision_desk(path="daily_decision_desk.csv"):
 def load_active_positions():
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
-            return pd.read_sql("SELECT * FROM active_positions", conn)
+            return pd.read_sql(f"SELECT * FROM {TABLE_ACTIVE_POSITIONS}", conn)
     except Exception:
         return pd.DataFrame()
 
@@ -49,7 +54,7 @@ def load_trade_history(limit=200):
                 SELECT TOP {int(limit)}
                     [Ticker SYMBOL], [方向], [報酬率(%)], [淨損益金額],
                     [市場狀態], [進場陣型], [出場時間]
-                FROM trade_history
+                FROM {TABLE_TRADE_HISTORY}
                 ORDER BY [出場時間] DESC
             """
             return pd.read_sql(query, conn)

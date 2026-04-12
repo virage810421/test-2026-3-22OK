@@ -15,6 +15,10 @@ from fundamental_screener import get_vip_stock_pool
 from screening import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
 from portfolio_risk import apply_portfolio_risk
 from system_guard import run_system_guard
+from fts_sql_table_name_map import sql_table
+
+TABLE_TRADE_HISTORY = sql_table('trade_history')
+TABLE_DAILY_CHIP = sql_table('daily_chip_data')
 
 logging.basicConfig(
     filename="pipeline.log",
@@ -101,7 +105,7 @@ def get_system_performance():
             r"Trusted_Connection=yes;"
         )
         with pyodbc.connect(DB_CONN_STR) as conn:
-            query = "SELECT TOP 100 [報酬率(%)], [淨損益金額], [結餘本金] FROM trade_history ORDER BY [出場時間] DESC"
+            query = f"SELECT TOP 100 [報酬率(%)], [淨損益金額], [結餘本金] FROM {TABLE_TRADE_HISTORY} ORDER BY [出場時間] DESC"
             df_stats = pd.read_sql(query, conn)
 
             if not df_stats.empty:
@@ -163,7 +167,7 @@ def get_dynamic_watchlist():
         )
         with pyodbc.connect(DB_CONN_STR) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT DISTINCT [Ticker SYMBOL] FROM daily_chip_data")
+            cursor.execute(f"SELECT DISTINCT [Ticker SYMBOL] FROM {TABLE_DAILY_CHIP}")
             rows = cursor.fetchall()
             dynamic_list = [normalize_ticker_symbol(row[0]) for row in rows if row[0]]
 

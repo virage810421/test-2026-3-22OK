@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-04-12 10:56:00",
+  "module_version": "v86_approved_live_watchlist_loader",
+  "approved_present": false,
+  "selected_ticker_count": 5,
+  "selected_tickers": [
+    "2330.TW",
+    "2317.TW",
+    "2454.TW",
+    "2881.TW",
+    "2603.TW"
+  ],
+  "registry_summary": {
+    "generated_at": "2026-04-12 10:56:00",
+    "candidate_count": 0,
+    "approved_count": 0,
+    "current_approved_ticker_count": 0,
+    "status": "live_watchlist_registry_ready"
+  },
+  "status": "approved_live_watchlist_loader_ready"
+}

@@ -1,0 +1,26 @@
+這包是文件 9 的第三輪「安全收編版」。
+
+已做：
+1. fts_trainer_backend.py
+- 補 directional artifacts 輸出：selected_features_long/short/range.pkl 與 model_long/short/range_趨勢多頭|區間盤整|趨勢空頭.pkl
+- 不覆蓋原本 shared selected_features.pkl 與 model_*.pkl
+- 產出 runtime/trainer_backend_directional_report.json
+
+2. fts_model_layer.py
+- 補 model_scope / model_bucket / feature_scope / direction_scope
+- 可讀 directional artifacts，但預設由 config.py 關閉，不直接掛到 live
+- 產出 runtime/model_layer_directional_status.json
+
+3. live_paper_trading.py
+- 補 Candidate_Long / Candidate_Short / Candidate_Range
+- 補 Approved_Long / Approved_Short / Approved_Range
+- 只做 runtime 標註與摘要，不直接改 live 下單主流程
+- 產出 runtime/live_paper_directional_candidates.json
+
+4. config.py
+- 新增第三輪安全開關，預設不直接影響真倉
+
+未做：
+- 沒把 directional models 設成 live 預設主模型
+- 沒把 directional approved candidates 直接當真倉交易白名單
+- 沒改 control tower 主控輸出

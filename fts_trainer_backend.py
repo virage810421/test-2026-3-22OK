@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Safer trainer backend with approved pipeline support."""
+"""Safer trainer backend with diversified feature selection, promotion floors and out-of-time checks."""
 from __future__ import annotations
 
 import itertools
@@ -20,11 +20,10 @@ from config import PARAMS
 from model_governance import create_version_tag, get_best_version_entry, promote_best_version, restore_version, snapshot_current_models
 from fts_data_quality_guard import validate_training_frame
 from fts_feature_catalog import FEATURE_SPECS, PRIORITY_NEW_FEATURES_20
-from param_storage import resolve_params_for_context
-from fts_training_ticker_scoreboard import TrainingTickerScoreboard
 
 RUNTIME_PATH = Path('runtime') / 'trainer_backend_report.json'
-ACTIVE_TRAIN_PARAMS = dict(PARAMS)
+DIRECTIONAL_RUNTIME_PATH = Path('runtime') / 'trainer_backend_directional_report.json'
+
 
 META_DROP_COLS = [
     'Ticker', 'Ticker SYMBOL', 'Date', 'Setup', 'Setup_Tag', 'Regime', 'Regime_Source',
@@ -34,12 +33,14 @@ META_DROP_COLS = [
     'Exit_Price', 'Entry_Date', 'Exit_Date', 'Direction', 'Stop_Hit', 'Hold_Days',
     'Touched_TP', 'Touched_SL', 'Label_Reason', 'Label_Exit_Type',
     'Favorable_Move_Pct', 'Adverse_Move_Pct', 'Max_Favorable_Excursion',
-    'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count'
+    'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count',
+    'Long_Label_Y', 'Short_Label_Y', 'Range_Label_Y',
+    'Long_Target_Return', 'Short_Target_Return', 'Range_Target_Return',
+    'Long_MAE', 'Short_MAE', 'Range_MAE',
+    'Long_MFE', 'Short_MFE', 'Range_MFE',
+    'Long_Exit_Type', 'Short_Exit_Type', 'Range_Exit_Type',
+    'Range_Confidence_At_Label', 'Strategy_Bucket'
 ]
-
-
-def _params() -> dict[str, Any]:
-    return ACTIVE_TRAIN_PARAMS
 
 
 def _evaluate_alpha(signal: pd.Series, future_return: pd.Series) -> dict[str, float] | None:
@@ -57,7 +58,15 @@ def _evaluate_alpha(signal: pd.Series, future_return: pd.Series) -> dict[str, fl
     corr = float(abs(pd.Series(signal).corr(pd.Series(future_return)))) if len(df) >= 10 else 0.0
     active_ratio = float((pd.Series(signal).abs() > 1e-12).mean())
     score = expectancy * 100 + hit_rate * 10 + min(profit_factor, 5.0) + corr * 2.0 + active_ratio
-    return {'hit_rate': hit_rate, 'avg_return': avg_return, 'profit_factor': profit_factor, 'expectancy': expectancy, 'score': score, 'corr_abs': corr, 'active_ratio': active_ratio}
+    return {
+        'hit_rate': hit_rate,
+        'avg_return': avg_return,
+        'profit_factor': profit_factor,
+        'expectancy': expectancy,
+        'score': score,
+        'corr_abs': corr,
+        'active_ratio': active_ratio,
+    }
 
 
 def _build_feature_columns(df: pd.DataFrame) -> tuple[list[str], list[str]]:
@@ -80,8 +89,8 @@ def _materialize_interactions(df: pd.DataFrame, features: list[str]) -> pd.DataF
         parts = [p for p in feature.split('_X_') if p]
         if all(p in out.columns for p in parts):
             vals = pd.to_numeric(out[parts[0]], errors='coerce').fillna(0.0)
-            for part in parts[1:]:
-                vals = vals * pd.to_numeric(out[part], errors='coerce').fillna(0.0)
+            for p in parts[1:]:
+                vals = vals * pd.to_numeric(out[p], errors='coerce').fillna(0.0)
             out[feature] = vals
     return out
 
@@ -111,15 +120,21 @@ def _select_features_train_only(train_df: pd.DataFrame, all_features: list[str])
         res = _evaluate_alpha(signal, future_return)
         if not res:
             continue
-        ranked.append({'feature': col, 'bucket': _candidate_bucket(col), 'priority': int(col in PRIORITY_NEW_FEATURES_20), **res})
+        ranked.append({
+            'feature': col,
+            'bucket': _candidate_bucket(col),
+            'priority': int(col in PRIORITY_NEW_FEATURES_20),
+            **res,
+        })
     ranked.sort(key=lambda x: (x['score'], x['priority'], x['profit_factor'], x['corr_abs']), reverse=True)
 
-    min_count = int(_params().get('MODEL_MIN_SELECTED_FEATURES', 8))
-    max_count = int(_params().get('MODEL_MAX_SELECTED_FEATURES', 18))
-    seed_limit = int(_params().get('MODEL_SEED_FEATURE_LIMIT', 12))
+    min_count = int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8))
+    max_count = int(PARAMS.get('MODEL_MAX_SELECTED_FEATURES', 18))
+    seed_limit = int(PARAMS.get('MODEL_SEED_FEATURE_LIMIT', 12))
 
     chosen: list[str] = []
     used_buckets: set[str] = set()
+    # Phase 1: quality-first with bucket diversification
     for item in ranked:
         if item['feature'] in chosen:
             continue
@@ -131,18 +146,24 @@ def _select_features_train_only(train_df: pd.DataFrame, all_features: list[str])
             used_buckets.add(bucket)
         if len(chosen) >= max(min_count, 6):
             break
+
+    # Phase 2: fill from top-ranked features regardless of bucket until min count reached
     if len(chosen) < min_count:
         for item in ranked:
             if item['feature'] not in chosen:
                 chosen.append(item['feature'])
             if len(chosen) >= min_count:
                 break
+
+    # Phase 3: backfill with strategic priority features if still too few
     if len(chosen) < min_count:
         for feat in PRIORITY_NEW_FEATURES_20:
             if feat in train_df.columns and feat not in chosen:
                 chosen.append(feat)
             if len(chosen) >= min_count:
                 break
+
+    # Phase 4: absolute fallback from raw features
     if len(chosen) < min_count:
         for feat in all_features:
             if feat in train_df.columns and feat not in chosen and feat not in META_DROP_COLS:
@@ -158,7 +179,7 @@ def _select_features_train_only(train_df: pd.DataFrame, all_features: list[str])
             if name in train_df.columns:
                 signal = pd.to_numeric(train_df[name], errors='coerce').fillna(0.0)
             else:
-                if not all(part in train_df.columns for part in combo):
+                if not all(p in train_df.columns for p in combo):
                     continue
                 signal = train_df[list(combo)].apply(pd.to_numeric, errors='coerce').fillna(0.0).prod(axis=1)
             if int((signal != 0).sum()) < 20:
@@ -173,13 +194,98 @@ def _select_features_train_only(train_df: pd.DataFrame, all_features: list[str])
     return final, ranked[:50]
 
 
+
+
+def _train_directional_scope(train_df: pd.DataFrame, all_features: list[str], scope: str) -> dict[str, Any]:
+    label_col = f'{scope}_Label_Y'
+    ret_col = f'{scope}_Target_Return'
+    result: dict[str, Any] = {
+        'scope': scope.lower(),
+        'status': 'skip',
+        'reason': 'label_missing',
+        'selected_features_path': f'models/selected_features_{scope.lower()}.pkl',
+        'models': {},
+    }
+    if label_col not in train_df.columns:
+        return result
+    local = train_df.copy()
+    local[label_col] = pd.to_numeric(local[label_col], errors='coerce').fillna(0).astype(int)
+    if ret_col not in local.columns:
+        local[ret_col] = np.where(local[label_col] == 1, 0.03, -0.03)
+    else:
+        local[ret_col] = pd.to_numeric(local[ret_col], errors='coerce').fillna(0.0)
+    if len(local) < int(PARAMS.get('DIRECTIONAL_MIN_SAMPLES', 80)):
+        result['reason'] = 'insufficient_rows'
+        result['rows_total'] = int(len(local))
+        return result
+    scoped_features, ranked = _select_features_train_only(local.rename(columns={ret_col: 'Target_Return'}), all_features)
+    scoped_features = [f for f in scoped_features if f in local.columns]
+    min_features = int(PARAMS.get('DIRECTIONAL_MIN_FEATURES', 6))
+    if len(scoped_features) < min_features:
+        result['reason'] = 'insufficient_features'
+        result['rows_total'] = int(len(local))
+        result['selected_features_count'] = int(len(scoped_features))
+        return result
+    os.makedirs('models', exist_ok=True)
+    feat_path = Path(f'models/selected_features_{scope.lower()}.pkl')
+    joblib.dump(scoped_features, feat_path)
+    result['selected_features_count'] = int(len(scoped_features))
+    result['feature_preview'] = scoped_features[:20]
+    result['rows_total'] = int(len(local))
+    result['feature_selection_preview'] = ranked[:12]
+    metrics_by_regime: dict[str, Any] = {}
+    save_count = 0
+    for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
+        regime_df = local[local['Regime'] == regime].copy() if 'Regime' in local.columns else pd.DataFrame()
+        if len(regime_df) < int(PARAMS.get('MODEL_MIN_REGIME_SAMPLES', 50)):
+            metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '樣本不足'}
+            continue
+        safe_features = [f for f in scoped_features if f in regime_df.columns]
+        if len(safe_features) < max(4, min_features // 2):
+            metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '無足夠可用特徵'}
+            continue
+        y_reg = pd.to_numeric(regime_df[label_col], errors='coerce').fillna(0).astype(int)
+        if y_reg.nunique() < 2:
+            metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '標籤單一'}
+            continue
+        X_reg = regime_df[safe_features].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        reg_model = _fit_model(X_reg, y_reg)
+        model_path = Path(f'models/model_{scope.lower()}_{regime}.pkl')
+        joblib.dump(reg_model, model_path)
+        metrics_by_regime[regime] = {'status': 'SAVE', 'rows': int(len(regime_df)), 'feature_count': int(len(safe_features))}
+        save_count += 1
+    result['models'] = metrics_by_regime
+    result['status'] = 'ready' if save_count > 0 else 'partial'
+    result['saved_regime_models'] = int(save_count)
+    return result
+
+
+def _export_directional_artifacts(train_df: pd.DataFrame, all_features: list[str]) -> dict[str, Any]:
+    payload = {
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'enabled': bool(PARAMS.get('ENABLE_DIRECTIONAL_MODEL_ARTIFACTS', True)),
+        'live_mount_enabled': bool(PARAMS.get('ENABLE_DIRECTIONAL_MODEL_LOADING', False)),
+        'scopes': {},
+    }
+    if not payload['enabled']:
+        DIRECTIONAL_RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return payload
+    for scope in ['Long', 'Short', 'Range']:
+        try:
+            payload['scopes'][scope.lower()] = _train_directional_scope(train_df, all_features, scope)
+        except Exception as e:
+            payload['scopes'][scope.lower()] = {'scope': scope.lower(), 'status': 'error', 'reason': str(e)}
+    DIRECTIONAL_RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
+    DIRECTIONAL_RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    return payload
+
 def _fit_model(X_train: pd.DataFrame, y_train: pd.Series) -> RandomForestClassifier:
     model = RandomForestClassifier(
-        n_estimators=int(_params().get('MODEL_N_ESTIMATORS', 200)),
-        max_depth=int(_params().get('MODEL_MAX_DEPTH', 7)),
+        n_estimators=int(PARAMS.get('MODEL_N_ESTIMATORS', 200)),
+        max_depth=int(PARAMS.get('MODEL_MAX_DEPTH', 7)),
         random_state=42,
         class_weight='balanced',
-        min_samples_leaf=int(_params().get('MODEL_MIN_SAMPLES_LEAF', 3)),
+        min_samples_leaf=int(PARAMS.get('MODEL_MIN_SAMPLES_LEAF', 3)),
     )
     model.fit(X_train, y_train)
     return model
@@ -229,20 +335,7 @@ def _purged_walk_forward(X: pd.DataFrame, y: pd.Series, target_return: pd.Series
     return results, summary
 
 
-def _load_approved_feature_snapshot() -> list[str]:
-    try:
-        from fts_approved_artifact_loader import ApprovedArtifactLoader  # type: ignore
-        if bool(PARAMS.get('APPROVED_FEATURE_SNAPSHOT_USE_IN_TRAINING', True)):
-            return ApprovedArtifactLoader().load_approved_selected_features(scope=str(PARAMS.get('APPROVED_DEFAULT_SCOPE', 'default')))
-    except Exception:
-        pass
-    return []
-
-
 def train_models() -> tuple[Path, dict[str, Any]]:
-    global ACTIVE_TRAIN_PARAMS
-    ACTIVE_TRAIN_PARAMS = resolve_params_for_context(base_params=PARAMS, scope_name=str(PARAMS.get('APPROVED_DEFAULT_SCOPE', 'default'))) if bool(PARAMS.get('APPROVED_PARAMS_USE_IN_TRAINING', True)) else dict(PARAMS)
-
     dataset_path = Path('data/ml_training_data.csv')
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not dataset_path.exists():
@@ -251,10 +344,10 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         return RUNTIME_PATH, payload
 
     pretrain_version = create_version_tag('pretrain')
-    snapshot_current_models(pretrain_version, note='approved pipeline 重訓前自動備份')
+    snapshot_current_models(pretrain_version, note='重訓前自動備份（任務收尾版）')
 
     df = pd.read_csv(dataset_path)
-    df, quality_report = validate_training_frame(df, min_rows=max(80, int(_params().get('MODEL_MIN_TRAIN_ROWS', 80))))
+    df, quality_report = validate_training_frame(df, min_rows=max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))))
     if quality_report.get('status') == 'blocked':
         payload = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'blocked_by_data_quality', 'dataset_path': str(dataset_path), 'quality_report': quality_report}
         RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
@@ -269,14 +362,8 @@ def train_models() -> tuple[Path, dict[str, Any]]:
 
     all_features, _ = _build_feature_columns(df)
     df = _materialize_interactions(df, all_features)
-    train_df, oot_df = _chronological_split(df, oot_ratio=float(_params().get('OOT_RATIO', 0.20)))
-
-    approved_selected = _load_approved_feature_snapshot()
-    ranked_features: list[dict[str, Any]] = []
-    if approved_selected:
-        selected_features = [f for f in approved_selected if f in train_df.columns or '_X_' in str(f)]
-    else:
-        selected_features, ranked_features = _select_features_train_only(train_df, all_features)
+    train_df, oot_df = _chronological_split(df, oot_ratio=float(PARAMS.get('OOT_RATIO', 0.20)))
+    selected_features, ranked_features = _select_features_train_only(train_df, all_features)
     train_df = _materialize_interactions(train_df, selected_features)
     oot_df = _materialize_interactions(oot_df, selected_features)
     selected_features = [f for f in selected_features if f in train_df.columns and f in oot_df.columns]
@@ -287,23 +374,33 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     y_oot = oot_df['Label_Y']
     ret_oot = oot_df['Target_Return']
 
-    wf_results, wf_summary = _purged_walk_forward(X_train, y_train, train_df['Target_Return'], gap=int(_params().get('WF_GAP', 5)), splits=int(_params().get('WF_SPLITS', 5)))
+    wf_results, wf_summary = _purged_walk_forward(
+        X_train,
+        y_train,
+        train_df['Target_Return'],
+        gap=int(PARAMS.get('WF_GAP', 5)),
+        splits=int(PARAMS.get('WF_SPLITS', 5)),
+    )
 
     feature_to_sample_ratio = float(len(selected_features) / max(len(train_df), 1))
-    model = _fit_model(X_train, y_train) if y_train.nunique() >= 2 and len(X_train) >= 80 and len(selected_features) >= int(_params().get('MODEL_MIN_SELECTED_FEATURES', 8)) else None
+    model = _fit_model(X_train, y_train) if y_train.nunique() >= 2 and len(X_train) >= 80 and len(selected_features) >= int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)) else None
     oot_metrics = {'hit_rate': 0.0, 'avg_return': 0.0, 'pred_accuracy': 0.0, 'profit_factor': 0.0, 'coverage': 0.0}
     if model is not None and len(X_oot) > 0 and y_oot.nunique() >= 1:
         pred_oot = model.predict(X_oot)
         oot_metrics = _evaluate_predictions(pred_oot, y_oot, ret_oot)
 
     overfit_gap = float(max(0.0, wf_summary.get('ret_mean', 0.0) - oot_metrics.get('avg_return', 0.0)))
-    leakage_guards = {'feature_selection_train_only': not bool(approved_selected), 'purged_walk_forward': True, 'out_of_time_holdout': True}
+    leakage_guards = {
+        'feature_selection_train_only': True,
+        'purged_walk_forward': True,
+        'out_of_time_holdout': True,
+    }
     warnings: list[str] = []
-    if len(selected_features) < int(_params().get('MODEL_MIN_SELECTED_FEATURES', 8)):
+    if len(selected_features) < int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)):
         warnings.append('selected_features_below_minimum')
-    if oot_metrics.get('profit_factor', 0.0) < float(_params().get('MODEL_MIN_OOT_PF', 1.0)):
+    if oot_metrics.get('profit_factor', 0.0) < float(PARAMS.get('MODEL_MIN_OOT_PF', 1.0)):
         warnings.append('oot_profit_factor_below_floor')
-    if oot_metrics.get('hit_rate', 0.0) < float(_params().get('MODEL_MIN_OOT_HIT_RATE', 0.45)):
+    if oot_metrics.get('hit_rate', 0.0) < float(PARAMS.get('MODEL_MIN_OOT_HIT_RATE', 0.45)):
         warnings.append('oot_hit_rate_below_floor')
     if wf_summary.get('effective_splits', 0) < 3:
         warnings.append('insufficient_walk_forward_splits')
@@ -317,8 +414,6 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         'rows_out_of_time': int(len(oot_df)),
         'selected_features_count': int(len(selected_features)),
         'selected_features': selected_features,
-        'selected_features_source': 'approved_snapshot' if approved_selected else 'train_only_selection',
-        'approved_resolution_chain': ACTIVE_TRAIN_PARAMS.get('_approved_resolution_chain', []),
         'feature_to_sample_ratio': feature_to_sample_ratio,
         'walk_forward_summary': wf_summary,
         'walk_forward_results': wf_results[:10],
@@ -340,11 +435,11 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     for regime in regimes:
         regime_df = train_df[train_df['Regime'] == regime].copy() if 'Regime' in train_df.columns else pd.DataFrame()
         model_path = Path(f'models/model_{regime}.pkl')
-        if len(regime_df) < int(_params().get('MODEL_MIN_REGIME_SAMPLES', 50)):
+        if len(regime_df) < int(PARAMS.get('MODEL_MIN_REGIME_SAMPLES', 50)):
             metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '樣本不足'}
             continue
         safe_features = [f for f in selected_features if f in regime_df.columns]
-        if len(safe_features) < max(4, int(_params().get('MODEL_MIN_SELECTED_FEATURES', 8)) // 2):
+        if len(safe_features) < max(4, int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)) // 2):
             metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '無足夠可用特徵'}
             continue
         X_reg = regime_df[safe_features].replace([np.inf, -np.inf], np.nan).fillna(0.0)
@@ -359,14 +454,14 @@ def train_models() -> tuple[Path, dict[str, Any]]:
 
     overall_score = float(oot_metrics['avg_return'] * 100 + min(oot_metrics['profit_factor'], 5.0) + oot_metrics['hit_rate'] * 10)
     version_tag = create_version_tag('trained')
-    snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features)}, note='approved pipeline 訓練完成快照')
+    snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features)}, note='任務收尾版訓練完成快照')
 
     promotion_ready = (
         save_count > 0
-        and len(selected_features) >= int(_params().get('MODEL_MIN_SELECTED_FEATURES', 8))
-        and overall_score >= float(_params().get('MODEL_MIN_PROMOTION_SCORE', 0.0))
-        and oot_metrics.get('profit_factor', 0.0) >= float(_params().get('MODEL_MIN_OOT_PF', 1.0))
-        and oot_metrics.get('hit_rate', 0.0) >= float(_params().get('MODEL_MIN_OOT_HIT_RATE', 0.45))
+        and len(selected_features) >= int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8))
+        and overall_score >= float(PARAMS.get('MODEL_MIN_PROMOTION_SCORE', 0.0))
+        and oot_metrics.get('profit_factor', 0.0) >= float(PARAMS.get('MODEL_MIN_OOT_PF', 1.0))
+        and oot_metrics.get('hit_rate', 0.0) >= float(PARAMS.get('MODEL_MIN_OOT_HIT_RATE', 0.45))
     )
     best_entry = get_best_version_entry()
     best_score = float(best_entry.get('metrics', {}).get('overall_score', -1e18)) if best_entry else -1e18
@@ -383,17 +478,12 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     else:
         report['promotion'] = {'status': 'kept_current', 'version': version_tag}
 
-    try:
-        scoreboard_path, scoreboard_payload = TrainingTickerScoreboard().build_from_parts(
-            train_df=train_df,
-            oot_df=oot_df,
-            pred_oot=(pred_oot.tolist() if 'pred_oot' in locals() else None),
-            selected_features=selected_features,
-        )
-        report['ticker_scoreboard'] = {'path': str(scoreboard_path), 'payload': scoreboard_payload}
-    except Exception as exc:
-        report['ticker_scoreboard'] = {'status': 'scoreboard_failed', 'error': str(exc)}
-
+    directional_report = _export_directional_artifacts(train_df, all_features)
+    report['directional_artifacts'] = {
+        'status': directional_report.get('enabled', False),
+        'live_mount_enabled': directional_report.get('live_mount_enabled', False),
+        'scopes': {k: {'status': v.get('status'), 'saved_regime_models': v.get('saved_regime_models', 0)} for k, v in directional_report.get('scopes', {}).items()},
+    }
     report['regimes'] = metrics_by_regime
     report['overall_score'] = overall_score
     report['promotion_ready'] = promotion_ready

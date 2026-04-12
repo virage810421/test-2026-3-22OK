@@ -13,6 +13,7 @@ import pyodbc
 import requests
 import urllib3
 from io import StringIO
+from fts_sql_table_name_map import sql_table
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -26,7 +27,7 @@ DB_CONN_STR = (
     r"Trusted_Connection=yes;"
 )
 
-TABLE_NAME = "monthly_revenue_simple"
+TABLE_NAME = sql_table('monthly_revenue_simple')
 
 CSV_OUTPUT = "monthly_revenue_simple.csv"
 CSV_STOCK_CACHE = "stock_list_cache_listed.csv"
@@ -509,11 +510,11 @@ def write_to_sql(df):
             cursor.execute(f"""
                 IF EXISTS (
                     SELECT 1
-                    FROM dbo.{TABLE_NAME}
+                    FROM {TABLE_NAME}
                     WHERE [{COL_TICKER}] = ? AND [{COL_YMD}] = ?
                 )
                 BEGIN
-                    UPDATE dbo.{TABLE_NAME}
+                    UPDATE {TABLE_NAME}
                     SET
                         [{COL_COMPANY_NAME}] = ?,
                         [{COL_INDUSTRY}] = ?,
@@ -523,7 +524,7 @@ def write_to_sql(df):
                 END
                 ELSE
                 BEGIN
-                    INSERT INTO dbo.{TABLE_NAME}
+                    INSERT INTO {TABLE_NAME}
                     (
                         [{COL_TICKER}],
                         [{COL_COMPANY_NAME}],

@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-04-12 10:56:01",
+  "module_version": "v87_stock_master_service",
+  "status": "stock_master_ready",
+  "csv_path": "C:\\test\\test-2026-3-22OK\\runtime\\stock_master.csv",
+  "row_count": 1064,
+  "sector_counts": {
+    "OTHERS": 1058,
+    "CYCLICAL": 6
+  },
+  "sql_sync": {
+    "status": "refreshed",
+    "table": "stock_master",
+    "rows": 1064
+  }
+}

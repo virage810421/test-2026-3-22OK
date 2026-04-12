@@ -13,19 +13,6 @@ import numpy as np
 import pandas as pd
 
 try:
-    from config import PARAMS as LEGACY_PARAMS  # type: ignore
-except Exception:  # pragma: no cover
-    LEGACY_PARAMS = {}
-
-try:
-    from market_language import apply_market_language_features, latest_feature_vector as market_language_feature_vector  # type: ignore
-except Exception:  # pragma: no cover
-    def apply_market_language_features(df, p=None):
-        return df
-    def market_language_feature_vector(df, p=None):
-        return {}
-
-try:
     from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # pragma: no cover
     class _Paths:
@@ -61,11 +48,11 @@ except Exception:  # pragma: no cover
     def log(msg: str) -> None:
         print(msg)
 
-from fts_feature_catalog import FEATURE_BUCKETS, PRIORITY_NEW_FEATURES_20
+from fts_feature_catalog import FEATURE_BUCKETS, PRIORITY_NEW_FEATURES_20, FEATURE_SPECS, LIVE_SAFE_FEATURES, get_training_feature_groups, get_live_feature_groups
 
 
 class FeatureService:
-    MODULE_VERSION = 'v85_feature_service_market_language_safe_merge'
+    MODULE_VERSION = 'v85_feature_service_directional_range_safe'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'feature_service.json'
@@ -116,16 +103,80 @@ class FeatureService:
         tr = pd.concat([(high - low), (high - close.shift(1)).abs(), (low - close.shift(1)).abs()], axis=1).max(axis=1)
         return tr.rolling(window, min_periods=1).mean().fillna(0.0)
 
-    def load_selected_features(self) -> list[str]:
+
+    def _compute_directional_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, float]:
+        close = safe_float(row.get('Close', row.get('close', 0.0)), 0.0)
+        open_ = safe_float(row.get('Open', row.get('open', close)), close)
+        high = safe_float(row.get('High', row.get('high', max(close, open_))), max(close, open_))
+        low = safe_float(row.get('Low', row.get('low', min(close, open_))), min(close, open_))
+        ma20 = safe_float(row.get('MA20', row.get('MA_20', close)), close)
+        rsi = safe_float(row.get('RSI', 50.0), 50.0)
+        bb_width = safe_float(row.get('BB_Width', 0.0), 0.0)
+        total_ratio = safe_float(row.get('Total_Ratio', 0.0), 0.0)
+        upper_shadow = safe_float(row.get('Upper_Shadow_Pct', row.get('Upper_Shadow', 0.0)), 0.0)
+        lower_shadow = safe_float(row.get('Lower_Shadow_Pct', row.get('Lower_Shadow', 0.0)), 0.0)
+        intraday_return = safe_float(row.get('Intraday_Return', (close - open_) / open_ if open_ else 0.0), 0.0)
+        gap_pct = safe_float(row.get('Gap_Pct', 0.0), 0.0)
+        rs_market = safe_float(row.get('RS_vs_Market_20', 0.0), 0.0)
+
+        if history_df is not None and not history_df.empty and len(history_df) >= 10 and 'Close' in history_df.columns:
+            h = history_df.copy()
+            c = pd.to_numeric(h['Close'], errors='coerce').ffill().fillna(close)
+            high_s = pd.to_numeric(h.get('High', c), errors='coerce').fillna(c)
+            low_s = pd.to_numeric(h.get('Low', c), errors='coerce').fillna(c)
+            roll_high = float(high_s.rolling(20, min_periods=5).max().iloc[-1])
+            roll_low = float(low_s.rolling(20, min_periods=5).min().iloc[-1])
+            range_width = max(roll_high - roll_low, 1e-9)
+            range_pos = (close - roll_low) / range_width
+            range_top = max(0.0, (roll_high - close) / max(abs(close), 1e-9))
+            range_bottom = max(0.0, (close - roll_low) / max(abs(close), 1e-9))
+            center = (roll_high + roll_low) / 2.0
+            center_dist = abs(close - center) / max(abs(close), 1e-9)
+        else:
+            range_pos = 0.5
+            range_top = 0.0
+            range_bottom = 0.0
+            center_dist = 0.0
+            range_width = bb_width
+
+        mean_rev = max(0.0, (1.0 - abs(range_pos - 0.5) * 2.0)) * max(0.0, (60.0 - abs(rsi - 50.0)) / 60.0)
+        exhaustion = max(0.0, abs(range_pos - 0.5) * 2.0) * max(0.0, abs(rsi - 50.0) / 50.0)
+        bounce_quality = max(0.0, (1.0 - range_pos) * max(0.0, lower_shadow) * max(0.0, 1.0 - abs(intraday_return)))
+        fade_quality = max(0.0, range_pos * max(0.0, upper_shadow) * max(0.0, 1.0 - abs(intraday_return)))
+
+        out = {
+            'Short_Failed_Rebound': float((close < ma20) and (intraday_return < 0) and (upper_shadow > lower_shadow)),
+            'Short_Weak_Bounce': float((close < ma20) and (intraday_return <= 0.01) and (rsi < 55)),
+            'Short_Distribution_Pressure': float((close < ma20) and (total_ratio < 0)),
+            'Short_Breakdown_Followthrough': float((close < ma20) and (gap_pct < 0) and (intraday_return <= 0)),
+            'Short_Upper_Shadow_Pressure': float(max(0.0, upper_shadow - lower_shadow)),
+            'Short_GapDown_Continuation': float((gap_pct < 0) and (close <= open_)),
+            'Short_Below_MA20_FailedRetake': float((close < ma20) and (high < ma20)),
+            'Short_RS_Weakness': float(max(0.0, -rs_market)),
+            'Range_Position_Pct': float(min(max(range_pos, 0.0), 1.0)),
+            'Distance_To_Range_Top': float(range_top),
+            'Distance_To_Range_Bottom': float(range_bottom),
+            'Range_Mean_Reversion_Score': float(mean_rev),
+            'Range_Exhaustion_Score': float(exhaustion),
+            'Range_Width_Pct': float(range_width / max(abs(close), 1e-9) if close else 0.0),
+            'Range_Center_Distance': float(center_dist),
+            'Range_Bounce_Quality': float(bounce_quality),
+            'Range_Fade_Quality': float(fade_quality),
+        }
         try:
-            from config import PARAMS  # type: ignore
-            from fts_approved_artifact_loader import ApprovedArtifactLoader  # type: ignore
-            if bool(PARAMS.get('APPROVED_FEATURE_SNAPSHOT_USE_IN_TRAINING', True) or PARAMS.get('APPROVED_FEATURE_SNAPSHOT_USE_IN_LIVE', True)):
-                approved = ApprovedArtifactLoader().load_approved_selected_features(scope=str(PARAMS.get('APPROVED_DEFAULT_SCOPE', 'default')))
-                if approved:
-                    return approved
+            from fts_regime_service import RegimeService
+            regime_row = RegimeService().build_regime_row(row, history_df=history_df)
+            out.update({k: safe_float(v, 0.0) for k, v in regime_row.items()})
         except Exception:
-            pass
+            out.setdefault('Range_Confidence', 0.0)
+            out.setdefault('Trend_Confidence', 0.0)
+            out.setdefault('Range_Width_Pctl', 0.5)
+            out.setdefault('MA_Slope_Flatness', 0.0)
+            out.setdefault('BB_Width_Pctl', 0.5)
+            out.setdefault('ADX_Low_Regime_Flag', 0.0)
+        return out
+
+    def load_selected_features(self) -> list[str]:
         if not self.selected_features_path.exists():
             return []
         try:
@@ -230,7 +281,11 @@ class FeatureService:
 
         out: dict[str, float] = {}
         missing: list[str] = []
+        allow_directional_live = bool(getattr(CONFIG, 'enable_directional_features_in_live', False))
         for key in picked:
+            if (not allow_directional_live) and key not in LIVE_SAFE_FEATURES:
+                missing.append(key)
+                continue
             if '_X_' in key:
                 out[key] = self._combo_feature(key, features)
                 continue
@@ -288,7 +343,6 @@ class FeatureService:
         out['ADV20_Pctl'] = self._rolling_percentile(out['ADV20_Proxy'], 252)
         out['ATR_Pct_Pctl'] = self._rolling_percentile(out['ATR_Pct'], 252)
         out['RealizedVol_20_Pctl'] = self._rolling_percentile(out['RealizedVol_20'], 252)
-        out = apply_market_language_features(out, LEGACY_PARAMS)
         return out
 
     def extract_ai_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:
@@ -339,9 +393,7 @@ class FeatureService:
             latest = enriched.iloc[-1].to_dict()
             for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20']:
                 features[k] = safe_float(latest.get(k, features.get(k, 0.0)), features.get(k, 0.0))
-            for k, v in market_language_feature_vector(history_df, LEGACY_PARAMS).items():
-                features[k] = safe_float(v, 0.0)
-        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7','ML_Regime_Code','ML_Trend_Bull','ML_Trend_Bear','ML_Trend_Side','ML_Volume_Breakout','ML_Price_Breakout','ML_Oversold','ML_SmartMoney_Buying']
+        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7']
         for k in passthrough:
             if k in row:
                 features[k] = safe_float(row.get(k, 0), 0)
@@ -349,6 +401,9 @@ class FeatureService:
         features['Chip_Total_Ratio_Rank'] = safe_float(row.get('Chip_Total_Ratio_Rank', row.get('Chip_Total_Ratio_Pctl', 0.5)), 0.5)
         features['Regime_TrendStrength_X_ScoreGap'] = safe_float(row.get('Regime_TrendStrength_X_ScoreGap', (features['ADX'] / 100.0) * features['Score_Gap']), 0)
         features['Volatility_X_SignalConflict'] = safe_float(row.get('Volatility_X_SignalConflict', features.get('ATR_Pctl_252', 0.0) * features['Signal_Conflict']), 0)
+        directional = self._compute_directional_features(row, history_df=history_df)
+        if bool(getattr(CONFIG, 'enable_directional_features_in_training', True)):
+            features.update(directional)
         return features
 
     def mount_live_features(self, ticker: str, as_of_row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> tuple[dict[str, Any], dict[str, float]]:
@@ -401,6 +456,10 @@ class FeatureService:
             'selected_features_present': bool(selected),
             'selected_feature_count': len(selected),
             'feature_buckets': {k: len(v) for k, v in FEATURE_BUCKETS.items()},
+            'directional_training_enabled': bool(getattr(CONFIG, 'enable_directional_features_in_training', True)),
+            'directional_live_enabled': bool(getattr(CONFIG, 'enable_directional_features_in_live', False)),
+            'live_feature_groups': get_live_feature_groups(),
+            'training_feature_groups': get_training_feature_groups(),
             'priority_new_features_20': PRIORITY_NEW_FEATURES_20,
             'official_percentile_mode': True,
             'precise_event_calendar_mode': True,

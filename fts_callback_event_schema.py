@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
@@ -22,6 +23,11 @@ class CallbackEventSchema:
             'timestamp': str(raw.get('timestamp', '')).strip(),
             'reject_code': str(raw.get('reject_code', '')).strip(),
             'reject_reason': str(raw.get('reject_reason', '')).strip(),
+            'direction_bucket': str(raw.get('direction_bucket', raw.get('approved_pool_type', ''))).strip().upper(),
+            'strategy_bucket': str(raw.get('strategy_bucket', '')).strip().upper(),
+            'approved_pool_type': str(raw.get('approved_pool_type', '')).strip().upper(),
+            'model_scope': str(raw.get('model_scope', '')).strip().upper(),
+            'range_confidence': safe_float(raw.get('range_confidence', 0.0), 0.0),
             'raw_payload': raw,
         }
         missing = [k for k in self.REQUIRED if not payload.get(k)]
@@ -30,11 +36,7 @@ class CallbackEventSchema:
         return payload
 
     def build_definition(self) -> tuple[str, dict[str, Any]]:
-        payload = {
-            'generated_at': now_str(),
-            'status': 'callback_event_schema_defined',
-            'required_fields': list(self.REQUIRED),
-        }
+        payload = {'generated_at': now_str(), 'status': 'callback_event_schema_defined', 'required_fields': list(self.REQUIRED), 'directional_fields': ['direction_bucket','strategy_bucket','approved_pool_type','model_scope','range_confidence']}
         path = PATHS.runtime_dir / 'callback_event_schema.json'
         write_json(path, payload)
         return str(path), payload

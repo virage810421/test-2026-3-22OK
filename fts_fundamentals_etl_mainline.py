@@ -12,6 +12,7 @@ import pandas as pd
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
 from fts_data_quality_guard import safe_float_or_none, safe_int_or_none, build_frame_quality_summary
+from fts_sql_table_name_map import sql_table
 
 try:  # optional dependency on user machine
     import yfinance as yf  # type: ignore
@@ -57,7 +58,7 @@ class FundamentalsETLMainline:
 
     MODULE_VERSION = 'v83_fundamentals_etl_mainline_builtin'
     CSV_FILENAME = str(getattr(CONFIG, 'fundamentals_csv_filename', 'market_financials_backup_fullspeed.csv'))
-    TABLE_NAME = str(getattr(CONFIG, 'fundamentals_table_name', 'fundamentals_clean'))
+    TABLE_NAME = sql_table(str(getattr(CONFIG, 'fundamentals_table_name', 'fundamentals_clean')))
     TARGET_REPORTS_PER_STOCK = int(getattr(CONFIG, 'fundamentals_target_reports_per_stock', 2))
 
     def __init__(self):

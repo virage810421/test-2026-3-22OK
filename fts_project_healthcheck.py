@@ -11,6 +11,7 @@ import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
+from fts_sql_table_name_map import EN_TO_ZH_TABLE
 
 EXCLUDE_DIRS = {
     "__pycache__", ".git", ".venv", "venv", "env", "node_modules",
@@ -76,6 +77,7 @@ CORE_TABLE_NAMES = [
     "feature_event_calendar",
     "live_feature_mount",
 ]
+CORE_TABLE_ALIASES = sorted(set(CORE_TABLE_NAMES + [EN_TO_ZH_TABLE.get(t, t) for t in CORE_TABLE_NAMES]))
 
 @dataclass
 class CompileResult:
@@ -231,7 +233,7 @@ class ProjectHealthcheck:
                     content += "\n" + p.read_text(encoding="utf-8", errors="ignore")
                 except Exception:
                     pass
-        table_hits = {t: (t in content) for t in CORE_TABLE_NAMES}
+        table_hits = {t: (t in content) for t in CORE_TABLE_ALIASES}
         return {
             "present_files": present_files,
             "core_table_names": table_hits,

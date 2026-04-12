@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-04-12 10:56:00",
+  "approved_at": "2026-04-12 10:56:00",
+  "approved_by": "approved_pipeline_auto",
+  "scope": "default",
+  "source_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+  "approved_feature_snapshot_path": "C:\\test\\test-2026-3-22OK\\runtime\\research_lab\\approved_pipeline\\approved_feature_snapshot_default.pkl",
+  "feature_count": 4,
+  "status": "approved_feature_snapshot_ready"
+}

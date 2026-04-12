@@ -1,7 +1,7 @@
 {
   "project_root": "C:\\test\\test-2026-3-22OK",
   "summary": {
-    "python_files_total": 288,
+    "python_files_total": 313,
     "compile_failures": 0,
     "core_import_failures": 0,
     "missing_local_import_edges": 0,
@@ -290,7 +290,22 @@
       "error": ""
     },
     {
+      "file": "advanced_optimizer.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "alert_manager.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "alpha_miner.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "auto_optimizer.py",
       "ok": true,
       "error": ""
     },
@@ -335,6 +350,11 @@
       "error": ""
     },
     {
+      "file": "feature_selector.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "formal_trading_system.py",
       "ok": true,
       "error": ""
@@ -366,6 +386,16 @@
     },
     {
       "file": "fts_ai_quality.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_approved_artifact_loader.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_approved_pipeline.py",
       "ok": true,
       "error": ""
     },
@@ -501,6 +531,16 @@
     },
     {
       "file": "fts_chip_enrichment_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_chip_factor_snapshot_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_company_quality_snapshot_service.py",
       "ok": true,
       "error": ""
     },
@@ -805,6 +845,21 @@
       "error": ""
     },
     {
+      "file": "fts_live_watchlist_loader.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_watchlist_promoter.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_live_watchlist_registry.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_local_history_bootstrap.py",
       "ok": true,
       "error": ""
@@ -945,6 +1000,11 @@
       "error": ""
     },
     {
+      "file": "fts_price_liquidity_snapshot_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_progress.py",
       "ok": true,
       "error": ""
@@ -1005,6 +1065,11 @@
       "error": ""
     },
     {
+      "file": "fts_regime_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_reject_classifier.py",
       "ok": true,
       "error": ""
@@ -1016,6 +1081,11 @@
     },
     {
       "file": "fts_research_gate.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_research_lab.py",
       "ok": true,
       "error": ""
     },
@@ -1046,6 +1116,11 @@
     },
     {
       "file": "fts_retry_queue.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_revenue_momentum_snapshot_service.py",
       "ok": true,
       "error": ""
     },
@@ -1125,6 +1200,11 @@
       "error": ""
     },
     {
+      "file": "fts_sql_table_name_map.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_stage_inputs_outputs.py",
       "ok": true,
       "error": ""
@@ -1141,6 +1221,11 @@
     },
     {
       "file": "fts_state_repair.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_stock_master_service.py",
       "ok": true,
       "error": ""
     },
@@ -1255,6 +1340,21 @@
       "error": ""
     },
     {
+      "file": "fts_training_ticker_scoreboard.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_universe_common.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_training_universe_service.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_unused_candidates.py",
       "ok": true,
       "error": ""
@@ -1325,12 +1425,22 @@
       "error": ""
     },
     {
+      "file": "kline_cache.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "launcher.py",
       "ok": true,
       "error": ""
     },
     {
       "file": "live_paper_trading.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "market_language.py",
       "ok": true,
       "error": ""
     },
@@ -1370,7 +1480,17 @@
       "error": ""
     },
     {
+      "file": "optimizer.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "paper_broker.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "param_storage.py",
       "ok": true,
       "error": ""
     },
@@ -1445,6 +1565,11 @@
       "error": ""
     },
     {
+      "file": "update_training_universe_daily_columns_to_zh.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "yahoo_csv_to_sql.py",
       "ok": true,
       "error": ""
@@ -1455,79 +1580,79 @@
       "module": "formal_trading_system_v83_official_main",
       "ok": true,
       "error": "",
-      "seconds": 1.085
+      "seconds": 0.844
     },
     {
       "module": "fts_fundamentals_etl_mainline",
       "ok": true,
       "error": "",
-      "seconds": 0.921
+      "seconds": 0.794
     },
     {
       "module": "fts_training_governance_mainline",
       "ok": true,
       "error": "",
-      "seconds": 1.725
+      "seconds": 1.458
     },
     {
       "module": "fts_feature_service",
       "ok": true,
       "error": "",
-      "seconds": 0.487
+      "seconds": 0.416
     },
     {
       "module": "fts_screening_engine",
       "ok": true,
       "error": "",
-      "seconds": 1.368
+      "seconds": 0.973
     },
     {
       "module": "fts_cross_sectional_percentile_service",
       "ok": true,
       "error": "",
-      "seconds": 0.823
+      "seconds": 0.735
     },
     {
       "module": "fts_event_calendar_service",
       "ok": true,
       "error": "",
-      "seconds": 0.49
+      "seconds": 0.412
     },
     {
       "module": "fts_decision_execution_bridge",
       "ok": true,
       "error": "",
-      "seconds": 0.472
+      "seconds": 0.43
     },
     {
       "module": "fts_phase1_upgrade",
       "ok": true,
       "error": "",
-      "seconds": 0.492
+      "seconds": 0.405
     },
     {
       "module": "fts_phase2_mock_broker_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.459
+      "seconds": 0.422
     },
     {
       "module": "fts_phase3_real_cutover_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.588
+      "seconds": 0.499
     },
     {
       "module": "model_governance",
       "ok": true,
       "error": "",
-      "seconds": 0.081
+      "seconds": 0.07
     },
     {
       "module": "db_setup",
       "ok": true,
       "error": "",
-      "seconds": 0.051
+      "seconds": 0.032
     }
   ],
   "local_imports_by_file": {
@@ -1701,7 +1826,26 @@
       "performance"
     ],
     "advanced_chart1_runtime_variants\\yahoo_csv_to_sql.py": [],
+    "advanced_optimizer.py": [
+      "config",
+      "fts_research_lab",
+      "fts_utils",
+      "kline_cache",
+      "param_storage",
+      "screening"
+    ],
     "alert_manager.py": [],
+    "alpha_miner.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "auto_optimizer.py": [
+      "advanced_optimizer",
+      "config",
+      "optimizer",
+      "param_storage",
+      "sector_classifier"
+    ],
     "broker_base.py": [],
     "config.py": [],
     "daily_chip_etl.py": [
@@ -1723,6 +1867,11 @@
       "fts_level3_runtime_loader",
       "paper_broker",
       "risk_gateway"
+    ],
+    "feature_selector.py": [
+      "fts_config",
+      "fts_research_lab",
+      "fts_utils"
     ],
     "formal_trading_system.py": [
       "formal_trading_system_v83_official_main"
@@ -1761,6 +1910,22 @@
     "fts_ai_quality.py": [
       "fts_config",
       "fts_utils"
+    ],
+    "fts_approved_artifact_loader.py": [
+      "fts_config",
+      "fts_research_lab",
+      "fts_utils",
+      "param_storage"
+    ],
+    "fts_approved_pipeline.py": [
+      "alpha_miner",
+      "config",
+      "fts_approved_artifact_loader",
+      "fts_config",
+      "fts_research_lab",
+      "fts_utils",
+      "model_governance",
+      "param_storage"
     ],
     "fts_architecture_map.py": [
       "fts_config",
@@ -1864,6 +2029,17 @@
     ],
     "fts_chip_enrichment_service.py": [
       "fts_config",
+      "fts_sql_table_name_map",
+      "fts_utils"
+    ],
+    "fts_chip_factor_snapshot_service.py": [
+      "fts_config",
+      "fts_training_universe_common",
+      "fts_utils"
+    ],
+    "fts_company_quality_snapshot_service.py": [
+      "fts_config",
+      "fts_training_universe_common",
       "fts_utils"
     ],
     "fts_compat.py": [
@@ -1967,7 +2143,9 @@
       "fts_config",
       "fts_utils"
     ],
-    "fts_etl_monthly_revenue_service.py": [],
+    "fts_etl_monthly_revenue_service.py": [
+      "fts_sql_table_name_map"
+    ],
     "fts_etl_quality.py": [
       "fts_config",
       "fts_utils"
@@ -1996,6 +2174,7 @@
       "fts_cross_sectional_percentile_service",
       "fts_event_calendar_service",
       "fts_feature_catalog",
+      "fts_regime_service",
       "fts_utils"
     ],
     "fts_feature_stack_audit.py": [
@@ -2013,6 +2192,7 @@
     "fts_fundamentals_etl_mainline.py": [
       "fts_config",
       "fts_data_quality_guard",
+      "fts_sql_table_name_map",
       "fts_utils"
     ],
     "fts_fundamentals_true_backfill.py": [],
@@ -2063,6 +2243,7 @@
       "fts_utils"
     ],
     "fts_legacy_master_pipeline_impl.py": [
+      "fts_sql_table_name_map",
       "fundamental_screener",
       "performance",
       "portfolio_risk",
@@ -2109,6 +2290,18 @@
       "fts_kill_switch",
       "fts_market_rules_tw",
       "fts_upgrade_runtime"
+    ],
+    "fts_live_watchlist_loader.py": [
+      "config",
+      "fts_config"
+    ],
+    "fts_live_watchlist_promoter.py": [
+      "config",
+      "fts_config",
+      "fts_live_watchlist_registry"
+    ],
+    "fts_live_watchlist_registry.py": [
+      "fts_config"
     ],
     "fts_local_history_bootstrap.py": [
       "fts_config",
@@ -2237,6 +2430,11 @@
       "fts_config",
       "fts_utils"
     ],
+    "fts_price_liquidity_snapshot_service.py": [
+      "fts_config",
+      "fts_training_universe_common",
+      "fts_utils"
+    ],
     "fts_progress.py": [
       "fts_config",
       "fts_target95_push"
@@ -2250,6 +2448,7 @@
     ],
     "fts_project_healthcheck.py": [
       "fts_screening_engine",
+      "fts_sql_table_name_map",
       "screening"
     ],
     "fts_project_hygiene.py": [],
@@ -2275,6 +2474,10 @@
     "fts_recovery_validation.py": [
       "fts_upgrade_runtime"
     ],
+    "fts_regime_service.py": [
+      "fts_config",
+      "fts_utils"
+    ],
     "fts_reject_classifier.py": [
       "fts_config",
       "fts_utils"
@@ -2284,6 +2487,10 @@
       "fts_utils"
     ],
     "fts_research_gate.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_research_lab.py": [
       "fts_config",
       "fts_utils"
     ],
@@ -2309,6 +2516,11 @@
     ],
     "fts_retry_queue.py": [
       "fts_config",
+      "fts_utils"
+    ],
+    "fts_revenue_momentum_snapshot_service.py": [
+      "fts_config",
+      "fts_training_universe_common",
       "fts_utils"
     ],
     "fts_risk.py": [
@@ -2366,6 +2578,7 @@
     "fts_sql_feature_snapshot_sync.py": [
       "fts_config"
     ],
+    "fts_sql_table_name_map.py": [],
     "fts_stage_inputs_outputs.py": [
       "fts_config",
       "fts_utils"
@@ -2383,7 +2596,15 @@
       "fts_config",
       "fts_utils"
     ],
+    "fts_stock_master_service.py": [
+      "config",
+      "fts_config",
+      "fts_sector_service",
+      "fts_training_universe_common",
+      "fts_utils"
+    ],
     "fts_strategy_policy_layer.py": [
+      "config",
       "fts_config"
     ],
     "fts_submission_gate.py": [
@@ -2488,6 +2709,25 @@
       "fts_utils",
       "model_governance"
     ],
+    "fts_training_ticker_scoreboard.py": [
+      "fts_config"
+    ],
+    "fts_training_universe_common.py": [
+      "fts_config",
+      "fts_utils"
+    ],
+    "fts_training_universe_service.py": [
+      "config",
+      "fts_chip_factor_snapshot_service",
+      "fts_company_quality_snapshot_service",
+      "fts_config",
+      "fts_price_liquidity_snapshot_service",
+      "fts_revenue_momentum_snapshot_service",
+      "fts_sector_service",
+      "fts_stock_master_service",
+      "fts_training_universe_common",
+      "fts_utils"
+    ],
     "fts_unused_candidates.py": [
       "fts_config",
       "fts_utils"
@@ -2518,6 +2758,7 @@
     "fts_watchlist_service.py": [
       "config",
       "fts_config",
+      "fts_live_watchlist_loader",
       "fts_utils"
     ],
     "fts_wave1_body_upgrade_templates.py": [
@@ -2541,7 +2782,11 @@
       "fts_utils"
     ],
     "fundamental_screener.py": [
-      "config"
+      "config",
+      "fts_sql_table_name_map"
+    ],
+    "kline_cache.py": [
+      "fts_market_data_service"
     ],
     "launcher.py": [],
     "live_paper_trading.py": [
@@ -2554,6 +2799,7 @@
       "sector_classifier",
       "strategies"
     ],
+    "market_language.py": [],
     "master_pipeline.py": [
       "fts_pipeline",
       "fts_utils"
@@ -2570,16 +2816,30 @@
     "models\\test_line.py": [],
     "monitor_center.py": [
       "config",
+      "fts_sql_table_name_map",
       "performance"
     ],
     "monthly_revenue_simple.py": [
       "fts_etl_monthly_revenue_service"
     ],
+    "optimizer.py": [
+      "config",
+      "fts_research_lab",
+      "fts_utils",
+      "kline_cache",
+      "param_storage",
+      "screening"
+    ],
     "paper_broker.py": [
       "broker_base"
     ],
+    "param_storage.py": [
+      "fts_research_lab",
+      "fts_utils"
+    ],
     "performance.py": [
-      "config"
+      "config",
+      "fts_sql_table_name_map"
     ],
     "portfolio_risk.py": [
       "config",
@@ -2625,8 +2885,10 @@
     "system_guard.py": [
       "alert_manager",
       "config",
+      "fts_sql_table_name_map",
       "performance"
     ],
+    "update_training_universe_daily_columns_to_zh.py": [],
     "yahoo_csv_to_sql.py": [
       "fts_fundamentals_etl_mainline",
       "fts_utils"
@@ -2707,16 +2969,26 @@
       "db_setup_research_plus.py"
     ],
     "core_table_names": {
-      "fundamentals_clean": true,
-      "monthly_revenue_simple": true,
       "daily_chip_data": true,
-      "execution_orders": false,
-      "execution_fills": false,
       "execution_account_snapshot": false,
+      "execution_fills": false,
+      "execution_orders": false,
       "execution_positions_snapshot": false,
       "feature_cross_section_snapshot": true,
       "feature_event_calendar": true,
-      "live_feature_mount": true
+      "fundamentals_clean": true,
+      "live_feature_mount": true,
+      "monthly_revenue_simple": true,
+      "執行委託單": false,
+      "執行成交回報": false,
+      "基本面清洗": false,
+      "實戰特徵掛載": false,
+      "帳戶快照": false,
+      "月營收簡表": false,
+      "每日籌碼資料": false,
+      "特徵事件日曆": false,
+      "特徵截面快照": false,
+      "部位快照": false
     },
     "all_core_tables_declared": false
   },
@@ -2752,8 +3024,8 @@
         "formal_trading_system_v83_official_main.py"
       ],
       "ok": false,
-      "seconds": 44.632,
-      "stdout_tail": "[01:22:00] ========================================================================\n[01:22:00] ? 啟動 正式交易主控版_v83_official_main\n[01:22:00] ? 模式：DAILY\n[01:22:00] ========================================================================\n[01:22:27] ? mainline stage | daily_chip_etl.py | ok=True | skipped=False\n[01:22:29] ? mainline stage | monthly_revenue_simple.py | ok=True | skipped=False\n[01:22:40] ? mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False\n[01:22:43] ? legacy decision engine | ok=False\n[01:22:43] ? control tower failure: 'cp950' codec can't encode character '\\U0001f9ec' in position 11: illegal multibyte sequence\n",
+      "seconds": 43.731,
+      "stdout_tail": "[17:13:20] ========================================================================\n[17:13:20] ? 啟動 正式交易主控版_v83_official_main\n[17:13:20] ? 模式：DAILY\n[17:13:20] ========================================================================\n[17:13:40] ? mainline stage | daily_chip_etl.py | ok=True | skipped=False\n[17:13:41] ? mainline stage | monthly_revenue_simple.py | ok=False | skipped=False\n[17:13:51] ? mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False\n[17:14:02] ? legacy decision engine | ok=True\n[17:14:03] ? control tower failure: 'cp950' codec can't encode character '\\U0001f9ec' in position 11: illegal multibyte sequence\n",
       "stderr_tail": "",
       "returncode": 1
     },
@@ -2763,8 +3035,8 @@
         "--train"
       ],
       "ok": true,
-      "seconds": 5.897,
-      "stdout_tail": "[01:22:44] ========================================================================\n[01:22:44] ? 啟動 正式交易主控版_v83_official_main\n[01:22:44] ? 模式：TRAIN\n[01:22:44] ========================================================================\n",
+      "seconds": 5.91,
+      "stdout_tail": "[17:14:04] ========================================================================\n[17:14:04] ? 啟動 正式交易主控版_v83_official_main\n[17:14:04] ? 模式：TRAIN\n[17:14:04] ========================================================================\n",
       "stderr_tail": "",
       "returncode": 0
     }

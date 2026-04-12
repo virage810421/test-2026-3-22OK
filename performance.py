@@ -6,6 +6,7 @@ import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
 from config import PARAMS
+from fts_sql_table_name_map import sql_table
 
 DB_CONN_STR = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
@@ -13,6 +14,9 @@ DB_CONN_STR = (
     r'DATABASE=股票online;'
     r'Trusted_Connection=yes;'
 )
+
+
+TABLE_TRADE_HISTORY = sql_table('trade_history')
 
 
 def get_strategy_ev(setup_tag, current_regime=None):
@@ -23,9 +27,9 @@ def get_strategy_ev(setup_tag, current_regime=None):
     """
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
-            base_query = """
+            base_query = f"""
                 SELECT TOP 60 [報酬率(%)], [市場狀態]
-                FROM trade_history
+                FROM {TABLE_TRADE_HISTORY}
                 WHERE [進場陣型] = ?
                   AND [報酬率(%)] IS NOT NULL
                 ORDER BY [出場時間] DESC
@@ -57,7 +61,7 @@ def get_strategy_summary(setup_tag, lookback=60):
             query = f"""
                 SELECT TOP {int(lookback)}
                     [報酬率(%)], [淨損益金額], [市場狀態], [進場時間], [出場時間]
-                FROM trade_history
+                FROM {TABLE_TRADE_HISTORY}
                 WHERE [進場陣型] = ?
                   AND [報酬率(%)] IS NOT NULL
                 ORDER BY [出場時間] DESC
@@ -131,9 +135,9 @@ def check_strategy_health(setup_tag, min_trades=10):
     """
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
-            query = """
+            query = f"""
                 SELECT TOP 20 [報酬率(%)], [淨損益金額]
-                FROM trade_history 
+                FROM {TABLE_TRADE_HISTORY} 
                 WHERE [進場陣型] = ?
                   AND [報酬率(%)] IS NOT NULL
                 ORDER BY [出場時間] DESC

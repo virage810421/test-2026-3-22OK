@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-04-11 00:32:32",
+  "generated_at": "2026-04-12 17:12:09",
   "module_version": "v83_feature_stack_audit_hotfix_compat",
-  "bucket_count": 14,
+  "bucket_count": 17,
   "feature_buckets": {
     "price_action": 7,
     "tradeability": 7,
@@ -16,11 +16,19 @@
     "cross_sectional": 4,
     "fundamentals": 2,
     "events": 13,
-    "interaction": 2
+    "interaction": 2,
+    "directional_short": 8,
+    "directional_range": 9,
+    "regime_confidence": 6
   },
-  "selected_features_present": false,
-  "selected_feature_count": 0,
-  "selected_features_sample": [],
+  "selected_features_present": true,
+  "selected_feature_count": 4,
+  "selected_features_sample": [
+    "MACD_Hist",
+    "Score_Gap",
+    "Volume_Z20",
+    "Regime_TrendStrength_X_ScoreGap"
+  ],
   "priority_new_features_20": [
     "ATR14",
     "ATR_Pct",
@@ -43,7 +51,7 @@
     "Earnings_Window_Flag",
     "Regime_TrendStrength_X_ScoreGap"
   ],
-  "percentile_backed_feature_count": 11,
+  "percentile_backed_feature_count": 14,
   "precise_event_feature_count": 13,
   "official_percentile_mode": true,
   "precise_event_calendar_mode": true,

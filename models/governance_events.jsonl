@@ -45,3 +45,32 @@
 {"time": "2026-04-11 01:22:49", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
 {"time": "2026-04-11 01:22:49", "event": "live_health_eval", "status": "live_health_ok", "triggers": [], "warnings": [], "sample_gate_passed": true, "trade_count": 1136}
 {"time": "2026-04-11 01:22:49", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}
+{"time": "2026-04-12 10:55:48", "event": "snapshot", "version": "pretrain_20260412_105548", "note": "approved pipeline 重訓前自動備份", "metrics": {}}
+{"time": "2026-04-12 10:55:52", "event": "snapshot", "version": "pretrain_20260412_105552", "note": "approved pipeline 重訓前自動備份", "metrics": {}}
+{"time": "2026-04-12 10:55:55", "event": "snapshot", "version": "pretrain_20260412_105555", "note": "approved pipeline 重訓前自動備份", "metrics": {}}
+{"time": "2026-04-12 10:55:59", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-12 10:55:59", "event": "live_health_eval", "status": "live_health_ok", "triggers": [], "warnings": [], "sample_gate_passed": true, "trade_count": 1136}
+{"time": "2026-04-12 10:55:59", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}
+{"time": "2026-04-12 17:07:10", "event": "snapshot", "version": "pretrain_20260412_170710", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:07:14", "event": "snapshot", "version": "pretrain_20260412_170714", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:07:17", "event": "snapshot", "version": "pretrain_20260412_170717", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:07:21", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-12 17:07:21", "event": "live_health_eval", "status": "live_health_ok", "triggers": [], "warnings": [], "sample_gate_passed": true, "trade_count": 1136}
+{"time": "2026-04-12 17:07:21", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}
+{"time": "2026-04-12 17:10:58", "event": "snapshot", "version": "pretrain_20260412_171058", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:11:58", "event": "snapshot", "version": "pretrain_20260412_171158", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:12:01", "event": "snapshot", "version": "pretrain_20260412_171201", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:12:05", "event": "snapshot", "version": "pretrain_20260412_171205", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:12:09", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-12 17:12:09", "event": "live_health_eval", "status": "live_health_ok", "triggers": [], "warnings": [], "sample_gate_passed": true, "trade_count": 1136}
+{"time": "2026-04-12 17:12:09", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}
+{"time": "2026-04-12 17:13:53", "event": "snapshot", "version": "pretrain_20260412_171353", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:13:57", "event": "snapshot", "version": "pretrain_20260412_171357", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:14:00", "event": "snapshot", "version": "pretrain_20260412_171400", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:14:03", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-12 17:14:03", "event": "live_health_eval", "status": "live_health_ok", "triggers": [], "warnings": [], "sample_gate_passed": true, "trade_count": 1136}
+{"time": "2026-04-12 17:14:03", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}
+{"time": "2026-04-12 17:14:07", "event": "snapshot", "version": "pretrain_20260412_171407", "note": "重訓前自動備份（任務收尾版）", "metrics": {}}
+{"time": "2026-04-12 17:14:09", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-12 17:14:09", "event": "live_health_eval", "status": "live_health_ok", "triggers": [], "warnings": [], "sample_gate_passed": true, "trade_count": 1136}
+{"time": "2026-04-12 17:14:09", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}

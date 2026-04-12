@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from config import PARAMS
+
 try:
     from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # pragma: no cover
@@ -173,3 +175,36 @@ def export_policy_runtime() -> Path:
 
 
 export_policy_runtime()
+
+
+
+def get_directional_policy_params(direction_bucket: str) -> dict[str, float]:
+    bucket = str(direction_bucket or 'LONG').upper()
+    if bucket == 'SHORT':
+        return {
+            'min_proba': float(PARAMS.get('SHORT_MIN_PROBA', 0.55)),
+            'tp_pct': float(PARAMS.get('SHORT_TP_PCT', 0.08)),
+            'sl_pct': float(PARAMS.get('SHORT_SL_PCT', 0.035)),
+            'max_hold_days': float(PARAMS.get('SHORT_MAX_HOLD_DAYS', 5)),
+        }
+    if bucket == 'RANGE':
+        return {
+            'min_proba': float(PARAMS.get('RANGE_MIN_PROBA', 0.53)),
+            'tp_pct': float(PARAMS.get('RANGE_TP_PCT', 0.05)),
+            'sl_pct': float(PARAMS.get('RANGE_SL_PCT', 0.03)),
+            'max_hold_days': float(PARAMS.get('RANGE_MAX_HOLD_DAYS', 4)),
+        }
+    return {
+        'min_proba': float(PARAMS.get('LONG_MIN_PROBA', 0.52)),
+        'tp_pct': float(PARAMS.get('LONG_TP_PCT', 0.12)),
+        'sl_pct': float(PARAMS.get('LONG_SL_PCT', 0.04)),
+        'max_hold_days': float(PARAMS.get('LONG_MAX_HOLD_DAYS', 7)),
+    }
+
+
+def get_directional_policy_snapshot() -> dict[str, dict[str, float]]:
+    return {
+        'LONG': get_directional_policy_params('LONG'),
+        'SHORT': get_directional_policy_params('SHORT'),
+        'RANGE': get_directional_policy_params('RANGE'),
+    }

@@ -3,6 +3,7 @@ import warnings
 import pyodbc
 import pandas as pd
 from config import WATCH_LIST
+from fts_sql_table_name_map import sql_table
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -15,6 +16,9 @@ DB_CONN_STR = (
 
 DEFAULT_DEFENSIVE_LIST = ["2330.TW", "2317.TW", "2454.TW", "2881.TW", "2603.TW"]
 CSV_OUTPUT_PATH = "data/stock_list_cache_listed.csv"
+
+TABLE_MONTHLY_REVENUE = sql_table('monthly_revenue_simple')
+TABLE_FUNDAMENTALS = sql_table('fundamentals_clean')
 
 
 def _safe_pct_str(x):
@@ -48,7 +52,7 @@ def get_vip_stock_pool(save_csv=True, return_details=False):
 
     try:
         with pyodbc.connect(DB_CONN_STR) as conn:
-            query = """
+            query = f"""
             WITH LatestRevenue AS (
                 SELECT
                     [Ticker SYMBOL],
@@ -59,7 +63,7 @@ def get_vip_stock_pool(save_csv=True, return_details=False):
                         PARTITION BY [Ticker SYMBOL]
                         ORDER BY [資料年月日] DESC
                     ) AS rn
-                FROM monthly_revenue_simple
+                FROM {TABLE_MONTHLY_REVENUE}
             ),
             FinancialsBase AS (
                 SELECT
@@ -73,7 +77,7 @@ def get_vip_stock_pool(save_csv=True, return_details=False):
                     [營業現金流],
                     [負債比率(%)],
                     [本業獲利比(%)]
-                FROM fundamentals_clean
+                FROM {TABLE_FUNDAMENTALS}
             ),
             FinancialsWithLag AS (
                 SELECT

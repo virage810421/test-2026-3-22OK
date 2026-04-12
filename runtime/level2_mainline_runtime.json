@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-11 01:22:43",
+  "generated_at": "2026-04-12 17:14:02",
   "module_version": "v83_level2_mainline_integrated",
   "status": "mainline_degraded",
   "etl": [
@@ -10,7 +10,7 @@
       "mode": "subprocess",
       "returncode": 0,
       "error": "",
-      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1064 筆 -> monthly_revenue_simple\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：日期條件未達成。\n\n⚪ [月更雷達] 月營收上網補抓：尚未到可抓取時間 18:30，目前 01:22。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+      "stdout_tail": "✅ 法人籌碼 CSV 與 SQL 之間沒有待補的舊資料。\n========================================================\n🧩 開機先執行：月營收 CSV → SQL 本地補資料\n========================================================\n❌ 月營收本地 CSV 補 SQL 失敗：('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.月營收簡表'。 (208) (SQLExecDirectW); [42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：日期條件未達成。\n\n⚪ [月更雷達] 月營收上網補抓：尚未到可抓取時間 18:30，目前 17:13。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -18,12 +18,12 @@
     {
       "stage": "script",
       "target": "monthly_revenue_simple.py",
-      "ok": true,
+      "ok": false,
       "mode": "subprocess",
-      "returncode": 0,
+      "returncode": 1,
       "error": "",
-      "stdout_tail": "==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-02\n✅ 月營收筆數：1065\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1064 筆\n⏳ 已寫入 200 筆...\n⏳ 已寫入 400 筆...\n⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1064 筆 -> monthly_revenue_simple\n✅ 全部完成",
-      "stderr_tail": "",
+      "stdout_tail": "==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-03\n✅ 月營收筆數：1052\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1052 筆",
+      "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\monthly_revenue_simple.py\", line 9, in <module>\n    main()\n  File \"C:\\test\\test-2026-3-22OK\\fts_etl_monthly_revenue_service.py\", line 564, in main\n    write_to_sql(df_final)\n  File \"C:\\test\\test-2026-3-22OK\\fts_etl_monthly_revenue_service.py\", line 510, in write_to_sql\n    cursor.execute(f\"\"\"\npyodbc.ProgrammingError: ('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.月營收簡表'。 (208) (SQLExecDirectW); [42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")",
       "seconds": 0.0,
       "skipped": false
     },
@@ -34,7 +34,7 @@
       "mode": "subprocess",
       "returncode": 0,
       "error": "",
-      "stdout_tail": "[01:22:40] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[01:22:40] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "stdout_tail": "[17:13:51] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[17:13:51] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -43,12 +43,12 @@
   "legacy_pipeline": {
     "stage": "python",
     "target": "fts_legacy_master_pipeline_impl.main",
-    "ok": false,
+    "ok": true,
     "mode": "inprocess",
     "returncode": null,
-    "error": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\fts_pipeline.py\", line 89, in _call_module_main\n    result = fn()\n             ^^^^\n  File \"C:\\test\\test-2026-3-22OK\\fts_legacy_master_pipeline_impl.py\", line 433, in main\n    df_report = build_decision_desk(watch_list, market_data, global_risk_multiplier)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\fts_legacy_master_pipeline_impl.py\", line 296, in build_decision_desk\n    result = inspect_stock(ticker, preloaded_df=df)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\screening.py\", line 62, in inspect_stock\n    return _engine.inspect_stock(ticker, preloaded_df=preloaded_df, p=p)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\fts_screening_engine.py\", line 228, in inspect_stock\n    prepared = self._prepare(hist, p=p)\n               ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\fts_screening_engine.py\", line 205, in _prepare\n    out = self._infer_regime(out, params)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\test\\test-2026-3-22OK\\fts_screening_engine.py\", line 83, in _infer_regime\n    ma20 = pd.to_numeric(out['MA20'], errors='coerce').fillna(method='bfill').fillna(close)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: NDFrame.fillna() got an unexpected keyword argument 'method'\n",
-    "stdout_tail": "   ➤ 7_本業獲利比過低             :    0 檔\n   ➤ 8_缺乏爆發成長動能            :    0 檔\n   ➤ 🎉_成功入選                :    5 檔\n\n==========================================================\n🎉 體檢完成！本次共海選出 5 檔「台股特種部隊」！\n==========================================================\n\n📋 獲選名單財務指標預覽:\nTicker SYMBOL 產業類別名稱 ROE(%) 單月營收年增率(%) 毛利率(%) 營業利益率(%)  單季EPS\n      2330.TW   半導體業  9.260     22.170 62.330   54.000 19.500\n      2467.TW 電子零組件業  3.700      3.250 44.230   11.090  1.400\n      2471.TW  資訊服務業  7.250     29.000 48.860   20.130  1.300\n      3711.TW   半導體業  3.820     15.870 19.520   10.380  3.240\n      8150.TW   半導體業  2.820     22.120 11.620    6.400  0.710\n\n💾 名單已成功寫入 data/stock_list_cache_listed.csv，中央樞紐隨時可提取！\n✅ 雙引擎交集完成：原始監控 8 檔 | 基本面精選 5 檔 | 最終清單 1 檔\n📡 戰情中心：正在同步 1 檔標的資料 (⚡啟用智慧快取)...\n✅ 已完成 1 檔資料載入",
-    "stderr_tail": "\nTypeError(\"NDFrame.fillna() got an unexpected keyword argument 'method'\")",
+    "error": "",
+    "stdout_tail": "  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 873, in read_csv\n    return _read(filepath_or_buffer, kwds)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 300, in _read\n    parser = TextFileReader(filepath_or_buffer, **kwds)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1645, in __init__\n    self._engine = self._make_engine(f, self.engine)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1922, in _make_engine\n    return mapping[engine](f, **self.options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\c_parser_wrapper.py\", line 95, in __init__\n    self._reader = parsers.TextReader(src, **kwds)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"pandas/_libs/parsers.pyx\", line 575, in pandas._libs.parsers.TextReader.__cinit__\npandas.errors.EmptyDataError: No columns to parse from file\n\n🛑 AI 訓練異常，管線中斷！\n📊 已生成系統日誌 daily_report.json",
+    "stderr_tail": "",
     "seconds": 0.0,
     "skipped": false
   },

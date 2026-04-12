@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-04-12 10:56:00",
+  "module_version": "v85_approved_pipeline",
+  "scope": "default",
+  "backend_status": "trained",
+  "backend_promotion": {
+    "status": "promoted_best",
+    "version": "trained_20260411_003519"
+  },
+  "feature_snapshot_stage": {
+    "generated_at": "2026-04-12 10:56:00",
+    "approved_at": "2026-04-12 10:56:00",
+    "approved_by": "approved_pipeline_auto",
+    "scope": "default",
+    "source_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+    "approved_feature_snapshot_path": "C:\\test\\test-2026-3-22OK\\runtime\\research_lab\\approved_pipeline\\approved_feature_snapshot_default.pkl",
+    "feature_count": 4,
+    "status": "approved_feature_snapshot_ready"
+  },
+  "param_approval_stage": {
+    "status": "no_default_candidate"
+  },
+  "alpha_approval_stage": {
+    "status": "no_alpha_candidate"
+  },
+  "approved_params_present": false,
+  "best_model_version": "trained_20260411_003519",
+  "model_registry_best_version": "trained_20260411_003519",
+  "model_registry_current_version": "pretrain_20260412_105555",
+  "mount_status_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_artifact_mount_status.json",
+  "mount_status": {
+    "generated_at": "2026-04-12 10:56:00",
+    "module_version": "v85_approved_artifact_loader",
+    "scope": "default",
+    "training_mount_enabled": true,
+    "live_mount_enabled": true,
+    "approved_feature_snapshot_present": true,
+    "approved_feature_snapshot_count": 4,
+    "approved_feature_snapshot_meta": {
+      "generated_at": "2026-04-12 10:56:00",
+      "approved_at": "2026-04-12 10:56:00",
+      "approved_by": "approved_pipeline_auto",
+      "scope": "default",
+      "source_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+      "approved_feature_snapshot_path": "C:\\test\\test-2026-3-22OK\\runtime\\research_lab\\approved_pipeline\\approved_feature_snapshot_default.pkl",
+      "feature_count": 4,
+      "status": "approved_feature_snapshot_ready"
+    },
+    "approved_params_summary": {
+      "scope": "default",
+      "present": false,
+      "param_count": 0,
+      "approved_at": null,
+      "approved_by": null
+    },
+    "param_storage_summary": {
+      "generated_at": "2026-04-12 10:56:00",
+      "candidate_count": 0,
+      "approved_count": 0,
+      "latest_candidate_scope": null,
+      "separation_guarantee": "candidate and approved snapshots are separated from production config",
+      "status": "param_storage_safe_registry_ready"
+    },
+    "status": "approved_mount_status_ready"
+  },
+  "status": "approved_pipeline_ready"
+}

@@ -1,0 +1,4 @@
+本 patch 針對最終兩類缺口補強：
+1. tri-lane orchestrator 以 per-stage/per-lane runner 形式輸出 stage_runs 與 execution status。
+2. callback -> state machine -> execution ledger -> reconciliation -> repair workflow 已形成更深主幹。
+注意：仍非真實券商 API 最終自動修補器，若要 100% 自動閉環，仍需對接真實 broker callback/ledger 規格。

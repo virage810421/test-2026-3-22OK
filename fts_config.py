@@ -159,6 +159,13 @@ class SystemConfig:
     model_min_oot_hit_rate: float = 0.45
     model_min_promotion_score: float = 0.0
 
+    # ---- 文件8：directional/range maturity safe overlay ----
+    enable_directional_features_in_training: bool = True
+    enable_directional_features_in_live: bool = False
+    enable_directional_alpha_miner: bool = True
+    enable_range_confidence_service: bool = True
+    directional_backtest_safe_mode: bool = True
+
 
 @dataclass
 class DBConfig:

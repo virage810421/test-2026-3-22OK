@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-04-12 10:57:09",
+  "module_version": "v87_chip_factor_snapshot_service",
+  "status": "chip_snapshot_ready",
+  "csv_path": "C:\\test\\test-2026-3-22OK\\runtime\\chip_factors_daily.csv",
+  "row_count": 8,
+  "sql_sync": {
+    "status": "refreshed",
+    "table": "chip_factors_daily",
+    "rows": 8
+  }
+}

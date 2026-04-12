@@ -9,6 +9,7 @@ import pandas as pd
 
 from fts_config import PATHS, DB
 from fts_utils import now_str, log
+from fts_sql_table_name_map import sql_table
 
 try:
     import pyodbc  # type: ignore
@@ -21,6 +22,7 @@ class ChipEnrichmentService:
 
     RATIO_COLS = ['Foreign_Ratio', 'Trust_Ratio', 'Total_Ratio']
     CONSEC_COLS = ['Foreign_Consecutive', 'Trust_Consecutive']
+    TABLE_DAILY_CHIP = sql_table('daily_chip_data')
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'chip_enrichment_service.json'
@@ -88,9 +90,9 @@ class ChipEnrichmentService:
         if pyodbc is None:
             return pd.DataFrame()
         bare = str(ticker).split('.')[0]
-        query = """
+        query = f"""
         SELECT [日期], [Ticker SYMBOL], [外資買賣超], [投信買賣超], [自營商買賣超]
-        FROM daily_chip_data
+        FROM {self.TABLE_DAILY_CHIP}
         WHERE [Ticker SYMBOL] LIKE ? OR [Ticker SYMBOL] LIKE ?
         """
         try:

@@ -37,6 +37,43 @@ def _safe_exec(cursor, sql: str):
         pass
 
 
+def _rename_column_if_exists(cursor, table_name: str, old_col: str, new_col: str):
+    escaped_old = str(old_col).replace("'", "''")
+    escaped_new = str(new_col).replace("'", "''")
+    escaped_table = str(table_name).replace("'", "''")
+    sql = f"""
+    IF OBJECT_ID(N'dbo.{escaped_table}', N'U') IS NOT NULL
+       AND COL_LENGTH(N'dbo.{escaped_table}', N'{escaped_old}') IS NOT NULL
+       AND COL_LENGTH(N'dbo.{escaped_table}', N'{escaped_new}') IS NULL
+    BEGIN
+        EXEC sp_rename N'dbo.{escaped_table}.[{old_col}]', N'{new_col}', 'COLUMN';
+    END
+    """
+    _safe_exec(cursor, sql)
+
+
+def ensure_training_universe_daily_chinese_columns(cursor):
+    rename_pairs = [
+        ('Ticker SYMBOL', '股票代號'),
+        ('Liquidity_Score', '流動性分數'),
+        ('Chip_Score', '籌碼分數'),
+        ('Fundamental_Score', '基本面分數'),
+        ('Revenue_Momentum_Score', '營收動能分數'),
+        ('Risk_Penalty', '風險扣分'),
+        ('Tradability_Flag', '可交易旗標'),
+        ('Training_Eligible_Flag', '可訓練旗標'),
+        ('Training_Tier', '訓練分層'),
+        ('Exclude_Reason', '排除原因'),
+        ('Universe_Score', '訓練母池總分'),
+        ('ADV20', '二十日平均成交額'),
+        ('ATR_Pct', 'ATR百分比'),
+        ('ROE(%)', '股東權益報酬率(%)'),
+        ('SectorBucket', '產業分桶'),
+    ]
+    for old_col, new_col in rename_pairs:
+        _rename_column_if_exists(cursor, 'training_universe_daily', old_col, new_col)
+
+
 def ensure_research_plus_tables(cursor):
     ensure_table(cursor, 'feature_cross_section_snapshot', """
         CREATE TABLE dbo.feature_cross_section_snapshot (
@@ -127,6 +164,117 @@ def ensure_research_plus_tables(cursor):
             CONSTRAINT PK_system_guard_log PRIMARY KEY ([記錄時間])
         )
     """)
+
+    ensure_table(cursor, 'stock_master', """
+        CREATE TABLE dbo.stock_master (
+            [Ticker SYMBOL] NVARCHAR(32) NOT NULL,
+            [公司名稱] NVARCHAR(128) NULL,
+            [市場別] NVARCHAR(16) NULL,
+            [產業類別] NVARCHAR(64) NULL,
+            [產業類別名稱] NVARCHAR(64) NULL,
+            [是否停牌] BIT NULL,
+            [是否下市] BIT NULL,
+            [是否ETF] BIT NULL,
+            [是否普通股] BIT NULL,
+            [SectorBucket] NVARCHAR(32) NULL,
+            [來源] NVARCHAR(64) NULL,
+            [更新時間] DATETIME NOT NULL DEFAULT GETDATE(),
+            CONSTRAINT PK_stock_master PRIMARY KEY ([Ticker SYMBOL])
+        )
+    """)
+    ensure_table(cursor, 'company_quality_snapshot', """
+        CREATE TABLE dbo.company_quality_snapshot (
+            [Ticker SYMBOL] NVARCHAR(32) NOT NULL,
+            [資料日期] DATE NOT NULL,
+            [單月營收年增率(%)] DECIMAL(18,6) NULL,
+            [毛利率(%)] DECIMAL(18,6) NULL,
+            [營業利益率(%)] DECIMAL(18,6) NULL,
+            [單季EPS] DECIMAL(18,6) NULL,
+            [ROE(%)] DECIMAL(18,6) NULL,
+            [稅後淨利率(%)] DECIMAL(18,6) NULL,
+            [負債比率(%)] DECIMAL(18,6) NULL,
+            [本業獲利比(%)] DECIMAL(18,6) NULL,
+            [預估殖利率(%)] DECIMAL(18,6) NULL,
+            [Revenue_Growth_Score] DECIMAL(18,6) NULL,
+            [Profitability_Score] DECIMAL(18,6) NULL,
+            [BalanceSheet_Score] DECIMAL(18,6) NULL,
+            [Dividend_Score] DECIMAL(18,6) NULL,
+            [Quality_Total_Score] DECIMAL(18,6) NULL,
+            [資料來源] NVARCHAR(64) NULL,
+            CONSTRAINT PK_company_quality_snapshot PRIMARY KEY ([Ticker SYMBOL], [資料日期])
+        )
+    """)
+    ensure_table(cursor, 'revenue_momentum_snapshot', """
+        CREATE TABLE dbo.revenue_momentum_snapshot (
+            [Ticker SYMBOL] NVARCHAR(32) NOT NULL,
+            [資料年月] NVARCHAR(16) NOT NULL,
+            [單月營收年增率(%)] DECIMAL(18,6) NULL,
+            [三月平均年增(%)] DECIMAL(18,6) NULL,
+            [六月平均年增(%)] DECIMAL(18,6) NULL,
+            [營收加速度] DECIMAL(18,6) NULL,
+            [是否連續三月正成長] BIT NULL,
+            [營收動能分數] DECIMAL(18,6) NULL,
+            CONSTRAINT PK_revenue_momentum_snapshot PRIMARY KEY ([Ticker SYMBOL], [資料年月])
+        )
+    """)
+    ensure_table(cursor, 'price_liquidity_daily', """
+        CREATE TABLE dbo.price_liquidity_daily (
+            [Ticker SYMBOL] NVARCHAR(32) NOT NULL,
+            [資料日期] DATE NOT NULL,
+            [Close] DECIMAL(18,6) NULL,
+            [Volume] DECIMAL(38,6) NULL,
+            [Amount] DECIMAL(38,6) NULL,
+            [ADV20] DECIMAL(38,6) NULL,
+            [Turnover_Ratio] DECIMAL(18,6) NULL,
+            [ATR_Pct] DECIMAL(18,6) NULL,
+            [近20日缺資料天數] INT NULL,
+            [是否異常波動] BIT NULL,
+            [是否連續無量] BIT NULL,
+            [Liquidity_Score] DECIMAL(18,6) NULL,
+            CONSTRAINT PK_price_liquidity_daily PRIMARY KEY ([Ticker SYMBOL], [資料日期])
+        )
+    """)
+    ensure_table(cursor, 'chip_factors_daily', """
+        CREATE TABLE dbo.chip_factors_daily (
+            [Ticker SYMBOL] NVARCHAR(32) NOT NULL,
+            [資料日期] DATE NOT NULL,
+            [外資買賣超] DECIMAL(38,6) NULL,
+            [投信買賣超] DECIMAL(38,6) NULL,
+            [自營商買賣超] DECIMAL(38,6) NULL,
+            [三大法人合計] DECIMAL(38,6) NULL,
+            [籌碼集中度] DECIMAL(18,6) NULL,
+            [大戶散戶差] DECIMAL(18,6) NULL,
+            [Chip_Score] DECIMAL(18,6) NULL,
+            CONSTRAINT PK_chip_factors_daily PRIMARY KEY ([Ticker SYMBOL], [資料日期])
+        )
+    """)
+    ensure_table(cursor, 'training_universe_daily', """
+        CREATE TABLE dbo.training_universe_daily (
+            [股票代號] NVARCHAR(32) NOT NULL,
+            [資料日期] DATE NOT NULL,
+            [產業類別] NVARCHAR(32) NULL,
+            [產業類別名稱] NVARCHAR(64) NULL,
+            [流動性分數] DECIMAL(18,6) NULL,
+            [籌碼分數] DECIMAL(18,6) NULL,
+            [基本面分數] DECIMAL(18,6) NULL,
+            [營收動能分數] DECIMAL(18,6) NULL,
+            [風險扣分] DECIMAL(18,6) NULL,
+            [可交易旗標] BIT NULL,
+            [可訓練旗標] BIT NULL,
+            [訓練分層] NVARCHAR(32) NULL,
+            [排除原因] NVARCHAR(512) NULL,
+            [訓練母池總分] DECIMAL(18,6) NULL,
+            [資料完整率] DECIMAL(18,6) NULL,
+            [二十日平均成交額] DECIMAL(38,6) NULL,
+            [ATR百分比] DECIMAL(18,6) NULL,
+            [股東權益報酬率(%)] DECIMAL(18,6) NULL,
+            [負債比率(%)] DECIMAL(18,6) NULL,
+            [單月營收年增率(%)] DECIMAL(18,6) NULL,
+            [產業分桶] NVARCHAR(32) NULL,
+            CONSTRAINT PK_training_universe_daily PRIMARY KEY ([股票代號], [資料日期])
+        )
+    """)
+
     ensure_table(cursor, 'risk_gateway_log', """
         CREATE TABLE dbo.risk_gateway_log (
             [id] BIGINT IDENTITY(1,1) NOT NULL,
@@ -163,6 +311,8 @@ def ensure_research_plus_tables(cursor):
     ]
     for sql in alter_sqls:
         _safe_exec(cursor, sql)
+
+    ensure_training_universe_daily_chinese_columns(cursor)
 
 
 def main():

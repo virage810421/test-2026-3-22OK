@@ -33,6 +33,7 @@ from fts_interface_audit import InterfaceAuditBuilder
 from fts_reconciliation_engine import ReconciliationEngine
 from fts_recovery_engine import RecoveryEngine
 from fts_recovery_validation import RecoveryValidationBuilder
+from fts_tri_lane_orchestrator import TriLaneOrchestrator
 
 RUNTIME_DIR = PATHS.runtime_dir
 
@@ -185,10 +186,6 @@ def _build_control_outputs() -> dict[str, Any]:
         fallback_path=PATHS.runtime_dir / 'live_readiness_gate.json',
     )
     training_governance = _safe_build('fts_training_governance_mainline', 'TrainingGovernanceMainline', 'build_summary', {'execute_backend': False})
-    approved_pipeline = _safe_build('fts_approved_pipeline', 'ApprovedPipeline', 'run', {'auto_capture_features': True, 'auto_approve_params': True, 'auto_approve_alpha': True})
-    ticker_scoreboard = _safe_build('fts_training_ticker_scoreboard', 'TrainingTickerScoreboard', 'build_from_dataset')
-    live_watchlist_promotion = _safe_build('fts_live_watchlist_promoter', 'LiveWatchlistPromoter', 'run', {'auto_approve': True})
-    approved_live_loader = _safe_build('fts_live_watchlist_loader', 'ApprovedLiveWatchlistLoader', 'build_summary')
     tg_path = Path(training_governance.get('path', '')) if training_governance.get('path') else (PATHS.runtime_dir / 'training_governance_mainline.json')
     governance_payload = training_governance.get('payload', {}) if training_governance.get('status') == 'ok' else {}
     model_registry_path, model_registry_payload = ModelVersionRegistry().build()
@@ -285,15 +282,16 @@ def _build_control_outputs() -> dict[str, Any]:
     linkage = _safe_build('fts_mainline_linkage', 'MainlineLinkage', 'build')
     completion = _safe_build('fts_project_completion_audit', 'ProjectCompletionAudit', 'build')
     interface = _safe_build('fts_interface_audit', 'InterfaceAuditBuilder', 'build')
+    tri_lane_path, tri_lane_payload = _call_builder_result(
+        TriLaneOrchestrator(),
+        'build',
+        fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json',
+    )
 
     return {
         'project_healthcheck': {'path': health_path, 'payload': health_payload},
         'level2_mainline': {'path': level2_path, 'payload': level2_payload},
         'training_governance_mainline': {'path': str(tg_path) if tg_path.exists() else training_governance.get('path', ''), 'payload': governance_payload},
-        'approved_pipeline': approved_pipeline,
-        'ticker_scoreboard': ticker_scoreboard,
-        'live_watchlist_promotion': live_watchlist_promotion,
-        'approved_live_watchlist_loader': approved_live_loader,
         'model_registry': {'path': str(model_registry_path), 'payload': model_registry_payload},
         'model_selection_gate': {'path': str(model_gate_path), 'payload': model_gate_payload},
         'live_readiness_gate': {'path': str(readiness_path), 'payload': readiness_payload},
@@ -309,6 +307,10 @@ def _build_control_outputs() -> dict[str, Any]:
         'mainline_linkage': linkage,
         'project_completion_audit': completion,
         'interface_audit': interface,
+        'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload},
+        'tri_lane_stage_status': tri_lane_payload.get('lanes', {}) if isinstance(tri_lane_payload, dict) else {},
+        'tri_lane_stage_runs': tri_lane_payload.get('stage_runs', {}) if isinstance(tri_lane_payload, dict) else {},
+        'tri_lane_execution_status': tri_lane_payload.get('tri_lane_execution_status', {}) if isinstance(tri_lane_payload, dict) else {},
         'decision_rows': int(len(decision_df)),
         'normalized_orders': len(orders),
     }
@@ -326,6 +328,7 @@ def run_daily() -> dict[str, Any]:
         'module_version': 'v83_level3_control_tower_integrated',
         'outputs': outputs,
         'status': 'control_tower_ready',
+        'tri_lane_execution_status': outputs.get('tri_lane_execution_status', {}),
     }
     _write_json('formal_trading_system_v83_official_main.json', payload)
     return payload

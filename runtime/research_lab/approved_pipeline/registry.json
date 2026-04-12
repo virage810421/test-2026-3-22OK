@@ -1,0 +1,16 @@
+[
+  {
+    "generated_at": "2026-04-12 10:56:00",
+    "scope": "default",
+    "artifact_path": "C:\\test\\test-2026-3-22OK\\runtime\\research_lab\\approved_pipeline\\approved_feature_snapshot_default.pkl",
+    "feature_count": 4,
+    "status": "approved_feature_snapshot_ready"
+  },
+  {
+    "generated_at": "2026-04-12 10:56:00",
+    "scope": "default",
+    "artifact_path": "C:\\test\\test-2026-3-22OK\\runtime\\research_lab\\approved_pipeline\\approved_feature_snapshot_default.pkl",
+    "feature_count": 4,
+    "status": "approved_feature_snapshot_ready"
+  }
+]

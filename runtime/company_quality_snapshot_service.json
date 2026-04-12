@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-04-12 10:56:01",
+  "module_version": "v87_company_quality_snapshot_service",
+  "status": "quality_snapshot_ready",
+  "csv_path": "C:\\test\\test-2026-3-22OK\\runtime\\company_quality_snapshot.csv",
+  "row_count": 1072,
+  "sql_sync": {
+    "status": "refreshed",
+    "table": "company_quality_snapshot",
+    "rows": 1072
+  },
+  "score_mean": 0.397892352300995
+}

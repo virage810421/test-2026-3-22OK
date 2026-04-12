@@ -1,72 +1,98 @@
+
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
+from collections import defaultdict
+import pandas as pd
 
-from config import PARAMS, WATCH_LIST
-from fts_config import PATHS
-from fts_utils import now_str, log
-from fts_live_watchlist_registry import load_approved, summary as registry_summary
+from fts_prelive_runtime import PATHS, now_str, load_json, write_json, normalize_key
+from config import WATCH_LIST, PARAMS
 
+LANES = ['LONG', 'SHORT', 'RANGE']
 
-class ApprovedLiveWatchlistLoader:
-    MODULE_VERSION = 'v86_approved_live_watchlist_loader'
-
+class LiveWatchlistLoader:
     def __init__(self):
-        self.runtime_path = PATHS.runtime_dir / 'approved_live_watchlist_loader.json'
+        self.runtime_dir = PATHS.runtime_dir
+        self.summary_path = self.runtime_dir / 'live_watchlist_loader.json'
 
-    def _fallback(self) -> list[str]:
-        return list(dict.fromkeys([str(x).strip() for x in WATCH_LIST if str(x).strip()]))
+    def _approved(self, lane: str) -> list[dict[str, Any]]:
+        path = self.runtime_dir / f'approved_live_watchlist_{lane.lower()}.json'
+        payload = load_json(path, default={}) or {}
+        items = payload.get('items', payload if isinstance(payload, list) else [])
+        return items if isinstance(items, list) else []
 
-    def load_live_watchlist(self) -> list[str]:
-        if not bool(PARAMS.get('APPROVED_LIVE_WATCHLIST_ENABLED', True)):
-            return self._fallback()
-        approved = load_approved()
-        rows = approved.get('rows', []) if isinstance(approved, dict) else []
-        if not rows:
-            return self._fallback()
-        max_total = int(PARAMS.get('LIVE_WATCHLIST_MAX_NAMES', 12))
+    def _fallback(self) -> list[dict[str, Any]]:
+        return [{'ticker': t, 'lane': 'LONG', 'sector': '未知', 'promotion_score': 0.0, 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'WATCH_LIST'} for t in WATCH_LIST]
+
+    def resolve_live_watchlist(self) -> tuple[str, dict[str, Any]]:
+        lane_items = {lane: self._approved(lane) for lane in LANES}
+        if not any(lane_items.values()):
+            merged = self._fallback()
+            payload = {'generated_at': now_str(), 'status': 'fallback_watch_list', 'items': merged, 'lanes': {lane: [] for lane in LANES}, 'total_count': len(merged)}
+            write_json(self.summary_path, payload)
+            return str(self.summary_path), payload
+
         max_per_sector = int(PARAMS.get('LIVE_WATCHLIST_MAX_PER_SECTOR', 3))
-        sector_counts: dict[str, int] = {}
-        chosen: list[str] = []
-        ordered = sorted(rows, key=lambda r: (float(r.get('promotion_score', 0.0) or 0.0), -int(r.get('sector_rank', 9999) or 9999), -int(r.get('global_rank', 9999) or 9999)), reverse=True)
-        for row in ordered:
-            ticker = str(row.get('ticker', '')).strip()
-            if not ticker or ticker in chosen:
-                continue
-            sector = str(row.get('sector', 'OTHERS') or 'OTHERS')
-            if sector_counts.get(sector, 0) >= max_per_sector:
-                continue
-            if bool(row.get('feature_integrity_ok', True)) is False:
-                continue
-            if bool(row.get('liquidity_ok', True)) is False:
-                continue
-            chosen.append(ticker)
-            sector_counts[sector] = sector_counts.get(sector, 0) + 1
-            if len(chosen) >= max_total:
-                break
-        return chosen or self._fallback()
+        total_cap = int(PARAMS.get('LIVE_WATCHLIST_TOTAL_MAX_NAMES', 18))
+        min_liq = float(PARAMS.get('LIVE_WATCHLIST_MIN_LIQUIDITY_SCORE', 0.20))
+        min_cov = float(PARAMS.get('LIVE_WATCHLIST_MIN_FEATURE_COVERAGE', 0.95))
+        max_short_over_long = float(PARAMS.get('LIVE_WATCHLIST_MAX_NET_SHORT_OVER_LONG', 0.60))
+        max_long_over_short = float(PARAMS.get('LIVE_WATCHLIST_MAX_NET_LONG_OVER_SHORT', 1.20))
 
-    def build_summary(self) -> tuple[Path, dict[str, Any]]:
-        approved = load_approved()
-        selected = self.load_live_watchlist()
+        by_ticker: dict[str, dict[str, Any]] = {}
+        for lane, items in lane_items.items():
+            for item in items:
+                t = str(item.get('ticker') or '').strip()
+                if not t:
+                    continue
+                score = float(item.get('promotion_score', 0.0) or 0.0)
+                liq = float(item.get('liquidity_score', 1.0) or 0.0)
+                cov = float(item.get('feature_coverage', 1.0) or 0.0)
+                if liq < min_liq or cov < min_cov:
+                    continue
+                current = by_ticker.get(t)
+                if current is None or score > float(current.get('promotion_score', 0.0) or 0.0):
+                    merged = dict(item)
+                    merged['lane'] = lane
+                    by_ticker[t] = merged
+        items = list(by_ticker.values())
+        # optimizer penalty proxy: sector concentration and overlap penalty
+        sector_counts = defaultdict(int)
+        selected = []
+        long_n = short_n = range_n = 0
+        for item in sorted(items, key=lambda x: float(x.get('promotion_score', 0.0) or 0.0), reverse=True):
+            lane = normalize_key(item.get('lane')) or 'LONG'
+            sector = str(item.get('sector') or '未知')
+            if sector_counts[sector] >= max_per_sector:
+                continue
+            projected_long = long_n + (1 if lane == 'LONG' else 0)
+            projected_short = short_n + (1 if lane == 'SHORT' else 0)
+            if projected_long > 0 and projected_short / projected_long > max_short_over_long:
+                if lane == 'SHORT':
+                    continue
+            if projected_short > 0 and projected_long / max(projected_short, 1) > max_long_over_short:
+                if lane == 'LONG' and projected_short > 0 and projected_long > 1:
+                    continue
+            item = dict(item)
+            item['optimizer_penalty'] = sector_counts[sector] * 0.05
+            item['optimized_score'] = float(item.get('promotion_score', 0.0) or 0.0) - item['optimizer_penalty']
+            selected.append(item)
+            sector_counts[sector] += 1
+            long_n = projected_long
+            short_n = projected_short
+            range_n = range_n + (1 if lane == 'RANGE' else 0)
+            if len(selected) >= total_cap:
+                break
+        lanes = {lane: [x for x in selected if normalize_key(x.get('lane')) == lane] for lane in LANES}
         payload = {
             'generated_at': now_str(),
-            'module_version': self.MODULE_VERSION,
-            'approved_present': bool(approved),
-            'selected_ticker_count': len(selected),
-            'selected_tickers': selected,
-            'registry_summary': registry_summary(),
-            'status': 'approved_live_watchlist_loader_ready',
+            'status': 'directional_watchlist_loaded',
+            'items': selected,
+            'lanes': lanes,
+            'total_count': len(selected),
+            'sector_counts': dict(sector_counts),
+            'net_exposure_proxy': {'LONG': long_n, 'SHORT': short_n, 'RANGE': range_n},
         }
-        self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        log(f'🛰️ approved live watchlist loader ready: {self.runtime_path}')
-        return self.runtime_path, payload
-
-
-if __name__ == '__main__':
-    path, payload = ApprovedLiveWatchlistLoader().build_summary()
-    print(path)
-    print(payload.get('status'))
+        write_json(self.summary_path, payload)
+        return str(self.summary_path), payload
