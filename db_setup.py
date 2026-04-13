@@ -17,6 +17,7 @@ MASTER_CONN_STR = (
     r"Trusted_Connection=yes;"
 )
 
+
 TARGET_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=localhost;"

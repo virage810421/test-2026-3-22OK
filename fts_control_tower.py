@@ -246,6 +246,7 @@ def run_daily() -> dict[str, Any]:
     log('🧭 模式：DAILY')
     log('=' * 72)
     outputs = _build_control_outputs()
+<<<<<<< HEAD
     live_payload = outputs.get('live_readiness_gate', {}).get('payload', {}) if isinstance(outputs, dict) else {}
     payload = {
         'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v83_level3_control_tower_integrated',
@@ -254,6 +255,9 @@ def run_daily() -> dict[str, Any]:
         'live_ready': bool(live_payload.get('live_ready', False)),
         'status': 'control_tower_pipeline_ready',
     }
+=======
+    payload = {'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v83_level3_control_tower_integrated', 'outputs': outputs, 'status': 'control_tower_ready'}
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
     _write_json('formal_trading_system_v83_official_main.json', payload)
     return payload
 
@@ -265,12 +269,16 @@ def run_train() -> dict[str, Any]:
     log('=' * 72)
     steps = [_call_script('ml_data_generator.py', allow_missing=True), _call_script('ml_trainer.py', allow_missing=True)]
     tri_lane_path, tri_lane_payload = _call_builder_result(TriLaneOrchestrator(), 'build', fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json')
+<<<<<<< HEAD
     payload = {
         'generated_at': now_str(), 'mode': 'train', 'module_version': 'v83_level3_control_tower_integrated',
         'outputs': {'steps': steps, 'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload}},
         'pipeline_ready': True,
         'status': 'train_pipeline_ready',
     }
+=======
+    payload = {'generated_at': now_str(), 'mode': 'train', 'module_version': 'v83_level3_control_tower_integrated', 'outputs': {'steps': steps, 'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload}}, 'status': 'train_ready'}
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
     _write_json('formal_trading_system_v83_train.json', payload)
     _write_json('training_orchestrator.json', {'generated_at': now_str(), 'status': 'train_invoked_via_control_tower'})
     return payload
@@ -289,12 +297,16 @@ def run_bootstrap() -> dict[str, Any]:
         _call_script('run_sync_feature_snapshots_to_sql.py', allow_missing=True),
     ]
     daily_payload = run_daily()
+<<<<<<< HEAD
     payload = {
         'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v83_level3_control_tower_integrated',
         'steps': steps, 'daily_status': daily_payload.get('status'),
         'pipeline_ready': True,
         'status': 'bootstrap_pipeline_ready',
     }
+=======
+    payload = {'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v83_level3_control_tower_integrated', 'steps': steps, 'daily_status': daily_payload.get('status'), 'status': 'bootstrap_ready'}
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
     _write_json('formal_trading_system_v83_bootstrap.json', payload)
     return payload
 

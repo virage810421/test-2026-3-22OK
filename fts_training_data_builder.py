@@ -30,7 +30,10 @@ RUNTIME_PATH = Path('runtime/training_data_builder.json')
 def _write_runtime(payload: dict[str, Any]) -> None:
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+<<<<<<< HEAD
 
+=======
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
 
 
 def get_dynamic_watchlist():
@@ -248,6 +251,7 @@ def generate_ml_dataset(tickers=None):
             sample_row=df_out.iloc[0].to_dict(),
             dataset_columns=df_out.columns.tolist(),
         )
+<<<<<<< HEAD
     selected_features = _features.load_selected_features()
     if not df_out.empty:
         _features.write_feature_manifest(
@@ -255,6 +259,8 @@ def generate_ml_dataset(tickers=None):
             dataset_columns=df_out.columns.tolist(),
             selected_features=selected_features,
         )
+=======
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
     payload = {
         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'dataset_path': str(dataset_path),
@@ -263,8 +269,11 @@ def generate_ml_dataset(tickers=None):
         'rows_generated': int(len(df_out)),
         'quality_report': quality_report,
         'ticker_reports': ticker_reports[:200],
+<<<<<<< HEAD
         'selected_feature_count': int(len(selected_features)),
         'feature_manifest_path': str(_features.feature_manifest_path),
+=======
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
     }
     _write_runtime(payload)
     print(f"🧪 training data builder status: {payload['status']} | rows={payload['rows_generated']}")

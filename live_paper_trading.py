@@ -615,13 +615,18 @@ def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str,
             row = dict(row or {})
             row['Ticker'] = ticker
             row.setdefault('Ticker SYMBOL', ticker)
+<<<<<<< HEAD
             chosen_side = 'LONG'
             if lane == 'SHORT':
                 chosen_side = 'SHORT'
+=======
+            if lane == 'SHORT':
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
                 row['Direction'] = '做空(Short)'
                 row.setdefault('Regime', '趨勢空頭')
                 row.setdefault('Structure', '趨勢空頭追擊')
             elif lane == 'RANGE':
+<<<<<<< HEAD
                 range_side = str(item.get('preferred_side') or item.get('range_side') or '').upper()
                 weighted_buy_existing = float(row.get('Weighted_Buy_Score', 0.0) or 0.0)
                 weighted_sell_existing = float(row.get('Weighted_Sell_Score', 0.0) or 0.0)
@@ -642,6 +647,12 @@ def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str,
                     row.setdefault('Structure', '盤整低吸')
             else:
                 chosen_side = 'LONG'
+=======
+                row['Direction'] = '做多(Long)'
+                row['Regime'] = '區間盤整'
+                row.setdefault('Structure', '盤整均值回歸')
+            else:
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
                 row['Direction'] = '做多(Long)'
                 row.setdefault('Regime', '趨勢多頭')
                 row.setdefault('Structure', '趨勢多頭攻堅')
@@ -649,6 +660,7 @@ def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str,
             row.setdefault('Realized_EV', float(item.get('oot_ev', 0.0) or 0.0))
             row.setdefault('Kelly_Pos', float(PARAMS.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03)))
             row.setdefault('Health', 'KEEP')
+<<<<<<< HEAD
             if chosen_side == 'SHORT':
                 row.setdefault('Weighted_Sell_Score', trigger + 0.25)
                 row.setdefault('Weighted_Buy_Score', max(0.0, trigger - 0.75))
@@ -656,6 +668,11 @@ def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str,
                 row.setdefault('Weighted_Buy_Score', trigger + 0.25)
                 row.setdefault('Weighted_Sell_Score', max(0.0, trigger - 0.75))
             row.setdefault('Score_Gap', float(row['Weighted_Buy_Score']) - float(row['Weighted_Sell_Score']))
+=======
+            row.setdefault('Weighted_Buy_Score', trigger + 0.25)
+            row.setdefault('Weighted_Sell_Score', max(0.0, trigger - 0.75))
+            row.setdefault('Score_Gap', max(0.1, float(row['Weighted_Buy_Score']) - float(row['Weighted_Sell_Score'])))
+>>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
             aug_rows.append(row)
             existing.add(ticker)
             take += 1
