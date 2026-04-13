@@ -27,6 +27,8 @@ class PaperBroker(BrokerBase):
         self.pending_fills: List[FillEvent] = []
         self.fill_history: List[FillEvent] = []
         self.supports_short = self.allow_short
+        self.protective_stops: Dict[str, Dict[str, Any]] = {}
+        self.stop_trigger_history: List[Dict[str, Any]] = []
 
     def update_market_prices(self, price_map: Dict[str, float]) -> None:
         for symbol, price in price_map.items():
@@ -81,7 +83,9 @@ class PaperBroker(BrokerBase):
         return OrderRecord(order_id=str(uuid.uuid4()), symbol=order.symbol, side=order.side, quantity=int(order.quantity), remaining_qty=int(order.quantity), order_type=order.order_type, limit_price=order.limit_price, status=OrderStatus.SUBMITTED, strategy_name=order.strategy_name, signal_id=order.signal_id, client_order_id=order.client_order_id, note=order.note, create_time=_now(), update_time=_now())
 
     def _append_fill(self, order: OrderRecord, qty: int, px: float, commission: float, tax: float) -> None:
-        self.pending_fills.append(FillEvent(order_id=order.order_id, symbol=order.symbol, side=order.side, fill_qty=int(qty), fill_price=float(px), fill_time=_now(), commission=commission, tax=tax, slippage=round(abs(px - (order.limit_price or self.last_prices.get(order.symbol, px))), 4), strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note))
+        fill = FillEvent(order_id=order.order_id, symbol=order.symbol, side=order.side, fill_qty=int(qty), fill_price=float(px), fill_time=_now(), commission=commission, tax=tax, slippage=round(abs(px - (order.limit_price or self.last_prices.get(order.symbol, px))), 4), strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
+        self.pending_fills.append(fill)
+        self.fill_history.append(fill)
 
     def place_order(self, order: OrderRequest) -> OrderRecord:
         record = self._make_order_record(order)
@@ -140,13 +144,221 @@ class PaperBroker(BrokerBase):
         self._append_fill(record, fill_qty, fill_price, commission, tax)
         return record
 
+
+    def upsert_protective_stop(self, symbol: str, quantity: int, stop_price: float, side: str = "SELL", client_order_id: str = "", note: str = "") -> Dict[str, Any]:
+        symbol = str(symbol).strip()
+        if not symbol or quantity <= 0 or float(stop_price) <= 0:
+            return {'ok': False, 'status': 'invalid_stop_payload', 'symbol': symbol}
+        order_id = client_order_id or f"STOP-{symbol}-{len(self.protective_stops)+1:04d}"
+        rec = self.protective_stops.get(order_id, {})
+        rec.update({
+            'order_id': order_id,
+            'symbol': symbol,
+            'side': str(side).upper(),
+            'quantity': int(quantity),
+            'stop_price': round(float(stop_price), 4),
+            'status': 'WORKING',
+            'note': str(note or ''),
+            'update_time': _now(),
+        })
+        self.protective_stops[order_id] = rec
+        return {'ok': True, 'status': 'protective_stop_upserted', 'broker_order_id': order_id, 'record': dict(rec)}
+
+    def replace_order(self, order_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        rec = self.open_orders.get(order_id)
+        if rec is not None:
+            if rec.status not in (OrderStatus.SUBMITTED, OrderStatus.PARTIALLY_FILLED):
+                return {'ok': False, 'status': 'replace_blocked', 'broker_order_id': order_id}
+            if 'price' in payload or 'limit_price' in payload:
+                new_px = float(payload.get('price', payload.get('limit_price', rec.limit_price or 0.0)) or 0.0)
+                if new_px > 0:
+                    rec.limit_price = new_px
+            if 'qty' in payload:
+                rec.quantity = int(payload.get('qty') or rec.quantity)
+                rec.remaining_qty = max(0, rec.quantity - rec.filled_qty)
+            rec.note = str(payload.get('note', rec.note or ''))
+            rec.update_time = _now()
+            return {'ok': True, 'status': 'replace_ok', 'broker_order_id': order_id, 'record': rec.to_dict()}
+        stop_rec = self.protective_stops.get(order_id)
+        if stop_rec is not None:
+            if 'stop_price' in payload:
+                stop_rec['stop_price'] = round(float(payload.get('stop_price') or stop_rec['stop_price']), 4)
+            if 'qty' in payload:
+                stop_rec['quantity'] = int(payload.get('qty') or stop_rec['quantity'])
+            stop_rec['note'] = str(payload.get('note', stop_rec.get('note', '')))
+            stop_rec['update_time'] = _now()
+            return {'ok': True, 'status': 'replace_ok', 'broker_order_id': order_id, 'record': dict(stop_rec)}
+        return {'ok': False, 'status': 'missing_order', 'broker_order_id': order_id}
+
+    def get_protective_stops(self) -> List[Dict[str, Any]]:
+        return [dict(v) for v in self.protective_stops.values()]
+
+
+    def process_protective_stops(self, price_map: Optional[Dict[str, float]] = None) -> List[Dict[str, Any]]:
+        if price_map:
+            self.update_market_prices(price_map)
+        events: List[Dict[str, Any]] = []
+        for order_id, stop_rec in list(self.protective_stops.items()):
+            status = str(stop_rec.get('status', 'WORKING')).upper()
+            if status not in {'WORKING', 'SUBMITTED'}:
+                continue
+            symbol = str(stop_rec.get('symbol', '')).strip()
+            if not symbol:
+                continue
+            market_px = float(self.last_prices.get(symbol, 0.0) or 0.0)
+            stop_price = float(stop_rec.get('stop_price', 0.0) or 0.0)
+            if market_px <= 0 or stop_price <= 0:
+                continue
+            pos = int(self.positions.get(symbol, 0) or 0)
+            qty = min(abs(pos), int(stop_rec.get('quantity', 0) or 0))
+            if qty <= 0:
+                stop_rec['status'] = 'CANCELLED_NO_POSITION'
+                stop_rec['update_time'] = _now()
+                continue
+            stop_side = str(stop_rec.get('side', 'SELL') or 'SELL').upper()
+            if stop_side == 'SELL':
+                triggered = pos > 0 and market_px <= stop_price
+                fill_side = OrderSide.SELL
+                trigger_ref = min(market_px, stop_price)
+            else:
+                triggered = pos < 0 and market_px >= stop_price
+                fill_side = OrderSide.COVER if pos < 0 else OrderSide.BUY
+                trigger_ref = max(market_px, stop_price)
+            if not triggered:
+                continue
+            fill_price = self._apply_slippage(fill_side, qty, trigger_ref)
+            gross = fill_price * qty
+            commission = self._commission(gross)
+            tax = self._tax(fill_side, gross)
+            if fill_side in (OrderSide.BUY, OrderSide.COVER):
+                self.cash -= gross + commission + tax
+                self.positions[symbol] = pos + qty
+            else:
+                self.cash += gross - commission - tax
+                self.positions[symbol] = pos - qty
+            if self.positions.get(symbol, 0) == 0:
+                self.positions.pop(symbol, None)
+            fill = FillEvent(
+                order_id=str(order_id),
+                symbol=symbol,
+                side=fill_side,
+                fill_qty=int(qty),
+                fill_price=float(fill_price),
+                fill_time=_now(),
+                commission=commission,
+                tax=tax,
+                slippage=round(abs(fill_price - trigger_ref), 4),
+                note=str(stop_rec.get('note', '') or '') + '|protective_stop_triggered',
+            )
+            self.pending_fills.append(fill)
+            self.fill_history.append(fill)
+            stop_rec['status'] = 'TRIGGERED_FILLED'
+            stop_rec['trigger_time'] = _now()
+            stop_rec['trigger_fill_price'] = float(fill_price)
+            stop_rec['filled_qty'] = int(qty)
+            stop_rec['update_time'] = _now()
+            event = {
+                'order_id': str(order_id),
+                'symbol': symbol,
+                'side': fill_side.value,
+                'qty': int(qty),
+                'stop_price': round(stop_price, 4),
+                'trigger_price': round(trigger_ref, 4),
+                'fill_price': round(fill_price, 4),
+                'status': 'TRIGGERED_FILLED',
+                'time': _now(),
+            }
+            self.stop_trigger_history.append(dict(event))
+            events.append(event)
+        return events
+
+    def get_fill_history_dicts(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                'order_id': f.order_id,
+                'symbol': f.symbol,
+                'side': f.side.value if hasattr(f.side, 'value') else str(f.side),
+                'fill_qty': f.fill_qty,
+                'fill_price': f.fill_price,
+                'fill_time': f.fill_time,
+                'commission': f.commission,
+                'tax': f.tax,
+                'slippage': f.slippage,
+                'note': f.note,
+            }
+            for f in self.fill_history
+        ]
+
+
+    def get_open_orders_dicts(self) -> List[Dict[str, Any]]:
+        return [self._order_record_to_row(x) for x in self.get_open_orders()]
+
+    def get_positions_detailed(self) -> List[Dict[str, Any]]:
+        rows: List[Dict[str, Any]] = []
+        for symbol, qty in self.positions.items():
+            market_px = float(self.last_prices.get(symbol, 0.0) or 0.0)
+            avg_cost = market_px
+            market_value = abs(int(qty)) * market_px
+            rows.append({
+                'ticker': symbol,
+                'qty': int(qty),
+                'available_qty': abs(int(qty)),
+                'avg_cost': avg_cost,
+                'market_price': market_px,
+                'market_value': market_value,
+                'unrealized_pnl': 0.0,
+                'realized_pnl': 0.0,
+                'direction_bucket': 'LONG' if int(qty) >= 0 else 'SHORT',
+                'strategy_name': 'paper_runtime',
+                'industry': '未知',
+            })
+        return rows
+
+    def export_runtime_snapshot(self) -> Dict[str, Any]:
+        return {
+            'cash': self.get_cash(),
+            'positions': self.get_positions(),
+            'open_orders': [self._order_record_to_row(x) for x in self.get_open_orders()],
+            'protective_stops': self.get_protective_stops(),
+            'stop_trigger_events': list(self.stop_trigger_history[-20:]),
+        }
+
+    @staticmethod
+    def _order_record_to_row(record: OrderRecord) -> Dict[str, Any]:
+        return {
+            'order_id': record.order_id,
+            'symbol': record.symbol,
+            'side': record.side.value,
+            'quantity': record.quantity,
+            'filled_qty': record.filled_qty,
+            'remaining_qty': record.remaining_qty,
+            'avg_fill_price': record.avg_fill_price,
+            'order_type': record.order_type.value,
+            'limit_price': record.limit_price,
+            'status': record.status.value,
+            'create_time': record.create_time,
+            'update_time': record.update_time,
+            'reject_reason': record.reject_reason,
+            'strategy_name': record.strategy_name,
+            'signal_id': record.signal_id,
+            'client_order_id': record.client_order_id,
+            'note': record.note,
+        }
+
     def cancel_order(self, order_id: str) -> bool:
         rec = self.open_orders.get(order_id)
-        if not rec or rec.status in (OrderStatus.FILLED, OrderStatus.CANCELLED):
-            return False
-        rec.status = OrderStatus.CANCELLED
-        rec.update_time = _now()
-        return True
+        if rec is not None:
+            if rec.status in (OrderStatus.FILLED, OrderStatus.CANCELLED):
+                return False
+            rec.status = OrderStatus.CANCELLED
+            rec.update_time = _now()
+            return True
+        stop_rec = self.protective_stops.get(order_id)
+        if stop_rec is not None:
+            stop_rec['status'] = 'CANCELLED'
+            stop_rec['update_time'] = _now()
+            return True
+        return False
 
     def get_order_status(self, order_id: str) -> Optional[OrderRecord]:
         return self.open_orders.get(order_id)

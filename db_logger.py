@@ -46,16 +46,12 @@ class SQLServerExecutionLogger:
     def insert_order(self, row: dict) -> None:
         if not self.enabled or not self.db:
             return
-        sql = """
-        INSERT INTO dbo.execution_orders (
-            [order_id], [client_order_id], [broker_order_id], [ticker_symbol], [direction_bucket], [strategy_bucket],
-            [status], [qty], [filled_qty], [remaining_qty], [avg_fill_price], [order_type], [submitted_price], [ref_price],
-            [reject_reason], [signal_id], [industry], [signal_score], [ai_confidence], [note], [created_at], [updated_at]
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
+        order_id = _pick(row, '委託單號', 'order_id', 'broker_order_id', 'client_order_id')
+        if not order_id:
+            return
         side = _pick(row, '買賣方向', 'side', 'direction_bucket')
-        self.db.execute(sql, [
-            _pick(row, '委託單號', 'order_id'),
+        vals = [
+            str(order_id),
             _pick(row, '客戶委託編號', 'client_order_id'),
             _pick(row, 'broker_order_id'),
             _pick(row, '股票代號', 'symbol', 'ticker', 'ticker_symbol'),
@@ -67,7 +63,7 @@ class SQLServerExecutionLogger:
             _pick(row, '剩餘股數', 'remaining_qty'),
             _pick(row, '平均成交價', 'avg_fill_price'),
             _pick(row, '委託類型', 'order_type'),
-            _pick(row, '委託價格', 'limit_price', 'submitted_price'),
+            _pick(row, '委託價格', 'limit_price', 'submitted_price', 'stop_price'),
             _pick(row, '參考價', 'ref_price'),
             _pick(row, '拒單原因', 'reject_reason'),
             _pick(row, '訊號編號', 'signal_id'),
@@ -77,20 +73,35 @@ class SQLServerExecutionLogger:
             _pick(row, '備註', 'note'),
             _dt(_pick(row, '建立時間', 'create_time', 'created_at')),
             _dt(_pick(row, '更新時間', 'update_time', 'updated_at')),
-        ])
+        ]
+        sql = """
+        MERGE dbo.execution_orders AS tgt
+        USING (SELECT ? AS [order_id]) AS src
+        ON tgt.[order_id] = src.[order_id]
+        WHEN MATCHED THEN UPDATE SET
+            [client_order_id]=?, [broker_order_id]=?, [ticker_symbol]=?, [direction_bucket]=?, [strategy_bucket]=?,
+            [status]=?, [qty]=?, [filled_qty]=?, [remaining_qty]=?, [avg_fill_price]=?, [order_type]=?, [submitted_price]=?, [ref_price]=?,
+            [reject_reason]=?, [signal_id]=?, [industry]=?, [signal_score]=?, [ai_confidence]=?, [note]=?,
+            [created_at]=COALESCE([created_at], ?), [updated_at]=?
+        WHEN NOT MATCHED THEN INSERT (
+            [order_id], [client_order_id], [broker_order_id], [ticker_symbol], [direction_bucket], [strategy_bucket],
+            [status], [qty], [filled_qty], [remaining_qty], [avg_fill_price], [order_type], [submitted_price], [ref_price],
+            [reject_reason], [signal_id], [industry], [signal_score], [ai_confidence], [note], [created_at], [updated_at]
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        self.db.execute(sql, vals + vals)
         self.db.commit()
 
     def insert_fill(self, row: dict) -> None:
         if not self.enabled or not self.db:
             return
-        sql = """
-        INSERT INTO dbo.execution_fills (
-            [fill_id], [order_id], [ticker_symbol], [direction_bucket], [fill_qty], [fill_price], [fill_time],
-            [commission], [tax], [slippage], [strategy_name], [signal_id], [note]
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-        self.db.execute(sql, [
-            _pick(row, '成交編號', 'fill_id'),
+        fill_id = _pick(row, '成交編號', 'fill_id')
+        if not fill_id:
+            order_id = _pick(row, '委託單號', 'order_id', 'client_order_id', 'broker_order_id', default='FILL')
+            fill_time = _pick(row, '成交時間', 'fill_time', 'updated_at') or datetime.now().isoformat(timespec='seconds')
+            fill_id = f"{order_id}-{fill_time}"
+        vals = [
+            str(fill_id),
             _pick(row, '委託單號', 'order_id'),
             _pick(row, '股票代號', 'symbol', 'ticker', 'ticker_symbol'),
             _pick(row, '買賣方向', 'side', 'direction_bucket'),
@@ -103,7 +114,20 @@ class SQLServerExecutionLogger:
             _pick(row, '策略名稱', 'strategy_name'),
             _pick(row, '訊號編號', 'signal_id'),
             _pick(row, '備註', 'note'),
-        ])
+        ]
+        sql = """
+        MERGE dbo.execution_fills AS tgt
+        USING (SELECT ? AS [fill_id]) AS src
+        ON tgt.[fill_id] = src.[fill_id]
+        WHEN MATCHED THEN UPDATE SET
+            [order_id]=?, [ticker_symbol]=?, [direction_bucket]=?, [fill_qty]=?, [fill_price]=?, [fill_time]=?,
+            [commission]=?, [tax]=?, [slippage]=?, [strategy_name]=?, [signal_id]=?, [note]=?
+        WHEN NOT MATCHED THEN INSERT (
+            [fill_id], [order_id], [ticker_symbol], [direction_bucket], [fill_qty], [fill_price], [fill_time],
+            [commission], [tax], [slippage], [strategy_name], [signal_id], [note]
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        self.db.execute(sql, vals + vals)
         self.db.commit()
 
     def upsert_account_snapshot(self, row: dict) -> None:
@@ -170,6 +194,43 @@ class SQLServerExecutionLogger:
                 _pick(row, '備註', 'note', 'lifecycle_note'),
             ])
         self.db.commit()
+
+
+    def sync_runtime_snapshot(self, account_row: dict, position_rows: list[dict], snapshot_time: Optional[str] = None, note: str = '') -> None:
+        if not self.enabled or not self.db:
+            return
+        snap_time = _dt(snapshot_time) or datetime.now()
+        account_payload = dict(account_row or {})
+        if note and not account_payload.get('note'):
+            account_payload['note'] = note
+        account_payload['snapshot_time'] = snap_time
+        self.upsert_account_snapshot(account_payload)
+        self.replace_positions_snapshot(position_rows or [], snapshot_time=snap_time.isoformat(timespec='seconds'))
+
+    def ingest_protective_stop_order(self, row: dict) -> None:
+        if not self.enabled or not self.db:
+            return
+        order_payload = {
+            'order_id': _pick(row, 'broker_order_id', 'order_id', 'client_order_id'),
+            'client_order_id': _pick(row, 'client_order_id'),
+            'broker_order_id': _pick(row, 'broker_order_id', 'order_id'),
+            'ticker_symbol': _pick(row, 'ticker_symbol', 'ticker', 'symbol'),
+            'direction_bucket': _pick(row, 'direction_bucket', 'side'),
+            'strategy_bucket': _pick(row, 'strategy_bucket', 'strategy_name', default='protective_stop'),
+            'status': _pick(row, 'status', default='WORKING'),
+            'qty': _pick(row, 'qty', 'quantity'),
+            'filled_qty': _pick(row, 'filled_qty', default=0),
+            'remaining_qty': _pick(row, 'remaining_qty', 'qty', 'quantity'),
+            'avg_fill_price': _pick(row, 'avg_fill_price', 'trigger_fill_price'),
+            'order_type': _pick(row, 'order_type', default='STOP'),
+            'submitted_price': _pick(row, 'submitted_price', 'stop_price'),
+            'ref_price': _pick(row, 'ref_price', 'stop_price'),
+            'signal_id': _pick(row, 'signal_id', 'client_order_id'),
+            'note': _pick(row, 'note', default='protective_stop_workflow'),
+            'updated_at': _dt(_pick(row, 'updated_at', 'update_time')) or datetime.now(),
+            'created_at': _dt(_pick(row, 'created_at', 'create_time')) or datetime.now(),
+        }
+        self.insert_order(order_payload)
 
     def close(self) -> None:
         if self.db:

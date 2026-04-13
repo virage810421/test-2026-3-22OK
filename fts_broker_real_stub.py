@@ -37,6 +37,7 @@ class RealBrokerStub(BrokerBase):
         self._orders: Dict[str, dict[str, Any]] = {}
         self._fills: List[dict[str, Any]] = []
         self._callbacks: List[dict[str, Any]] = []
+        self._protective_stops: Dict[str, dict[str, Any]] = {}
         self._connected = False
         self._session_id = f"SIM-{uuid.uuid4().hex[:8].upper()}"
         self._event_store = CallbackEventStore() if CallbackEventStore is not None else None
@@ -118,7 +119,7 @@ class RealBrokerStub(BrokerBase):
         market_value = 0.0
         for pos in self._positions.values():
             px = self._last_prices.get(pos.ticker, pos.avg_cost)
-            market_value += px * pos.qty
+            market_value += abs(px * pos.qty)
         equity = self._cash + market_value
         return {
             "cash_available": round(self._cash, 2),
@@ -126,6 +127,51 @@ class RealBrokerStub(BrokerBase):
             "equity": round(equity, 2),
             "buying_power": round(self._cash, 2),
             "updated_at": now_str(),
+        }
+
+
+    def get_protective_stops(self) -> list[dict[str, Any]]:
+        return [dict(v) for v in self._protective_stops.values()]
+
+    def get_open_orders_dicts(self) -> list[dict[str, Any]]:
+        return [dict(v) for v in self._orders.values() if str(v.get('status', '')).upper() in {'SUBMITTED', 'PARTIALLY_FILLED'}]
+
+    def get_fill_history_dicts(self) -> list[dict[str, Any]]:
+        return [dict(v) for v in self._fills]
+
+    def get_positions_detailed(self) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for pos in self._positions.values():
+            ticker = getattr(pos, 'ticker', '')
+            qty = int(getattr(pos, 'qty', 0) or 0)
+            avg_cost = float(getattr(pos, 'avg_cost', 0) or 0)
+            market_px = float(self._last_prices.get(ticker, avg_cost) or avg_cost or 0.0)
+            market_value = abs(qty) * market_px
+            unrealized = (market_px - avg_cost) * qty if qty >= 0 else (avg_cost - market_px) * abs(qty)
+            rows.append({
+                'ticker': ticker,
+                'qty': qty,
+                'available_qty': abs(qty),
+                'avg_cost': avg_cost,
+                'market_price': market_px,
+                'market_value': market_value,
+                'unrealized_pnl': round(unrealized, 4),
+                'realized_pnl': 0.0,
+                'direction_bucket': 'LONG' if qty >= 0 else 'SHORT',
+                'strategy_name': getattr(pos, 'lifecycle_note', '') or 'mock_real_runtime',
+                'industry': getattr(pos, 'industry', '未知'),
+                'note': getattr(pos, 'lifecycle_note', ''),
+            })
+        return rows
+
+    def export_runtime_snapshot(self) -> dict[str, Any]:
+        snap = self.get_cash()
+        return {
+            'cash': snap.get('cash_available', 0.0),
+            'positions': [dict(x) for x in self.get_positions_rows()],
+            'open_orders': [dict(x) for x in self.snapshot_orders()],
+            'fills': [dict(x) for x in self.get_fill_history_dicts()[-20:]],
+            'protective_stops': self.get_protective_stops(),
         }
 
     def get_positions_rows(self) -> list[dict[str, Any]]:
@@ -143,14 +189,103 @@ class RealBrokerStub(BrokerBase):
             return list(self._fills)
         return [x for x in self._fills if str(x.get("fill_time", "")).startswith(str(trading_date))]
 
+    def poll_fills(self) -> list[dict[str, Any]]:
+        fills = list(self._fills)
+        self._fills = []
+        return fills
+
+    def process_protective_stops(self, price_map: dict[str, float] | None = None) -> list[dict[str, Any]]:
+        for ticker, price in (price_map or {}).items():
+            self.update_market_price(ticker, price)
+        events: list[dict[str, Any]] = []
+        for broker_order_id, rec in list(self._protective_stops.items()):
+            if str(rec.get('status', 'SUBMITTED')).upper() not in {'SUBMITTED', 'WORKING'}:
+                continue
+            ticker = str(rec.get('ticker', '')).strip().upper()
+            market_px = float(self._last_prices.get(ticker, 0) or 0)
+            stop_px = float(rec.get('stop_price', 0) or 0)
+            qty = int(rec.get('qty', 0) or 0)
+            if not ticker or market_px <= 0 or stop_px <= 0 or qty <= 0:
+                continue
+            pos = self._positions.get(ticker)
+            pos_qty = int(getattr(pos, 'qty', 0) or 0)
+            side = str(rec.get('side', 'SELL')).upper()
+            if side == 'SELL':
+                triggered = pos_qty > 0 and market_px <= stop_px
+                fill_side = 'SELL'
+                trigger_px = min(market_px, stop_px)
+            else:
+                triggered = pos_qty < 0 and market_px >= stop_px
+                fill_side = 'BUY'
+                trigger_px = max(market_px, stop_px)
+            if not triggered:
+                continue
+            fill_qty = min(abs(pos_qty), qty)
+            order_row = {
+                'broker_order_id': broker_order_id,
+                'client_order_id': rec.get('client_order_id', broker_order_id),
+                'ticker': ticker,
+                'side': fill_side,
+                'qty': fill_qty,
+                'filled_qty': 0,
+                'remaining_qty': fill_qty,
+                'submitted_price': trigger_px,
+                'status': 'SUBMITTED',
+                'strategy_name': 'protective_stop',
+                'industry': getattr(pos, 'industry', '未知') if pos is not None else '未知',
+                'created_at': now_str(),
+                'updated_at': now_str(),
+                'avg_fill_price': 0.0,
+            }
+            self._apply_fill(order_row, fill_qty=fill_qty, fill_price=trigger_px)
+            rec['status'] = 'TRIGGERED_FILLED'
+            rec['updated_at'] = now_str()
+            rec['filled_qty'] = fill_qty
+            rec['trigger_fill_price'] = round_price(trigger_px)
+            event = {'order_id': broker_order_id, 'symbol': ticker, 'side': fill_side, 'qty': fill_qty, 'stop_price': stop_px, 'trigger_price': trigger_px, 'fill_price': trigger_px, 'status': 'TRIGGERED_FILLED', 'time': now_str()}
+            self._record_callback({
+                'broker_order_id': broker_order_id,
+                'client_order_id': rec.get('client_order_id', broker_order_id),
+                'event_type': 'STOP_TRIGGERED',
+                'status': 'FILLED',
+                'symbol': ticker,
+                'filled_qty': fill_qty,
+                'remaining_qty': 0,
+                'timestamp': now_str(),
+                'avg_fill_price': trigger_px,
+            })
+            events.append(event)
+        return events
+
+
+    def upsert_protective_stop(self, symbol: str, quantity: int, stop_price: float, side: str = "SELL", client_order_id: str = "", note: str = "") -> dict[str, Any]:
+        if not symbol or quantity <= 0 or stop_price <= 0:
+            return {'ok': False, 'status': 'invalid_stop_payload', 'symbol': symbol}
+        broker_order_id = client_order_id or f'STOP-{symbol}-{len(self._protective_stops)+1:04d}'
+        rec = self._protective_stops.get(broker_order_id, {})
+        rec.update({'broker_order_id': broker_order_id, 'ticker': symbol, 'qty': int(quantity), 'stop_price': round_price(float(stop_price)), 'side': str(side).upper(), 'status': 'SUBMITTED', 'updated_at': now_str(), 'note': str(note or '')})
+        self._protective_stops[broker_order_id] = rec
+        return {'ok': True, 'status': 'protective_stop_upserted', 'broker_order_id': broker_order_id, 'updated_order': dict(rec)}
+
     def replace_order(self, broker_order_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         order = self._orders.get(str(broker_order_id))
         if not order:
+            stop_rec = self._protective_stops.get(str(broker_order_id))
+            if stop_rec is not None:
+                if 'stop_price' in payload:
+                    stop_rec['stop_price'] = round_price(float(payload['stop_price']))
+                if 'qty' in payload:
+                    stop_rec['qty'] = int(payload['qty'])
+                stop_rec['updated_at'] = now_str()
+                stop_rec['note'] = str(payload.get('note', stop_rec.get('note', '')))
+                return {'ok': True, 'status': 'replace_ok', 'broker_order_id': broker_order_id, 'updated_order': dict(stop_rec)}
             return {"ok": False, "status": "missing_order", "broker_order_id": broker_order_id}
         if order.get("status") not in {"SUBMITTED", "PARTIALLY_FILLED"}:
             return {"ok": False, "status": "replace_blocked", "broker_order_id": broker_order_id, "reason": "order_not_working"}
         if "price" in payload:
             order["submitted_price"] = round_price(float(payload["price"]))
+        if "stop_price" in payload:
+            order["submitted_price"] = round_price(float(payload["stop_price"]))
         if "qty" in payload:
             order["qty"] = int(payload["qty"])
             order["remaining_qty"] = max(order["qty"] - int(order.get("filled_qty", 0) or 0), 0)

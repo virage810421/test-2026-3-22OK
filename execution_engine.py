@@ -20,6 +20,8 @@ from fts_data_quality_guard import validate_order_contract_dict, append_order_qu
 LOG_DIR = "execution_logs"
 ORDER_BLOTTER_PATH = os.path.join(LOG_DIR, "order_blotter.csv")
 FILL_BLOTTER_PATH = os.path.join(LOG_DIR, "fill_blotter.csv")
+STOP_REPLACE_BLOTTER_PATH = os.path.join(LOG_DIR, "stop_replace_blotter.csv")
+STOP_TRIGGER_BLOTTER_PATH = os.path.join(LOG_DIR, "stop_trigger_blotter.csv")
 STATE_PATH = os.path.join(LOG_DIR, "execution_state.json")
 LEVEL3_RUNTIME_PATH = os.path.join('runtime', 'level3_execution_runtime.json')
 
@@ -40,7 +42,7 @@ class ExecutionEngine:
         print("========================================================")
         print("🚀 啟動 Execution Engine：決策桌 → 風控 → 券商 → blotter")
         print("========================================================")
-        df, source_meta = self._load_or_build_orders(decision_csv_path)
+        df, source_meta, stop_replace_df = self._load_or_build_orders(decision_csv_path)
         if df is None or df.empty:
             print("⚠️ 決策桌為空")
             return
@@ -62,6 +64,7 @@ class ExecutionEngine:
         if blocked:
             print(f"🛑 kill switch blocking execution: {' | '.join(reasons)}")
             self._write_level3_runtime(df, source_meta, order_rows_this_run, fill_rows_this_run, status='blocked_by_kill_switch', extra={'reasons': reasons})
+            self._sync_execution_sql_runtime(status='blocked_by_kill_switch', note='kill_switch_blocked')
             return
         for _, row in df.iterrows():
             order_req = self._row_to_order_request(row)
@@ -138,15 +141,29 @@ class ExecutionEngine:
             transition = self._record_state_transition('SUBMITTED', 'FILLED')
             if transition and not transition.get('allowed', True):
                 print(f"⚠️ order_state_machine detected illegal fill transition: {transition}")
+        stop_replace_rows = self._apply_stop_replace_workflow(stop_replace_df)
+        stop_trigger_rows = self._apply_protective_stop_trigger_workflow()
+        try:
+            late_fills = self.broker.poll_fills()
+        except Exception as e:
+            late_fills = []
+            print(f"⚠️ protective stop 後 poll_fills 失敗：{e}")
+        for fill in late_fills:
+            fill_row = self._fill_event_to_row(fill)
+            fill_rows_this_run.append(fill_row)
+            self._append_csv_row(FILL_BLOTTER_PATH, fill_row)
+            if self.db_logger:
+                self.db_logger.insert_fill(fill_row)
+        self._sync_execution_sql_runtime(status='completed', note='execution_engine_run')
         self._save_state()
-        self._write_level3_runtime(df, source_meta, order_rows_this_run, fill_rows_this_run, status='completed')
+        self._write_level3_runtime(df, source_meta, order_rows_this_run, fill_rows_this_run, status='completed', extra={'stop_replace_rows': int(len(stop_replace_rows)), 'stop_trigger_rows': int(len(stop_trigger_rows))})
         print("--------------------------------------------------------")
         print(f"✅ 本輪完成 | 送單: {submit_count} | 跳過: {skip_count}")
         print(f"💰 Cash: {self.broker.get_cash():,.2f}")
         print(f"📦 Positions: {self.broker.get_positions()}")
         print("========================================================")
 
-    def _load_or_build_orders(self, decision_csv_path: str) -> tuple[pd.DataFrame, dict[str, Any]]:
+    def _load_or_build_orders(self, decision_csv_path: str) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
         if os.path.exists(decision_csv_path):
             try:
                 df = pd.read_csv(decision_csv_path)
@@ -155,19 +172,146 @@ class ExecutionEngine:
         else:
             df = pd.DataFrame()
         if not df.empty:
-            return self._normalize_execution_df(df), {'source': decision_csv_path, 'bridge_used': False}
+            stop_df = self._load_stop_replace_df(None)
+            return self._normalize_execution_df(df), {'source': decision_csv_path, 'bridge_used': False}, stop_df
         bridge = self.level3_services.get('DecisionExecutionBridge')
         if bridge is None:
-            return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': False, 'reason': 'missing_bridge'}
+            return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': False, 'reason': 'missing_bridge'}, pd.DataFrame()
         try:
             out_path, payload = bridge.build()
             out_path = str(out_path)
             if os.path.exists(out_path):
                 built_df = pd.read_csv(out_path, encoding='utf-8-sig')
-                return self._normalize_execution_df(built_df), {'source': out_path, 'bridge_used': True, 'payload_status': payload.get('status', '')}
+                stop_df = self._load_stop_replace_df(payload.get('stop_replace_output_path'))
+                return self._normalize_execution_df(built_df), {'source': out_path, 'bridge_used': True, 'payload_status': payload.get('status', ''), 'stop_replace_output_path': payload.get('stop_replace_output_path', '')}, stop_df
         except Exception as e:
-            return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': True, 'error': repr(e)}
-        return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': True, 'reason': 'bridge_output_missing'}
+            return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': True, 'error': repr(e)}, pd.DataFrame()
+        return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': True, 'reason': 'bridge_output_missing'}, pd.DataFrame()
+
+
+    def _load_stop_replace_df(self, explicit_path: str | None) -> pd.DataFrame:
+        candidates = []
+        if explicit_path:
+            candidates.append(explicit_path)
+        candidates.extend([os.path.join('data', 'stop_replace_payloads.csv'), os.path.join('runtime', 'stop_replace_payloads.csv')])
+        for path in candidates:
+            if path and os.path.exists(path):
+                try:
+                    return pd.read_csv(path, encoding='utf-8-sig')
+                except Exception:
+                    try:
+                        return pd.read_csv(path)
+                    except Exception:
+                        continue
+        return pd.DataFrame()
+
+    def _apply_stop_replace_workflow(self, stop_df: pd.DataFrame) -> list[dict[str, Any]]:
+        if stop_df is None or stop_df.empty:
+            return []
+        rows: list[dict[str, Any]] = []
+        for _, row in stop_df.iterrows():
+            try:
+                should_replace = bool(row.get('Should_Replace_Stop', False))
+                if not should_replace:
+                    continue
+                symbol = str(row.get('Ticker', '')).strip()
+                qty = int(float(row.get('Current_Position_Qty', 0) or 0))
+                stop_price = float(row.get('Desired_Stop_Price', 0) or 0)
+                mode = str(row.get('Stop_Workflow_Mode', 'PLAN_ONLY') or 'PLAN_ONLY').strip().upper()
+                broker_order_id = str(row.get('Broker_Stop_Order_ID', '') or '').strip()
+                note = str(row.get('Note', '') or '')
+                result = {'ok': False, 'status': 'skipped', 'symbol': symbol, 'mode': mode, 'broker_order_id': broker_order_id, 'stop_price': stop_price, 'qty': qty, 'note': note}
+                if symbol and qty > 0 and stop_price > 0:
+                    if broker_order_id and hasattr(self.broker, 'replace_order'):
+                        result = self.broker.replace_order(broker_order_id, {'stop_price': stop_price, 'qty': qty, 'note': note}) or result
+                    elif mode == 'UPSERT_PROTECTIVE_STOP' and hasattr(self.broker, 'upsert_protective_stop'):
+                        side = 'BUY' if str(row.get('Position_Side', 'LONG')).upper() == 'SHORT' else 'SELL'
+                        result = self.broker.upsert_protective_stop(symbol=symbol, quantity=qty, stop_price=stop_price, side=side, client_order_id=str(row.get('Client_Order_ID', '') or ''), note=note) or result
+                    else:
+                        result['status'] = 'plan_only'
+                blotter_row = {
+                    'run_time': datetime.now().isoformat(timespec='seconds'),
+                    'Ticker SYMBOL': symbol,
+                    'Broker_Stop_Order_ID': broker_order_id,
+                    'Stop_Workflow_Mode': mode,
+                    'Desired_Stop_Price': stop_price,
+                    'Current_Position_Qty': qty,
+                    'Result_Status': result.get('status', ''),
+                    'Result_OK': bool(result.get('ok', False)),
+                    'Client_Order_ID': str(row.get('Client_Order_ID', '') or ''),
+                    'Note': note,
+                }
+                rows.append(blotter_row)
+                self._append_csv_row(STOP_REPLACE_BLOTTER_PATH, blotter_row)
+                if self.db_logger:
+                    protective_record = result.get('record', {}) if isinstance(result, dict) else {}
+                    payload = {
+                        'order_id': broker_order_id or str(protective_record.get('order_id', '') or protective_record.get('broker_order_id', '') or row.get('Client_Order_ID', '') or ''),
+                        'client_order_id': str(row.get('Client_Order_ID', '') or protective_record.get('client_order_id', '') or ''),
+                        'broker_order_id': broker_order_id or str(protective_record.get('order_id', '') or protective_record.get('broker_order_id', '') or ''),
+                        'ticker_symbol': symbol,
+                        'direction_bucket': 'STOP_' + str(row.get('Position_Side', 'LONG')).upper(),
+                        'strategy_bucket': 'protective_stop',
+                        'status': str(result.get('status', protective_record.get('status', mode)) or mode),
+                        'qty': qty,
+                        'filled_qty': int(protective_record.get('filled_qty', 0) or 0),
+                        'remaining_qty': int(protective_record.get('quantity', protective_record.get('qty', qty)) or qty),
+                        'avg_fill_price': float(protective_record.get('trigger_fill_price', 0) or 0),
+                        'order_type': 'STOP',
+                        'submitted_price': stop_price,
+                        'ref_price': float(row.get('Reference_Price', 0) or 0),
+                        'signal_id': str(row.get('Client_Order_ID', '') or ''),
+                        'note': note or 'protective_stop_workflow',
+                        'created_at': protective_record.get('create_time', protective_record.get('created_at', datetime.now().isoformat(timespec='seconds'))),
+                        'updated_at': protective_record.get('update_time', protective_record.get('updated_at', datetime.now().isoformat(timespec='seconds'))),
+                    }
+                    self.db_logger.ingest_protective_stop_order(payload)
+            except Exception as e:
+                rows.append({'run_time': datetime.now().isoformat(timespec='seconds'), 'Ticker SYMBOL': str(row.get('Ticker', '') or ''), 'Result_Status': f'exception:{e}', 'Result_OK': False})
+        return rows
+
+    def _apply_protective_stop_trigger_workflow(self) -> list[dict[str, Any]]:
+        if not bool(getattr(self.broker, 'process_protective_stops', None)):
+            return []
+        try:
+            triggered = self.broker.process_protective_stops() or []
+        except Exception as e:
+            print(f"⚠️ protective stop trigger workflow 失敗：{e}")
+            return []
+        rows: list[dict[str, Any]] = []
+        for item in triggered:
+            row = {
+                'run_time': datetime.now().isoformat(timespec='seconds'),
+                'Ticker SYMBOL': str(item.get('symbol', '') or ''),
+                'Broker_Stop_Order_ID': str(item.get('order_id', '') or ''),
+                'Stop_Price': float(item.get('stop_price', 0) or 0),
+                'Trigger_Price': float(item.get('trigger_price', 0) or 0),
+                'Fill_Price': float(item.get('fill_price', 0) or 0),
+                'Fill_Qty': int(item.get('qty', 0) or 0),
+                'Side': str(item.get('side', '') or ''),
+                'Result_Status': str(item.get('status', '') or ''),
+            }
+            rows.append(row)
+            self._append_csv_row(STOP_TRIGGER_BLOTTER_PATH, row)
+            if self.db_logger:
+                self.db_logger.ingest_protective_stop_order({
+                    'order_id': str(item.get('order_id', '') or ''),
+                    'broker_order_id': str(item.get('order_id', '') or ''),
+                    'ticker_symbol': str(item.get('symbol', '') or ''),
+                    'direction_bucket': 'STOP_TRIGGER',
+                    'strategy_bucket': 'protective_stop',
+                    'status': str(item.get('status', 'TRIGGERED_FILLED') or 'TRIGGERED_FILLED'),
+                    'qty': int(item.get('qty', 0) or 0),
+                    'filled_qty': int(item.get('qty', 0) or 0),
+                    'remaining_qty': 0,
+                    'avg_fill_price': float(item.get('fill_price', 0) or 0),
+                    'order_type': 'STOP',
+                    'submitted_price': float(item.get('stop_price', 0) or 0),
+                    'ref_price': float(item.get('trigger_price', 0) or 0),
+                    'note': 'protective_stop_triggered',
+                    'updated_at': str(item.get('time', datetime.now().isoformat(timespec='seconds'))),
+                })
+        return rows
 
     @staticmethod
     def _normalize_execution_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -317,7 +461,39 @@ class ExecutionEngine:
                 return self.broker.get_positions_detailed()
             except Exception:
                 pass
-        return [{'ticker': k, 'qty': int(v), 'avg_cost': float(getattr(self.broker, 'last_prices', {}).get(k, 0.0) or 0.0)} for k, v in self.broker.get_positions().items()]
+        rows = []
+        price_map = getattr(self.broker, 'last_prices', {}) or {}
+        for k, v in self.broker.get_positions().items():
+            qty = int(v)
+            market_px = float(price_map.get(k, 0.0) or 0.0)
+            avg_cost = market_px
+            market_value = abs(qty) * market_px
+            rows.append({'ticker': k, 'qty': qty, 'available_qty': abs(qty), 'avg_cost': avg_cost, 'market_price': market_px, 'market_value': market_value, 'unrealized_pnl': 0.0, 'realized_pnl': 0.0, 'direction_bucket': 'LONG' if qty >= 0 else 'SHORT'})
+        return rows
+
+    def _broker_protective_stops_for_runtime(self) -> list[dict[str, Any]]:
+        getter = getattr(self.broker, 'get_protective_stops', None)
+        if not callable(getter):
+            return []
+        try:
+            return getter() or []
+        except Exception:
+            return []
+
+    def _sync_execution_sql_runtime(self, status: str, note: str = '') -> None:
+        if not self.db_logger:
+            return
+        try:
+            for stop_row in self._broker_protective_stops_for_runtime():
+                self.db_logger.ingest_protective_stop_order(stop_row)
+            cash_snapshot = self.broker.get_account_snapshot() if hasattr(self.broker, 'get_account_snapshot') else {}
+            if not isinstance(cash_snapshot, dict):
+                cash_snapshot = {'cash': float(self.broker.get_cash() or 0.0), 'equity': float(self.broker.get_cash() or 0.0), 'market_value': 0.0, 'buying_power': float(self.broker.get_cash() or 0.0)}
+            cash_snapshot = dict(cash_snapshot)
+            cash_snapshot.update({'snapshot_time': datetime.now().isoformat(timespec='seconds'), 'broker_type': getattr(self.broker, '__class__', type('X',(object,),{})).__name__, 'note': f'{status}|{note}' if note else status})
+            self.db_logger.sync_runtime_snapshot(cash_snapshot, self._broker_positions_for_runtime(), snapshot_time=cash_snapshot['snapshot_time'], note=cash_snapshot.get('note', ''))
+        except Exception as e:
+            print(f"⚠️ execution SQL runtime sync 失敗：{e}")
 
     def _build_position_state(self) -> dict[str, Any]:
         service = self.level3_services.get('PositionStateService')
@@ -390,10 +566,55 @@ class ExecutionEngine:
 
     @staticmethod
     def _order_record_to_row(record) -> dict:
+        if isinstance(record, dict):
+            side = record.get('side', '')
+            order_type = record.get('order_type', record.get('type', ''))
+            status = record.get('status', '')
+            return {
+                'order_id': record.get('order_id', record.get('client_order_id', record.get('broker_order_id', ''))),
+                'symbol': record.get('symbol', record.get('ticker', '')),
+                'side': getattr(side, 'value', side),
+                'quantity': int(record.get('quantity', record.get('qty', 0)) or 0),
+                'qty': int(record.get('qty', record.get('quantity', 0)) or 0),
+                'filled_qty': int(record.get('filled_qty', 0) or 0),
+                'remaining_qty': int(record.get('remaining_qty', 0) or 0),
+                'avg_fill_price': float(record.get('avg_fill_price', 0) or 0),
+                'order_type': getattr(order_type, 'value', order_type),
+                'limit_price': record.get('limit_price', record.get('submitted_price')),
+                'status': getattr(status, 'value', status),
+                'create_time': record.get('create_time', record.get('created_at', '')),
+                'update_time': record.get('update_time', record.get('updated_at', '')),
+                'updated_at': record.get('updated_at', record.get('update_time', '')),
+                'reject_reason': record.get('reject_reason', ''),
+                'strategy_name': record.get('strategy_name', ''),
+                'signal_id': record.get('signal_id', record.get('client_order_id', '')),
+                'client_order_id': record.get('client_order_id', ''),
+                'note': record.get('note', ''),
+            }
         return {"order_id": record.order_id, "symbol": record.symbol, "side": record.side.value, "quantity": record.quantity, "qty": record.quantity, "filled_qty": record.filled_qty, "remaining_qty": record.remaining_qty, "avg_fill_price": record.avg_fill_price, "order_type": record.order_type.value, "limit_price": record.limit_price, "status": record.status.value, "create_time": record.create_time, "update_time": record.update_time, "updated_at": record.update_time, "reject_reason": record.reject_reason, "strategy_name": record.strategy_name, "signal_id": record.signal_id, "client_order_id": record.client_order_id, "note": record.note}
 
     @staticmethod
     def _fill_event_to_row(fill) -> dict:
+        if isinstance(fill, dict):
+            side = fill.get('side', '')
+            order_id = fill.get('order_id', fill.get('client_order_id', fill.get('broker_order_id', '')))
+            fill_time = fill.get('fill_time', fill.get('updated_at', datetime.now().isoformat(timespec='seconds')))
+            return {
+                'fill_id': fill.get('fill_id', f'{order_id}-{fill_time}'),
+                'order_id': order_id,
+                'symbol': fill.get('symbol', fill.get('ticker', '')),
+                'side': getattr(side, 'value', side),
+                'fill_qty': int(fill.get('fill_qty', fill.get('qty', 0)) or 0),
+                'fill_price': float(fill.get('fill_price', 0) or 0),
+                'fill_time': fill_time,
+                'updated_at': fill_time,
+                'commission': float(fill.get('commission', 0) or 0),
+                'tax': float(fill.get('tax', 0) or 0),
+                'slippage': float(fill.get('slippage', 0) or 0),
+                'strategy_name': fill.get('strategy_name', ''),
+                'signal_id': fill.get('signal_id', fill.get('client_order_id', '')),
+                'note': fill.get('note', ''),
+            }
         return {"fill_id": f"{fill.order_id}-{fill.fill_time}", "order_id": fill.order_id, "symbol": fill.symbol, "side": fill.side.value, "fill_qty": fill.fill_qty, "fill_price": fill.fill_price, "fill_time": fill.fill_time, "updated_at": fill.fill_time, "commission": fill.commission, "tax": fill.tax, "slippage": fill.slippage, "strategy_name": fill.strategy_name, "signal_id": fill.signal_id, "note": fill.note}
 
     @staticmethod

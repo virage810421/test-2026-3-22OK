@@ -4,6 +4,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", message=".*pandas only supports SQLAlchemy.*")
 
 from datetime import datetime
+import os
 import requests
 import pandas as pd
 import pyodbc
@@ -16,6 +17,10 @@ from fts_model_layer import evaluate_model_signal
 from fts_execution_layer import build_entry_metrics as _build_entry_metrics_layer, signal_gate as _signal_gate_layer, portfolio_gate as _portfolio_gate_layer, compute_position_plan
 from sector_classifier import get_stock_sector
 from fts_execution_ledger import ExecutionLedger
+try:
+    from db_logger import SQLServerExecutionLogger
+except Exception:
+    SQLServerExecutionLogger = None
 from fts_live_watchlist_loader import LiveWatchlistLoader
 try:
     from fts_level3_runtime_loader import build_level3_services
@@ -116,6 +121,323 @@ def _safe_int(x, default=0):
 
 
 
+def _table_has_column(cursor, table_name: str, column_name: str) -> bool:
+    try:
+        cursor.execute("""
+            SELECT 1
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = ? AND COLUMN_NAME = ?
+        """, (table_name, column_name))
+        return cursor.fetchone() is not None
+    except Exception:
+        return False
+
+
+def _ensure_exit_sql_columns(cursor):
+    additions = {
+        '目前停損價': 'FLOAT NULL',
+        '停損單號': 'NVARCHAR(64) NULL',
+        '目標倉位倍率': 'DECIMAL(10,4) NULL',
+        'Exit_State': 'NVARCHAR(20) NULL',
+        'Exit_Action': 'NVARCHAR(32) NULL',
+        '最後停損更新時間': 'DATETIME NULL',
+    }
+    for col, typ in additions.items():
+        try:
+            cursor.execute(f"IF COL_LENGTH('dbo.active_positions', N'{col}') IS NULL ALTER TABLE dbo.active_positions ADD [{col}] {typ}")
+        except Exception:
+            pass
+    try:
+        cursor.execute("IF COL_LENGTH('dbo.trade_history', N'出場原因') IS NULL ALTER TABLE dbo.trade_history ADD [出場原因] NVARCHAR(100) NULL")
+    except Exception:
+        pass
+    try:
+        cursor.connection.commit()
+    except Exception:
+        pass
+
+
+def _load_stop_replace_payloads() -> pd.DataFrame:
+    candidates = [
+        os.path.join('data', str(PARAMS.get('EXIT_SQL_STOP_SOURCE_FILE', 'stop_replace_payloads.csv'))),
+        os.path.join('runtime', str(PARAMS.get('EXIT_SQL_STOP_SOURCE_FILE', 'stop_replace_payloads.csv'))),
+        os.path.join('data', 'stop_replace_payloads.csv'),
+        os.path.join('runtime', 'stop_replace_payloads.csv'),
+    ]
+    for path in candidates:
+        if path and os.path.exists(path):
+            try:
+                return pd.read_csv(path, encoding='utf-8-sig')
+            except Exception:
+                try:
+                    return pd.read_csv(path)
+                except Exception:
+                    continue
+    return pd.DataFrame()
+
+
+def _build_stop_payload_map(stop_df: pd.DataFrame) -> dict[str, dict]:
+    mp: dict[str, dict] = {}
+    if stop_df is None or stop_df.empty:
+        return mp
+    for _, row in stop_df.iterrows():
+        ticker = str(row.get('Ticker', '') or '').strip()
+        if not ticker:
+            continue
+        mp[ticker] = dict(row)
+    return mp
+
+
+def _sync_stop_plan_to_sql(cursor, pos, stop_row: dict) -> None:
+    if not bool(PARAMS.get('EXIT_SQL_STOP_SYNC_ENABLE', True)):
+        return
+    ticker = str(pos.get('Ticker SYMBOL', '') or '').strip()
+    entry_time = pos.get('進場時間')
+    if not ticker or entry_time is None:
+        return
+    desired_stop = _safe_float(stop_row.get('Desired_Stop_Price', 0), 0.0)
+    if desired_stop <= 0:
+        return
+    stop_oid = str(stop_row.get('Broker_Stop_Order_ID', '') or stop_row.get('Client_Order_ID', '') or '')
+    target_mult = _safe_float(stop_row.get('Target_Position_Multiplier', 1.0), 1.0)
+    exit_state = str(stop_row.get('Exit_State', 'DEFEND') or 'DEFEND')
+    exit_action = str(stop_row.get('Exit_Action', 'TIGHTEN_STOP') or 'TIGHTEN_STOP')
+    updates = []
+    params = []
+    if _table_has_column(cursor, 'active_positions', '目前停損價'):
+        updates.append('[目前停損價] = ?')
+        params.append(desired_stop)
+    if _table_has_column(cursor, 'active_positions', '停損單號'):
+        updates.append('[停損單號] = ?')
+        params.append(stop_oid)
+    if _table_has_column(cursor, 'active_positions', '目標倉位倍率'):
+        updates.append('[目標倉位倍率] = ?')
+        params.append(target_mult)
+    if _table_has_column(cursor, 'active_positions', 'Exit_State'):
+        updates.append('[Exit_State] = ?')
+        params.append(exit_state)
+    if _table_has_column(cursor, 'active_positions', 'Exit_Action'):
+        updates.append('[Exit_Action] = ?')
+        params.append(exit_action)
+    if _table_has_column(cursor, 'active_positions', '最後停損更新時間'):
+        updates.append('[最後停損更新時間] = ?')
+        params.append(datetime.now())
+    if not updates:
+        return
+    sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?"
+    params.extend([ticker, entry_time])
+    try:
+        cursor.execute(sql, tuple(params))
+    except Exception:
+        pass
+
+
+def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price: float, current_cash: float, daily_log: list[str], exit_msg: str, exit_reason: str = '', execution_logger=None) -> float:
+    ticker = str(pos.get('Ticker SYMBOL', '') or '')
+    direction = pos.get('方向', '')
+    entry_price = _safe_float(pos.get('進場價', 0), 0.0)
+    shares = _safe_int(pos.get('進場股數', 0), 0)
+    setup_tag = pos.get('進場陣型', '傳統訊號')
+    sell_shares = min(max(int(sell_shares), 0), max(shares, 0))
+    if sell_shares <= 0:
+        return current_cash
+    is_long = ('Long' in str(direction)) or ('多' in str(direction))
+    trade_dir_int = 1 if is_long else -1
+    pnl, invested = calculate_pnl(
+        trade_dir_int,
+        entry_price,
+        actual_exit_price,
+        sell_shares,
+        PARAMS['FEE_RATE'] * PARAMS['FEE_DISCOUNT'],
+        PARAMS['TAX_RATE'],
+    )
+    current_cash += (invested + pnl)
+    remaining_shares = shares - sell_shares
+    if remaining_shares <= 0:
+        cursor.execute(
+            'DELETE FROM active_positions WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?',
+            (ticker, pos['進場時間']),
+        )
+    else:
+        remaining_invested = max(0.0, float(pos.get('投入資金', 0) or 0) - invested)
+        updates = ['[進場股數] = ?', '[投入資金] = ?', '[停利階段] = 1']
+        params = [remaining_shares, remaining_invested]
+        if _table_has_column(cursor, 'active_positions', '目標倉位倍率'):
+            updates.append('[目標倉位倍率] = ?')
+            params.append(round(remaining_shares / max(shares, 1), 4))
+        sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?"
+        params.extend([ticker, pos['進場時間']])
+        cursor.execute(sql, tuple(params))
+    try:
+        profit_pct = (pnl / invested) * 100 if invested > 0 else 0.0
+        has_reason_col = _table_has_column(cursor, 'trade_history', '出場原因')
+        if has_reason_col:
+            cursor.execute(
+                """
+                INSERT INTO trade_history (
+                    [策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間],
+                    [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
+                    [市場狀態], [進場陣型], [期望值], [預期停損(%)], [預期停利(%)],
+                    [風報比(RR)], [風險金額], [出場原因]
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    '實戰自動結算', ticker, direction, pos['進場時間'], datetime.now(), entry_price, actual_exit_price, profit_pct, pnl, current_cash,
+                    pos.get('市場狀態', None), setup_tag,
+                    float(pos.get('期望值', 0) if pd.notna(pos.get('期望值', 0)) else 0),
+                    float(pos.get('預期停損(%)', 0) if pd.notna(pos.get('預期停損(%)', 0)) else 0),
+                    float(pos.get('預期停利(%)', 0) if pd.notna(pos.get('預期停利(%)', 0)) else 0),
+                    float(pos.get('風報比(RR)', 0) if pd.notna(pos.get('風報比(RR)', 0)) else 0),
+                    float(pos.get('風險金額', 0) if pd.notna(pos.get('風險金額', 0)) else 0),
+                    str(exit_reason or exit_msg),
+                ),
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO trade_history (
+                    [策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間],
+                    [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
+                    [市場狀態], [進場陣型], [期望值], [預期停損(%)], [預期停利(%)],
+                    [風報比(RR)], [風險金額]
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    '實戰自動結算', ticker, direction, pos['進場時間'], datetime.now(), entry_price, actual_exit_price, profit_pct, pnl, current_cash,
+                    pos.get('市場狀態', None), setup_tag,
+                    float(pos.get('期望值', 0) if pd.notna(pos.get('期望值', 0)) else 0),
+                    float(pos.get('預期停損(%)', 0) if pd.notna(pos.get('預期停損(%)', 0)) else 0),
+                    float(pos.get('預期停利(%)', 0) if pd.notna(pos.get('預期停利(%)', 0)) else 0),
+                    float(pos.get('風報比(RR)', 0) if pd.notna(pos.get('風報比(RR)', 0)) else 0),
+                    float(pos.get('風險金額', 0) if pd.notna(pos.get('風險金額', 0)) else 0),
+                ),
+            )
+    except Exception as e:
+        print(f"⚠️ {ticker} 寫入歷史戰績表失敗: {e}")
+    if execution_logger is not None:
+        try:
+            side = 'SELL' if is_long else 'BUY'
+            ts = datetime.now().isoformat(timespec='seconds')
+            order_id = f'SQL-EXIT-{ticker}-{str(pos.get('進場時間', ts)).replace(':', '').replace(' ', '_')}'
+            execution_logger.insert_order({
+                'order_id': order_id,
+                'client_order_id': order_id,
+                'ticker_symbol': ticker,
+                'direction_bucket': side,
+                'strategy_bucket': 'live_paper_trading_sql_exit',
+                'status': 'FILLED',
+                'qty': int(sell_shares),
+                'filled_qty': int(sell_shares),
+                'remaining_qty': 0,
+                'avg_fill_price': float(actual_exit_price),
+                'order_type': 'MARKET',
+                'submitted_price': float(actual_exit_price),
+                'ref_price': float(actual_exit_price),
+                'signal_id': str(pos.get('Ticker SYMBOL', ticker)),
+                'note': str(exit_reason or exit_msg),
+                'created_at': ts,
+                'updated_at': ts,
+            })
+            execution_logger.insert_fill({
+                'fill_id': f'{order_id}-{ts}',
+                'order_id': order_id,
+                'ticker_symbol': ticker,
+                'direction_bucket': side,
+                'fill_qty': int(sell_shares),
+                'fill_price': float(actual_exit_price),
+                'fill_time': ts,
+                'commission': 0.0,
+                'tax': 0.0,
+                'slippage': 0.0,
+                'strategy_name': 'live_paper_trading_sql_exit',
+                'signal_id': str(pos.get('Ticker SYMBOL', ticker)),
+                'note': str(exit_reason or exit_msg),
+            })
+        except Exception:
+            pass
+    daily_log.append(f"{exit_msg} {ticker}: 損益 ${pnl:,.0f}")
+    return current_cash
+
+
+def _maybe_apply_protective_stop(cursor, pos, curr_price: float, stop_row: dict, current_cash: float, daily_log: list[str], execution_logger=None) -> tuple[float, bool]:
+    ticker = str(pos.get('Ticker SYMBOL', '') or '').strip()
+    direction = str(pos.get('方向', '') or '')
+    shares = _safe_int(pos.get('進場股數', 0), 0)
+    is_long = ('Long' in direction) or ('多' in direction)
+    desired_stop = _safe_float(stop_row.get('Desired_Stop_Price', 0), 0.0)
+    if desired_stop <= 0:
+        desired_stop = _safe_float(pos.get('目前停損價', pos.get('Current_Stop_Price', 0)), 0.0)
+    if desired_stop <= 0 or shares <= 0:
+        return current_cash, False
+    if is_long:
+        triggered = curr_price <= desired_stop
+        trigger_ref = min(curr_price, desired_stop)
+    else:
+        triggered = curr_price >= desired_stop
+        trigger_ref = max(curr_price, desired_stop)
+    if not triggered:
+        return current_cash, False
+    slippage = PARAMS.get('MARKET_SLIPPAGE', 0.001)
+    trade_dir_int = 1 if is_long else -1
+    actual_exit_price = apply_slippage(trigger_ref, -trade_dir_int, slippage)
+    current_cash = _execute_sql_position_exit(
+        cursor,
+        pos,
+        shares,
+        actual_exit_price,
+        current_cash,
+        daily_log,
+        exit_msg='🛡️ 觸發保護停損',
+        exit_reason=str(stop_row.get('Exit_Action', 'TIGHTEN_STOP') or 'TIGHTEN_STOP'),
+        execution_logger=execution_logger,
+    )
+    return current_cash, True
+
+
+
+
+
+def _sync_execution_sql_runtime_tables(conn, current_cash: float, execution_logger=None, note: str = '') -> None:
+    if execution_logger is None or not bool(PARAMS.get('EXECUTION_SQL_SYNC_ENABLED', True)):
+        return
+    try:
+        active_df = _read_active_positions(conn)
+        rows = []
+        for _, pos in active_df.iterrows():
+            ticker = str(pos.get('Ticker SYMBOL', '') or '').strip()
+            qty = _safe_int(pos.get('進場股數', 0), 0)
+            if not ticker or qty <= 0:
+                continue
+            avg_cost = _safe_float(pos.get('進場價', 0), 0.0)
+            market_price = avg_cost
+            market_value = _safe_float(pos.get('投入資金', 0), avg_cost * qty)
+            rows.append({
+                'ticker': ticker,
+                'qty': qty if ('Long' in str(pos.get('方向', '')) or '多' in str(pos.get('方向', ''))) else -qty,
+                'available_qty': qty,
+                'avg_cost': avg_cost,
+                'market_price': market_price,
+                'market_value': market_value,
+                'unrealized_pnl': 0.0,
+                'realized_pnl': 0.0,
+                'strategy_name': 'live_paper_trading',
+                'industry': get_stock_sector(ticker),
+                'note': str(pos.get('Exit_State', 'HOLD') or 'HOLD'),
+            })
+        execution_logger.sync_runtime_snapshot({
+            'snapshot_time': datetime.now().isoformat(timespec='seconds'),
+            'account_name': '我的實戰帳戶',
+            'cash': float(current_cash or 0.0),
+            'market_value': float(sum(float(r.get('market_value', 0) or 0) for r in rows)),
+            'equity': float(current_cash or 0.0) + float(sum(float(r.get('market_value', 0) or 0) for r in rows)),
+            'buying_power': float(current_cash or 0.0),
+            'broker_type': 'live_paper_sql',
+            'note': note or 'live_paper_trading_sync',
+        }, rows, snapshot_time=datetime.now().isoformat(timespec='seconds'), note=note or 'live_paper_trading_sync')
+    except Exception:
+        pass
 
 def _infer_candidate_lane(row) -> str:
     direction = str(row.get("Direction", "")).upper()
@@ -229,6 +551,8 @@ def run_eod_broker():
     try:
         conn = pyodbc.connect(DB_CONN_STR)
         cursor = conn.cursor()
+        execution_logger = SQLServerExecutionLogger(enabled=bool(PARAMS.get('EXECUTION_SQL_SYNC_ENABLED', True))) if SQLServerExecutionLogger is not None else None
+        _ensure_exit_sql_columns(cursor)
     except Exception as e:
         print(f"🛑 無法連線 SQL 資料庫: {e}")
         return
@@ -242,6 +566,8 @@ def run_eod_broker():
 
     current_cash = get_available_cash(cursor)
     active_df = _read_active_positions(conn)
+    stop_payload_df = _load_stop_replace_payloads() if bool(PARAMS.get('EXIT_SQL_STOP_SYNC_ENABLE', True)) else pd.DataFrame()
+    stop_payload_map = _build_stop_payload_map(stop_payload_df)
 
     stock_value = _safe_float(active_df["投入資金"].sum(), 0.0) if not active_df.empty and "投入資金" in active_df.columns else 0.0
     daily_log = []
@@ -275,6 +601,13 @@ def run_eod_broker():
             computed_df = result["計算後資料"]
             latest_row = computed_df.iloc[-1]
             curr_price = float(latest_row["Close"])
+
+            stop_row = stop_payload_map.get(ticker)
+            if stop_row:
+                _sync_stop_plan_to_sql(cursor, pos, stop_row)
+                current_cash, stop_handled = _maybe_apply_protective_stop(cursor, pos, curr_price, stop_row, current_cash, daily_log)
+                if stop_handled:
+                    continue
 
             volatility_pct = (latest_row.get("BB_std", 0) * 1.5) / curr_price if curr_price > 0 else 0.05
             trend_is_with_me = (
@@ -331,73 +664,10 @@ def run_eod_broker():
                 trade_dir_int = 1 if is_long else -1
                 slippage = PARAMS.get("MARKET_SLIPPAGE", 0.001)
                 actual_exit_price = apply_slippage(curr_price, -trade_dir_int, slippage)
-
-                pnl, invested = calculate_pnl(
-                    trade_dir_int,
-                    entry_price,
-                    actual_exit_price,
-                    sell_shares,
-                    PARAMS["FEE_RATE"] * PARAMS["FEE_DISCOUNT"],
-                    PARAMS["TAX_RATE"],
-                )
-
-                current_cash += (invested + pnl)
-
-                remaining_shares = shares - sell_shares
-                if remaining_shares <= 0:
-                    cursor.execute(
-                        "DELETE FROM active_positions WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?",
-                        (ticker, pos["進場時間"]),
-                    )
-                else:
-                    remaining_invested = max(0.0, float(pos["投入資金"]) - invested)
-                    cursor.execute(
-                        """
-                        UPDATE active_positions
-                        SET [進場股數] = ?, [投入資金] = ?, [停利階段] = 1
-                        WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?
-                        """,
-                        (remaining_shares, remaining_invested, ticker, pos["進場時間"]),
-                    )
-
-                try:
-                    profit_pct = (pnl / invested) * 100 if invested > 0 else 0.0
-                    cursor.execute(
-                        """
-                        INSERT INTO trade_history (
-                            [策略名稱], [Ticker SYMBOL], [方向], [進場時間], [出場時間],
-                            [進場價], [出場價], [報酬率(%)], [淨損益金額], [結餘本金],
-                            [市場狀態], [進場陣型], [期望值], [預期停損(%)], [預期停利(%)],
-                            [風報比(RR)], [風險金額]
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        (
-                            "實戰自動結算",
-                            ticker,
-                            direction,
-                            pos["進場時間"],
-                            datetime.now(),
-                            entry_price,
-                            actual_exit_price,
-                            profit_pct,
-                            pnl,
-                            current_cash,
-                            pos.get("市場狀態", None),
-                            setup_tag,
-                            float(pos.get("期望值", 0) if pd.notna(pos.get("期望值", 0)) else 0),
-                            float(pos.get("預期停損(%)", 0) if pd.notna(pos.get("預期停損(%)", 0)) else 0),
-                            float(pos.get("預期停利(%)", 0) if pd.notna(pos.get("預期停利(%)", 0)) else 0),
-                            float(pos.get("風報比(RR)", 0) if pd.notna(pos.get("風報比(RR)", 0)) else 0),
-                            float(pos.get("風險金額", 0) if pd.notna(pos.get("風險金額", 0)) else 0),
-                        ),
-                    )
-                except Exception as e:
-                    print(f"⚠️ {ticker} 寫入歷史戰績表失敗: {e}")
-
-                daily_log.append(f"{exit_msg} {ticker}: 損益 ${pnl:,.0f}")
+                current_cash = _execute_sql_position_exit(cursor, pos, sell_shares, actual_exit_price, current_cash, daily_log, exit_msg, exit_msg, execution_logger=execution_logger)
 
     conn.commit()
+    _sync_execution_sql_runtime_tables(conn, current_cash, execution_logger=execution_logger, note='after_exit_phase')
 
     # 重新讀一次持倉狀態，避免平倉後還沿用舊曝險
     active_df = _read_active_positions(conn)
@@ -429,6 +699,8 @@ def run_eod_broker():
         directional_allow_map = _load_directional_allow_map()
         decisions = _augment_directional_decisions(decisions, directional_allow_map)
         for _, row in decisions.iterrows():
+            if str(row.get('Exit_Action', '') or '').strip().upper() in {'REDUCE', 'EXIT', 'TIGHTEN_STOP', 'MOVE_TO_BREAK_EVEN'} or str(row.get('Exit_State', '') or '').strip().upper() in {'WATCH_EXIT', 'DEFEND', 'REDUCE', 'EXIT'}:
+                continue
             ticker = row.get("Ticker", "Unknown")
             trade_direction = row.get("Direction", "做多(Long)")
             candidate_lane = _infer_candidate_lane(row)
@@ -497,6 +769,7 @@ def run_eod_broker():
             if not PARAMS.get("IGNORE_CASH_LIMIT", False):
                 current_cash -= total_cost
 
+            entry_time = datetime.now()
             cursor.execute(
                 """
                 INSERT INTO active_positions (
@@ -509,7 +782,7 @@ def run_eod_broker():
                 (
                     ticker,
                     trade_direction,
-                    datetime.now(),
+                    entry_time,
                     curr_price,
                     total_cost,
                     shares,
@@ -523,6 +796,35 @@ def run_eod_broker():
                 ),
             )
             conn.commit()
+            try:
+                stop_px = curr_price * (1 - float(entry_metrics['預期停損(%)'])) if 'Long' in str(trade_direction) or '多' in str(trade_direction) else curr_price * (1 + float(entry_metrics['預期停損(%)']))
+                updates = []
+                params = []
+                if _table_has_column(cursor, 'active_positions', '目前停損價'):
+                    updates.append('[目前停損價] = ?')
+                    params.append(float(stop_px))
+                if _table_has_column(cursor, 'active_positions', '目標倉位倍率'):
+                    updates.append('[目標倉位倍率] = ?')
+                    params.append(1.0)
+                if _table_has_column(cursor, 'active_positions', 'Exit_State'):
+                    updates.append('[Exit_State] = ?')
+                    params.append('HOLD')
+                if _table_has_column(cursor, 'active_positions', 'Exit_Action'):
+                    updates.append('[Exit_Action] = ?')
+                    params.append('HOLD')
+                if _table_has_column(cursor, 'active_positions', '最後停損更新時間'):
+                    updates.append('[最後停損更新時間] = ?')
+                    params.append(datetime.now())
+                if updates:
+                    sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?"
+                    params.extend([ticker, entry_time])
+                    try:
+                        cursor.execute(sql, tuple(params))
+                        conn.commit()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
             # 立刻更新組合狀態，避免同一輪連續下單超限
             sector = get_stock_sector(ticker)
@@ -573,9 +875,15 @@ def run_eod_broker():
     print("=" * 60)
 
     send_line_bot_msg(full_report)
+    _sync_execution_sql_runtime_tables(conn, current_cash, execution_logger=execution_logger, note='end_of_run')
 
     cursor.close()
     conn.close()
+    if execution_logger is not None:
+        try:
+            execution_logger.close()
+        except Exception:
+            pass
 
 
 def _record_directional_execution_event(event_type: str, payload: dict):

@@ -176,6 +176,28 @@ class SystemConfig:
     live_directional_min_feature_count: int = 4
     directional_live_require_approved_features: bool = True
 
+    # ---- exit model / auto reduce-close workflow ----
+    enable_exit_model_workflow: bool = True
+    exit_selected_features_filename: str = 'selected_features_exit.pkl'
+    exit_defend_model_filename: str = 'exit_model_defend.pkl'
+    exit_reduce_model_filename: str = 'exit_model_reduce.pkl'
+    exit_confirm_model_filename: str = 'exit_model_confirm.pkl'
+    active_positions_csv_filename: str = 'active_positions.csv'
+    active_open_orders_csv_filename: str = 'open_orders_snapshot.csv'
+    stop_replace_payload_filename: str = 'stop_replace_payloads.csv'
+    stop_trigger_blotter_filename: str = 'stop_trigger_blotter.csv'
+    enable_protective_stop_trigger_workflow: bool = True
+    live_paper_apply_stop_workflow: bool = True
+    enable_exit_stop_replace_workflow: bool = True
+    enable_execution_sql_sync: bool = True
+    execution_sql_sync_snapshots: bool = True
+    execution_sql_sync_stop_orders: bool = True
+    exit_stop_replace_min_bps: int = 20
+    exit_stop_min_gap_pct: float = 0.003
+    exit_break_even_trigger_r: float = 0.80
+    exit_break_even_buffer_pct: float = 0.0005
+    exit_stop_workflow_allow_upsert: bool = True
+
     # ---- legacy detachment / service-first guard ----
     force_service_api_only: bool = True
     allow_legacy_facade_in_research: bool = False

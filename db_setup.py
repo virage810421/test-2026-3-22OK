@@ -124,6 +124,12 @@ def ensure_core_tables(cursor):
         "預期停利(%)": "DECIMAL(10,3) NULL",
         "風報比(RR)": "DECIMAL(10,3) NULL",
         "風險金額": "FLOAT NULL",
+        "目前停損價": "FLOAT NULL",
+        "停損單號": "NVARCHAR(64) NULL",
+        "目標倉位倍率": "DECIMAL(10,4) NULL",
+        "Exit_State": "NVARCHAR(20) NULL",
+        "Exit_Action": "NVARCHAR(32) NULL",
+        "最後停損更新時間": "DATETIME NULL",
     }
     for col, typ in trade_history_columns.items():
         ensure_column(cursor, "trade_history", col, typ)
