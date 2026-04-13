@@ -255,6 +255,13 @@ def generate_ml_dataset(tickers=None):
             dataset_columns=df_out.columns.tolist(),
             selected_features=selected_features,
         )
+    advanced_cols = [
+        'Score_Gap_Slope_3d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release',
+        'ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Bull_Emerging_Score',
+        'Bear_Emerging_Score','Range_Compression_Score','Breakout_Readiness','Trend_Exhaustion_Score','Entry_Readiness',
+        'Breakout_Risk_Next3','Reversal_Risk_Next3','Exit_Hazard_Score','Proba_Delta_3d','Trend_Confidence_Delta','Range_Confidence_Delta',
+        'Regime_Label','Regime_Confidence','Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range','Transition_Label',
+    ]
     payload = {
         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'dataset_path': str(dataset_path),
@@ -264,6 +271,8 @@ def generate_ml_dataset(tickers=None):
         'quality_report': quality_report,
         'ticker_reports': ticker_reports[:200],
         'selected_feature_count': int(len(selected_features)),
+        'advanced_feature_columns_present': [c for c in advanced_cols if c in df_out.columns],
+        'advanced_feature_column_count': int(sum(1 for c in advanced_cols if c in df_out.columns)),
         'feature_manifest_path': str(_features.feature_manifest_path),
     }
     _write_runtime(payload)

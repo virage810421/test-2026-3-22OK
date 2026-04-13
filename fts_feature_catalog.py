@@ -100,16 +100,50 @@ FEATURE_SPECS: Dict[str, FeatureSpec] = {
     'Dividend_Window_7': _fs('Dividend_Window_7', 'events', 'dividend calendar', 'Dividend event window 7 day.', True, True, False, True),
 }
 
+FEATURE_SPECS.update({
+    'Buy_Score_Slope_3d': _fs('Buy_Score_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of buy score.', True),
+    'Buy_Score_Slope_5d': _fs('Buy_Score_Slope_5d', 'lead_timing', 'screening/scoring', '5-bar slope of buy score.', True),
+    'Sell_Score_Slope_3d': _fs('Sell_Score_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of sell score.', True),
+    'Sell_Score_Slope_5d': _fs('Sell_Score_Slope_5d', 'lead_timing', 'screening/scoring', '5-bar slope of sell score.', True),
+    'Score_Gap_Slope_3d': _fs('Score_Gap_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of score gap.', True),
+    'Score_Gap_Slope_5d': _fs('Score_Gap_Slope_5d', 'lead_timing', 'screening/scoring', '5-bar slope of score gap.', True),
+    'ADX_Delta_3d': _fs('ADX_Delta_3d', 'lead_timing', 'OHLCV', '3-bar change in ADX.', True),
+    'MACD_Hist_Delta_3d': _fs('MACD_Hist_Delta_3d', 'lead_timing', 'OHLCV', '3-bar change in MACD histogram.', True),
+    'RSI_Reclaim_Speed': _fs('RSI_Reclaim_Speed', 'lead_timing', 'OHLCV', 'Speed of RSI reclaim from weak state.', True),
+    'BB_Squeeze_Release': _fs('BB_Squeeze_Release', 'lead_timing', 'OHLCV', 'Compression-to-release transition signal.', True),
+    'ATR_Expansion_Start': _fs('ATR_Expansion_Start', 'lead_timing', 'OHLCV', 'Early-stage ATR expansion signal.', True),
+    'Volume_Z20_Delta': _fs('Volume_Z20_Delta', 'lead_timing', 'OHLCV', '3-bar change in volume z-score.', True),
+    'Foreign_Ratio_Delta_3d': _fs('Foreign_Ratio_Delta_3d', 'lead_timing', 'chip_flow', '3-bar change in foreign ratio.', True),
+    'Total_Ratio_Delta_3d': _fs('Total_Ratio_Delta_3d', 'lead_timing', 'chip_flow', '3-bar change in total ratio.', True),
+    'Bull_Emerging_Score': _fs('Bull_Emerging_Score', 'transition_regime', 'regime service', 'Probability-like score for bullish transition emerging.', True),
+    'Bear_Emerging_Score': _fs('Bear_Emerging_Score', 'transition_regime', 'regime service', 'Probability-like score for bearish transition emerging.', True),
+    'Range_Compression_Score': _fs('Range_Compression_Score', 'transition_regime', 'regime service', 'Compression score prior to range breakout.', True),
+    'Breakout_Readiness': _fs('Breakout_Readiness', 'transition_regime', 'regime service', 'Readiness of compressed regime to break out.', True),
+    'Trend_Exhaustion_Score': _fs('Trend_Exhaustion_Score', 'transition_regime', 'regime service', 'Probability-like score of trend exhaustion.', True),
+    'Entry_Readiness': _fs('Entry_Readiness', 'timing', 'feature/regime fusion', 'Composite readiness for early entry.', True),
+    'Breakout_Risk_Next3': _fs('Breakout_Risk_Next3', 'timing', 'regime service', 'Risk of range resolving in next ~3 bars.', True),
+    'Reversal_Risk_Next3': _fs('Reversal_Risk_Next3', 'timing', 'regime service', 'Risk of trend reversal in next ~3 bars.', True),
+    'Exit_Hazard_Score': _fs('Exit_Hazard_Score', 'timing', 'feature/regime fusion', 'Composite hazard score for early exit defense.', True),
+    'Proba_Delta_3d': _fs('Proba_Delta_3d', 'timing', 'model/signal proxy', '3-bar change in probability proxy.', True),
+    'Trend_Confidence_Delta': _fs('Trend_Confidence_Delta', 'timing', 'regime service', 'Change in trend confidence.', True),
+    'Range_Confidence_Delta': _fs('Range_Confidence_Delta', 'timing', 'regime service', 'Change in range confidence.', True),
+    'Regime_Label': _fs('Regime_Label', 'transition_regime', 'regime service', 'Primary regime label from regime service.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Regime_Confidence': _fs('Regime_Confidence', 'transition_regime', 'regime service', 'Confidence of primary regime label.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Next_Regime_Prob_Bull': _fs('Next_Regime_Prob_Bull', 'transition_regime', 'regime service', 'Forward bull-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Next_Regime_Prob_Bear': _fs('Next_Regime_Prob_Bear', 'transition_regime', 'regime service', 'Forward bear-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Next_Regime_Prob_Range': _fs('Next_Regime_Prob_Range', 'transition_regime', 'regime service', 'Forward range-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Transition_Label': _fs('Transition_Label', 'transition_regime', 'regime service', 'Transition-state label from regime service.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+})
+
 FEATURE_BUCKETS: Dict[str, List[str]] = {}
 for name, spec in FEATURE_SPECS.items():
     FEATURE_BUCKETS.setdefault(spec.bucket, []).append(name)
 
 PRIORITY_NEW_FEATURES_20: List[str] = [
-    'ATR14', 'ATR_Pct', 'ATR_Pctl_252', 'RealizedVol_20', 'RealizedVol_60',
-    'Gap_Pct', 'Overnight_Return', 'Intraday_Return', 'Turnover_Proxy', 'ADV20_Proxy',
-    'DollarVol20_Proxy', 'Volume_Z20', 'Return_Z20', 'RS_vs_Market_20', 'RS_vs_Sector_20',
-    'Revenue_YoY_Rank', 'Chip_Total_Ratio_Rank', 'Event_Days_Since_Revenue',
-    'Earnings_Window_Flag', 'Regime_TrendStrength_X_ScoreGap',
+    'Score_Gap_Slope_3d', 'Score_Gap_Slope_5d', 'ADX_Delta_3d', 'MACD_Hist_Delta_3d', 'RSI_Reclaim_Speed',
+    'BB_Squeeze_Release', 'ATR_Expansion_Start', 'Volume_Z20_Delta', 'Foreign_Ratio_Delta_3d', 'Total_Ratio_Delta_3d',
+    'Bull_Emerging_Score', 'Bear_Emerging_Score', 'Range_Compression_Score', 'Breakout_Readiness', 'Trend_Exhaustion_Score',
+    'Entry_Readiness', 'Breakout_Risk_Next3', 'Reversal_Risk_Next3', 'Exit_Hazard_Score', 'Proba_Delta_3d',
 ]
 
 

@@ -250,7 +250,11 @@ class FeatureService:
         try:
             from fts_regime_service import RegimeService
             regime_row = RegimeService().build_regime_row(row, history_df=history_df)
-            out.update({k: safe_float(v, 0.0) for k, v in regime_row.items()})
+            for k, v in regime_row.items():
+                if k in {'Regime_Label', 'Transition_Label'}:
+                    out[k] = str(v)
+                else:
+                    out[k] = safe_float(v, 0.0)
         except Exception:
             out.setdefault('Range_Confidence', 0.0)
             out.setdefault('Trend_Confidence', 0.0)
@@ -590,6 +594,38 @@ class FeatureService:
         out['ADV20_Pctl'] = self._rolling_percentile(out['ADV20_Proxy'], 252)
         out['ATR_Pct_Pctl'] = self._rolling_percentile(out['ATR_Pct'], 252)
         out['RealizedVol_20_Pctl'] = self._rolling_percentile(out['RealizedVol_20'], 252)
+
+        rsi = pd.to_numeric(out.get('RSI', 50.0), errors='coerce').fillna(50.0)
+        adx = pd.to_numeric(out.get('ADX14', out.get('ADX', 20.0)), errors='coerce').fillna(20.0)
+        macd_hist = pd.to_numeric(out.get('MACD_Hist', 0.0), errors='coerce').fillna(0.0)
+        bb_width = pd.to_numeric(out.get('BB_Width', 0.0), errors='coerce').fillna(0.0)
+        weighted_buy = pd.to_numeric(out.get('Weighted_Buy_Score', out.get('Buy_Score', 0.0)), errors='coerce').fillna(0.0)
+        weighted_sell = pd.to_numeric(out.get('Weighted_Sell_Score', out.get('Sell_Score', 0.0)), errors='coerce').fillna(0.0)
+        score_gap = pd.to_numeric(out.get('Score_Gap', weighted_buy - weighted_sell), errors='coerce').fillna(weighted_buy - weighted_sell)
+        foreign_ratio = pd.to_numeric(out.get('Foreign_Ratio', 0.0), errors='coerce').fillna(0.0)
+        total_ratio = pd.to_numeric(out.get('Total_Ratio', 0.0), errors='coerce').fillna(0.0)
+        ai_proba = pd.to_numeric(out.get('AI_Proba', 0.5 + score_gap.clip(-2, 2) * 0.1), errors='coerce').fillna(0.5)
+
+        width_mean = bb_width.rolling(20, min_periods=5).mean().replace(0, np.nan)
+        squeeze_flag = (bb_width < (width_mean * 0.85)).fillna(False).astype(float)
+        width_delta = bb_width.diff(3).fillna(0.0)
+        atr_pctl = pd.to_numeric(out.get('ATR_Pct_Pctl', 0.5), errors='coerce').fillna(0.5)
+
+        out['Buy_Score_Slope_3d'] = weighted_buy.diff(3).fillna(0.0)
+        out['Buy_Score_Slope_5d'] = weighted_buy.diff(5).fillna(0.0)
+        out['Sell_Score_Slope_3d'] = weighted_sell.diff(3).fillna(0.0)
+        out['Sell_Score_Slope_5d'] = weighted_sell.diff(5).fillna(0.0)
+        out['Score_Gap_Slope_3d'] = score_gap.diff(3).fillna(0.0)
+        out['Score_Gap_Slope_5d'] = score_gap.diff(5).fillna(0.0)
+        out['ADX_Delta_3d'] = adx.diff(3).fillna(0.0)
+        out['MACD_Hist_Delta_3d'] = macd_hist.diff(3).fillna(0.0)
+        out['RSI_Reclaim_Speed'] = (((rsi - rsi.shift(3)) / 3.0).fillna(0.0) + (((rsi > 50) & (rsi.shift(1).fillna(rsi) <= 50)).astype(float) * 0.35)).fillna(0.0)
+        out['BB_Squeeze_Release'] = (squeeze_flag.shift(1).fillna(0.0) * width_delta.clip(lower=0.0) * (1.0 + macd_hist.diff().fillna(0.0).clip(lower=0.0))).fillna(0.0)
+        out['ATR_Expansion_Start'] = (((atr_pctl.shift(1).fillna(0.5) < 0.45).astype(float)) * out['ATR_Pct'].diff(3).fillna(0.0).clip(lower=0.0)).fillna(0.0)
+        out['Volume_Z20_Delta'] = out['Volume_Z20'].diff(3).fillna(0.0)
+        out['Foreign_Ratio_Delta_3d'] = foreign_ratio.diff(3).fillna(0.0)
+        out['Total_Ratio_Delta_3d'] = total_ratio.diff(3).fillna(0.0)
+        out['Proba_Delta_3d'] = ai_proba.diff(3).fillna(0.0)
         return out
 
     def extract_ai_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:
@@ -638,12 +674,16 @@ class FeatureService:
         if history_df is not None and not history_df.empty:
             enriched = self.enrich_from_history(history_df)
             latest = enriched.iloc[-1].to_dict()
-            for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20']:
+            for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20','Buy_Score_Slope_3d','Buy_Score_Slope_5d','Sell_Score_Slope_3d','Sell_Score_Slope_5d','Score_Gap_Slope_3d','Score_Gap_Slope_5d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release','ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Proba_Delta_3d']:
                 features[k] = safe_float(latest.get(k, features.get(k, 0.0)), features.get(k, 0.0))
-        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7']
+        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7','Bull_Emerging_Score','Bear_Emerging_Score','Range_Compression_Score','Breakout_Readiness','Trend_Exhaustion_Score','Entry_Readiness','Breakout_Risk_Next3','Reversal_Risk_Next3','Exit_Hazard_Score','Trend_Confidence_Delta','Range_Confidence_Delta','Regime_Confidence','Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range']
         for k in passthrough:
             if k in row:
                 features[k] = safe_float(row.get(k, 0), 0)
+        if 'Regime_Label' in row:
+            features['Regime_Label'] = str(row.get('Regime_Label', row.get('Regime', '區間盤整')))
+        if 'Transition_Label' in row:
+            features['Transition_Label'] = str(row.get('Transition_Label', 'Stable'))
         features['Revenue_YoY_Rank'] = safe_float(row.get('Revenue_YoY_Rank', row.get('Revenue_YoY_Pctl', 0.5)), 0.5)
         features['Chip_Total_Ratio_Rank'] = safe_float(row.get('Chip_Total_Ratio_Rank', row.get('Chip_Total_Ratio_Pctl', 0.5)), 0.5)
         features['Regime_TrendStrength_X_ScoreGap'] = safe_float(row.get('Regime_TrendStrength_X_ScoreGap', (features['ADX'] / 100.0) * features['Score_Gap']), 0)

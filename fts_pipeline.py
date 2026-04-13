@@ -4,8 +4,8 @@ from __future__ import annotations
 """Level-2 mainline orchestrator.
 
 收尾目標：
-1. 預設改成 service-first，不再默默執行 legacy decision engine。
-2. 只有在明確開啟 execute_legacy_pipeline 時，才進入 legacy compatibility。
+1. Level-2 只跑正式 service module，不再經過 legacy wrapper 檔名。
+2. legacy decision engine 已自 Level-2 主線拆離，不再由 control tower 直接觸發。
 3. 將 heuristics / model / execution 的分層狀態寫入 runtime，避免新舊主線混在一起。
 """
 
@@ -41,45 +41,17 @@ class StageResult:
     skipped: bool = False
 
 
-class ExternalScriptRunner:
-    def run_script(self, script_name: str, timeout: int = 1800, critical: bool = False) -> StageResult:
-        target = PATHS.base_dir / script_name
-        if not target.exists():
-            return StageResult(stage='script', target=script_name, ok=not critical, mode='subprocess', error='missing', skipped=not critical)
-        cmd = [sys.executable, str(target)]
-        env = os.environ.copy()
-        env['PYTHONUTF8'] = '1'
-        env['PYTHONIOENCODING'] = 'utf-8'
-        try:
-            proc = subprocess.run(
-                cmd,
-                cwd=str(PATHS.base_dir),
-                capture_output=True,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
-                timeout=timeout,
-                env=env,
-            )
-            ok = proc.returncode == 0
-            return StageResult(
-                stage='script',
-                target=script_name,
-                ok=ok,
-                mode='subprocess',
-                returncode=proc.returncode,
-                stdout_tail='\n'.join((proc.stdout or '').splitlines()[-20:]),
-                stderr_tail='\n'.join((proc.stderr or '').splitlines()[-20:]),
-            )
-        except Exception as exc:
-            return StageResult(stage='script', target=script_name, ok=False, mode='subprocess', error=repr(exc))
 
 
 class StageManager:
-    def __init__(self, runner: ExternalScriptRunner | None = None):
-        self.runner = runner or ExternalScriptRunner()
+    def __init__(self):
+        self.stage_modules: list[tuple[str, str, str]] = [
+            ('etl', 'fts_etl_daily_chip_service', 'main_scheduler'),
+            ('etl', 'fts_etl_monthly_revenue_service', 'main'),
+            ('etl', 'fts_fundamentals_etl_mainline', 'main'),
+        ]
 
-    def _call_module_main(self, module_name: str, attr_name: str = 'main') -> StageResult:
+    def _call_module_main(self, module_name: str, attr_name: str = 'main', stage: str = 'python') -> StageResult:
         buf_out = io.StringIO()
         buf_err = io.StringIO()
         try:
@@ -89,7 +61,7 @@ class StageManager:
                 result = fn()
             ok = False if isinstance(result, int) and result != 0 else True
             return StageResult(
-                stage='python',
+                stage=stage,
                 target=f'{module_name}.{attr_name}',
                 ok=ok,
                 mode='inprocess',
@@ -98,7 +70,7 @@ class StageManager:
             )
         except Exception:
             return StageResult(
-                stage='python',
+                stage=stage,
                 target=f'{module_name}.{attr_name}',
                 ok=False,
                 mode='inprocess',
@@ -107,31 +79,32 @@ class StageManager:
                 stderr_tail='\n'.join(buf_err.getvalue().splitlines()[-20:]),
             )
 
-    def run(self, execute_legacy: bool = False) -> dict[str, Any]:
-        execute_legacy = bool(execute_legacy and getattr(CONFIG, 'execute_legacy_pipeline', False))
+    def run(self) -> dict[str, Any]:
         etl_results = []
-        for script_name in ['daily_chip_etl.py', 'monthly_revenue_simple.py', 'yahoo_csv_to_sql.py']:
-            result = self.runner.run_script(script_name, timeout=getattr(CONFIG, 'upstream_timeout_seconds', 3600), critical=False)
+        for stage_name, module_name, attr_name in self.stage_modules:
+            result = self._call_module_main(module_name, attr_name, stage=stage_name)
             etl_results.append(asdict(result))
-            log(f"🔁 mainline stage | {script_name} | ok={result.ok} | skipped={result.skipped}")
-
-        legacy_result = asdict(StageResult(stage='python', target='fts_legacy_master_pipeline_impl.main', ok=True, mode='inprocess', skipped=not execute_legacy))
-        if execute_legacy:
-            result = self._call_module_main('fts_legacy_master_pipeline_impl', 'main')
-            legacy_result = asdict(result)
-            log(f"🧠 legacy decision engine | ok={result.ok}")
-        else:
-            log('🧭 level-2 mainline | legacy decision engine skipped (service-first mode)')
+            log(f"🔁 mainline stage | {module_name}.{attr_name} | ok={result.ok} | skipped={result.skipped}")
 
         etl_ok = all(r['ok'] or r['skipped'] for r in etl_results)
         payload = {
             'generated_at': now_str(),
-            'module_version': 'v86_level2_service_first_hardened',
-            'status': 'mainline_ready' if (etl_ok and (legacy_result['ok'] or legacy_result['skipped'])) else 'mainline_degraded',
-            'legacy_mode': 'compatibility_enabled' if execute_legacy else 'service_first',
-            'legacy_pipeline_enabled': bool(execute_legacy),
+            'module_version': 'v87_level2_service_detached',
+            'status': 'mainline_ready' if etl_ok else 'mainline_degraded',
+            'legacy_mode': 'detached_from_level2',
+            'legacy_pipeline_enabled': False,
+            'legacy_pipeline': {
+                'stage': 'python',
+                'target': 'fts_legacy_master_pipeline_impl.main',
+                'ok': True,
+                'mode': 'detached',
+                'skipped': True,
+                'note': 'legacy decision engine 已自 Level-2 主線拆離；如需單獨研究請手動執行 legacy facade。',
+            },
             'etl': etl_results,
-            'legacy_pipeline': legacy_result,
+            'service_modules': [
+                f'{module_name}.{attr_name}' for _, module_name, attr_name in self.stage_modules
+            ],
             'decision_csv': str(PATHS.base_dir / 'daily_decision_desk.csv'),
             'model_dir': str(PATHS.model_dir),
             'boundary_status': {
@@ -144,13 +117,13 @@ class StageManager:
         return payload
 
 
-def run_level2_mainline(execute_legacy: bool = False) -> tuple[str, dict[str, Any]]:
-    payload = StageManager().run(execute_legacy=execute_legacy)
+def run_level2_mainline() -> tuple[str, dict[str, Any]]:
+    payload = StageManager().run()
     return str(RUNTIME_PATH), payload
 
 
 def main() -> int:
-    path, payload = run_level2_mainline(execute_legacy=False)
+    path, payload = run_level2_mainline()
     log(f'✅ level-2 mainline 完成：{path}')
     return 0 if payload.get('status') in {'mainline_ready', 'mainline_degraded'} else 1
 

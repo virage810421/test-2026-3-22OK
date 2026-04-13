@@ -16,7 +16,7 @@ from fts_feature_service import FeatureService
 from fts_chip_enrichment_service import ChipEnrichmentService
 from fts_screening_engine import ScreeningEngine
 from fts_strategy_policy_layer import get_active_strategy, get_strategy_policy
-from fts_screening_legacy_compat import (
+from fts_signal_primitives import (
     add_fundamental_filter,
     apply_slippage,
     calculate_pnl,

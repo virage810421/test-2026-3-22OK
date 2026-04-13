@@ -174,9 +174,9 @@ def _feature_input_from_row(latest_row, regime: str, scope: str = 'SHARED') -> t
     selected = _selected_features_for_scope(scope)
     if regime in models and selected_features_ready(scope):
         try:
-            from screening import extract_ai_features
-            features_dict = extract_ai_features(latest_row)
-            X = {f: _safe_float(features_dict.get(f, 0.0), 0.0) for f in selected}
+            from fts_feature_service import FeatureService
+            features_dict = FeatureService().extract_ai_features(latest_row, history_df=None)
+            X = {f: _safe_float(features_dict.get(f, latest_row.get(f, 0.0)), 0.0) for f in selected}
             proba = float(models[regime].predict_proba(pd.DataFrame([X]))[0][1])
             return {'proba': max(0.01, min(0.99, proba)), **X}, ('ai_model_directional' if scope != 'SHARED' and scope in DIRECTIONAL_MODELS and DIRECTIONAL_MODELS.get(scope) else ('ai_model_bootstrapped_from_shared' if scope != 'SHARED' else 'ai_model'))
         except Exception:
@@ -217,9 +217,15 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
     if realized_ev <= 0:
         veto_reasons.append(f'non_positive_ev:{realized_ev:.4f}')
 
+    entry_readiness = _safe_float(latest_row.get('Entry_Readiness', 0.0), 0.0)
+    breakout_risk = _safe_float(latest_row.get('Breakout_Risk_Next3', 0.0), 0.0)
+    reversal_risk = _safe_float(latest_row.get('Reversal_Risk_Next3', 0.0), 0.0)
+    exit_hazard = _safe_float(latest_row.get('Exit_Hazard_Score', 0.0), 0.0)
     ev_boost = 1.15 if realized_ev > 1.5 else 1.05 if realized_ev > 0.5 else 1.0
     sample_boost = 1.10 if sample_size >= 20 else 1.03 if sample_size >= 10 else 1.0
-    conviction = max(0.0, min(proba * (float(base_multiplier) * 2.0) * ev_boost * sample_boost, 2.5))
+    readiness_boost = 1.08 if entry_readiness >= 0.60 else 1.02 if entry_readiness >= 0.35 else 1.0
+    risk_penalty = 0.82 if max(breakout_risk, reversal_risk, exit_hazard) >= 0.80 else 0.92 if max(breakout_risk, reversal_risk, exit_hazard) >= 0.60 else 1.0
+    conviction = max(0.0, min(proba * (float(base_multiplier) * 2.0) * ev_boost * sample_boost * readiness_boost * risk_penalty, 2.5))
     approved = len(veto_reasons) == 0
 
     decision = ModelDecision(
@@ -240,7 +246,7 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         feature_scope=direction_scope,
         direction_scope=direction_scope,
         heuristic_fallback_active=heuristic_fallback_active,
-        debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK)},
+        debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK), 'Regime_Label': latest_row.get('Regime_Label', regime), 'Transition_Label': latest_row.get('Transition_Label', ''), 'Entry_Readiness': entry_readiness, 'Breakout_Risk_Next3': breakout_risk, 'Reversal_Risk_Next3': reversal_risk, 'Exit_Hazard_Score': exit_hazard, 'Next_Regime_Prob_Bull': latest_row.get('Next_Regime_Prob_Bull'), 'Next_Regime_Prob_Bear': latest_row.get('Next_Regime_Prob_Bear'), 'Next_Regime_Prob_Range': latest_row.get('Next_Regime_Prob_Range')},
     )
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(decision.as_dict(), ensure_ascii=False, indent=2), encoding='utf-8')

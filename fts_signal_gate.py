@@ -27,6 +27,11 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
     fallback_build = bool(row.get('FallbackBuild', False))
     desk_usable = bool(row.get('DeskUsable', True))
     execution_eligible = bool(row.get('ExecutionEligible', True))
+    entry_readiness = safe_float(row.get('Entry_Readiness', 0.0), 0.0)
+    breakout_risk = safe_float(row.get('Breakout_Risk_Next3', 0.0), 0.0)
+    reversal_risk = safe_float(row.get('Reversal_Risk_Next3', 0.0), 0.0)
+    exit_hazard = safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0)
+    transition_label = str(row.get('Transition_Label', ''))
 
     blockers: list[str] = []
     warnings: list[str] = []
@@ -48,6 +53,14 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         blockers.append('non_positive_ev')
     if ai_proba < 0.50:
         blockers.append('ai_probability_below_threshold')
+    if entry_readiness < 0.10:
+        warnings.append('entry_readiness_low')
+    if breakout_risk >= 0.80:
+        warnings.append('breakout_risk_high')
+    if reversal_risk >= 0.80 or exit_hazard >= 0.80:
+        warnings.append('reversal_or_exit_hazard_high')
+    if transition_label and transition_label != 'Stable':
+        diagnostics.append(f'transition={transition_label}')
 
     # 分數現在只做診斷與方向一致性，不再當主硬閘門。
     if direction == 'LONG':

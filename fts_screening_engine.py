@@ -28,7 +28,7 @@ except Exception:  # pragma: no cover
 from fts_market_data_service import MarketDataService
 from fts_feature_service import FeatureService
 from fts_chip_enrichment_service import ChipEnrichmentService
-from fts_screening_legacy_compat import (
+from fts_signal_primitives import (
     _apply_weighted_scores,
     _assign_golden_type,
     _compute_realized_signal_stats,

@@ -81,6 +81,11 @@ def build_entry_metrics(row, params=PARAMS):
     weighted_buy = _safe_float(row.get('Weighted_Buy_Score', 0.0), 0.0)
     weighted_sell = _safe_float(row.get('Weighted_Sell_Score', 0.0), 0.0)
     score_gap = _safe_float(row.get('Score_Gap', 0.0), 0.0)
+    entry_readiness = _safe_float(row.get('Entry_Readiness', 0.0), 0.0)
+    breakout_risk = _safe_float(row.get('Breakout_Risk_Next3', 0.0), 0.0)
+    reversal_risk = _safe_float(row.get('Reversal_Risk_Next3', 0.0), 0.0)
+    exit_hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0)
+    transition_label = str(row.get('Transition_Label', ''))
 
     try:
         dummy_vol = 0.05
@@ -102,6 +107,10 @@ def build_entry_metrics(row, params=PARAMS):
         risk_budget_ratio = min(risk_budget_ratio, 0.02)
     if score_gap <= 0:
         risk_budget_ratio = min(risk_budget_ratio, 0.015)
+    if breakout_risk >= 0.75 or reversal_risk >= 0.75 or exit_hazard >= 0.75:
+        risk_budget_ratio = min(risk_budget_ratio, 0.0125)
+    elif entry_readiness >= 0.60 and realized_ev > 0 and ai_proba >= 0.52:
+        risk_budget_ratio = min(max(risk_budget_ratio, 0.035), 0.06)
 
     return {
         '市場狀態': regime,
@@ -116,6 +125,11 @@ def build_entry_metrics(row, params=PARAMS):
         'Weighted_Buy_Score': weighted_buy,
         'Weighted_Sell_Score': weighted_sell,
         'Score_Gap': score_gap,
+        'Entry_Readiness': entry_readiness,
+        'Breakout_Risk_Next3': breakout_risk,
+        'Reversal_Risk_Next3': reversal_risk,
+        'Exit_Hazard_Score': exit_hazard,
+        'Transition_Label': transition_label,
     }
 
 

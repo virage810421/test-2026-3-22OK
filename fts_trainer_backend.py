@@ -508,6 +508,15 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     else:
         report['promotion'] = {'status': 'kept_current', 'version': version_tag}
 
+    advanced_feature_candidates = [
+        'Score_Gap_Slope_3d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release',
+        'ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Bull_Emerging_Score',
+        'Bear_Emerging_Score','Range_Compression_Score','Breakout_Readiness','Trend_Exhaustion_Score','Entry_Readiness',
+        'Breakout_Risk_Next3','Reversal_Risk_Next3','Exit_Hazard_Score','Proba_Delta_3d','Trend_Confidence_Delta','Range_Confidence_Delta',
+        'Regime_Confidence','Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range'
+    ]
+    report['advanced_feature_candidates_present'] = [c for c in advanced_feature_candidates if c in train_df.columns]
+    report['advanced_feature_selected'] = [c for c in selected_features if c in advanced_feature_candidates]
     report['regimes'] = metrics_by_regime
     report['directional_lane_artifacts'] = lane_artifacts
     report['overall_score'] = overall_score

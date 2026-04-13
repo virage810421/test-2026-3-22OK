@@ -30,7 +30,6 @@ from fts_recovery_engine import RecoveryEngine
 from fts_recovery_validation import RecoveryValidationBuilder
 from fts_reconciliation_engine import ReconciliationEngine
 from fts_tri_lane_orchestrator import TriLaneOrchestrator
-from fts_compat import DecisionCompatibilityLayer, apply_decision_integrity_flags
 from fts_prelive_runtime import write_json
 
 RUNTIME_DIR = PATHS.runtime_dir
@@ -121,7 +120,6 @@ def _safe_build(module_name: str, class_name: str, method_name: str, kwargs: Opt
 
 
 def _load_decision_df() -> pd.DataFrame:
-    compat = DecisionCompatibilityLayer()
     candidates = [
         PATHS.data_dir / 'normalized_decision_output_enriched.csv',
         PATHS.data_dir / 'normalized_decision_output.csv',
@@ -129,17 +127,11 @@ def _load_decision_df() -> pd.DataFrame:
         PATHS.data_dir / 'daily_decision_desk.csv',
     ]
     for candidate in candidates:
-        if not candidate.exists():
-            continue
-        try:
-            if candidate.name.startswith('normalized_decision_output'):
-                df = pd.read_csv(candidate)
-                df, _ = apply_decision_integrity_flags(df)
-            else:
-                df, _ = compat.normalize(candidate)
-            return df
-        except Exception:
-            continue
+        if candidate.exists():
+            try:
+                return pd.read_csv(candidate)
+            except Exception:
+                continue
     return pd.DataFrame()
 
 
@@ -185,7 +177,7 @@ class _AcceptedSignal:
 
 def _build_control_outputs() -> dict[str, Any]:
     health_path, health_payload = ProjectHealthcheck(PATHS.base_dir).build_report(deep=False)
-    level2_path, level2_payload = run_level2_mainline(execute_legacy=bool(getattr(CONFIG, 'execute_legacy_pipeline', False)))
+    level2_path, level2_payload = run_level2_mainline()
     decision_df = _load_decision_df()
     orders = _normalize_orders(decision_df)
     accepted_signals = [_AcceptedSignal(o) for o in orders]

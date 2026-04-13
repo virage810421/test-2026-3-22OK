@@ -468,7 +468,7 @@ def reconcile_local_monthly_revenue_csv_to_sql():
         return True
 
     try:
-        from monthly_revenue_simple import write_to_sql
+        from fts_etl_monthly_revenue_service import write_to_sql
         df = pd.read_csv(monthly_path, encoding="utf-8-sig")
         df = df.where(pd.notnull(df), None)
         if df.empty:
@@ -1094,12 +1094,12 @@ def download_and_sync_new_chip_data():
 # =========================================================
 def run_monthly_revenue_module():
     try:
-        from monthly_revenue_simple import main as monthly_revenue_main
+        from fts_etl_monthly_revenue_service import main as monthly_revenue_main
         monthly_revenue_main()
         print("✅ 月營收模組執行完成。")
         return True
     except ImportError as e:
-        print(f"⚠️ 找不到營收模組 (monthly_revenue_simple.py) 或匯入失敗：{e}")
+        print(f"⚠️ 找不到營收服務模組 (fts_etl_monthly_revenue_service.py) 或匯入失敗：{e}")
         return False
     except Exception as e:
         print(f"❌ 月營收模組發生異常：{e}")
@@ -1113,7 +1113,7 @@ def run_fundamentals_module():
         print("✅ 季財報模組執行完成。")
         return True
     except ImportError as e:
-        print(f"⚠️ 找不到財報模組 (yahoo_csv_to_sql.py) 或匯入失敗：{e}")
+        print(f"⚠️ 找不到財報服務模組 (fts_fundamentals_etl_mainline.py) 或匯入失敗：{e}")
         return False
     except Exception as e:
         print(f"❌ 季財報模組發生異常：{e}")
