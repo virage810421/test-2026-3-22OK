@@ -5,6 +5,11 @@ from typing import Any
 
 from fts_utils import safe_float
 
+try:
+    from config import PARAMS
+except Exception:
+    PARAMS = {}
+
 
 def _infer_direction(row: dict[str, Any]) -> str:
     text = ' '.join(str(row.get(k, '')) for k in ['Direction', 'Golden_Type', 'Structure', 'Regime']).upper()
@@ -32,6 +37,17 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
     reversal_risk = safe_float(row.get('Reversal_Risk_Next3', 0.0), 0.0)
     exit_hazard = safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0)
     transition_label = str(row.get('Transition_Label', ''))
+    hysteresis_label = str(row.get('Hysteresis_Regime_Label', row.get('Regime_Label', row.get('Regime', ''))))
+    hysteresis_armed = safe_float(row.get('Hysteresis_Switch_Armed', 0.0), 0.0)
+    hysteresis_locked = safe_float(row.get('Hysteresis_Locked', 0.0), 0.0)
+    entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()
+    early_state = str(row.get('Early_Path_State', entry_state)).upper()
+    confirm_state = str(row.get('Confirm_Path_State', 'WAIT_CONFIRM')).upper()
+    entry_path = str(row.get('Entry_Path', 'NONE')).upper()
+    preentry_score = safe_float(row.get('PreEntry_Score', 0.0), 0.0)
+    confirm_score = safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0)
+    legacy_long_pressure = safe_float(row.get('Legacy_Long_Confirm_Pressure', 0.0), 0.0)
+    legacy_short_pressure = safe_float(row.get('Legacy_Short_Confirm_Pressure', 0.0), 0.0)
 
     blockers: list[str] = []
     warnings: list[str] = []
@@ -51,7 +67,15 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         blockers.append('execution_not_eligible')
     if realized_ev <= 0:
         blockers.append('non_positive_ev')
-    if ai_proba < 0.50:
+    pilot_proba_floor = max(0.45, float(PARAMS.get('LONG_MIN_PROBA', 0.52)) - float(PARAMS.get('PILOT_MIN_PROBA_BUFFER', 0.04)))
+    if entry_state == 'NO_ENTRY':
+        blockers.append('state_machine_no_entry')
+    elif entry_state == 'PREPARE':
+        blockers.append('state_machine_watch_only')
+    elif entry_state == 'PILOT_ENTRY':
+        if ai_proba < pilot_proba_floor:
+            blockers.append('pilot_ai_probability_below_threshold')
+    elif ai_proba < 0.50:
         blockers.append('ai_probability_below_threshold')
     if entry_readiness < 0.10:
         warnings.append('entry_readiness_low')
@@ -61,24 +85,31 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         warnings.append('reversal_or_exit_hazard_high')
     if transition_label and transition_label != 'Stable':
         diagnostics.append(f'transition={transition_label}')
+    if hysteresis_label:
+        diagnostics.append(f'hysteresis_regime={hysteresis_label}')
+    if hysteresis_armed >= 0.5:
+        warnings.append('hysteresis_switch_armed')
+    if hysteresis_locked >= 0.5:
+        diagnostics.append('hysteresis_locked')
 
-    # 分數現在只做診斷與方向一致性，不再當主硬閘門。
+    # 舊 c2-c9 / weighted score 現在只保留做確認診斷，不再主導提前布局。
+    diagnostics.extend([
+        f'entry_state={entry_state}',
+        f'early_state={early_state}',
+        f'confirm_state={confirm_state}',
+        f'entry_path={entry_path}',
+        f'preentry_score={preentry_score:.3f}',
+        f'confirm_score={confirm_score:.3f}',
+        f'score_gap={score_gap:.3f}',
+    ])
     if direction == 'LONG':
-        diagnostics.append(f'weighted_buy={weighted_buy:.3f}')
-        diagnostics.append(f'weighted_sell={weighted_sell:.3f}')
-        diagnostics.append(f'score_gap={score_gap:.3f}')
-        if weighted_sell > weighted_buy and ai_proba < 0.55:
-            blockers.append('directional_score_conflict_long')
-        elif weighted_sell > weighted_buy:
-            warnings.append('directional_score_conflict_long_but_model_override')
+        diagnostics.append(f'legacy_long_confirm_pressure={legacy_long_pressure:.3f}')
+        if weighted_sell > weighted_buy:
+            warnings.append('legacy_long_confirmation_weaker_than_sell_pressure')
     elif direction == 'SHORT':
-        diagnostics.append(f'weighted_sell={weighted_sell:.3f}')
-        diagnostics.append(f'weighted_buy={weighted_buy:.3f}')
-        diagnostics.append(f'score_gap={score_gap:.3f}')
-        if weighted_buy > weighted_sell and ai_proba < 0.55:
-            blockers.append('directional_score_conflict_short')
-        elif weighted_buy > weighted_sell:
-            warnings.append('directional_score_conflict_short_but_model_override')
+        diagnostics.append(f'legacy_short_confirm_pressure={legacy_short_pressure:.3f}')
+        if weighted_buy > weighted_sell:
+            warnings.append('legacy_short_confirmation_weaker_than_buy_pressure')
     else:
         diagnostics.append(f'range_score_gap={score_gap:.3f}')
         if abs(score_gap) > max(trigger_score, 2.0) and ai_proba < 0.55:

@@ -134,6 +134,8 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
     entry_dt = pd.to_datetime(entry_row.name, errors='coerce')
     exit_dt = pd.to_datetime(future_window.index[-1], errors='coerce')
 
+    setup_ready_label = int(_safe_float(computed_df.iloc[i].get('PreEntry_Score', 0.0), 0.0) >= float(PARAMS.get('PREENTRY_PILOT_THRESHOLD', 0.58)) and favorable_move * 100.0 >= float(PARAMS.get('SETUP_READY_MIN_FAVORABLE_PCT', 1.50)))
+    trigger_confirm_label = int(_safe_float(computed_df.iloc[i].get('Confirm_Entry_Score', 0.0), 0.0) >= float(PARAMS.get('CONFIRM_FULL_THRESHOLD', 0.66)) and favorable_move * 100.0 >= float(PARAMS.get('TRIGGER_CONFIRM_MIN_FAVORABLE_PCT', 3.00)) and int(label_y) == 1)
     return {
         'Label': int(label_y),
         'Label_Y': int(label_y),
@@ -156,6 +158,11 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
         'Max_Adverse_Excursion': round(float(max_adverse_excursion * 100.0), 4),
         'Realized_Return_After_Cost': round(float(realized_return * 100.0), 4),
         'Direction': 'SHORT' if is_short else 'LONG',
+        'Setup_Ready_Label': setup_ready_label,
+        'Trigger_Confirm_Label': trigger_confirm_label,
+        'Entry_State_At_Label': str(computed_df.iloc[i].get('Entry_State', 'NO_ENTRY')),
+        'Early_Path_State_At_Label': str(computed_df.iloc[i].get('Early_Path_State', 'NO_ENTRY')),
+        'Confirm_Path_State_At_Label': str(computed_df.iloc[i].get('Confirm_Path_State', 'WAIT_CONFIRM')),
     }
 
 
@@ -169,7 +176,8 @@ def generate_ml_dataset(tickers=None):
     base_columns = [
         'Ticker SYMBOL', 'Ticker', 'Date', 'Setup_Tag', 'Setup', 'Regime',
         'Label', 'Label_Y', 'Target_Return', 'Future_Return_Pct', 'Entry_Price', 'Exit_Price',
-        'Entry_Date', 'Exit_Date', 'Hold_Days', 'Direction',
+        'Entry_Date', 'Exit_Date', 'Hold_Days', 'Direction', 'Setup_Ready_Label', 'Trigger_Confirm_Label',
+        'Entry_State_At_Label', 'Early_Path_State_At_Label', 'Confirm_Path_State_At_Label',
     ]
 
     for ticker in tickers:

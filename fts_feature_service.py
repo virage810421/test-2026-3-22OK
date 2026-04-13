@@ -251,7 +251,7 @@ class FeatureService:
             from fts_regime_service import RegimeService
             regime_row = RegimeService().build_regime_row(row, history_df=history_df)
             for k, v in regime_row.items():
-                if k in {'Regime_Label', 'Transition_Label'}:
+                if k in {'Regime_Label', 'Transition_Label', 'Hysteresis_Regime_Label', 'Hysteresis_Pending_Label'}:
                     out[k] = str(v)
                 else:
                     out[k] = safe_float(v, 0.0)
@@ -648,6 +648,24 @@ class FeatureService:
             'Weighted_Sell_Score': safe_float(row.get('Weighted_Sell_Score', row.get('Sell_Score', 0.0)), 0.0),
             'Score_Gap': safe_float(row.get('Score_Gap', 0.0), 0.0),
             'Signal_Conflict': safe_float(row.get('Signal_Conflict', 0.0), 0.0),
+            'Legacy_Long_Confirm_Pressure': safe_float(row.get('Legacy_Long_Confirm_Pressure', 0.0), 0.0),
+            'Legacy_Short_Confirm_Pressure': safe_float(row.get('Legacy_Short_Confirm_Pressure', 0.0), 0.0),
+            'Legacy_Range_Confirm_Pressure': safe_float(row.get('Legacy_Range_Confirm_Pressure', 0.0), 0.0),
+            'PreEntry_Long_Score': safe_float(row.get('PreEntry_Long_Score', 0.0), 0.0),
+            'PreEntry_Short_Score': safe_float(row.get('PreEntry_Short_Score', 0.0), 0.0),
+            'PreEntry_Range_Score': safe_float(row.get('PreEntry_Range_Score', 0.0), 0.0),
+            'PreEntry_Score': safe_float(row.get('PreEntry_Score', 0.0), 0.0),
+            'Confirm_Long_Score': safe_float(row.get('Confirm_Long_Score', 0.0), 0.0),
+            'Confirm_Short_Score': safe_float(row.get('Confirm_Short_Score', 0.0), 0.0),
+            'Confirm_Range_Score': safe_float(row.get('Confirm_Range_Score', 0.0), 0.0),
+            'Confirm_Entry_Score': safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0),
+            'Watch_Eligible': safe_float(row.get('Watch_Eligible', 0.0), 0.0),
+            'Pilot_Eligible': safe_float(row.get('Pilot_Eligible', 0.0), 0.0),
+            'Full_Eligible': safe_float(row.get('Full_Eligible', 0.0), 0.0),
+            'Pilot_Position_Multiplier': safe_float(row.get('Pilot_Position_Multiplier', 0.0), 0.0),
+            'Full_Position_Multiplier': safe_float(row.get('Full_Position_Multiplier', 1.0), 1.0),
+            'StateMachine_Kelly_Pos': safe_float(row.get('StateMachine_Kelly_Pos', row.get('Kelly_Pos', 0.0)), 0.0),
+            'Confirm_Transition_Aligned': safe_float(row.get('Confirm_Transition_Aligned', 0.0), 0.0),
             'Vol_Squeeze': safe_float(row.get('Vol_Squeeze', 0.0), 0.0),
             'Absorption': safe_float(row.get('Absorption', 0.0), 0.0),
             'MR_Long_Spring': safe_float(row.get('MR_Long_Spring', 0.0), 0.0),
@@ -674,9 +692,9 @@ class FeatureService:
         if history_df is not None and not history_df.empty:
             enriched = self.enrich_from_history(history_df)
             latest = enriched.iloc[-1].to_dict()
-            for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20','Buy_Score_Slope_3d','Buy_Score_Slope_5d','Sell_Score_Slope_3d','Sell_Score_Slope_5d','Score_Gap_Slope_3d','Score_Gap_Slope_5d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release','ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Proba_Delta_3d']:
+            for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20','Buy_Score_Slope_3d','Buy_Score_Slope_5d','Sell_Score_Slope_3d','Sell_Score_Slope_5d','Score_Gap_Slope_3d','Score_Gap_Slope_5d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release','ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Proba_Delta_3d','PreEntry_Long_Score','PreEntry_Short_Score','PreEntry_Range_Score','PreEntry_Score','Confirm_Long_Score','Confirm_Short_Score','Confirm_Range_Score','Confirm_Entry_Score','Legacy_Long_Confirm_Pressure','Legacy_Short_Confirm_Pressure','Legacy_Range_Confirm_Pressure','Watch_Eligible','Pilot_Eligible','Full_Eligible','Pilot_Position_Multiplier','Full_Position_Multiplier','StateMachine_Kelly_Pos','Confirm_Transition_Aligned']:
                 features[k] = safe_float(latest.get(k, features.get(k, 0.0)), features.get(k, 0.0))
-        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7','Bull_Emerging_Score','Bear_Emerging_Score','Range_Compression_Score','Breakout_Readiness','Trend_Exhaustion_Score','Entry_Readiness','Breakout_Risk_Next3','Reversal_Risk_Next3','Exit_Hazard_Score','Trend_Confidence_Delta','Range_Confidence_Delta','Regime_Confidence','Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range']
+        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7','Bull_Emerging_Score','Bear_Emerging_Score','Range_Compression_Score','Breakout_Readiness','Trend_Exhaustion_Score','Entry_Readiness','Breakout_Risk_Next3','Reversal_Risk_Next3','Exit_Hazard_Score','Trend_Confidence_Delta','Range_Confidence_Delta','Regime_Confidence','PreEntry_Long_Score','PreEntry_Short_Score','PreEntry_Range_Score','PreEntry_Score','Confirm_Long_Score','Confirm_Short_Score','Confirm_Range_Score','Confirm_Entry_Score','Legacy_Long_Confirm_Pressure','Legacy_Short_Confirm_Pressure','Legacy_Range_Confirm_Pressure','Watch_Eligible','Pilot_Eligible','Full_Eligible','Pilot_Position_Multiplier','Full_Position_Multiplier','StateMachine_Kelly_Pos','Confirm_Transition_Aligned','Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range','Hysteresis_Stable_Bars','Hysteresis_Switch_Armed','Hysteresis_Switch_Margin','Hysteresis_Pending_Bars','Hysteresis_Regime_Changed','Hysteresis_Locked']
         for k in passthrough:
             if k in row:
                 features[k] = safe_float(row.get(k, 0), 0)
@@ -684,6 +702,13 @@ class FeatureService:
             features['Regime_Label'] = str(row.get('Regime_Label', row.get('Regime', '區間盤整')))
         if 'Transition_Label' in row:
             features['Transition_Label'] = str(row.get('Transition_Label', 'Stable'))
+        for sk in ['Early_Path_State', 'Confirm_Path_State', 'Entry_State', 'Entry_Path', 'StateMachine_Direction', 'Exit_State', 'Golden_Type_Legacy']:
+            if sk in row:
+                features[sk] = str(row.get(sk, ''))
+        if 'Hysteresis_Regime_Label' in row:
+            features['Hysteresis_Regime_Label'] = str(row.get('Hysteresis_Regime_Label', row.get('Regime_Label', row.get('Regime', '區間盤整'))))
+        if 'Hysteresis_Pending_Label' in row:
+            features['Hysteresis_Pending_Label'] = str(row.get('Hysteresis_Pending_Label', 'None'))
         features['Revenue_YoY_Rank'] = safe_float(row.get('Revenue_YoY_Rank', row.get('Revenue_YoY_Pctl', 0.5)), 0.5)
         features['Chip_Total_Ratio_Rank'] = safe_float(row.get('Chip_Total_Ratio_Rank', row.get('Chip_Total_Ratio_Pctl', 0.5)), 0.5)
         features['Regime_TrendStrength_X_ScoreGap'] = safe_float(row.get('Regime_TrendStrength_X_ScoreGap', (features['ADX'] / 100.0) * features['Score_Gap']), 0)

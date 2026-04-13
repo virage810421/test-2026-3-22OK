@@ -101,6 +101,33 @@ FEATURE_SPECS: Dict[str, FeatureSpec] = {
 }
 
 FEATURE_SPECS.update({
+    'PreEntry_Long_Score': _fs('PreEntry_Long_Score', 'entry_state_machine', 'screening/state machine', 'Preemptive long-layout score.', True, True, False, False, 'shared', 'LONG_ONLY', 'live_vetted', True),
+    'PreEntry_Short_Score': _fs('PreEntry_Short_Score', 'entry_state_machine', 'screening/state machine', 'Preemptive short-layout score.', True, True, False, False, 'shared', 'SHORT_ONLY', 'live_vetted', True),
+    'PreEntry_Range_Score': _fs('PreEntry_Range_Score', 'entry_state_machine', 'screening/state machine', 'Preemptive range-layout score.', True, True, False, False, 'shared', 'RANGE_ONLY', 'live_vetted', True),
+    'PreEntry_Score': _fs('PreEntry_Score', 'entry_state_machine', 'screening/state machine', 'Dominant preentry score used by state machine.', True),
+    'Confirm_Long_Score': _fs('Confirm_Long_Score', 'entry_state_machine', 'screening/state machine', 'Confirmed-entry long score.', True),
+    'Confirm_Short_Score': _fs('Confirm_Short_Score', 'entry_state_machine', 'screening/state machine', 'Confirmed-entry short score.', True),
+    'Confirm_Range_Score': _fs('Confirm_Range_Score', 'entry_state_machine', 'screening/state machine', 'Confirmed-entry range score.', True),
+    'Confirm_Entry_Score': _fs('Confirm_Entry_Score', 'entry_state_machine', 'screening/state machine', 'Dominant confirmed-entry score used by state machine.', True),
+    'Legacy_Long_Confirm_Pressure': _fs('Legacy_Long_Confirm_Pressure', 'entry_state_machine', 'legacy c2-c9', 'Legacy confirmation pressure from bullish c2-c9 ladder.', True),
+    'Legacy_Short_Confirm_Pressure': _fs('Legacy_Short_Confirm_Pressure', 'entry_state_machine', 'legacy c2-c9', 'Legacy confirmation pressure from bearish c2-c9 ladder.', True),
+    'Legacy_Range_Confirm_Pressure': _fs('Legacy_Range_Confirm_Pressure', 'entry_state_machine', 'legacy scoring', 'Legacy score neutrality used for range confirmation.', True),
+    'Watch_Eligible': _fs('Watch_Eligible', 'entry_state_machine', 'screening/state machine', '1 if watch/prepare path is eligible.', True),
+    'Pilot_Eligible': _fs('Pilot_Eligible', 'entry_state_machine', 'screening/state machine', '1 if pilot-entry path is eligible.', True),
+    'Full_Eligible': _fs('Full_Eligible', 'entry_state_machine', 'screening/state machine', '1 if full confirmed-entry path is eligible.', True),
+    'Pilot_Position_Multiplier': _fs('Pilot_Position_Multiplier', 'entry_state_machine', 'screening/state machine', 'Position-size multiplier for pilot path.', True),
+    'Full_Position_Multiplier': _fs('Full_Position_Multiplier', 'entry_state_machine', 'screening/state machine', 'Position-size multiplier for confirmed path.', True),
+    'StateMachine_Kelly_Pos': _fs('StateMachine_Kelly_Pos', 'entry_state_machine', 'screening/state machine', 'Kelly allocation after state-machine scaling.', True),
+    'Confirm_Transition_Aligned': _fs('Confirm_Transition_Aligned', 'entry_state_machine', 'screening/state machine', '1 if transition and dominant lane are aligned for confirmation.', True),
+    'Early_Path_State': _fs('Early_Path_State', 'entry_state_machine', 'screening/state machine', 'Early-layout state (NO_ENTRY/PREPARE/PILOT_ENTRY).', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
+    'Confirm_Path_State': _fs('Confirm_Path_State', 'entry_state_machine', 'screening/state machine', 'Confirmation path state (WAIT_CONFIRM/FULL_ENTRY).', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
+    'Entry_State': _fs('Entry_State', 'entry_state_machine', 'screening/state machine', 'Final state-machine action state.', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
+    'Entry_Path': _fs('Entry_Path', 'entry_state_machine', 'screening/state machine', 'Which path dominates current action.', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
+    'StateMachine_Direction': _fs('StateMachine_Direction', 'entry_state_machine', 'screening/state machine', 'Dominant state-machine lane/direction.', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
+    'Exit_State': _fs('Exit_State', 'entry_state_machine', 'screening/state machine', 'State-machine exit status (HOLD/REDUCE/DEFEND/EXIT).', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
+})
+
+FEATURE_SPECS.update({
     'Buy_Score_Slope_3d': _fs('Buy_Score_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of buy score.', True),
     'Buy_Score_Slope_5d': _fs('Buy_Score_Slope_5d', 'lead_timing', 'screening/scoring', '5-bar slope of buy score.', True),
     'Sell_Score_Slope_3d': _fs('Sell_Score_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of sell score.', True),
@@ -133,6 +160,14 @@ FEATURE_SPECS.update({
     'Next_Regime_Prob_Bear': _fs('Next_Regime_Prob_Bear', 'transition_regime', 'regime service', 'Forward bear-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
     'Next_Regime_Prob_Range': _fs('Next_Regime_Prob_Range', 'transition_regime', 'regime service', 'Forward range-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
     'Transition_Label': _fs('Transition_Label', 'transition_regime', 'regime service', 'Transition-state label from regime service.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Regime_Label': _fs('Hysteresis_Regime_Label', 'transition_regime', 'regime service', 'Regime label after hysteresis smoothing.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Stable_Bars': _fs('Hysteresis_Stable_Bars', 'transition_regime', 'regime service', 'Count of stable bars in current hysteresis regime.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Switch_Armed': _fs('Hysteresis_Switch_Armed', 'transition_regime', 'regime service', '1 if regime switch is armed but not yet confirmed.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Switch_Margin': _fs('Hysteresis_Switch_Margin', 'transition_regime', 'regime service', 'Margin between challenger and incumbent regime probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Pending_Label': _fs('Hysteresis_Pending_Label', 'transition_regime', 'regime service', 'Pending regime label awaiting hysteresis confirmation.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Pending_Bars': _fs('Hysteresis_Pending_Bars', 'transition_regime', 'regime service', 'Pending confirmation bar count for hysteresis switch.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Regime_Changed': _fs('Hysteresis_Regime_Changed', 'transition_regime', 'regime service', '1 if hysteresis regime changed on this bar.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
+    'Hysteresis_Locked': _fs('Hysteresis_Locked', 'transition_regime', 'regime service', '1 if minimum hold constraint kept prior regime.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
 })
 
 FEATURE_BUCKETS: Dict[str, List[str]] = {}
@@ -143,7 +178,8 @@ PRIORITY_NEW_FEATURES_20: List[str] = [
     'Score_Gap_Slope_3d', 'Score_Gap_Slope_5d', 'ADX_Delta_3d', 'MACD_Hist_Delta_3d', 'RSI_Reclaim_Speed',
     'BB_Squeeze_Release', 'ATR_Expansion_Start', 'Volume_Z20_Delta', 'Foreign_Ratio_Delta_3d', 'Total_Ratio_Delta_3d',
     'Bull_Emerging_Score', 'Bear_Emerging_Score', 'Range_Compression_Score', 'Breakout_Readiness', 'Trend_Exhaustion_Score',
-    'Entry_Readiness', 'Breakout_Risk_Next3', 'Reversal_Risk_Next3', 'Exit_Hazard_Score', 'Proba_Delta_3d',
+    'Entry_Readiness', 'Breakout_Risk_Next3', 'Reversal_Risk_Next3', 'Exit_Hazard_Score', 'PreEntry_Score',
+    'Confirm_Entry_Score', 'Proba_Delta_3d',
 ]
 
 

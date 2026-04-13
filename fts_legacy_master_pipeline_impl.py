@@ -303,22 +303,24 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
 
         latest_row = result["計算後資料"].iloc[-1]
         regime = result.get("Regime", latest_row.get("Regime", "區間盤整"))
-        setup_tag = result.get("Golden_Type", "無")
-        if setup_tag == "無":
+        entry_state = str(result.get('Entry_State', 'NO_ENTRY')).upper()
+        setup_tag = result.get('Golden_Type', '無')
+        if entry_state == 'NO_ENTRY' or setup_tag == '無':
             continue
 
         realized_ev = float(result.get("期望值", 0.0))
         hist_win = float(result.get("系統勝率(%)", 50.0)) / 100.0
         signal_conf = float(result.get("訊號信心分數(%)", 50.0)) / 100.0
         sample_size = int(result.get("歷史訊號樣本數", 0))
-        kelly_signal = float(result.get("Kelly建議倉位", 0.0))
+        kelly_signal = float(result.get('StateMachine_Kelly_Pos', result.get('Kelly建議倉位', 0.0)))
 
         weighted_buy = float(result.get("Weighted_Buy_Score", latest_row.get("Weighted_Buy_Score", 0.0)))
         weighted_sell = float(result.get("Weighted_Sell_Score", latest_row.get("Weighted_Sell_Score", 0.0)))
         score_gap = float(result.get("Score_Gap", latest_row.get("Score_Gap", 0.0)))
 
         ai_proba = _predict_ai_proba(latest_row, regime, hist_win, ai_models, selected_features, ticker)
-        action = "做多(Long)" if "多" in setup_tag else "做空(Short)"
+        direction_lane = str(result.get('StateMachine_Direction', 'LONG')).upper()
+        action = '做多(Long)' if direction_lane == 'LONG' else ('做空(Short)' if direction_lane == 'SHORT' else '區間(Range)')
 
         health_status, health_note = check_strategy_health(setup_tag)
         realized_strategy_ev = float(get_strategy_ev(setup_tag, regime))
@@ -373,6 +375,15 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
             "Score": round(base_score, 4),
             "Risk": health_note,
             "Health": health_status,
+            "Entry_State": entry_state,
+            "Early_Path_State": result.get('Early_Path_State', entry_state),
+            "Confirm_Path_State": result.get('Confirm_Path_State', 'WAIT_CONFIRM'),
+            "Entry_Path": result.get('Entry_Path', 'NONE'),
+            "PreEntry_Score": round(float(result.get('PreEntry_Score', 0.0)), 4),
+            "Confirm_Entry_Score": round(float(result.get('Confirm_Entry_Score', 0.0)), 4),
+            "StateMachine_Direction": direction_lane,
+            "StateMachine_Kelly_Pos": round(float(result.get('StateMachine_Kelly_Pos', final_kelly)), 4),
+            "Legacy_Golden_Type": result.get('Golden_Type_Legacy', ''),
         })
 
     df_report = pd.DataFrame(rows)

@@ -194,6 +194,7 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
     signal_conf = _safe_float(latest_row.get('訊號信心分數(%)', latest_row.get('AI_Proba', 0.5) * 100.0), 50.0) / 100.0
 
     veto_reasons: list[str] = []
+    entry_state = str(latest_row.get('Entry_State', 'NO_ENTRY')).upper()
     selected_ready = selected_features_ready(direction_scope) if direction_scope != 'SHARED' else selected_features_ready('SHARED')
     if STRICT_PARITY and not selected_ready:
         model_source = 'parity_locked_signal_confidence'
@@ -212,8 +213,11 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
     elif sample_size < 15:
         proba = 0.5 + (proba - 0.5) * 0.7
 
-    if proba < float(min_proba):
-        veto_reasons.append(f'proba_below_threshold:{proba:.3f}<{float(min_proba):.3f}')
+    effective_min_proba = float(min_proba)
+    if entry_state == 'PILOT_ENTRY':
+        effective_min_proba = max(0.45, float(min_proba) - float(PARAMS.get('PILOT_MIN_PROBA_BUFFER', 0.04)))
+    if proba < effective_min_proba:
+        veto_reasons.append(f'proba_below_threshold:{proba:.3f}<{effective_min_proba:.3f}')
     if realized_ev <= 0:
         veto_reasons.append(f'non_positive_ev:{realized_ev:.4f}')
 
@@ -246,7 +250,7 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         feature_scope=direction_scope,
         direction_scope=direction_scope,
         heuristic_fallback_active=heuristic_fallback_active,
-        debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK), 'Regime_Label': latest_row.get('Regime_Label', regime), 'Transition_Label': latest_row.get('Transition_Label', ''), 'Entry_Readiness': entry_readiness, 'Breakout_Risk_Next3': breakout_risk, 'Reversal_Risk_Next3': reversal_risk, 'Exit_Hazard_Score': exit_hazard, 'Next_Regime_Prob_Bull': latest_row.get('Next_Regime_Prob_Bull'), 'Next_Regime_Prob_Bear': latest_row.get('Next_Regime_Prob_Bear'), 'Next_Regime_Prob_Range': latest_row.get('Next_Regime_Prob_Range')},
+        debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK), 'Regime_Label': latest_row.get('Regime_Label', regime), 'Transition_Label': latest_row.get('Transition_Label', ''), 'Entry_State': entry_state, 'PreEntry_Score': latest_row.get('PreEntry_Score'), 'Confirm_Entry_Score': latest_row.get('Confirm_Entry_Score'), 'Entry_Readiness': entry_readiness, 'Breakout_Risk_Next3': breakout_risk, 'Reversal_Risk_Next3': reversal_risk, 'Exit_Hazard_Score': exit_hazard, 'Next_Regime_Prob_Bull': latest_row.get('Next_Regime_Prob_Bull'), 'Next_Regime_Prob_Bear': latest_row.get('Next_Regime_Prob_Bear'), 'Next_Regime_Prob_Range': latest_row.get('Next_Regime_Prob_Range')},
     )
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(decision.as_dict(), ensure_ascii=False, indent=2), encoding='utf-8')

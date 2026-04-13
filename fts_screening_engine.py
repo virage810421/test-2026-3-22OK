@@ -28,7 +28,8 @@ except Exception:  # pragma: no cover
 from fts_market_data_service import MarketDataService
 from fts_feature_service import FeatureService
 from fts_chip_enrichment_service import ChipEnrichmentService
-from fts_signal_primitives import (
+from fts_regime_service import RegimeService
+from fts_screening_legacy_compat import (
     _apply_weighted_scores,
     _assign_golden_type,
     _compute_realized_signal_stats,
@@ -36,7 +37,7 @@ from fts_signal_primitives import (
 
 
 class ScreeningEngine:
-    MODULE_VERSION = 'v85_screening_engine_regime_upgrade'
+    MODULE_VERSION = 'v87_screening_engine_dual_path_state_machine'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'screening_engine.json'
@@ -44,6 +45,7 @@ class ScreeningEngine:
         self.market = MarketDataService()
         self.features = FeatureService()
         self.chips = ChipEnrichmentService()
+        self.regime_service = RegimeService()
 
     @staticmethod
     def _rsi(close: pd.Series, window: int = 14) -> pd.Series:
@@ -75,6 +77,144 @@ class ScreeningEngine:
     def _rolling_percentile(series: pd.Series, window: int = 252) -> pd.Series:
         s = pd.to_numeric(series, errors='coerce').astype(float)
         return s.rolling(window, min_periods=min(30, window)).rank(pct=True).fillna(0.5)
+
+
+
+    @staticmethod
+    def _clip01(series: pd.Series | float) -> pd.Series | float:
+        if isinstance(series, pd.Series):
+            return pd.to_numeric(series, errors='coerce').fillna(0.0).clip(0.0, 1.0)
+        try:
+            return float(max(0.0, min(1.0, float(series))))
+        except Exception:
+            return 0.0
+
+    def _apply_dual_path_state_machine(self, df: pd.DataFrame, params: dict[str, Any]) -> pd.DataFrame:
+        out = df.copy()
+        if out.empty:
+            return out
+
+        def _series(name: str, default: float = 0.0) -> pd.Series:
+            if name in out.columns:
+                return pd.to_numeric(out[name], errors='coerce').fillna(default)
+            return pd.Series([default] * len(out), index=out.index, dtype=float)
+
+        trigger = max(1.0, float(params.get('TRIGGER_SCORE', 2.0)))
+        legacy_influence = float(params.get('LEGACY_CONFIRM_INFLUENCE', 0.10))
+        watch_th = float(params.get('PREENTRY_WATCH_THRESHOLD', 0.42))
+        pilot_th = float(params.get('PREENTRY_PILOT_THRESHOLD', 0.58))
+        full_th = float(params.get('CONFIRM_FULL_THRESHOLD', 0.66))
+        pilot_risk_cap = float(params.get('PILOT_MAX_BREAKOUT_RISK', 0.82))
+        full_risk_cap = float(params.get('FULL_MAX_BREAKOUT_RISK', 0.72))
+        require_alignment = bool(params.get('STATE_MACHINE_CONFIRM_REQUIRES_ALIGNMENT', False))
+
+        weighted_buy = _series('Weighted_Buy_Score', 0.0) if 'Weighted_Buy_Score' in out.columns else _series('Buy_Score', 0.0)
+        weighted_sell = _series('Weighted_Sell_Score', 0.0) if 'Weighted_Sell_Score' in out.columns else _series('Sell_Score', 0.0)
+        score_gap = _series('Score_Gap', 0.0) if 'Score_Gap' in out.columns else (weighted_buy - weighted_sell)
+        ai_proba_legacy = (_series('AI_Proba', 0.5) if 'AI_Proba' in out.columns else (0.5 + score_gap.clip(-2, 2) * 0.10)).clip(0.01, 0.99)
+        entry_readiness = self._clip01(_series('Entry_Readiness', 0.0))
+        breakout_risk = self._clip01(_series('Breakout_Risk_Next3', 0.0))
+        reversal_risk = self._clip01(_series('Reversal_Risk_Next3', 0.0))
+        exit_hazard = self._clip01(_series('Exit_Hazard_Score', 0.0))
+        bull_emerge = self._clip01(_series('Bull_Emerging_Score', 0.0))
+        bear_emerge = self._clip01(_series('Bear_Emerging_Score', 0.0))
+        range_compression = self._clip01(_series('Range_Compression_Score', 0.0))
+        breakout_readiness = self._clip01(_series('Breakout_Readiness', 0.0))
+        trend_exhaustion = self._clip01(_series('Trend_Exhaustion_Score', 0.0))
+        trend_conf = self._clip01(_series('Trend_Confidence', 0.0))
+        range_conf = self._clip01(_series('Range_Confidence', 0.0))
+        rs_mkt = self._clip01(_series('RS_vs_Market_20_Pctl', 0.5))
+        volume_delta = _series('Volume_Z20_Delta', 0.0).clip(-1.0, 1.0)
+        foreign_delta = _series('Foreign_Ratio_Delta_3d', 0.0).clip(-1.0, 1.0)
+        total_delta = _series('Total_Ratio_Delta_3d', 0.0).clip(-1.0, 1.0)
+        score_gap_slope = _series('Score_Gap_Slope_3d', 0.0).clip(-2.0, 2.0)
+        proba_delta = _series('Proba_Delta_3d', 0.0).clip(-0.5, 0.5)
+        next_bull = self._clip01(_series('Next_Regime_Prob_Bull', 0.34))
+        next_bear = self._clip01(_series('Next_Regime_Prob_Bear', 0.33))
+        next_range = self._clip01(_series('Next_Regime_Prob_Range', 0.33))
+        transition_label = out['Transition_Label'].astype(str) if 'Transition_Label' in out.columns else pd.Series(['Stable'] * len(out), index=out.index)
+
+        legacy_long = self._clip01((weighted_buy / max(trigger, 1.0)).clip(0.0, 1.5) / 1.5)
+        legacy_short = self._clip01((weighted_sell / max(trigger, 1.0)).clip(0.0, 1.5) / 1.5)
+        legacy_range = self._clip01(1.0 - (score_gap.abs() / max(trigger, 1.0)).clip(0.0, 1.0))
+
+        long_pre = self._clip01(0.28 * bull_emerge + 0.18 * entry_readiness + 0.14 * ((score_gap_slope.clip(lower=0.0)) / 2.0) + 0.10 * ((volume_delta.clip(lower=0.0)) / 1.0) + 0.10 * ((foreign_delta.clip(lower=0.0) + total_delta.clip(lower=0.0)) / 2.0) + 0.10 * breakout_readiness + 0.10 * rs_mkt.clip(lower=0.0))
+        short_pre = self._clip01(0.28 * bear_emerge + 0.18 * entry_readiness + 0.14 * (((-score_gap_slope).clip(lower=0.0)) / 2.0) + 0.10 * (((-volume_delta).clip(lower=0.0)) / 1.0) + 0.10 * (((-foreign_delta).clip(lower=0.0) + (-total_delta).clip(lower=0.0)) / 2.0) + 0.10 * breakout_readiness + 0.10 * (1.0 - rs_mkt))
+        range_pre = self._clip01(0.30 * range_compression + 0.22 * range_conf + 0.15 * legacy_range + 0.10 * (1.0 - breakout_risk) + 0.08 * (1.0 - reversal_risk) + 0.08 * self._clip01(_series('Range_Bounce_Quality', 0.0)) + 0.07 * self._clip01(_series('Range_Fade_Quality', 0.0)))
+
+        long_confirm = self._clip01(0.30 * long_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_long * legacy_influence)
+        short_confirm = self._clip01(0.30 * short_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_short * legacy_influence)
+        range_confirm = self._clip01(0.32 * range_pre + 0.20 * range_conf + 0.15 * ai_proba_legacy + 0.15 * (1.0 - breakout_risk) + 0.08 * (1.0 - exit_hazard) + 0.10 * legacy_range * legacy_influence)
+
+        dominant_pre = pd.concat({'LONG': long_pre, 'SHORT': short_pre, 'RANGE': range_pre}, axis=1)
+        dominant_confirm = pd.concat({'LONG': long_confirm, 'SHORT': short_confirm, 'RANGE': range_confirm}, axis=1)
+        dominant_lane = dominant_pre.idxmax(axis=1)
+        dominant_pre_score = dominant_pre.max(axis=1)
+        dominant_confirm_score = dominant_confirm.lookup(dominant_confirm.index, dominant_lane) if hasattr(dominant_confirm, 'lookup') else pd.Series([dominant_confirm.loc[idx, lane] for idx, lane in dominant_lane.items()], index=dominant_lane.index)
+
+        align_long = (next_bull >= np.maximum(next_bear, next_range) - 0.03) | transition_label.str.contains('Bull', case=False, na=False) | out.get('Regime', pd.Series(['']*len(out), index=out.index)).astype(str).str.contains('多頭', na=False)
+        align_short = (next_bear >= np.maximum(next_bull, next_range) - 0.03) | transition_label.str.contains('Bear', case=False, na=False) | out.get('Regime', pd.Series(['']*len(out), index=out.index)).astype(str).str.contains('空頭', na=False)
+        align_range = (next_range >= np.maximum(next_bull, next_bear) - 0.03) | transition_label.str.contains('Range', case=False, na=False) | out.get('Regime', pd.Series(['']*len(out), index=out.index)).astype(str).str.contains('區間', na=False)
+        confirm_aligned = pd.Series(False, index=out.index)
+        confirm_aligned = confirm_aligned.where(~(dominant_lane == 'LONG'), align_long)
+        confirm_aligned = confirm_aligned.where(~(dominant_lane == 'SHORT'), align_short)
+        confirm_aligned = confirm_aligned.where(~(dominant_lane == 'RANGE'), align_range)
+
+        max_risk = pd.concat([breakout_risk, reversal_risk, exit_hazard], axis=1).max(axis=1)
+        watch_ok = dominant_pre_score >= watch_th
+        pilot_ok = (dominant_pre_score >= pilot_th) & (max_risk <= pilot_risk_cap)
+        full_ok = (dominant_confirm_score >= full_th) & (max_risk <= full_risk_cap) & (confirm_aligned | (not require_alignment))
+
+        early_state = np.where(pilot_ok, 'PILOT_ENTRY', np.where(watch_ok, 'PREPARE', 'NO_ENTRY'))
+        confirm_state = np.where(full_ok, 'FULL_ENTRY', 'WAIT_CONFIRM')
+        entry_state = np.where(full_ok, 'FULL_ENTRY', np.where(pilot_ok, 'PILOT_ENTRY', np.where(watch_ok, 'PREPARE', 'NO_ENTRY')))
+        entry_path = np.where(full_ok, 'CONFIRMATION', np.where(watch_ok, 'PREEMPTIVE', 'NONE'))
+
+        exit_reduce = float(params.get('STATE_EXIT_REDUCE_HAZARD', 0.55))
+        exit_defend = float(params.get('STATE_EXIT_DEFEND_HAZARD', 0.72))
+        exit_hard = float(params.get('STATE_EXIT_HARD_EXIT', 0.88))
+        exit_state = np.where(exit_hazard >= exit_hard, 'EXIT', np.where(exit_hazard >= exit_defend, 'DEFEND', np.where(exit_hazard >= exit_reduce, 'REDUCE', 'HOLD')))
+
+        pilot_mult = float(params.get('PILOT_ALLOC_MULTIPLIER', 0.33))
+        full_mult = float(params.get('FULL_ALLOC_MULTIPLIER', 1.00))
+        synthetic_kelly = float(params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03))
+        raw_kelly = _series('Kelly建議倉位', 0.0) if 'Kelly建議倉位' in out.columns else _series('Kelly_Pos', 0.0)
+        effective_kelly = raw_kelly.where(raw_kelly > 0, synthetic_kelly)
+        state_kelly = np.where(entry_state == 'FULL_ENTRY', effective_kelly * full_mult, np.where(entry_state == 'PILOT_ENTRY', effective_kelly * pilot_mult, 0.0))
+
+        lane_to_tag = {'LONG': '多方進場', 'SHORT': '空方進場', 'RANGE': '區間進場'}
+        dominant_tag = dominant_lane.map(lane_to_tag).fillna('無')
+        out['Golden_Type_Legacy'] = out.get('Golden_Type', '無')
+        out['PreEntry_Long_Score'] = long_pre.round(6)
+        out['PreEntry_Short_Score'] = short_pre.round(6)
+        out['PreEntry_Range_Score'] = range_pre.round(6)
+        out['PreEntry_Score'] = dominant_pre_score.round(6)
+        out['Confirm_Long_Score'] = long_confirm.round(6)
+        out['Confirm_Short_Score'] = short_confirm.round(6)
+        out['Confirm_Range_Score'] = range_confirm.round(6)
+        out['Confirm_Entry_Score'] = dominant_confirm_score.round(6)
+        out['Legacy_Long_Confirm_Pressure'] = legacy_long.round(6)
+        out['Legacy_Short_Confirm_Pressure'] = legacy_short.round(6)
+        out['Legacy_Range_Confirm_Pressure'] = legacy_range.round(6)
+        out['Watch_Eligible'] = watch_ok.astype(int)
+        out['Pilot_Eligible'] = pilot_ok.astype(int)
+        out['Full_Eligible'] = full_ok.astype(int)
+        out['Early_Path_State'] = pd.Series(early_state, index=out.index)
+        out['Confirm_Path_State'] = pd.Series(confirm_state, index=out.index)
+        out['Entry_State'] = pd.Series(entry_state, index=out.index)
+        out['Entry_Path'] = pd.Series(entry_path, index=out.index)
+        out['StateMachine_Direction'] = dominant_lane
+        out['Confirm_Transition_Aligned'] = confirm_aligned.astype(int)
+        out['Pilot_Position_Multiplier'] = float(pilot_mult)
+        out['Full_Position_Multiplier'] = float(full_mult)
+        out['StateMachine_Kelly_Pos'] = pd.Series(state_kelly, index=out.index).round(6)
+        out['Exit_State'] = pd.Series(exit_state, index=out.index)
+        out['AI_Proba_Legacy'] = ai_proba_legacy.round(6)
+        state_proba = self._clip01(0.58 * dominant_confirm_score + 0.22 * dominant_pre_score + 0.12 * (1.0 - max_risk) + 0.08 * self._clip01(0.5 + proba_delta))
+        out['AI_Proba'] = ((ai_proba_legacy * 0.30) + (state_proba * 0.70)).clip(0.01, 0.99).round(6)
+        out['Golden_Type'] = dominant_tag.where(pd.Series(entry_state, index=out.index) != 'NO_ENTRY', '無')
+        out['Direction'] = dominant_lane
+        return out
 
     @staticmethod
     def _infer_regime(df: pd.DataFrame, params: dict[str, Any]) -> pd.DataFrame:
@@ -193,6 +333,7 @@ class ScreeningEngine:
         out['Sell_Score'] = out[[f'sell_c{i}' for i in range(2, 10)]].sum(axis=1)
         out = _apply_weighted_scores(out, params)
         out = _assign_golden_type(out, float(params.get('TRIGGER_SCORE', 2)))
+        out['Golden_Type_Legacy'] = out.get('Golden_Type', '無')
 
         out['Vol_Squeeze'] = (out['BB_Width'] < out['BB_Width'].rolling(20, min_periods=5).mean()).fillna(False).astype(int)
         out['Fake_Breakout'] = ((out['Close'] < out['MA20']) & (out['RSI'] > 55)).fillna(False)
@@ -205,12 +346,24 @@ class ScreeningEngine:
         out = self._infer_regime(out, params)
         out['AI_Proba'] = (0.5 + out['Score_Gap'].clip(-2, 2) * 0.1).clip(0.01, 0.99)
         out['Realized_EV'] = (out['Close'].shift(-int(params.get('ML_LABEL_HOLD_DAYS', 5))) / out['Close'] - 1).fillna(0.0)
+        out['Regime_Raw'] = out.get('Regime', '區間盤整')
+        try:
+            out = self.regime_service.enrich_dataframe(out)
+            if 'Hysteresis_Regime_Label' in out.columns:
+                out['Regime'] = out['Hysteresis_Regime_Label'].where(out['Hysteresis_Regime_Label'].astype(str) != '', out['Regime_Raw'])
+                out['Regime_Hysteresis_Applied'] = 1
+            else:
+                out['Regime_Hysteresis_Applied'] = 0
+            out['Regime_Source'] = out.get('Regime_Source', 'direction_strength_environment_v2').astype(str) + '|transition_hysteresis_v1'
+        except Exception:
+            out['Regime_Hysteresis_Applied'] = 0
 
         stats = _compute_realized_signal_stats(out, params, hold_days=int(params.get('ML_LABEL_HOLD_DAYS', 5)))
         for k, v in stats.items():
             if k == 'Realized_Signal_Returns':
                 continue
             out[k] = v
+        out = self._apply_dual_path_state_machine(out, params)
         out['訊號信心分數(%)'] = (out['AI_Proba'] * 100.0).round(2)
         return out
 
@@ -237,6 +390,7 @@ class ScreeningEngine:
         latest['Official_Percentile_Mode'] = 1
         latest['Precise_Event_Calendar_Mode'] = 1
         latest['Selected_Features_Driven_Live'] = int(bool(self.features.load_selected_features()))
+        latest['Regime_Hysteresis_Applied'] = int(bool(latest.get('Regime_Hysteresis_Applied', 0)))
         latest['計算後資料'] = prepared
         return latest
 
@@ -248,7 +402,7 @@ class ScreeningEngine:
             'official_percentile_mode': True,
             'precise_event_calendar_mode': True,
             'selected_features_driven_live': bool(self.features.load_selected_features()),
-            'regime_engine': 'direction_strength_environment_v2',
+            'regime_engine': 'direction_strength_environment_v2 + transition_hysteresis_v1',
             'status': 'screening_engine_ready',
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')

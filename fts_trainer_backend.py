@@ -33,7 +33,8 @@ META_DROP_COLS = [
     'Exit_Price', 'Entry_Date', 'Exit_Date', 'Direction', 'Stop_Hit', 'Hold_Days',
     'Touched_TP', 'Touched_SL', 'Label_Reason', 'Label_Exit_Type',
     'Favorable_Move_Pct', 'Adverse_Move_Pct', 'Max_Favorable_Excursion',
-    'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count'
+    'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count',
+    'Setup_Ready_Label', 'Trigger_Confirm_Label', 'Entry_State_At_Label', 'Early_Path_State_At_Label', 'Confirm_Path_State_At_Label'
 ]
 
 
@@ -517,6 +518,10 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     ]
     report['advanced_feature_candidates_present'] = [c for c in advanced_feature_candidates if c in train_df.columns]
     report['advanced_feature_selected'] = [c for c in selected_features if c in advanced_feature_candidates]
+    if 'Setup_Ready_Label' in df.columns:
+        report['setup_ready_positive_ratio'] = float(pd.to_numeric(df['Setup_Ready_Label'], errors='coerce').fillna(0).mean())
+    if 'Trigger_Confirm_Label' in df.columns:
+        report['trigger_confirm_positive_ratio'] = float(pd.to_numeric(df['Trigger_Confirm_Label'], errors='coerce').fillna(0).mean())
     report['regimes'] = metrics_by_regime
     report['directional_lane_artifacts'] = lane_artifacts
     report['overall_score'] = overall_score

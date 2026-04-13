@@ -86,6 +86,15 @@ def build_entry_metrics(row, params=PARAMS):
     reversal_risk = _safe_float(row.get('Reversal_Risk_Next3', 0.0), 0.0)
     exit_hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0)
     transition_label = str(row.get('Transition_Label', ''))
+    hysteresis_label = str(row.get('Hysteresis_Regime_Label', row.get('Regime_Label', regime)))
+    hysteresis_armed = _safe_float(row.get('Hysteresis_Switch_Armed', 0.0), 0.0)
+    hysteresis_locked = _safe_float(row.get('Hysteresis_Locked', 0.0), 0.0)
+    entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()
+    early_state = str(row.get('Early_Path_State', entry_state)).upper()
+    confirm_state = str(row.get('Confirm_Path_State', 'WAIT_CONFIRM')).upper()
+    entry_path = str(row.get('Entry_Path', 'NONE')).upper()
+    preentry_score = _safe_float(row.get('PreEntry_Score', 0.0), 0.0)
+    confirm_score = _safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0)
 
     try:
         dummy_vol = 0.05
@@ -111,6 +120,10 @@ def build_entry_metrics(row, params=PARAMS):
         risk_budget_ratio = min(risk_budget_ratio, 0.0125)
     elif entry_readiness >= 0.60 and realized_ev > 0 and ai_proba >= 0.52:
         risk_budget_ratio = min(max(risk_budget_ratio, 0.035), 0.06)
+    if entry_state == 'PILOT_ENTRY':
+        risk_budget_ratio = min(risk_budget_ratio, 0.02)
+    elif entry_state == 'PREPARE':
+        risk_budget_ratio = 0.0
 
     return {
         '市場狀態': regime,
@@ -130,6 +143,16 @@ def build_entry_metrics(row, params=PARAMS):
         'Reversal_Risk_Next3': reversal_risk,
         'Exit_Hazard_Score': exit_hazard,
         'Transition_Label': transition_label,
+        'Hysteresis_Regime_Label': hysteresis_label,
+        'Hysteresis_Switch_Armed': hysteresis_armed,
+        'Hysteresis_Locked': hysteresis_locked,
+        'Entry_State': entry_state,
+        'Early_Path_State': early_state,
+        'Confirm_Path_State': confirm_state,
+        'Entry_Path': entry_path,
+        'PreEntry_Score': preentry_score,
+        'Confirm_Entry_Score': confirm_score,
+        'Exit_State': str(row.get('Exit_State', 'HOLD')).upper(),
     }
 
 
@@ -177,6 +200,25 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
     ai_proba = _safe_float(row.get('AI_Proba', 0.0), 0.0)
     realized_ev = _safe_float(row.get('Realized_EV', 0.0), 0.0)
     signal_conf = _safe_float(row.get('訊號信心分數(%)', ai_proba * 100.0), ai_proba * 100.0) / 100.0
+    entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()
+    early_state = str(row.get('Early_Path_State', entry_state)).upper()
+    confirm_state = str(row.get('Confirm_Path_State', 'WAIT_CONFIRM')).upper()
+    preentry_score = _safe_float(row.get('PreEntry_Score', 0.0), 0.0)
+    confirm_score = _safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0)
+    breakout_risk = _safe_float(row.get('Breakout_Risk_Next3', 0.0), 0.0)
+    reversal_risk = _safe_float(row.get('Reversal_Risk_Next3', 0.0), 0.0)
+    exit_hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0)
+    pilot_proba = max(0.45, min_proba - float(params.get('PILOT_MIN_PROBA_BUFFER', 0.04)))
+    pilot_conf = max(0.40, min_conf - float(params.get('PILOT_MIN_CONF_BUFFER', 0.06)))
+
+    if entry_state == 'NO_ENTRY':
+        reasons.append('state_machine_no_entry')
+        row['_signal_gate_diagnostics'] = ['diag_state_machine_no_entry']
+        return GateDecision(allowed=False, reasons=reasons)
+    if entry_state == 'PREPARE':
+        reasons.append('state_machine_watch_only')
+        row['_signal_gate_diagnostics'] = ['diag_state_machine_watch_only']
+        return GateDecision(allowed=False, reasons=reasons)
 
     # Weighted scores are kept as secondary diagnostics, not as the alpha gate.
     if strategy_bucket == 'SHORT':
@@ -205,6 +247,16 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
         if score_gap <= 0:
             diagnostics.append('diag_negative_score_gap')
 
+    active_min_proba = min_proba
+    active_min_conf = min_conf
+    if entry_state == 'PILOT_ENTRY':
+        active_min_proba = pilot_proba
+        active_min_conf = pilot_conf
+        if max(breakout_risk, reversal_risk, exit_hazard) > float(params.get('PILOT_MAX_BREAKOUT_RISK', 0.82)):
+            reasons.append('pilot_risk_too_high')
+    elif max(breakout_risk, reversal_risk, exit_hazard) > float(params.get('FULL_MAX_BREAKOUT_RISK', 0.72)):
+        reasons.append('full_entry_risk_too_high')
+
     if model_decision is not None:
         if not bool(getattr(model_decision, 'approved', False)):
             reasons.extend(list(getattr(model_decision, 'veto_reasons', [])))
@@ -212,21 +264,22 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
             decision_proba = _safe_float(getattr(model_decision, 'proba', ai_proba), ai_proba)
             decision_ev = _safe_float(getattr(model_decision, 'realized_ev', realized_ev), realized_ev)
             decision_conf = _safe_float(getattr(model_decision, 'signal_confidence', signal_conf), signal_conf)
-            if decision_proba < min_proba:
-                reasons.append(f'model_proba_low:{decision_proba:.3f}<{min_proba:.3f}')
+            if decision_proba < active_min_proba:
+                reasons.append(f'model_proba_low:{decision_proba:.3f}<{active_min_proba:.3f}')
             if decision_ev < min_ev:
                 reasons.append(f'model_ev_low:{decision_ev:.4f}<{min_ev:.4f}')
-            if decision_conf < min_conf:
-                reasons.append(f'model_confidence_low:{decision_conf:.3f}<{min_conf:.3f}')
+            if decision_conf < active_min_conf:
+                reasons.append(f'model_confidence_low:{decision_conf:.3f}<{active_min_conf:.3f}')
     else:
-        if ai_proba < min_proba:
-            reasons.append(f'ai_proba_low:{ai_proba:.3f}<{min_proba:.3f}')
+        if ai_proba < active_min_proba:
+            reasons.append(f'ai_proba_low:{ai_proba:.3f}<{active_min_proba:.3f}')
         if realized_ev < min_ev:
             reasons.append(f'realized_ev_low:{realized_ev:.4f}<{min_ev:.4f}')
-        if signal_conf < min_conf:
-            reasons.append(f'signal_confidence_low:{signal_conf:.3f}<{min_conf:.3f}')
+        if signal_conf < active_min_conf:
+            reasons.append(f'signal_confidence_low:{signal_conf:.3f}<{active_min_conf:.3f}')
 
     # Expose heuristic weaknesses without blocking a model-approved trade.
+    diagnostics.extend([f'entry_state={entry_state}', f'early_state={early_state}', f'confirm_state={confirm_state}', f'preentry_score={preentry_score:.3f}', f'confirm_score={confirm_score:.3f}'])
     row['_signal_gate_diagnostics'] = diagnostics
     return GateDecision(allowed=not reasons, reasons=reasons + diagnostics[:0])
 
@@ -238,7 +291,19 @@ def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', 
         return GateDecision(allowed=False, reasons=reasons)
 
     direction = direction_bucket(row.get('Direction', ''))
-    requested_alloc = _safe_float(row.get('Kelly_Pos', 0.0), 0.0)
+    entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()
+    pilot_mult = _safe_float(row.get('Pilot_Position_Multiplier', params.get('PILOT_ALLOC_MULTIPLIER', 0.33)), 0.33)
+    full_mult = _safe_float(row.get('Full_Position_Multiplier', params.get('FULL_ALLOC_MULTIPLIER', 1.0)), 1.0)
+    requested_alloc = _safe_float(row.get('StateMachine_Kelly_Pos', row.get('Kelly_Pos', 0.0)), 0.0)
+    if requested_alloc <= 0:
+        base_alloc = _safe_float(row.get('Kelly_Pos', params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03)), 0.0)
+        if entry_state == 'PILOT_ENTRY':
+            requested_alloc = max(base_alloc, _safe_float(params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03), 0.03)) * pilot_mult
+        elif entry_state == 'FULL_ENTRY':
+            requested_alloc = max(base_alloc, _safe_float(params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03), 0.03)) * full_mult
+    if entry_state not in {'PILOT_ENTRY', 'FULL_ENTRY'}:
+        reasons.append('state_machine_not_executable')
+        return GateDecision(allowed=False, reasons=reasons)
 
     max_sector_positions = int(params.get('PORT_MAX_SECTOR_POSITIONS', 2))
     max_sector_alloc = float(params.get('PORT_MAX_SECTOR_ALLOC', 0.35))
@@ -271,7 +336,18 @@ def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', 
 def compute_position_plan(row, curr_price: float, total_nav: float, current_cash: float, entry_metrics: dict[str, Any], params=PARAMS) -> PositionPlan:
     if curr_price <= 0:
         return PositionPlan(False, 'price_invalid', 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-    requested_alloc = _safe_float(row.get('Kelly_Pos', 0.0), 0.0)
+    entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()
+    pilot_mult = _safe_float(row.get('Pilot_Position_Multiplier', params.get('PILOT_ALLOC_MULTIPLIER', 0.33)), 0.33)
+    full_mult = _safe_float(row.get('Full_Position_Multiplier', params.get('FULL_ALLOC_MULTIPLIER', 1.0)), 1.0)
+    requested_alloc = _safe_float(row.get('StateMachine_Kelly_Pos', row.get('Kelly_Pos', 0.0)), 0.0)
+    if requested_alloc <= 0:
+        base_alloc = _safe_float(row.get('Kelly_Pos', params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03)), 0.0)
+        if entry_state == 'PILOT_ENTRY':
+            requested_alloc = max(base_alloc, _safe_float(params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03), 0.03)) * pilot_mult
+        elif entry_state == 'FULL_ENTRY':
+            requested_alloc = max(base_alloc, _safe_float(params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03), 0.03)) * full_mult
+    if entry_state not in {'PILOT_ENTRY', 'FULL_ENTRY'}:
+        return PositionPlan(False, 'state_machine_not_executable', 0, 0.0, requested_alloc, 0.0, 0.0, 0.0, 0.0)
     stop_pct = max(_safe_float(entry_metrics.get('預期停損(%)', 0.0), 0.0) / 100.0, 1e-6)
     tp_pct = max(_safe_float(entry_metrics.get('預期停利(%)', 0.0), 0.0) / 100.0, 0.0)
     risk_budget_ratio = _safe_float(entry_metrics.get('風險金額比率', 0.0), 0.0)
@@ -311,6 +387,9 @@ def apply_signal_gate(row, model_decision=None, params=PARAMS):
         'approved_for_long': bool(gate.allowed and strategy_bucket == 'LONG'),
         'approved_for_short': bool(gate.allowed and strategy_bucket == 'SHORT'),
         'approved_for_range': bool(gate.allowed and strategy_bucket == 'RANGE'),
+        'entry_state': str(row.get('Entry_State', 'NO_ENTRY')).upper(),
+        'preentry_score': _safe_float(row.get('PreEntry_Score', 0.0), 0.0),
+        'confirm_entry_score': _safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0),
     })
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
