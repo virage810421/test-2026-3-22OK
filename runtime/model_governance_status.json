@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-12 17:14:09",
+  "generated_at": "2026-04-12 21:53:53",
   "system_name": "正式交易主控版_v83_official_main",
   "thresholds": {
     "min_win_rate": 0.5,
@@ -9,15 +9,15 @@
     "max_shadow_return_drift_pct": 0.08
   },
   "metrics": {
-    "win_rate": 0.20862676056338028,
-    "profit_factor": 0.7069591594503442,
+    "win_rate": 0.22535211267605634,
+    "profit_factor": 0.8064291455711963,
     "max_drawdown_pct": 0.08
   },
   "walk_forward": {
-    "score": -5.442537867448831
+    "score": -1.8948421114032004
   },
   "shadow_result": {
-    "return_drift_pct": 0.23979952576422864
+    "return_drift_pct": 0.15863784955439372
   },
   "failures": [
     "win_rate_below_threshold",

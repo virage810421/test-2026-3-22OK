@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -9,7 +10,6 @@ import pandas as pd
 
 from fts_config import PATHS, DB
 from fts_utils import now_str, log
-from fts_sql_table_name_map import sql_table
 
 try:
     import pyodbc  # type: ignore
@@ -22,7 +22,6 @@ class ChipEnrichmentService:
 
     RATIO_COLS = ['Foreign_Ratio', 'Trust_Ratio', 'Total_Ratio']
     CONSEC_COLS = ['Foreign_Consecutive', 'Trust_Consecutive']
-    TABLE_DAILY_CHIP = sql_table('daily_chip_data')
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'chip_enrichment_service.json'
@@ -90,14 +89,20 @@ class ChipEnrichmentService:
         if pyodbc is None:
             return pd.DataFrame()
         bare = str(ticker).split('.')[0]
-        query = f"""
+        query = """
         SELECT [日期], [Ticker SYMBOL], [外資買賣超], [投信買賣超], [自營商買賣超]
-        FROM {self.TABLE_DAILY_CHIP}
+        FROM daily_chip_data
         WHERE [Ticker SYMBOL] LIKE ? OR [Ticker SYMBOL] LIKE ?
         """
         try:
             with pyodbc.connect(self._db_conn_str()) as conn:
-                chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        'ignore',
+                        message='pandas only supports SQLAlchemy connectable.*',
+                        category=UserWarning,
+                    )
+                    chip_df = pd.read_sql(query, conn, params=(f'{bare}%', f'{bare}%'))
             if chip_df.empty:
                 return pd.DataFrame()
             chip_df['日期'] = pd.to_datetime(chip_df['日期'], errors='coerce').dt.normalize()

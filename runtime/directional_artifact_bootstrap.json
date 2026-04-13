@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-04-13 00:58:38",
+  "status": "directional_artifacts_bootstrapped",
+  "lanes": {
+    "LONG": {
+      "features": false,
+      "models": [
+        {
+          "regime": "趨勢多頭",
+          "status": "present"
+        },
+        {
+          "regime": "區間盤整",
+          "status": "present"
+        },
+        {
+          "regime": "趨勢空頭",
+          "status": "present"
+        }
+      ]
+    },
+    "SHORT": {
+      "features": false,
+      "models": [
+        {
+          "regime": "趨勢多頭",
+          "status": "present"
+        },
+        {
+          "regime": "區間盤整",
+          "status": "present"
+        },
+        {
+          "regime": "趨勢空頭",
+          "status": "present"
+        }
+      ]
+    },
+    "RANGE": {
+      "features": false,
+      "models": [
+        {
+          "regime": "趨勢多頭",
+          "status": "present"
+        },
+        {
+          "regime": "區間盤整",
+          "status": "present"
+        },
+        {
+          "regime": "趨勢空頭",
+          "status": "present"
+        }
+      ]
+    }
+  }
+}

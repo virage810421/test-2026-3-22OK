@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-04-13 00:58:39",
+  "lane": "SHORT",
+  "items": [
+    {
+      "ticker": "2317.TW",
+      "lane": "SHORT",
+      "promotion_score": 18.781209438848293,
+      "oot_ev": 1.674669918699187,
+      "hit_rate": 0.551948051948052,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    },
+    {
+      "ticker": "1519.TW",
+      "lane": "SHORT",
+      "promotion_score": 15.290199761041157,
+      "oot_ev": 1.3286868217054264,
+      "hit_rate": 0.5409582689335394,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    },
+    {
+      "ticker": "2454.TW",
+      "lane": "SHORT",
+      "promotion_score": 10.40108915762483,
+      "oot_ev": 0.8337070866141729,
+      "hit_rate": 0.54858934169279,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    },
+    {
+      "ticker": "2881.TW",
+      "lane": "SHORT",
+      "promotion_score": 9.966294176970704,
+      "oot_ev": 0.7622056910569106,
+      "hit_rate": 0.6308943089430894,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    },
+    {
+      "ticker": "2603.TW",
+      "lane": "SHORT",
+      "promotion_score": 9.408141180796605,
+      "oot_ev": 0.7204196721311474,
+      "hit_rate": 0.5960912052117264,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    },
+    {
+      "ticker": "2002.TW",
+      "lane": "SHORT",
+      "promotion_score": 6.33596985162495,
+      "oot_ev": 0.4278032520325203,
+      "hit_rate": 0.5533980582524272,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    },
+    {
+      "ticker": "3231.TW",
+      "lane": "SHORT",
+      "promotion_score": 6.244902158832079,
+      "oot_ev": 0.4322211382113821,
+      "hit_rate": 0.5250403877221325,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    },
+    {
+      "ticker": "2330.TW",
+      "lane": "SHORT",
+      "promotion_score": 0.6876437628884143,
+      "oot_ev": -0.1334262295081967,
+      "hit_rate": 0.5432300163132137,
+      "sector": "未知",
+      "liquidity_score": 1.0,
+      "feature_coverage": 1.0,
+      "approval_reason": "scoreboard_promotion"
+    }
+  ],
+  "count": 8,
+  "approved_version": "2026-04-13 00:58:39",
+  "promotion_batch_id": "2026-04-13 00:58:39"
+}

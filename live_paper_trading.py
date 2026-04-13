@@ -16,6 +16,7 @@ from fts_model_layer import evaluate_model_signal
 from fts_execution_layer import build_entry_metrics as _build_entry_metrics_layer, signal_gate as _signal_gate_layer, portfolio_gate as _portfolio_gate_layer, compute_position_plan
 from sector_classifier import get_stock_sector
 from fts_execution_ledger import ExecutionLedger
+from fts_live_watchlist_loader import LiveWatchlistLoader
 try:
     from fts_level3_runtime_loader import build_level3_services
     _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()
@@ -114,6 +115,34 @@ def _safe_int(x, default=0):
         return default
 
 
+
+
+def _infer_candidate_lane(row) -> str:
+    direction = str(row.get("Direction", "")).upper()
+    structure = str(row.get("Structure", row.get("Setup_Tag", ""))).upper()
+    regime = str(row.get("Regime", "")).strip()
+    if "SHORT" in direction or "空" in direction or "SHORT" in structure:
+        return "SHORT"
+    if regime == "區間盤整" or "RANGE" in structure:
+        return "RANGE"
+    return "LONG"
+
+
+def _load_directional_allow_map():
+    try:
+        _, payload = LiveWatchlistLoader().resolve_live_watchlist()
+        lanes = payload.get("lanes", {}) if isinstance(payload, dict) else {}
+        allow_map = {}
+        for lane, items in lanes.items():
+            for item in items or []:
+                ticker = str(item.get("ticker") or "").strip()
+                if not ticker:
+                    continue
+                allow_map.setdefault(ticker, set()).add(str(lane).upper())
+        return allow_map
+    except Exception:
+        return {}
+
 def _direction_bucket(direction_text: str) -> str:
     s = str(direction_text)
     return "SHORT" if ("空" in s or "Short" in s) else "LONG"
@@ -168,7 +197,7 @@ def _build_entry_metrics(row):
     return _build_entry_metrics_layer(row, params=PARAMS)
 
 
-def _passes_signal_gate(row):
+def _passes_signal_gate(row, candidate_lane: str = 'LONG'):
     regime = row.get("Regime", "未知")
     structure = row.get("Structure", row.get("Setup_Tag", "AI訊號"))
     policy = get_strategy_policy(structure, regime=regime)
@@ -177,6 +206,7 @@ def _passes_signal_gate(row):
         regime,
         min_proba=float(policy.get("min_proba", 0.5)),
         base_multiplier=float(policy.get("multiplier", 1.0)),
+        direction_scope=str(candidate_lane).upper(),
     )
     gate = _signal_gate_layer(row, model_decision=model_decision, params=PARAMS)
     reason = "通過訊號閘門" if gate.allowed else " | ".join(gate.reasons)
@@ -396,9 +426,22 @@ def run_eod_broker():
             pass
 
     if not decisions.empty:
+        directional_allow_map = _load_directional_allow_map()
+        decisions = _augment_directional_decisions(decisions, directional_allow_map)
         for _, row in decisions.iterrows():
             ticker = row.get("Ticker", "Unknown")
             trade_direction = row.get("Direction", "做多(Long)")
+            candidate_lane = _infer_candidate_lane(row)
+            row['Candidate_Long'] = int(candidate_lane == 'LONG')
+            row['Candidate_Short'] = int(candidate_lane == 'SHORT')
+            row['Candidate_Range'] = int(candidate_lane == 'RANGE')
+            allowed_lanes = directional_allow_map.get(str(ticker).strip(), set())
+            row['Approved_Long'] = int('LONG' in allowed_lanes)
+            row['Approved_Short'] = int('SHORT' in allowed_lanes)
+            row['Approved_Range'] = int('RANGE' in allowed_lanes)
+            if allowed_lanes and candidate_lane not in allowed_lanes:
+                daily_log.append(f"⛔ 略過 {ticker}: lane {candidate_lane} 不在 approved directional watchlist {sorted(allowed_lanes)}")
+                continue
 
             try:
                 kill_manager = _LEVEL3_SERVICES.get("KillSwitchManager")
@@ -410,7 +453,7 @@ def run_eod_broker():
             except Exception:
                 pass
 
-            allow_signal, reason_signal = _passes_signal_gate(row)
+            allow_signal, reason_signal = _passes_signal_gate(row, candidate_lane)
             if not allow_signal:
                 daily_log.append(f"⛔ 略過 {ticker}: {reason_signal}")
                 continue
@@ -535,13 +578,96 @@ def run_eod_broker():
     conn.close()
 
 
-if __name__ == "__main__":
-    run_eod_broker()
-
-
-
 def _record_directional_execution_event(event_type: str, payload: dict):
     try:
         ExecutionLedger().record(event_type, payload)
     except Exception:
         pass
+
+def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str, set[str]]) -> pd.DataFrame:
+    if not bool(PARAMS.get("DIRECTIONAL_DECISION_AUGMENT", True)):
+        return decisions
+    try:
+        _, payload = LiveWatchlistLoader().resolve_live_watchlist()
+    except Exception:
+        return decisions
+    lanes_payload = payload.get('lanes', {}) if isinstance(payload, dict) else {}
+    max_per_lane = int(PARAMS.get('DIRECTIONAL_DECISION_AUGMENT_MAX_PER_LANE', 2))
+    use_screening = bool(PARAMS.get('DIRECTIONAL_DECISION_AUGMENT_USE_SCREENING', True))
+    existing = set(str(x).strip() for x in decisions.get('Ticker', pd.Series(dtype=str)).astype(str).tolist()) if isinstance(decisions, pd.DataFrame) else set()
+    aug_rows = []
+    trigger = float(PARAMS.get('TRIGGER_SCORE', 2.0))
+    for lane in ['SHORT', 'RANGE', 'LONG']:
+        items = lanes_payload.get(lane, []) if isinstance(lanes_payload, dict) else []
+        take = 0
+        for item in items:
+            if take >= max_per_lane:
+                break
+            ticker = str(item.get('ticker') or '').strip()
+            if not ticker or ticker in existing:
+                continue
+            row = {}
+            if use_screening:
+                try:
+                    row = inspect_stock(ticker) or {}
+                except Exception:
+                    row = {}
+            row = dict(row or {})
+            row['Ticker'] = ticker
+            row.setdefault('Ticker SYMBOL', ticker)
+            chosen_side = 'LONG'
+            if lane == 'SHORT':
+                chosen_side = 'SHORT'
+                row['Direction'] = '做空(Short)'
+                row.setdefault('Regime', '趨勢空頭')
+                row.setdefault('Structure', '趨勢空頭追擊')
+            elif lane == 'RANGE':
+                range_side = str(item.get('preferred_side') or item.get('range_side') or '').upper()
+                weighted_buy_existing = float(row.get('Weighted_Buy_Score', 0.0) or 0.0)
+                weighted_sell_existing = float(row.get('Weighted_Sell_Score', 0.0) or 0.0)
+                if range_side not in {'LONG', 'SHORT'}:
+                    if weighted_sell_existing > weighted_buy_existing:
+                        range_side = 'SHORT'
+                    elif weighted_buy_existing > weighted_sell_existing:
+                        range_side = 'LONG'
+                    else:
+                        range_side = 'SHORT' if (take % 2 == 1) else 'LONG'
+                chosen_side = range_side
+                row['Regime'] = '區間盤整'
+                if chosen_side == 'SHORT':
+                    row['Direction'] = '做空(Short)'
+                    row.setdefault('Structure', '盤整高拋')
+                else:
+                    row['Direction'] = '做多(Long)'
+                    row.setdefault('Structure', '盤整低吸')
+            else:
+                chosen_side = 'LONG'
+                row['Direction'] = '做多(Long)'
+                row.setdefault('Regime', '趨勢多頭')
+                row.setdefault('Structure', '趨勢多頭攻堅')
+            row.setdefault('AI_Proba', max(0.5, float(item.get('hit_rate', 0.5) or 0.5)))
+            row.setdefault('Realized_EV', float(item.get('oot_ev', 0.0) or 0.0))
+            row.setdefault('Kelly_Pos', float(PARAMS.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03)))
+            row.setdefault('Health', 'KEEP')
+            if chosen_side == 'SHORT':
+                row.setdefault('Weighted_Sell_Score', trigger + 0.25)
+                row.setdefault('Weighted_Buy_Score', max(0.0, trigger - 0.75))
+            else:
+                row.setdefault('Weighted_Buy_Score', trigger + 0.25)
+                row.setdefault('Weighted_Sell_Score', max(0.0, trigger - 0.75))
+            row.setdefault('Score_Gap', float(row['Weighted_Buy_Score']) - float(row['Weighted_Sell_Score']))
+            aug_rows.append(row)
+            existing.add(ticker)
+            take += 1
+    if not aug_rows:
+        return decisions
+    aug_df = pd.DataFrame(aug_rows)
+    if decisions is None or decisions.empty:
+        return aug_df
+    return pd.concat([decisions, aug_df], ignore_index=True, sort=False)
+
+
+
+if __name__ == "__main__":
+    run_eod_broker()
+

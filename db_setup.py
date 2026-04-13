@@ -199,6 +199,57 @@ def ensure_core_tables(cursor):
     for col, typ in chip_columns.items():
         ensure_column(cursor, "daily_chip_data", col, typ)
 
+
+    # -----------------------------------------------------
+    # execution_* runtime persistence tables
+    # -----------------------------------------------------
+    ensure_table(cursor, "execution_orders", """
+        CREATE TABLE dbo.execution_orders (
+            [order_id] NVARCHAR(64) NOT NULL,
+            [client_order_id] NVARCHAR(64) NULL,
+            [broker_order_id] NVARCHAR(64) NULL,
+            [Ticker SYMBOL] NVARCHAR(32) NULL,
+            [direction_bucket] NVARCHAR(16) NULL,
+            [strategy_bucket] NVARCHAR(32) NULL,
+            [status] NVARCHAR(32) NULL,
+            [qty] INT NULL,
+            [ref_price] FLOAT NULL,
+            [created_at] DATETIME NULL,
+            [updated_at] DATETIME NULL,
+            CONSTRAINT PK_execution_orders PRIMARY KEY ([order_id])
+        )
+    """)
+    ensure_table(cursor, "execution_fills", """
+        CREATE TABLE dbo.execution_fills (
+            [fill_id] NVARCHAR(64) NOT NULL,
+            [order_id] NVARCHAR(64) NULL,
+            [Ticker SYMBOL] NVARCHAR(32) NULL,
+            [direction_bucket] NVARCHAR(16) NULL,
+            [fill_qty] INT NULL,
+            [fill_price] FLOAT NULL,
+            [fill_time] DATETIME NULL,
+            CONSTRAINT PK_execution_fills PRIMARY KEY ([fill_id])
+        )
+    """)
+    ensure_table(cursor, "execution_account_snapshot", """
+        CREATE TABLE dbo.execution_account_snapshot (
+            [snapshot_time] DATETIME NOT NULL,
+            [cash] FLOAT NULL,
+            [equity] FLOAT NULL,
+            [broker_type] NVARCHAR(32) NULL,
+            CONSTRAINT PK_execution_account_snapshot PRIMARY KEY ([snapshot_time])
+        )
+    """)
+    ensure_table(cursor, "execution_positions_snapshot", """
+        CREATE TABLE dbo.execution_positions_snapshot (
+            [snapshot_time] DATETIME NOT NULL,
+            [Ticker SYMBOL] NVARCHAR(32) NOT NULL,
+            [direction_bucket] NVARCHAR(16) NULL,
+            [qty] INT NULL,
+            [avg_cost] FLOAT NULL,
+            CONSTRAINT PK_execution_positions_snapshot PRIMARY KEY ([snapshot_time], [Ticker SYMBOL])
+        )
+    """)
     # -----------------------------------------------------
     # fundamentals_clean
     # -----------------------------------------------------

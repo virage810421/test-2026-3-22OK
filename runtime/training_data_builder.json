@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-04-12 21:53:40",
+  "dataset_path": "data\\ml_training_data.csv",
+  "status": "ok",
+  "tickers_requested": 8,
+  "rows_generated": 5682,
+  "quality_report": {
+    "generated_at": "2026-04-12 21:53:39",
+    "dataset_name": "ml_training_generated",
+    "rows": 5682,
+    "columns": 108,
+    "missing_required_columns": [],
+    "required_columns_with_null_rate": {},
+    "columns_with_null_rate": {},
+    "status": "ok",
+    "missing_flag_columns_added": []
+  },
+  "ticker_reports": [
+    {
+      "ticker": "2330.TW",
+      "rows_added": 703,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2317.TW",
+      "rows_added": 716,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2454.TW",
+      "rows_added": 716,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2881.TW",
+      "rows_added": 701,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2603.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "3231.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1519.TW",
+      "rows_added": 713,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2002.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    }
+  ]
+}

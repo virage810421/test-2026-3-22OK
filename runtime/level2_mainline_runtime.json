@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-12 17:14:02",
+  "generated_at": "2026-04-12 21:24:17",
   "module_version": "v83_level2_mainline_integrated",
   "status": "mainline_degraded",
   "etl": [
@@ -10,7 +10,7 @@
       "mode": "subprocess",
       "returncode": 0,
       "error": "",
-      "stdout_tail": "✅ 法人籌碼 CSV 與 SQL 之間沒有待補的舊資料。\n========================================================\n🧩 開機先執行：月營收 CSV → SQL 本地補資料\n========================================================\n❌ 月營收本地 CSV 補 SQL 失敗：('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.月營收簡表'。 (208) (SQLExecDirectW); [42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：日期條件未達成。\n\n⚪ [月更雷達] 月營收上網補抓：尚未到可抓取時間 18:30，目前 17:13。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+      "stdout_tail": "\n⚪ [日更雷達] 法人籌碼上網補抓：日期條件未達成。\n\n🟢 [月更雷達] 月營收上網補抓：符合條件，可立即補跑。\n==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-03\n✅ 月營收筆數：1052\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1052 筆\n❌ 月營收模組發生異常：('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.月營收簡表'。 (208) (SQLExecDirectW); [42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -34,7 +34,7 @@
       "mode": "subprocess",
       "returncode": 0,
       "error": "",
-      "stdout_tail": "[17:13:51] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[17:13:51] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "stdout_tail": "[21:22:38] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[21:22:38] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -47,7 +47,7 @@
     "mode": "inprocess",
     "returncode": null,
     "error": "",
-    "stdout_tail": "  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 873, in read_csv\n    return _read(filepath_or_buffer, kwds)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 300, in _read\n    parser = TextFileReader(filepath_or_buffer, **kwds)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1645, in __init__\n    self._engine = self._make_engine(f, self.engine)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1922, in _make_engine\n    return mapping[engine](f, **self.options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\c_parser_wrapper.py\", line 95, in __init__\n    self._reader = parsers.TextReader(src, **kwds)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"pandas/_libs/parsers.pyx\", line 575, in pandas._libs.parsers.TextReader.__cinit__\npandas.errors.EmptyDataError: No columns to parse from file\n\n🛑 AI 訓練異常，管線中斷！\n📊 已生成系統日誌 daily_report.json",
+    "stdout_tail": "🗓️ 系統判定：今日為週日，啟動【例行性 AI 大腦重塑】！\n\n🧠 階段：重訓 AI 模型\n\n⏳ 階段：特徵生成\n🚀 執行 ml_data_generator.py（第 1 次）\n🧪 training data builder status: ok | rows=5682\n📄 report: runtime\\training_data_builder.json\n\n✅ 完成 ml_data_generator.py（87.6s）\n\n⏳ 階段：模型訓練\n🚀 執行 ml_trainer.py（第 1 次）\n✅ 完成 ml_trainer.py（10.3s）\n✅ 驗證通過：兵工廠成功掛載 3 顆 AI 大腦！\n🌤️ 大盤氣候判定：多頭順風，允許標準火力。\n🌍 市場氣候：多頭順風 | 風險倍率：1.00\n📡 啟動動態索敵雷達：正在從 SQL 資料庫獲取監控名單...\n🛑 致命錯誤：無法連線 SQL 或獲取動態名單！詳細原因: ('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.每日籌碼資料'。 (208) (SQLExecDirectW)\")\n📊 已生成系統日誌 daily_report.json",
     "stderr_tail": "",
     "seconds": 0.0,
     "skipped": false

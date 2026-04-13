@@ -38,6 +38,13 @@ class DecisionDeskBuilder:
             df = df.rename(columns=rename_map)
         return df
 
+    @staticmethod
+    def _metric_from_result(result: dict[str, Any], key: str, default: float = 0.0) -> float:
+        nested = result.get('ai_features_latest', {}) if isinstance(result.get('ai_features_latest', {}), dict) else {}
+        if key in result:
+            return safe_float(result.get(key, default), default)
+        return safe_float(nested.get(key, default), default)
+
     def build_decision_desk(self, limit: int = 12) -> pd.DataFrame:
         existing = resolve_decision_csv()
         if existing.exists():
@@ -55,9 +62,9 @@ class DecisionDeskBuilder:
                     'AI_Proba': result.get('AI_Proba', 0.5),
                     'Realized_EV': result.get('Realized_EV', 0.0),
                     'Sample_Size': result.get('Sample_Size', 0),
-                    'Weighted_Buy_Score': safe_float(result.get('ai_features_latest', {}).get('Weighted_Buy_Score', 0), 0),
-                    'Weighted_Sell_Score': safe_float(result.get('ai_features_latest', {}).get('Weighted_Sell_Score', 0), 0),
-                    'Score_Gap': safe_float(result.get('ai_features_latest', {}).get('Score_Gap', 0), 0),
+                    'Weighted_Buy_Score': self._metric_from_result(result, 'Weighted_Buy_Score', 0.0),
+                    'Weighted_Sell_Score': self._metric_from_result(result, 'Weighted_Sell_Score', 0.0),
+                    'Score_Gap': self._metric_from_result(result, 'Score_Gap', 0.0),
                     'Kelly_Pos': 0.05,
                     'Health': 'KEEP',
                 }

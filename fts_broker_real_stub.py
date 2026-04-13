@@ -27,7 +27,7 @@ class RealBrokerStub(BrokerBase):
     - 提供 orders / fills / positions / cash snapshot
     """
 
-    MODULE_VERSION = "v82_mock_real_broker"
+    MODULE_VERSION = "v86_mock_real_broker_contract_aligned"
 
     def __init__(self, credentials: dict[str, Any] | None = None):
         self.credentials = credentials or {}
@@ -120,6 +120,50 @@ class RealBrokerStub(BrokerBase):
         if not trading_date:
             return list(self._fills)
         return [x for x in self._fills if str(x.get("fill_time", "")).startswith(str(trading_date))]
+
+    def query_open_orders(self) -> list[dict[str, Any]]:
+        return [dict(x) for x in self._orders.values() if str(x.get('status', '')).upper() in {'NEW', 'SUBMITTED', 'PARTIALLY_FILLED'}]
+
+    def query_positions(self) -> list[dict[str, Any]]:
+        return self.get_positions_rows()
+
+    def query_cash(self) -> dict[str, Any]:
+        return self.get_cash()
+
+    def reconcile(self) -> dict[str, Any]:
+        cash = self.get_cash()
+        positions = self.get_positions_rows()
+        open_orders = self.query_open_orders()
+        fills = self.get_fills()
+        backlog = len(self._callbacks)
+        return {
+            'ok': True,
+            'status': 'reconciled_mock_real',
+            'as_of': now_str(),
+            'cash': cash,
+            'positions': positions,
+            'open_orders': open_orders,
+            'fills': fills,
+            'callback_backlog': backlog,
+        }
+
+    def capability_report(self) -> dict[str, Any]:
+        return {
+            'connect': True,
+            'refresh_auth': True,
+            'disconnect': True,
+            'place_order': True,
+            'cancel_order': True,
+            'replace_order': True,
+            'get_order_status': True,
+            'query_open_orders': True,
+            'query_positions': True,
+            'query_cash': True,
+            'get_fills': True,
+            'poll_callbacks': True,
+            'reconcile': True,
+            'broker_mode': 'mock_real',
+        }
 
     def replace_order(self, broker_order_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         order = self._orders.get(str(broker_order_id))

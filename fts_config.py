@@ -155,6 +155,11 @@ class SystemConfig:
     strategy_layer_status_filename: str = 'strategy_policy_book.json'
     selected_features_min_count_for_live: int = 6
     selected_features_min_count_for_training: int = 8
+    feature_manifest_filename: str = 'training_feature_manifest.json'
+    feature_parity_require_runtime_artifacts: bool = True
+    feature_artifact_max_age_days: int = 7
+    broker_contract_filename: str = 'broker_submission_contract.json'
+    broker_requirements_filename: str = 'broker_requirements_contract.json'
     model_min_oot_pf: float = 1.0
     model_min_oot_hit_rate: float = 0.45
     model_min_promotion_score: float = 0.0

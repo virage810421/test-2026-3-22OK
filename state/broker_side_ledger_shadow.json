@@ -1,0 +1,74 @@
+{
+  "generated_at": "2026-04-12 22:31:29",
+  "lanes": {
+    "LONG": {
+      "B1": {
+        "order_id": "B1",
+        "lane": "LONG",
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW",
+        "last_mutation_type": "callback_fill",
+        "last_mutation_reason": "callback_fill",
+        "updated_at": "2026-04-12 22:31:29"
+      }
+    },
+    "SHORT": {},
+    "RANGE": {},
+    "UNKNOWN": {}
+  },
+  "history": [
+    {
+      "recorded_at": "2026-04-12 21:01:20",
+      "event_type": "callback_event",
+      "lane": "LONG",
+      "order_key": "HC1"
+    },
+    {
+      "recorded_at": "2026-04-12 21:01:37",
+      "event_type": "callback_event",
+      "lane": "LONG",
+      "order_key": "HC1"
+    },
+    {
+      "recorded_at": "2026-04-12 21:15:20",
+      "event_type": "callback_event",
+      "lane": "LONG",
+      "order_key": "HC1"
+    },
+    {
+      "recorded_at": "2026-04-12 21:15:38",
+      "event_type": "callback_event",
+      "lane": "LONG",
+      "order_key": "HC1"
+    },
+    {
+      "recorded_at": "2026-04-12 21:22:17",
+      "event_type": "callback_event",
+      "lane": "LONG",
+      "order_key": "HC1"
+    },
+    {
+      "recorded_at": "2026-04-12 21:48:07",
+      "event_type": "callback_event",
+      "lane": "LONG",
+      "order_key": "HC1"
+    },
+    {
+      "recorded_at": "2026-04-12 21:48:25",
+      "event_type": "callback_event",
+      "lane": "LONG",
+      "order_key": "HC1"
+    },
+    {
+      "at": "2026-04-12 22:31:29",
+      "lane": "LONG",
+      "order_id": "B1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    }
+  ]
+}

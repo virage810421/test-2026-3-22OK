@@ -1,0 +1,96 @@
+{
+  "lanes": {
+    "LONG": {
+      "HC1": {
+        "order_id": "HC1",
+        "lane": "LONG",
+        "status": "FILLED",
+        "symbol": "2330.TW",
+        "strategy_bucket": "LONG",
+        "approved_pool_type": "LONG",
+        "model_scope": "LONG",
+        "range_confidence": 0.0,
+        "updated_at": "2026-04-12 21:48:25"
+      },
+      "C1": {
+        "order_id": "C1",
+        "lane": "LONG",
+        "status": "FILLED",
+        "symbol": "2330.TW",
+        "strategy_bucket": "LONG",
+        "approved_pool_type": "LONG",
+        "model_scope": "LONG",
+        "range_confidence": 0.0,
+        "updated_at": "2026-04-12 22:31:29"
+      }
+    },
+    "SHORT": {},
+    "RANGE": {},
+    "UNKNOWN": {}
+  },
+  "history": [
+    {
+      "at": "2026-04-12 21:01:20",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 21:01:37",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 21:15:20",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 21:15:38",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 21:22:17",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 21:48:07",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 21:48:25",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 22:16:39",
+      "order_id": "C1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-12 22:31:29",
+      "order_id": "C1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "policy_mode": "explicit",
+  "generated_from": "fts_strategy_policy_layer.py",
+  "regime_count": 3,
+  "policies": {
+    "趨勢多頭": {
+      "多": {
+        "strategy": "TrendBreakoutStrategy",
+        "name": "趨勢多頭攻堅",
+        "multiplier": 1.25,
+        "min_proba": 0.54,
+        "stop_scale": 1.0,
+        "tp_scale": 1.15,
+        "allow_ignore_tp": true,
+        "playbook": "trend_follow_breakout"
+      },
+      "空": {
+        "strategy": "DefensiveStrategy",
+        "name": "逆勢防守空單",
+        "multiplier": 0.65,
+        "min_proba": 0.6,
+        "stop_scale": 0.85,
+        "tp_scale": 0.75,
+        "allow_ignore_tp": false,
+        "playbook": "counter_trend_defense"
+      },
+      "其他": {
+        "strategy": "TrendBreakoutStrategy",
+        "name": "趨勢跟隨",
+        "multiplier": 1.0,
+        "min_proba": 0.55,
+        "stop_scale": 1.0,
+        "tp_scale": 1.0,
+        "allow_ignore_tp": false,
+        "playbook": "trend_follow_core"
+      }
+    },
+    "區間盤整": {
+      "多": {
+        "strategy": "MeanReversionStrategy",
+        "name": "盤整低吸",
+        "multiplier": 0.92,
+        "min_proba": 0.53,
+        "stop_scale": 0.85,
+        "tp_scale": 0.8,
+        "allow_ignore_tp": false,
+        "playbook": "range_buy_revert"
+      },
+      "空": {
+        "strategy": "MeanReversionStrategy",
+        "name": "盤整高拋",
+        "multiplier": 0.92,
+        "min_proba": 0.53,
+        "stop_scale": 0.85,
+        "tp_scale": 0.8,
+        "allow_ignore_tp": false,
+        "playbook": "range_sell_revert"
+      },
+      "其他": {
+        "strategy": "MeanReversionStrategy",
+        "name": "盤整均值回歸",
+        "multiplier": 0.9,
+        "min_proba": 0.53,
+        "stop_scale": 0.8,
+        "tp_scale": 0.7,
+        "allow_ignore_tp": false,
+        "playbook": "range_reversion_core"
+      }
+    },
+    "趨勢空頭": {
+      "多": {
+        "strategy": "DefensiveStrategy",
+        "name": "逆勢反彈防守",
+        "multiplier": 0.7,
+        "min_proba": 0.6,
+        "stop_scale": 0.8,
+        "tp_scale": 0.65,
+        "allow_ignore_tp": false,
+        "playbook": "bear_counter_trend"
+      },
+      "空": {
+        "strategy": "TrendBreakoutStrategy",
+        "name": "趨勢空頭追擊",
+        "multiplier": 1.2,
+        "min_proba": 0.55,
+        "stop_scale": 1.0,
+        "tp_scale": 1.1,
+        "allow_ignore_tp": true,
+        "playbook": "bear_breakdown_follow"
+      },
+      "其他": {
+        "strategy": "DefensiveStrategy",
+        "name": "空頭保守應對",
+        "multiplier": 0.8,
+        "min_proba": 0.57,
+        "stop_scale": 0.75,
+        "tp_scale": 0.75,
+        "allow_ignore_tp": false,
+        "playbook": "bear_defense_core"
+      }
+    }
+  }
+}

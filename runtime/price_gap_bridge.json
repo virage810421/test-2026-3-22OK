@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-10 13:16:51",
+  "generated_at": "2026-04-13 01:22:37",
   "module_version": "v79",
-  "scanned_csv_count": 10,
-  "scanned_csv_success_count": 4,
-  "candidate_rows": 1071,
+  "scanned_csv_count": 12,
+  "scanned_csv_success_count": 5,
+  "candidate_rows": 1073,
   "required_tickers": 3,
   "matched_tickers": 3,
   "missing_tickers": [],

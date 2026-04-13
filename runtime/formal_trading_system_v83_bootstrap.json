@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-12 17:07:21",
+  "generated_at": "2026-04-12 20:23:39",
   "mode": "bootstrap",
   "module_version": "v83_level3_control_tower_integrated",
   "steps": [
@@ -27,7 +27,7 @@
       "script": "run_full_market_percentile_snapshot.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "[17:06:18] ? cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
+      "stdout_tail": "[20:22:51] ? cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
       "stderr_tail": ""
     },
     {
@@ -35,7 +35,7 @@
       "script": "run_precise_event_calendar_build.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "[17:06:19] ?? event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
+      "stdout_tail": "[20:22:52] ?? event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
       "stderr_tail": ""
     },
     {

@@ -6,7 +6,6 @@ import contextlib
 import importlib
 import inspect
 import io
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -27,20 +26,18 @@ from fts_model_gate import ModelVersionRegistry, ModelSelectionGate
 from fts_gatekeeper import LaunchGatekeeper
 from fts_live_release_gate import LiveReleaseGate
 from fts_operator_approval import OperatorApprovalRegistry
-from fts_mainline_linkage import MainlineLinkage
-from fts_project_completion_audit import ProjectCompletionAudit
-from fts_interface_audit import InterfaceAuditBuilder
-from fts_reconciliation_engine import ReconciliationEngine
 from fts_recovery_engine import RecoveryEngine
 from fts_recovery_validation import RecoveryValidationBuilder
+from fts_reconciliation_engine import ReconciliationEngine
 from fts_tri_lane_orchestrator import TriLaneOrchestrator
+from fts_prelive_runtime import write_json
 
 RUNTIME_DIR = PATHS.runtime_dir
 
 
 def _write_json(name: str, payload: dict[str, Any]) -> str:
     path = RUNTIME_DIR / name
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    write_json(path, payload)
     return str(path)
 
 
@@ -51,6 +48,7 @@ def _call_script(script_name: str, args: Optional[list[str]] = None, allow_missi
         if allow_missing:
             return {'status': 'missing', 'script': script_name, 'returncode': None, 'args': args}
         raise FileNotFoundError(f'找不到腳本：{script_name}')
+    env = {'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
     proc = subprocess.run(
         [sys.executable, str(script_path), *args],
         cwd=str(PATHS.base_dir),
@@ -58,6 +56,7 @@ def _call_script(script_name: str, args: Optional[list[str]] = None, allow_missi
         text=True,
         encoding='utf-8',
         errors='replace',
+        env=env,
     )
     return {
         'status': 'ok' if proc.returncode == 0 else 'error',
@@ -69,10 +68,7 @@ def _call_script(script_name: str, args: Optional[list[str]] = None, allow_missi
     }
 
 
-
-
 def _extract_path_payload(result: Any, fallback_path: Optional[Path] = None) -> tuple[str, dict[str, Any]]:
-    """Normalize builder results that may return either (path, payload) or payload only."""
     if isinstance(result, tuple):
         if len(result) >= 2:
             path = result[0]
@@ -103,13 +99,9 @@ def _call_builder_result(builder: Any, method_name: str, *args: Any, fallback_pa
         return _extract_path_payload(method(*args, **kwargs), fallback_path=fallback_path)
     except TypeError:
         sig = inspect.signature(method)
-        accepted_kwargs = {}
-        for name, value in kwargs.items():
-            if name in sig.parameters:
-                accepted_kwargs[name] = value
-        if args or accepted_kwargs != kwargs:
-            return _extract_path_payload(method(*args, **accepted_kwargs), fallback_path=fallback_path)
-        raise
+        accepted_kwargs = {name: value for name, value in kwargs.items() if name in sig.parameters}
+        return _extract_path_payload(method(*args, **accepted_kwargs), fallback_path=fallback_path)
+
 
 def _safe_build(module_name: str, class_name: str, method_name: str, kwargs: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     kwargs = kwargs or {}
@@ -180,10 +172,8 @@ def _build_control_outputs() -> dict[str, Any]:
     accepted_signals = [_AcceptedSignal(o) for o in orders]
 
     readiness_path, readiness_payload = _call_builder_result(
-        LiveReadinessGate(),
-        'evaluate',
-        decision_df if not decision_df.empty else None,
-        fallback_path=PATHS.runtime_dir / 'live_readiness_gate.json',
+        LiveReadinessGate(), 'evaluate', decision_df if not decision_df.empty else None,
+        fallback_path=PATHS.runtime_dir / 'live_readiness_gate.json'
     )
     training_governance = _safe_build('fts_training_governance_mainline', 'TrainingGovernanceMainline', 'build_summary', {'execute_backend': False})
     tg_path = Path(training_governance.get('path', '')) if training_governance.get('path') else (PATHS.runtime_dir / 'training_governance_mainline.json')
@@ -194,99 +184,36 @@ def _build_control_outputs() -> dict[str, Any]:
         readiness={'total_signals': len(orders)},
         governance=governance_payload,
     )
-
     compat_info = {
         'row_count': int(len(decision_df)),
         'rows_with_price': int(decision_df['Reference_Price'].notna().sum()) if 'Reference_Price' in decision_df.columns else int(len(orders)),
         'rows_with_ticker': int(decision_df['Ticker'].notna().sum()) if 'Ticker' in decision_df.columns else int(len(orders)),
         'rows_with_action': int(decision_df['Direction'].notna().sum()) if 'Direction' in decision_df.columns else int(len(orders)),
     }
-    upstream_status = {'ready': [], 'missing': []}
-    upstream_exec = {'failed': []}
-    retry_queue = {'items': []}
     launch_gate_path, launch_gate_payload = _call_builder_result(
-        LaunchGatekeeper(),
-        'evaluate',
-        upstream_status,
-        upstream_exec,
-        retry_queue,
-        compat_info,
-        {'total_signals': len(orders)},
-        fallback_path=PATHS.runtime_dir / 'launch_gate.json',
+        LaunchGatekeeper(), 'evaluate', {'ready': [], 'missing': []}, {'failed': []}, {'items': []}, compat_info, {'total_signals': len(orders)},
+        fallback_path=PATHS.runtime_dir / 'launch_gate.json'
     )
     live_safety_path, live_safety_payload = _call_builder_result(
-        LiveSafetyGate(),
-        'evaluate',
-        readiness_payload,
-        launch_gate_payload,
-        orders=orders,
-        account_snapshot={'cash': CONFIG.starting_cash, 'equity': CONFIG.starting_cash},
-        risk_snapshot={'day_loss_pct': 0.0},
-        fallback_path=PATHS.runtime_dir / 'live_safety_gate.json',
+        LiveSafetyGate(), 'evaluate', readiness_payload, launch_gate_payload,
+        orders=orders, account_snapshot={'cash': CONFIG.starting_cash, 'equity': CONFIG.starting_cash}, risk_snapshot={'day_loss_pct': 0.0},
+        fallback_path=PATHS.runtime_dir / 'live_safety_gate.json'
     )
-    broker_approval_path, broker_approval_payload = _call_builder_result(
-        BrokerApprovalGate(),
-        'evaluate',
-        launch_gate_payload,
-        live_safety_payload,
-        fallback_path=PATHS.runtime_dir / 'broker_approval_gate.json',
-    )
-    submission_path, submission_payload = _call_builder_result(
-        SubmissionContractGate(),
-        'evaluate',
-        accepted_signals,
-        fallback_path=PATHS.runtime_dir / 'submission_contract_gate.json',
-    )
-    validation_path, validation_payload = _call_builder_result(
-        ValidationSuiteBuilder(),
-        'build',
-        launch_gate_payload,
-        model_gate_payload,
-        live_safety_payload,
-        broker_approval_payload,
-        submission_payload,
-        fallback_path=PATHS.runtime_dir / 'validation_suite_report.json',
-    )
-
-    recon_path, recon_payload = _call_builder_result(
-        ReconciliationEngine(),
-        'reconcile',
-        [], [], [], [], [], [], CONFIG.starting_cash, CONFIG.starting_cash,
-        fallback_path=PATHS.runtime_dir / 'reconciliation_engine.json',
-    )
+    broker_approval_path, broker_approval_payload = _call_builder_result(BrokerApprovalGate(), 'evaluate', launch_gate_payload, live_safety_payload, fallback_path=PATHS.runtime_dir / 'broker_approval_gate.json')
+    submission_path, submission_payload = _call_builder_result(SubmissionContractGate(), 'evaluate', accepted_signals, fallback_path=PATHS.runtime_dir / 'submission_contract_gate.json')
+    validation_path, validation_payload = _call_builder_result(ValidationSuiteBuilder(), 'build', launch_gate_payload, model_gate_payload, live_safety_payload, broker_approval_payload, submission_payload, fallback_path=PATHS.runtime_dir / 'validation_suite_report.json')
+    recon_path, recon_payload = _call_builder_result(ReconciliationEngine(), 'reconcile', [], [], [], [], [], [], CONFIG.starting_cash, CONFIG.starting_cash, fallback_path=PATHS.runtime_dir / 'reconciliation_engine.json')
     recovery_path, recovery_payload = (
         _call_builder_result(RecoveryEngine(), 'build_recovery_plan', fallback_path=PATHS.runtime_dir / 'recovery_plan.json')
-        if hasattr(RecoveryEngine(), 'build_recovery_plan')
-        else (str(PATHS.runtime_dir / 'recovery_plan.json'), {'status': 'missing_builder'})
+        if hasattr(RecoveryEngine(), 'build_recovery_plan') else (str(PATHS.runtime_dir / 'recovery_plan.json'), {'status': 'missing_builder'})
     )
-    recovery_validation_path, recovery_validation_payload = _call_builder_result(
-        RecoveryValidationBuilder(),
-        'build',
-        {'total': 0},
-        recovery_payload if isinstance(recovery_payload, dict) else {},
-        fallback_path=PATHS.runtime_dir / 'recovery_validation.json',
-    )
+    recovery_validation_path, recovery_validation_payload = _call_builder_result(RecoveryValidationBuilder(), 'build', {'total': 0}, recovery_payload if isinstance(recovery_payload, dict) else {}, fallback_path=PATHS.runtime_dir / 'recovery_validation.json')
     latest_approval = OperatorApprovalRegistry().latest_for('live_release')
     live_release_path, live_release_payload = _call_builder_result(
-        LiveReleaseGate(),
-        'evaluate',
-        governance=governance_payload,
-        safety=live_safety_payload,
-        recon=recon_payload if isinstance(recon_payload, dict) else {},
-        recovery=recovery_validation_payload,
-        approval=latest_approval,
-        broker_contract={'defined': True},
-        fallback_path=PATHS.runtime_dir / 'live_release_gate.json',
+        LiveReleaseGate(), 'evaluate', governance=governance_payload, safety=live_safety_payload, recon=recon_payload if isinstance(recon_payload, dict) else {},
+        recovery=recovery_validation_payload, approval=latest_approval, broker_contract={'defined': True}, fallback_path=PATHS.runtime_dir / 'live_release_gate.json'
     )
-
-    linkage = _safe_build('fts_mainline_linkage', 'MainlineLinkage', 'build')
-    completion = _safe_build('fts_project_completion_audit', 'ProjectCompletionAudit', 'build')
-    interface = _safe_build('fts_interface_audit', 'InterfaceAuditBuilder', 'build')
-    tri_lane_path, tri_lane_payload = _call_builder_result(
-        TriLaneOrchestrator(),
-        'build',
-        fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json',
-    )
+    tri_lane_path, tri_lane_payload = _call_builder_result(TriLaneOrchestrator(), 'build', fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json')
 
     return {
         'project_healthcheck': {'path': health_path, 'payload': health_payload},
@@ -304,12 +231,9 @@ def _build_control_outputs() -> dict[str, Any]:
         'recovery': {'path': str(recovery_path), 'payload': recovery_payload},
         'recovery_validation': {'path': str(recovery_validation_path), 'payload': recovery_validation_payload},
         'live_release_gate': {'path': str(live_release_path), 'payload': live_release_payload},
-        'mainline_linkage': linkage,
-        'project_completion_audit': completion,
-        'interface_audit': interface,
         'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload},
         'tri_lane_stage_status': tri_lane_payload.get('lanes', {}) if isinstance(tri_lane_payload, dict) else {},
-        'tri_lane_stage_runs': tri_lane_payload.get('stage_runs', {}) if isinstance(tri_lane_payload, dict) else {},
+        'tri_lane_stage_runs': tri_lane_payload.get('tri_lane_stage_runs', {}) if isinstance(tri_lane_payload, dict) else {},
         'tri_lane_execution_status': tri_lane_payload.get('tri_lane_execution_status', {}) if isinstance(tri_lane_payload, dict) else {},
         'decision_rows': int(len(decision_df)),
         'normalized_orders': len(orders),
@@ -322,13 +246,13 @@ def run_daily() -> dict[str, Any]:
     log('🧭 模式：DAILY')
     log('=' * 72)
     outputs = _build_control_outputs()
+    live_payload = outputs.get('live_readiness_gate', {}).get('payload', {}) if isinstance(outputs, dict) else {}
     payload = {
-        'generated_at': now_str(),
-        'mode': 'daily',
-        'module_version': 'v83_level3_control_tower_integrated',
+        'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v83_level3_control_tower_integrated',
         'outputs': outputs,
-        'status': 'control_tower_ready',
-        'tri_lane_execution_status': outputs.get('tri_lane_execution_status', {}),
+        'pipeline_ready': True,
+        'live_ready': bool(live_payload.get('live_ready', False)),
+        'status': 'control_tower_pipeline_ready',
     }
     _write_json('formal_trading_system_v83_official_main.json', payload)
     return payload
@@ -339,22 +263,13 @@ def run_train() -> dict[str, Any]:
     log('🚀 啟動 正式交易主控版_v83_official_main')
     log('🧭 模式：TRAIN')
     log('=' * 72)
-    steps = [
-        _call_script('ml_data_generator.py', allow_missing=True),
-        _call_script('ml_trainer.py', allow_missing=True),
-    ]
-    governance = _safe_build('fts_training_governance_mainline', 'TrainingGovernanceMainline', 'build_summary', {'execute_backend': False})
-    model_registry = _safe_build('fts_model_gate', 'ModelVersionRegistry', 'build')
+    steps = [_call_script('ml_data_generator.py', allow_missing=True), _call_script('ml_trainer.py', allow_missing=True)]
+    tri_lane_path, tri_lane_payload = _call_builder_result(TriLaneOrchestrator(), 'build', fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json')
     payload = {
-        'generated_at': now_str(),
-        'mode': 'train',
-        'module_version': 'v83_level3_control_tower_integrated',
-        'outputs': {
-            'steps': steps,
-            'training_governance_mainline': governance,
-            'model_registry': model_registry,
-        },
-        'status': 'train_ready',
+        'generated_at': now_str(), 'mode': 'train', 'module_version': 'v83_level3_control_tower_integrated',
+        'outputs': {'steps': steps, 'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload}},
+        'pipeline_ready': True,
+        'status': 'train_pipeline_ready',
     }
     _write_json('formal_trading_system_v83_train.json', payload)
     _write_json('training_orchestrator.json', {'generated_at': now_str(), 'status': 'train_invoked_via_control_tower'})
@@ -375,12 +290,10 @@ def run_bootstrap() -> dict[str, Any]:
     ]
     daily_payload = run_daily()
     payload = {
-        'generated_at': now_str(),
-        'mode': 'bootstrap',
-        'module_version': 'v83_level3_control_tower_integrated',
-        'steps': steps,
-        'daily_status': daily_payload.get('status'),
-        'status': 'bootstrap_ready',
+        'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v83_level3_control_tower_integrated',
+        'steps': steps, 'daily_status': daily_payload.get('status'),
+        'pipeline_ready': True,
+        'status': 'bootstrap_pipeline_ready',
     }
     _write_json('formal_trading_system_v83_bootstrap.json', payload)
     return payload
@@ -404,14 +317,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             payload = run_train()
         else:
             payload = run_daily()
-        return 0 if payload.get('status') in {'control_tower_ready', 'train_ready', 'bootstrap_ready'} else 1
+        return 0 if payload.get('status') in {'control_tower_pipeline_ready', 'train_pipeline_ready', 'bootstrap_pipeline_ready'} else 1
     except Exception as exc:
-        payload = {
-            'generated_at': now_str(),
-            'module_version': 'v83_level3_control_tower_integrated',
-            'error_type': type(exc).__name__,
-            'error': str(exc),
-        }
+        payload = {'generated_at': now_str(), 'module_version': 'v83_level3_control_tower_integrated', 'error_type': type(exc).__name__, 'error': str(exc)}
         _write_json('formal_trading_system_v83_official_main_error.json', payload)
         log(f'❌ control tower failure: {exc}')
         return 1

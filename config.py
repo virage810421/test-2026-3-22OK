@@ -1,7 +1,10 @@
 # ==========================================
 # 中央參數總控台（升級整合版 v2.1）
 # ==========================================
+import csv
 import os
+from pathlib import Path
+
 
 PARAMS = {
     "RSI_PERIOD": 14,
@@ -104,6 +107,7 @@ WATCH_LIST = [
     "2603.TW",
 ]
 
+
 TRAINING_POOL = [
     "2330.TW",
     "2317.TW",
@@ -113,21 +117,80 @@ TRAINING_POOL = [
     "3231.TW",
     "1519.TW",
     "2002.TW",
+    "2303.TW",
+    "2308.TW",
+    "2382.TW",
+    "2408.TW",
+    "2882.TW",
+    "2891.TW",
+    "3711.TW",
+    "6505.TW",
 ]
 
 BREAK_TEST_POOL = []
+OPTIONAL_UNIVERSE_FILES = [
+    Path('data/training_bootstrap_universe.csv'),
+    Path('data/paper_execution_watchlist.csv'),
+    Path('runtime/approved_live_watchlist.csv'),
+]
 
 # 不再把 token 寫死在程式裡。正式環境請改設環境變數。
 FINMIND_API_TOKEN = os.getenv("FINMIND_API_TOKEN", "").strip()
 
 
+def _normalize_ticker(v: str) -> str:
+    s = str(v or '').strip().upper()
+    if not s:
+        return ''
+    if s.endswith('.TW') or s.endswith('.TWO'):
+        return s
+    if s.isdigit():
+        return f'{s}.TW'
+    return s
+
+
+def _load_optional_tickers_from_csvs() -> list[str]:
+    out: list[str] = []
+    env_raw = os.getenv('FTS_EXTRA_TICKERS', '').strip()
+    if env_raw:
+        for token in env_raw.replace(';', ',').split(','):
+            ticker = _normalize_ticker(token)
+            if ticker:
+                out.append(ticker)
+    for path in OPTIONAL_UNIVERSE_FILES:
+        if not Path(path).exists():
+            continue
+        try:
+            with open(path, 'r', encoding='utf-8-sig', newline='') as fh:
+                reader = csv.DictReader(fh)
+                for row in reader:
+                    for col in ('Ticker SYMBOL', 'Ticker', 'ticker', 'symbol', 'stock_id', '代號'):
+                        ticker = _normalize_ticker(row.get(col, ''))
+                        if ticker:
+                            out.append(ticker)
+                            break
+        except Exception:
+            continue
+    return out
+
+
+
 def get_dynamic_watch_list():
     merged = []
-    for pool in [WATCH_LIST, TRAINING_POOL, BREAK_TEST_POOL]:
+    universe_sources = [WATCH_LIST, TRAINING_POOL, BREAK_TEST_POOL, _load_optional_tickers_from_csvs()]
+    max_names = max(int(os.getenv('FTS_MAX_DYNAMIC_TICKERS', '60') or 60), len(WATCH_LIST), len(TRAINING_POOL))
+    for pool in universe_sources:
         for ticker in pool:
-            if ticker not in merged:
+            ticker = _normalize_ticker(ticker)
+            if ticker and ticker not in merged:
                 merged.append(ticker)
+            if len(merged) >= max_names:
+                return merged
     return merged
+
+
+def get_dynamic_training_universe():
+    return get_dynamic_watch_list()
 
 
 # ---- Portfolio Risk Layer ----
@@ -182,19 +245,28 @@ PARAMS.setdefault("ENABLE_DIRECTIONAL_MODEL_LOADING", True)
 PARAMS.setdefault("ENABLE_DIRECTIONAL_WATCHLIST_IN_LIVE", True)
 
 
-# ---- deepest tri-lane orchestration / repair mutator ----
-PARAMS.setdefault("ENABLE_TRI_LANE_FULL_STAGE_SPLIT", True)
-PARAMS.setdefault("ENABLE_DIRECTIONAL_REPAIR_MUTATOR", True)
-PARAMS.setdefault("ENABLE_DIRECTIONAL_REPAIR_AUTO_EXECUTE", True)
-PARAMS.setdefault("ENABLE_DIRECTIONAL_BROKER_LEDGER_SHADOW", True)
-PARAMS.setdefault("TRI_LANE_STAGE_LIST", [
-    "promotion",
-    "watchlist_load",
-    "model_loading",
-    "candidate_filter",
-    "callback_pipeline",
-    "state_machine",
-    "ledger",
-    "reconciliation",
-    "repair_execution",
-])
+# ---- directional strengthening pack ----
+PARAMS.setdefault("ENABLE_DIRECTIONAL_ARTIFACT_BOOTSTRAP", True)
+PARAMS.setdefault("DIRECTIONAL_BOOTSTRAP_FORCE_SHARED", True)
+PARAMS.setdefault("DIRECTIONAL_SEED_FROM_CORE_WATCHLIST", True)
+PARAMS.setdefault("DIRECTIONAL_SCOREBOARD_AUTO_BUILD", True)
+PARAMS.setdefault("DIRECTIONAL_PROMOTION_MIN_COUNT", 3)
+PARAMS.setdefault("LONG_SEED_SCORE", 0.35)
+PARAMS.setdefault("SHORT_SEED_SCORE", 0.25)
+PARAMS.setdefault("RANGE_SEED_SCORE", 0.25)
+PARAMS.setdefault("SHORT_FALLBACK_FROM_CORE", True)
+PARAMS.setdefault("RANGE_FALLBACK_FROM_CORE", True)
+PARAMS.setdefault("LIVE_WATCHLIST_SHORT_MAX_NAMES", max(int(PARAMS.get("LIVE_WATCHLIST_SHORT_MAX_NAMES", 8)), 5))
+PARAMS.setdefault("LIVE_WATCHLIST_RANGE_MAX_NAMES", max(int(PARAMS.get("LIVE_WATCHLIST_RANGE_MAX_NAMES", 8)), 5))
+
+# ---- long/range activation + short/range event flow ----
+PARAMS.setdefault("LIVE_WATCHLIST_MIN_PER_LANE_LONG", 2)
+PARAMS.setdefault("LIVE_WATCHLIST_MIN_PER_LANE_SHORT", 2)
+PARAMS.setdefault("LIVE_WATCHLIST_MIN_PER_LANE_RANGE", 2)
+PARAMS.setdefault("LIVE_WATCHLIST_UNKNOWN_SECTOR_SOFT_CAP", True)
+PARAMS.setdefault("DIRECTIONAL_DECISION_AUGMENT", True)
+PARAMS.setdefault("DIRECTIONAL_DECISION_AUGMENT_MAX_PER_LANE", 2)
+PARAMS.setdefault("DIRECTIONAL_DECISION_AUGMENT_USE_SCREENING", True)
+PARAMS.setdefault("DIRECTIONAL_SYNTHETIC_KELLY", 0.03)
+PARAMS.setdefault("LONG_SEED_SCORE", max(float(PARAMS.get("LONG_SEED_SCORE", 0.35)), 0.45))
+PARAMS.setdefault("RANGE_SEED_SCORE", max(float(PARAMS.get("RANGE_SEED_SCORE", 0.25)), 0.35))

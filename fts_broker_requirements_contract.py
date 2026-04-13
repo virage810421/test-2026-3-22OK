@@ -20,6 +20,7 @@ class BrokerRequirementsContract:
                 'callback receiver or polling fallback',
                 'reject code mapping',
                 'rate limit handling',
+                'reconciliation api',
                 '現股 / 零股 / 盤後 / 當沖 / 融資融券規則資訊',
             ],
             'request_contract': {
@@ -30,8 +31,15 @@ class BrokerRequirementsContract:
                 'required_fields': ['broker_order_id', 'client_order_id', 'event_type', 'status', 'symbol', 'filled_qty', 'remaining_qty', 'timestamp'],
                 'optional_fields': ['avg_fill_price', 'reject_code', 'reject_reason', 'raw_payload'],
             },
+            'fill_contract': {
+                'required_fields': ['fill_id', 'broker_order_id', 'client_order_id', 'symbol', 'side', 'fill_qty', 'fill_price', 'fill_time'],
+                'optional_fields': ['commission', 'tax', 'liquidity_flag'],
+            },
             'account_contract': {
                 'required_fields': ['cash', 'buying_power', 'positions', 'open_orders'],
+            },
+            'reconcile_contract': {
+                'required_fields': ['as_of', 'cash', 'positions', 'open_orders', 'fills', 'callback_backlog'],
             },
             'waiting_for_broker_specifics': [
                 '券商 API 文件',

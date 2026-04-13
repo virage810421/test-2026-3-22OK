@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -101,14 +102,32 @@ def load_json(path: Path, default: Any = None) -> Any:
 
 def write_json(path: Path, payload: Any) -> Path:
     ensure_parent(path)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    tmp = path.with_suffix(path.suffix + '.tmp')
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    os.replace(tmp, path)
     return path
 
 
 def append_jsonl(path: Path, payload: Any) -> Path:
     ensure_parent(path)
-    with open(path, 'a', encoding='utf-8') as f:
-        f.write(json.dumps(payload, ensure_ascii=False) + '\n')
+    lock = path.with_suffix(path.suffix + '.lock')
+    start = time.time()
+    while lock.exists() and (time.time() - start) < 5:
+        time.sleep(0.05)
+    try:
+        lock.write_text('1', encoding='utf-8')
+        with open(path, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + '\n')
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except Exception:
+                pass
+    finally:
+        try:
+            lock.unlink(missing_ok=True)
+        except Exception:
+            pass
     return path
 
 

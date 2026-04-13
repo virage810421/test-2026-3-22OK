@@ -1,5 +1,5 @@
 ﻿Ticker,Reference_Price,Source
-2330.TW,150.0,decision:daily_decision_desk.csv
+2330.TW,150.0,decision:normalized_decision_output.csv
 2471.TW,52.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
 2467.TW,449.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
 2317.TW,110.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
@@ -1070,3 +1070,5 @@
 9946.TW,17.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
 9955.TW,30.89999961853028,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
 9958.TW,107.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
+2072.TW,170.5,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv
+4169.TW,157.0,C:\test\test-2026-3-22OK\data\auto_price_snapshot_candidates.csv

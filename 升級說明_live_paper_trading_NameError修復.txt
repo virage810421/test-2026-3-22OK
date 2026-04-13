@@ -1,0 +1,1 @@
+這版修復 live_paper_trading.py 中 _augment_directional_decisions / _record_directional_execution_event 定義放在 if __name__ == "__main__" 後面，導致直接執行腳本時 run_eod_broker() 先被呼叫而 NameError 的問題。

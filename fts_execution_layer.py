@@ -66,7 +66,10 @@ def _safe_int(x, default=0):
 
 def direction_bucket(direction_text: str) -> str:
     s = str(direction_text)
-    return 'SHORT' if ('空' in s or 'Short' in s or 'SELL' in s.upper()) else 'LONG'
+    u = s.upper()
+    if 'RANGE' in u or '區間' in s:
+        return 'RANGE'
+    return 'SHORT' if ('空' in s or 'SHORT' in u or 'SELL' in u) else 'LONG'
 
 
 def build_entry_metrics(row, params=PARAMS):
@@ -121,25 +124,51 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
     kelly_pct = _safe_float(row.get('Kelly_Pos', 0.0), 0.0)
     weighted_buy = _safe_float(row.get('Weighted_Buy_Score', 0.0), 0.0)
     weighted_sell = _safe_float(row.get('Weighted_Sell_Score', 0.0), 0.0)
-    score_gap = _safe_float(row.get('Score_Gap', 0.0), 0.0)
+    score_gap = _safe_float(row.get('Score_Gap', weighted_buy - weighted_sell), weighted_buy - weighted_sell)
     health = str(row.get('Health', 'KEEP')).upper()
 
     if kelly_pct <= 0:
         reasons.append('kelly_zero')
     if health == 'KILL':
         reasons.append('health_kill')
-    direction = direction_bucket(row.get('Direction', ''))
+
+    raw_direction = direction_bucket(row.get('Direction', ''))
+    strategy_bucket = str(row.get('Strategy_Bucket', raw_direction)).upper()
+    if strategy_bucket not in {'LONG', 'SHORT', 'RANGE'}:
+        strategy_bucket = raw_direction if raw_direction in {'LONG', 'SHORT', 'RANGE'} else 'LONG'
+
     trigger = float(params.get('TRIGGER_SCORE', 2))
-    if direction == 'SHORT':
+    if strategy_bucket == 'SHORT':
         trigger = float(params.get('SHORT_TRIGGER_SCORE', trigger))
-    if str(row.get('Strategy_Bucket', '')).upper() == 'RANGE':
+    elif strategy_bucket == 'RANGE':
         trigger = float(params.get('RANGE_TRIGGER_SCORE', max(1.0, trigger - 0.5)))
-    if weighted_buy < max(1.0, trigger):
-        reasons.append('weighted_buy_below_trigger')
-    if weighted_sell >= weighted_buy:
-        reasons.append('sell_pressure_not_cleared')
-    if score_gap <= 0:
-        reasons.append('negative_score_gap')
+
+    if strategy_bucket == 'SHORT':
+        short_gap = weighted_sell - weighted_buy
+        if weighted_sell < max(1.0, trigger):
+            reasons.append('weighted_sell_below_trigger')
+        if weighted_buy >= weighted_sell:
+            reasons.append('buy_pressure_not_cleared')
+        if short_gap <= 0:
+            reasons.append('negative_short_score_gap')
+    elif strategy_bucket == 'RANGE':
+        dominant_range_score = max(weighted_buy, weighted_sell)
+        max_range_gap = float(params.get('RANGE_MAX_SCORE_GAP_ABS', max(0.75, trigger)))
+        range_confidence = _safe_float(row.get('Range_Confidence', row.get('Range_Confidence_At_Label', 0.0)), 0.0)
+        min_range_conf = float(params.get('RANGE_MIN_CONFIDENCE', 0.0))
+        if dominant_range_score < max(1.0, trigger):
+            reasons.append('range_score_below_trigger')
+        if abs(score_gap) > max_range_gap:
+            reasons.append('range_score_gap_too_wide')
+        if range_confidence < min_range_conf:
+            reasons.append('range_confidence_low')
+    else:
+        if weighted_buy < max(1.0, trigger):
+            reasons.append('weighted_buy_below_trigger')
+        if weighted_sell >= weighted_buy:
+            reasons.append('sell_pressure_not_cleared')
+        if score_gap <= 0:
+            reasons.append('negative_score_gap')
 
     if model_decision is not None and not bool(getattr(model_decision, 'approved', False)):
         reasons.extend(list(getattr(model_decision, 'veto_reasons', [])))

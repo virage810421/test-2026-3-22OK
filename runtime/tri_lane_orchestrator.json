@@ -1,0 +1,293 @@
+{
+  "generated_at": "2026-04-13 00:58:39",
+  "status": "tri_lane_orchestration_ready",
+  "lanes": {
+    "LONG": {
+      "promotion": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_promoter.json",
+        "count": 8
+      },
+      "watchlist_load": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_loader.json",
+        "count": 2
+      },
+      "model_loading": {
+        "status": "ready",
+        "feature_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_long.pkl",
+        "model_count": 3
+      },
+      "candidate_filter": {
+        "status": "ready",
+        "count": 2
+      },
+      "callback_pipeline": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_store_summary.json"
+      },
+      "state_machine": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\state\\directional_execution_state_machine.json",
+        "count": 2
+      },
+      "ledger": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
+        "event_count": 16
+      },
+      "reconciliation": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
+        "issue_count": 0
+      },
+      "repair_execution": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+        "action_count": 0
+      }
+    },
+    "SHORT": {
+      "promotion": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_promoter.json",
+        "count": 8
+      },
+      "watchlist_load": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_loader.json",
+        "count": 2
+      },
+      "model_loading": {
+        "status": "ready",
+        "feature_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_short.pkl",
+        "model_count": 3
+      },
+      "candidate_filter": {
+        "status": "ready",
+        "count": 2
+      },
+      "callback_pipeline": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_store_summary.json"
+      },
+      "state_machine": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\state\\directional_execution_state_machine.json",
+        "count": 0
+      },
+      "ledger": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
+        "event_count": 0
+      },
+      "reconciliation": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
+        "issue_count": 0
+      },
+      "repair_execution": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+        "action_count": 0
+      }
+    },
+    "RANGE": {
+      "promotion": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_promoter.json",
+        "count": 8
+      },
+      "watchlist_load": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_loader.json",
+        "count": 3
+      },
+      "model_loading": {
+        "status": "ready",
+        "feature_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_range.pkl",
+        "model_count": 3
+      },
+      "candidate_filter": {
+        "status": "ready",
+        "count": 3
+      },
+      "callback_pipeline": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_store_summary.json"
+      },
+      "state_machine": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\state\\directional_execution_state_machine.json",
+        "count": 0
+      },
+      "ledger": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
+        "event_count": 0
+      },
+      "reconciliation": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
+        "issue_count": 0
+      },
+      "repair_execution": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+        "action_count": 0
+      }
+    }
+  },
+  "tri_lane_stage_runs": {
+    "LONG": {
+      "promotion": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_promoter.json",
+        "count": 8
+      },
+      "watchlist_load": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_loader.json",
+        "count": 2
+      },
+      "model_loading": {
+        "status": "ready",
+        "feature_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_long.pkl",
+        "model_count": 3
+      },
+      "candidate_filter": {
+        "status": "ready",
+        "count": 2
+      },
+      "callback_pipeline": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_store_summary.json"
+      },
+      "state_machine": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\state\\directional_execution_state_machine.json",
+        "count": 2
+      },
+      "ledger": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
+        "event_count": 16
+      },
+      "reconciliation": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
+        "issue_count": 0
+      },
+      "repair_execution": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+        "action_count": 0
+      }
+    },
+    "SHORT": {
+      "promotion": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_promoter.json",
+        "count": 8
+      },
+      "watchlist_load": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_loader.json",
+        "count": 2
+      },
+      "model_loading": {
+        "status": "ready",
+        "feature_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_short.pkl",
+        "model_count": 3
+      },
+      "candidate_filter": {
+        "status": "ready",
+        "count": 2
+      },
+      "callback_pipeline": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_store_summary.json"
+      },
+      "state_machine": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\state\\directional_execution_state_machine.json",
+        "count": 0
+      },
+      "ledger": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
+        "event_count": 0
+      },
+      "reconciliation": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
+        "issue_count": 0
+      },
+      "repair_execution": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+        "action_count": 0
+      }
+    },
+    "RANGE": {
+      "promotion": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_promoter.json",
+        "count": 8
+      },
+      "watchlist_load": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_watchlist_loader.json",
+        "count": 3
+      },
+      "model_loading": {
+        "status": "ready",
+        "feature_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_range.pkl",
+        "model_count": 3
+      },
+      "candidate_filter": {
+        "status": "ready",
+        "count": 3
+      },
+      "callback_pipeline": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_event_store_summary.json"
+      },
+      "state_machine": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\state\\directional_execution_state_machine.json",
+        "count": 0
+      },
+      "ledger": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
+        "event_count": 0
+      },
+      "reconciliation": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
+        "issue_count": 0
+      },
+      "repair_execution": {
+        "status": "ready",
+        "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+        "action_count": 0
+      }
+    }
+  },
+  "tri_lane_execution_status": {
+    "LONG": {
+      "ready_stages": 9,
+      "fallback_stages": []
+    },
+    "SHORT": {
+      "ready_stages": 9,
+      "fallback_stages": []
+    },
+    "RANGE": {
+      "ready_stages": 9,
+      "fallback_stages": []
+    }
+  },
+  "deep_full_split_complete": true
+}

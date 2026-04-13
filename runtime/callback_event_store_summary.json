@@ -1,8 +1,10 @@
 {
-  "generated_at": "2026-04-10 13:16:51",
+  "generated_at": "2026-04-12 22:31:29",
   "status": "callback_event_recorded",
   "last_event_valid": true,
-  "last_event_type": "REJECT",
-  "last_event_status": "REJECTED",
+  "last_event_type": "FILL",
+  "last_event_status": "FILLED",
+  "last_lane": "LONG",
+  "state_machine_status": "state_transition_recorded",
   "path": "C:\\test\\test-2026-3-22OK\\runtime\\callback_events.jsonl"
 }

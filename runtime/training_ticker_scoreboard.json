@@ -1,5 +1,6 @@
 {
-  "module_version": "v84_training_ticker_scoreboard_long_short_range_safe",
-  "status": "scoreboard_unavailable",
-  "rows": 0
+  "generated_at": "2026-04-13 00:58:38",
+  "status": "scoreboard_built",
+  "rows": 8,
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_ticker_scoreboard.csv"
 }

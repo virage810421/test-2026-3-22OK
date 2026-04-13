@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-12 17:12:09",
+  "generated_at": "2026-04-12 21:24:19",
   "mode": "daily",
   "module_version": "v83_level3_control_tower_integrated",
   "outputs": {
@@ -8,12 +8,16 @@
       "payload": {
         "project_root": "C:\\test\\test-2026-3-22OK",
         "summary": {
-          "python_files_total": 313,
+          "python_files_total": 317,
           "compile_failures": 0,
           "core_import_failures": 0,
+          "tri_lane_import_failures": 0,
+          "tri_lane_import_failed_modules": [],
           "missing_local_import_edges": 0,
           "wrapper_linkage_failures": 0,
-          "bridge_interface_failures": 0
+          "bridge_interface_failures": 0,
+          "tri_lane_smoke_failures": 0,
+          "json_persistence_risk_failures": 0
         },
         "compile_results": [
           {
@@ -687,6 +691,16 @@
             "error": ""
           },
           {
+            "file": "fts_execution_ledger.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_execution_state_machine.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_feature_catalog.py",
             "ok": true,
             "error": ""
@@ -1082,6 +1096,11 @@
             "error": ""
           },
           {
+            "file": "fts_repair_workflow_engine.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_report.py",
             "ok": true,
             "error": ""
@@ -1362,6 +1381,11 @@
             "error": ""
           },
           {
+            "file": "fts_tri_lane_orchestrator.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_unused_candidates.py",
             "ok": true,
             "error": ""
@@ -1587,79 +1611,178 @@
             "module": "formal_trading_system_v83_official_main",
             "ok": true,
             "error": "",
-            "seconds": 0.825
+            "seconds": 0.842,
+            "severity": "hard"
           },
           {
             "module": "fts_fundamentals_etl_mainline",
             "ok": true,
             "error": "",
-            "seconds": 0.75
+            "seconds": 0.774,
+            "severity": "hard"
           },
           {
             "module": "fts_training_governance_mainline",
             "ok": true,
             "error": "",
-            "seconds": 1.284
+            "seconds": 1.455,
+            "severity": "hard"
           },
           {
             "module": "fts_feature_service",
             "ok": true,
             "error": "",
-            "seconds": 0.393
+            "seconds": 0.433,
+            "severity": "hard"
           },
           {
             "module": "fts_screening_engine",
             "ok": true,
             "error": "",
-            "seconds": 0.998
+            "seconds": 1.024,
+            "severity": "hard"
           },
           {
             "module": "fts_cross_sectional_percentile_service",
             "ok": true,
             "error": "",
-            "seconds": 0.675
+            "seconds": 0.766,
+            "severity": "hard"
           },
           {
             "module": "fts_event_calendar_service",
             "ok": true,
             "error": "",
-            "seconds": 0.39
+            "seconds": 0.426,
+            "severity": "hard"
           },
           {
             "module": "fts_decision_execution_bridge",
             "ok": true,
             "error": "",
-            "seconds": 0.39
+            "seconds": 0.413,
+            "severity": "hard"
           },
           {
             "module": "fts_phase1_upgrade",
             "ok": true,
             "error": "",
-            "seconds": 0.429
+            "seconds": 0.442,
+            "severity": "hard"
           },
           {
             "module": "fts_phase2_mock_broker_stage",
             "ok": true,
             "error": "",
-            "seconds": 0.392
+            "seconds": 0.43,
+            "severity": "hard"
           },
           {
             "module": "fts_phase3_real_cutover_stage",
             "ok": true,
             "error": "",
-            "seconds": 0.486
+            "seconds": 0.546,
+            "severity": "hard"
           },
           {
             "module": "model_governance",
             "ok": true,
             "error": "",
-            "seconds": 0.078
+            "seconds": 0.068,
+            "severity": "hard"
           },
           {
             "module": "db_setup",
             "ok": true,
             "error": "",
-            "seconds": 0.049
+            "seconds": 0.043,
+            "severity": "hard"
+          }
+        ],
+        "tri_lane_import_smoke": [
+          {
+            "module": "fts_tri_lane_orchestrator",
+            "ok": true,
+            "error": "",
+            "seconds": 0.429,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_live_watchlist_promoter",
+            "ok": true,
+            "error": "",
+            "seconds": 0.413,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_live_watchlist_loader",
+            "ok": true,
+            "error": "",
+            "seconds": 0.41,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_live_watchlist_registry",
+            "ok": true,
+            "error": "",
+            "seconds": 0.066,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_execution_layer",
+            "ok": true,
+            "error": "",
+            "seconds": 0.453,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_execution_ledger",
+            "ok": true,
+            "error": "",
+            "seconds": 0.066,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_execution_state_machine",
+            "ok": true,
+            "error": "",
+            "seconds": 0.061,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_callback_event_store",
+            "ok": true,
+            "error": "",
+            "seconds": 0.069,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_reconciliation_engine",
+            "ok": true,
+            "error": "",
+            "seconds": 0.07,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_repair_workflow_engine",
+            "ok": true,
+            "error": "",
+            "seconds": 0.065,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_model_layer",
+            "ok": true,
+            "error": "",
+            "seconds": 1.488,
+            "severity": "hard"
+          },
+          {
+            "module": "live_paper_trading",
+            "ok": true,
+            "error": "",
+            "seconds": 1.867,
+            "severity": "hard"
           }
         ],
         "local_imports_by_file": {
@@ -1964,12 +2087,10 @@
             "fts_utils"
           ],
           "fts_broker_callback_norm.py": [
-            "fts_config",
-            "fts_utils"
+            "fts_prelive_runtime"
           ],
           "fts_broker_contract.py": [
-            "fts_config",
-            "fts_utils"
+            "fts_prelive_runtime"
           ],
           "fts_broker_factory.py": [
             "fts_broker_api_adapter",
@@ -2000,6 +2121,8 @@
           ],
           "fts_callback_event_store.py": [
             "fts_callback_event_schema",
+            "fts_execution_ledger",
+            "fts_execution_state_machine",
             "fts_prelive_runtime"
           ],
           "fts_chart_artifact.py": [
@@ -2036,7 +2159,6 @@
           ],
           "fts_chip_enrichment_service.py": [
             "fts_config",
-            "fts_sql_table_name_map",
             "fts_utils"
           ],
           "fts_chip_factor_snapshot_service.py": [
@@ -2073,6 +2195,7 @@
             "fts_model_gate",
             "fts_operator_approval",
             "fts_pipeline",
+            "fts_prelive_runtime",
             "fts_project_completion_audit",
             "fts_project_healthcheck",
             "fts_reconciliation_engine",
@@ -2174,6 +2297,12 @@
             "config",
             "fts_config",
             "fts_strategy_policy_layer"
+          ],
+          "fts_execution_ledger.py": [
+            "fts_prelive_runtime"
+          ],
+          "fts_execution_state_machine.py": [
+            "fts_prelive_runtime"
           ],
           "fts_feature_catalog.py": [],
           "fts_feature_service.py": [
@@ -2300,15 +2429,15 @@
           ],
           "fts_live_watchlist_loader.py": [
             "config",
-            "fts_config"
+            "fts_prelive_runtime"
           ],
           "fts_live_watchlist_promoter.py": [
             "config",
-            "fts_config",
-            "fts_live_watchlist_registry"
+            "fts_live_watchlist_registry",
+            "fts_prelive_runtime"
           ],
           "fts_live_watchlist_registry.py": [
-            "fts_config"
+            "fts_prelive_runtime"
           ],
           "fts_local_history_bootstrap.py": [
             "fts_config",
@@ -2453,11 +2582,7 @@
           "fts_project_completion_audit.py": [
             "fts_config"
           ],
-          "fts_project_healthcheck.py": [
-            "fts_screening_engine",
-            "fts_sql_table_name_map",
-            "screening"
-          ],
+          "fts_project_healthcheck.py": [],
           "fts_project_hygiene.py": [],
           "fts_real_api_readiness.py": [
             "fts_config",
@@ -2465,8 +2590,8 @@
           ],
           "fts_real_broker_adapter_blueprint.py": [],
           "fts_reconciliation_engine.py": [
-            "fts_upgrade_runtime",
-            "fts_utils"
+            "fts_prelive_runtime",
+            "fts_repair_workflow_engine"
           ],
           "fts_reconciliation_report.py": [
             "fts_config",
@@ -2488,6 +2613,12 @@
           "fts_reject_classifier.py": [
             "fts_config",
             "fts_utils"
+          ],
+          "fts_repair_workflow_engine.py": [
+            "config",
+            "fts_execution_ledger",
+            "fts_execution_state_machine",
+            "fts_prelive_runtime"
           ],
           "fts_report.py": [
             "fts_config",
@@ -2735,6 +2866,14 @@
             "fts_training_universe_common",
             "fts_utils"
           ],
+          "fts_tri_lane_orchestrator.py": [
+            "fts_execution_ledger",
+            "fts_execution_state_machine",
+            "fts_live_watchlist_loader",
+            "fts_live_watchlist_promoter",
+            "fts_prelive_runtime",
+            "fts_reconciliation_engine"
+          ],
           "fts_unused_candidates.py": [
             "fts_config",
             "fts_utils"
@@ -2960,7 +3099,8 @@
             "run_precise_event_calendar_build.py": true,
             "run_sync_feature_snapshots_to_sql.py": true,
             "ml_data_generator.py": true,
-            "ml_trainer.py": true
+            "ml_trainer.py": true,
+            "run_project_healthcheck.py": true
           },
           "required_dirs": {
             "data": true,
@@ -2976,35 +3116,45 @@
             "db_setup_research_plus.py"
           ],
           "core_table_names": {
+            "fundamentals_clean": true,
+            "monthly_revenue_simple": true,
             "daily_chip_data": true,
-            "execution_account_snapshot": false,
-            "execution_fills": false,
-            "execution_orders": false,
-            "execution_positions_snapshot": false,
+            "execution_orders": true,
+            "execution_fills": true,
+            "execution_account_snapshot": true,
+            "execution_positions_snapshot": true,
             "feature_cross_section_snapshot": true,
             "feature_event_calendar": true,
-            "fundamentals_clean": true,
             "live_feature_mount": true,
-            "monthly_revenue_simple": true,
-            "執行委託單": false,
-            "執行成交回報": false,
-            "基本面清洗": false,
-            "實戰特徵掛載": false,
-            "帳戶快照": false,
-            "月營收簡表": false,
-            "每日籌碼資料": false,
-            "特徵事件日曆": false,
-            "特徵截面快照": false,
-            "部位快照": false
+            "stock_master": true,
+            "company_quality_snapshot": true,
+            "revenue_momentum_snapshot": true,
+            "price_liquidity_daily": true,
+            "chip_factors_daily": true,
+            "training_universe_daily": true
           },
-          "all_core_tables_declared": false
+          "all_core_tables_declared": true
         },
         "runtime_presence": {
           "runtime_dir_exists": true,
+          "state_dir_exists": true,
           "required_runtime_json": {
             "formal_trading_system_v83_official_main.json": true,
             "training_orchestrator.json": true,
             "training_governance_mainline.json": true
+          },
+          "tri_lane_runtime_json": {
+            "tri_lane_orchestrator.json": true,
+            "live_watchlist_promoter.json": true,
+            "live_watchlist_loader.json": true,
+            "callback_event_store_summary.json": true,
+            "execution_ledger_summary.json": true,
+            "reconciliation_engine.json": true,
+            "repair_workflow_execution.json": true
+          },
+          "tri_lane_state_json": {
+            "directional_execution_state_machine.json": true,
+            "broker_side_ledger_shadow.json": true
           }
         },
         "bridge_interface_audit": {
@@ -3022,15 +3172,90 @@
               "period"
             ],
             "compatible": true,
-            "missing_in_engine": []
+            "missing_in_engine": [],
+            "audit_mode": "ast_static"
           }
+        },
+        "tri_lane_smoke": {
+          "tri_lane_orchestrator": {
+            "ok": true,
+            "seconds": 0.515,
+            "stdout_tail": "est\\\\test-2026-3-22OK\\\\runtime\\\\live_watchlist_promoter.json'}, 'watchlist_load': {'status': 'fallback', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\live_watchlist_loader.json', 'count': 0}, 'model_loading': {'status': 'fallback', 'detail': 'directional model artifact missing'}, 'candidate_filter': {'status': 'fallback', 'candidate_count': 0}, 'callback_pipeline': {'status': 'ready'}, 'state_machine': {'status': 'fallback', 'order_count': 0}, 'ledger': {'status': 'ready', 'event_count': 0}, 'reconciliation': {'status': 'ready', 'issue_count': 0}, 'repair_execution': {'status': 'ready', 'action_count': 0}}}, 'tri_lane_execution_status': {'LONG': {'ready_stages': 6, 'fallback_stages': ['watchlist_load', 'model_loading', 'candidate_filter']}, 'SHORT': {'ready_stages': 5, 'fallback_stages': ['watchlist_load', 'model_loading', 'candidate_filter', 'state_machine']}, 'RANGE': {'ready_stages': 5, 'fallback_stages': ['watchlist_load', 'model_loading', 'candidate_filter', 'state_machine']}}})\n",
+            "stderr_tail": "",
+            "returncode": 0
+          },
+          "watchlist_promoter": {
+            "ok": true,
+            "seconds": 0.454,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-12 21:22:16', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 0}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 0}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 0}}})\n",
+            "stderr_tail": "",
+            "returncode": 0
+          },
+          "watchlist_loader": {
+            "ok": true,
+            "seconds": 0.388,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\live_watchlist_loader.json', {'generated_at': '2026-04-12 21:22:17', 'status': 'fallback_watch_list', 'items': [{'ticker': '2330.TW', 'lane': 'LONG', 'sector': '未知', 'promotion_score': 0.0, 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'WATCH_LIST'}, {'ticker': '2317.TW', 'lane': 'LONG', 'sector': '未知', 'promotion_score': 0.0, 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'WATCH_LIST'}, {'ticker': '2454.TW', 'lane': 'LONG', 'sector': '未知', 'promotion_score': 0.0, 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'WATCH_LIST'}, {'ticker': '2881.TW', 'lane': 'LONG', 'sector': '未知', 'promotion_score': 0.0, 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'WATCH_LIST'}, {'ticker': '2603.TW', 'lane': 'LONG', 'sector': '未知', 'promotion_score': 0.0, 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'WATCH_LIST'}], 'lanes': {'LONG': [], 'SHORT': [], 'RANGE': []}, 'total_count': 5})\n",
+            "stderr_tail": "",
+            "returncode": 0
+          },
+          "callback_event_store": {
+            "ok": true,
+            "seconds": 0.103,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-12 21:22:17', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'state_machine_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\state\\\\directional_execution_state_machine.json', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
+            "stderr_tail": "",
+            "returncode": 0
+          },
+          "reconciliation_engine": {
+            "ok": true,
+            "seconds": 0.07,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-12 21:22:17', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-12 21:22:17', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
+            "stderr_tail": "",
+            "returncode": 0
+          }
+        },
+        "json_persistence_audit": {
+          "atomic_write_helper_enabled": true,
+          "tri_lane_helper_backed_files": [
+            "fts_callback_event_store.py",
+            "fts_control_tower.py",
+            "fts_execution_ledger.py",
+            "fts_execution_state_machine.py",
+            "fts_live_watchlist_loader.py",
+            "fts_live_watchlist_promoter.py",
+            "fts_live_watchlist_registry.py",
+            "fts_reconciliation_engine.py",
+            "fts_repair_workflow_engine.py",
+            "fts_tri_lane_orchestrator.py"
+          ],
+          "tri_lane_direct_json_write_files": [],
+          "risk_ok": true
+        },
+        "tri_lane_completion_audit": {
+          "control_tower": {
+            "tri_lane_orchestrator_hooked": false,
+            "tri_lane_stage_status_present": false,
+            "deep_full_split_complete": false
+          },
+          "repair_mutator": {
+            "repair_workflow_engine_present": true,
+            "ledger_mutation_present": true,
+            "state_machine_repair_present": true,
+            "fully_automated_mutator_complete": true
+          }
+        },
+        "training_dataset_audit": {
+          "present": true,
+          "status": "ok",
+          "rows_generated": 5682,
+          "tickers_requested": 8,
+          "error_tickers": []
         }
       }
     },
     "level2_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\level2_mainline_runtime.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:07",
+        "generated_at": "2026-04-12 21:24:17",
         "module_version": "v83_level2_mainline_integrated",
         "status": "mainline_degraded",
         "etl": [
@@ -3041,7 +3266,7 @@
             "mode": "subprocess",
             "returncode": 0,
             "error": "",
-            "stdout_tail": "✅ 法人籌碼 CSV 與 SQL 之間沒有待補的舊資料。\n========================================================\n🧩 開機先執行：月營收 CSV → SQL 本地補資料\n========================================================\n❌ 月營收本地 CSV 補 SQL 失敗：('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.月營收簡表'。 (208) (SQLExecDirectW); [42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：日期條件未達成。\n\n⚪ [月更雷達] 月營收上網補抓：尚未到可抓取時間 18:30，目前 17:11。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+            "stdout_tail": "\n⚪ [日更雷達] 法人籌碼上網補抓：日期條件未達成。\n\n🟢 [月更雷達] 月營收上網補抓：符合條件，可立即補跑。\n==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-03\n✅ 月營收筆數：1052\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1052 筆\n❌ 月營收模組發生異常：('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.月營收簡表'。 (208) (SQLExecDirectW); [42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -3065,7 +3290,7 @@
             "mode": "subprocess",
             "returncode": 0,
             "error": "",
-            "stdout_tail": "[17:11:55] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[17:11:55] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+            "stdout_tail": "[21:22:38] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[21:22:38] ✅ yahoo_csv_to_sql 第二級主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -3078,7 +3303,7 @@
           "mode": "inprocess",
           "returncode": null,
           "error": "",
-          "stdout_tail": "  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 873, in read_csv\n    return _read(filepath_or_buffer, kwds)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 300, in _read\n    parser = TextFileReader(filepath_or_buffer, **kwds)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1645, in __init__\n    self._engine = self._make_engine(f, self.engine)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py\", line 1922, in _make_engine\n    return mapping[engine](f, **self.options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\blue1\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\pandas\\io\\parsers\\c_parser_wrapper.py\", line 95, in __init__\n    self._reader = parsers.TextReader(src, **kwds)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"pandas/_libs/parsers.pyx\", line 575, in pandas._libs.parsers.TextReader.__cinit__\npandas.errors.EmptyDataError: No columns to parse from file\n\n🛑 AI 訓練異常，管線中斷！\n📊 已生成系統日誌 daily_report.json",
+          "stdout_tail": "🗓️ 系統判定：今日為週日，啟動【例行性 AI 大腦重塑】！\n\n🧠 階段：重訓 AI 模型\n\n⏳ 階段：特徵生成\n🚀 執行 ml_data_generator.py（第 1 次）\n🧪 training data builder status: ok | rows=5682\n📄 report: runtime\\training_data_builder.json\n\n✅ 完成 ml_data_generator.py（87.6s）\n\n⏳ 階段：模型訓練\n🚀 執行 ml_trainer.py（第 1 次）\n✅ 完成 ml_trainer.py（10.3s）\n✅ 驗證通過：兵工廠成功掛載 3 顆 AI 大腦！\n🌤️ 大盤氣候判定：多頭順風，允許標準火力。\n🌍 市場氣候：多頭順風 | 風險倍率：1.00\n📡 啟動動態索敵雷達：正在從 SQL 資料庫獲取監控名單...\n🛑 致命錯誤：無法連線 SQL 或獲取動態名單！詳細原因: ('42S02', \"[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]無效的物件名稱 'dbo.每日籌碼資料'。 (208) (SQLExecDirectW)\")\n📊 已生成系統日誌 daily_report.json",
           "stderr_tail": "",
           "seconds": 0.0,
           "skipped": false
@@ -3090,83 +3315,91 @@
     "training_governance_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "module_version": "v83_training_governance_mainline_hardened",
         "system_name": "正式交易主控版_v83_official_main",
         "orchestrator_status": "training_governed_v83",
-        "training_readiness_pct": 49,
+        "training_readiness_pct": 78,
         "backend": {
           "executed": false,
           "status": "summary_only",
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\trainer_backend_report.json",
           "report": {
-            "generated_at": "2026-04-11 00:35:17",
+            "generated_at": "2026-04-12 21:24:13",
             "status": "trained",
             "dataset_path": "data\\ml_training_data.csv",
             "rows_total": 5682,
             "rows_train": 4546,
             "rows_out_of_time": 1136,
-            "selected_features_count": 4,
+            "selected_features_count": 12,
             "selected_features": [
-              "MACD_Hist",
               "Score_Gap",
+              "Regime_TrendStrength_X_ScoreGap",
+              "MACD_Hist",
               "Volume_Z20",
-              "Regime_TrendStrength_X_ScoreGap"
+              "Gap_Pct",
+              "Distance_To_Range_Top",
+              "MA_Slope_Flatness",
+              "buy_c6",
+              "Score_Gap_X_Distance_To_Range_Top",
+              "Score_Gap_X_MA_Slope_Flatness",
+              "MACD_Hist_X_Distance_To_Range_Top",
+              "MACD_Hist_X_MA_Slope_Flatness"
             ],
-            "feature_to_sample_ratio": 0.0008798944126704796,
+            "feature_to_sample_ratio": 0.0026396832380114386,
             "walk_forward_summary": {
-              "ret_mean": -0.06411746367239106,
-              "hit_rate_mean": 0.20026420079260238,
-              "pf_mean": 0.9692084997902753,
-              "coverage_mean": 0.4520475561426684,
+              "ret_mean": -0.02920581241743725,
+              "hit_rate_mean": 0.18467635402906207,
+              "pf_mean": 1.0257391303405246,
+              "coverage_mean": 0.4145310435931308,
               "effective_splits": 5,
-              "score": -5.442537867448831
+              "score": -1.8948421114032004
             },
             "walk_forward_results": [
               {
-                "hit_rate": 0.14002642007926025,
-                "avg_return": -0.008215455746367235,
-                "pred_accuracy": 0.5852047556142669,
-                "profit_factor": 0.9844233280142907,
-                "coverage": 0.31836195508586523
+                "hit_rate": 0.13870541611624834,
+                "avg_return": 0.06540462351387055,
+                "pred_accuracy": 0.5799207397622193,
+                "profit_factor": 1.1259837851344565,
+                "coverage": 0.3130779392338177
               },
               {
-                "hit_rate": 0.23645970937912814,
-                "avg_return": 0.3086413474240422,
-                "pred_accuracy": 0.5653896961690885,
-                "profit_factor": 1.4138906874307464,
-                "coverage": 0.44517833553500663
+                "hit_rate": 0.20343461030383092,
+                "avg_return": 0.3576886393659181,
+                "pred_accuracy": 0.571994715984148,
+                "profit_factor": 1.5581393287535332,
+                "coverage": 0.3910171730515192
               },
               {
-                "hit_rate": 0.22192866578599735,
-                "avg_return": -0.2785430647291942,
-                "pred_accuracy": 0.5270805812417437,
-                "profit_factor": 0.7383168001286715,
-                "coverage": 0.5257595772787318
+                "hit_rate": 0.2047556142668428,
+                "avg_return": -0.22944557463672388,
+                "pred_accuracy": 0.5521796565389696,
+                "profit_factor": 0.7480806575621575,
+                "coverage": 0.4715984147952444
               },
               {
-                "hit_rate": 0.17040951122853368,
-                "avg_return": -0.44385455746367247,
-                "pred_accuracy": 0.43989431968295906,
-                "profit_factor": 0.5797617759678515,
-                "coverage": 0.4583883751651255
+                "hit_rate": 0.15852047556142668,
+                "avg_return": -0.4379660501981506,
+                "pred_accuracy": 0.45970937912813736,
+                "profit_factor": 0.5596426406435369,
+                "coverage": 0.4200792602377807
               },
               {
-                "hit_rate": 0.23249669749009247,
-                "avg_return": 0.10138441215323643,
-                "pred_accuracy": 0.5389696169088507,
-                "profit_factor": 1.1296499074098165,
-                "coverage": 0.512549537648613
+                "hit_rate": 0.21796565389696168,
+                "avg_return": 0.09828929986789958,
+                "pred_accuracy": 0.5535006605019815,
+                "profit_factor": 1.1368492396089391,
+                "coverage": 0.47688243064729197
               }
             ],
             "out_of_time": {
-              "hit_rate": 0.20862676056338028,
-              "avg_return": -0.3039169894366197,
-              "pred_accuracy": 0.4762323943661972,
-              "profit_factor": 0.7069591594503442,
-              "coverage": 0.5096830985915493
+              "hit_rate": 0.22535211267605634,
+              "avg_return": -0.18784366197183097,
+              "pred_accuracy": 0.5132042253521126,
+              "profit_factor": 0.8064291455711963,
+              "coverage": 0.5079225352112676
             },
-            "overfit_gap": 0.23979952576422864,
+            "overfit_gap": 0.15863784955439372,
             "leakage_guards": {
               "feature_selection_train_only": true,
               "purged_walk_forward": true,
@@ -3174,31 +3407,280 @@
             },
             "class_balance_train": 0.40519137703475583,
             "class_balance_oot": 0.44014084507042256,
+            "feature_selection_preview": [
+              {
+                "feature": "Score_Gap",
+                "bucket": "signal_score",
+                "priority": 0,
+                "hit_rate": 0.5224373075230972,
+                "avg_return": 0.5018818961724593,
+                "profit_factor": 1.2974196202313666,
+                "expectancy": 0.5018818961724593,
+                "score": 57.91141919687129,
+                "corr_abs": 0.10071844208151624,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "Regime_TrendStrength_X_ScoreGap",
+                "bucket": "interaction",
+                "priority": 1,
+                "hit_rate": 0.5224373075230972,
+                "avg_return": 0.5018818961724593,
+                "profit_factor": 1.2974196202313666,
+                "expectancy": 0.5018818961724593,
+                "score": 57.9048609169845,
+                "corr_abs": 0.09765927574128679,
+                "active_ratio": 0.9995600527936648
+              },
+              {
+                "feature": "MACD_Hist",
+                "bucket": "momentum",
+                "priority": 0,
+                "hit_rate": 0.5145182578090629,
+                "avg_return": 0.37423922129344483,
+                "profit_factor": 1.2136952631287274,
+                "expectancy": 0.37423922129344483,
+                "score": 44.88760490034856,
+                "corr_abs": 0.052402464892365046,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "Volume_Z20",
+                "bucket": "tradeability",
+                "priority": 1,
+                "hit_rate": 0.5169379674439067,
+                "avg_return": 0.013134601847778255,
+                "profit_factor": 1.0067990550766515,
+                "expectancy": 0.013134601847778255,
+                "score": 8.500263207647485,
+                "corr_abs": 0.007621869510229736,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Return_Z20",
+                "bucket": "momentum",
+                "priority": 1,
+                "hit_rate": 0.49692036955565333,
+                "avg_return": -0.04209509458864934,
+                "profit_factor": 0.9785167990511858,
+                "expectancy": -0.04209509458864934,
+                "score": 2.764647548223523,
+                "corr_abs": 0.015527979073628614,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Intraday_Return",
+                "bucket": "price_action",
+                "priority": 1,
+                "hit_rate": 0.4903211614606247,
+                "avg_return": -0.061022943246810374,
+                "profit_factor": 0.9690066800861045,
+                "expectancy": -0.061022943246810374,
+                "score": 0.7270357337415909,
+                "corr_abs": 0.021010787276488797,
+                "active_ratio": 0.9150901891772987
+              },
+              {
+                "feature": "Gap_Pct",
+                "bucket": "price_action",
+                "priority": 1,
+                "hit_rate": 0.47822261328640564,
+                "avg_return": -0.0751543554773427,
+                "profit_factor": 0.9619658807204301,
+                "expectancy": -0.0751543554773427,
+                "score": -0.851957979409958,
+                "corr_abs": 0.042242865359353836,
+                "active_ratio": 0.8347998240211175
+              },
+              {
+                "feature": "Overnight_Return",
+                "bucket": "price_action",
+                "priority": 1,
+                "hit_rate": 0.47822261328640564,
+                "avg_return": -0.0751543554773427,
+                "profit_factor": 0.9619658807204301,
+                "expectancy": -0.0751543554773427,
+                "score": -0.851957979409958,
+                "corr_abs": 0.042242865359353836,
+                "active_ratio": 0.8347998240211175
+              },
+              {
+                "feature": "Distance_To_Range_Top",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.68854370888392,
+                "corr_abs": 0.09847216552969966,
+                "active_ratio": 0.9582050153981522
+              },
+              {
+                "feature": "RSI",
+                "bucket": "momentum",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.690375131605826,
+                "corr_abs": 0.07720889587574183,
+                "active_ratio": 0.9989001319841619
+              },
+              {
+                "feature": "Range_Position_Pct",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.694704964729038,
+                "corr_abs": 0.08780244829785737,
+                "active_ratio": 0.973383194016718
+              },
+              {
+                "feature": "ADV20_Proxy",
+                "bucket": "tradeability",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.70519895735187,
+                "corr_abs": 0.07155677182805989,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Distance_To_Range_Bottom",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.715985426375713,
+                "corr_abs": 0.08387141237113253,
+                "active_ratio": 0.9599648042234932
+              },
+              {
+                "feature": "ATR14",
+                "bucket": "volatility",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.786119751274875,
+                "corr_abs": 0.028786652033298478,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "RealizedVol_20",
+                "bucket": "volatility",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.803237092026496,
+                "corr_abs": 0.0225377044907488,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Trend_Confidence",
+                "bucket": "regime_confidence",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.806240866084817,
+                "corr_abs": 0.02103581746158728,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "BB_Width",
+                "bucket": "volatility",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.808802227462646,
+                "corr_abs": 0.01744541393941207,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "ATR_Pct_Pctl",
+                "bucket": "volatility",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.8112318500475,
+                "corr_abs": 0.01623060264698711,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "ATR_Pctl_252",
+                "bucket": "volatility",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.812394382257203,
+                "corr_abs": 0.01564933654213479,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "Range_Width_Pct",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.813090306863547,
+                "corr_abs": 0.01530137423896326,
+                "active_ratio": 1.0
+              }
+            ],
+            "warnings": [
+              "oot_profit_factor_below_floor",
+              "oot_hit_rate_below_floor"
+            ],
             "promotion": {
-              "status": "promoted_best",
-              "version": "trained_20260411_003519"
+              "status": "restored_pretrain",
+              "version": "pretrain_20260412_212407",
+              "reason": "promotion_floor_not_met"
             },
             "regimes": {
               "趨勢多頭": {
                 "status": "SAVE",
-                "rows": 2861,
-                "feature_count": 4
+                "rows": 2048,
+                "feature_count": 12
               },
               "區間盤整": {
                 "status": "SAVE",
-                "rows": 622,
-                "feature_count": 4
+                "rows": 1089,
+                "feature_count": 12
               },
               "趨勢空頭": {
                 "status": "SAVE",
-                "rows": 1063,
-                "feature_count": 4
+                "rows": 1409,
+                "feature_count": 12
               }
-            }
+            },
+            "overall_score": -15.724415924851336,
+            "promotion_ready": false
           }
         },
         "training_integrity": {
-          "generated_at": "2026-04-12 17:12:09",
+          "generated_at": "2026-04-12 21:24:19",
           "thresholds": {
             "min_oot_hit_rate": 0.5,
             "min_oot_profit_factor": 1.0,
@@ -3206,73 +3688,81 @@
             "max_feature_to_sample_ratio": 0.35
           },
           "training_report": {
-            "generated_at": "2026-04-11 00:35:17",
+            "generated_at": "2026-04-12 21:24:13",
             "status": "trained",
             "dataset_path": "data\\ml_training_data.csv",
             "rows_total": 5682,
             "rows_train": 4546,
             "rows_out_of_time": 1136,
-            "selected_features_count": 4,
+            "selected_features_count": 12,
             "selected_features": [
-              "MACD_Hist",
               "Score_Gap",
+              "Regime_TrendStrength_X_ScoreGap",
+              "MACD_Hist",
               "Volume_Z20",
-              "Regime_TrendStrength_X_ScoreGap"
+              "Gap_Pct",
+              "Distance_To_Range_Top",
+              "MA_Slope_Flatness",
+              "buy_c6",
+              "Score_Gap_X_Distance_To_Range_Top",
+              "Score_Gap_X_MA_Slope_Flatness",
+              "MACD_Hist_X_Distance_To_Range_Top",
+              "MACD_Hist_X_MA_Slope_Flatness"
             ],
-            "feature_to_sample_ratio": 0.0008798944126704796,
+            "feature_to_sample_ratio": 0.0026396832380114386,
             "walk_forward_summary": {
-              "ret_mean": -0.06411746367239106,
-              "hit_rate_mean": 0.20026420079260238,
-              "pf_mean": 0.9692084997902753,
-              "coverage_mean": 0.4520475561426684,
+              "ret_mean": -0.02920581241743725,
+              "hit_rate_mean": 0.18467635402906207,
+              "pf_mean": 1.0257391303405246,
+              "coverage_mean": 0.4145310435931308,
               "effective_splits": 5,
-              "score": -5.442537867448831
+              "score": -1.8948421114032004
             },
             "walk_forward_results": [
               {
-                "hit_rate": 0.14002642007926025,
-                "avg_return": -0.008215455746367235,
-                "pred_accuracy": 0.5852047556142669,
-                "profit_factor": 0.9844233280142907,
-                "coverage": 0.31836195508586523
+                "hit_rate": 0.13870541611624834,
+                "avg_return": 0.06540462351387055,
+                "pred_accuracy": 0.5799207397622193,
+                "profit_factor": 1.1259837851344565,
+                "coverage": 0.3130779392338177
               },
               {
-                "hit_rate": 0.23645970937912814,
-                "avg_return": 0.3086413474240422,
-                "pred_accuracy": 0.5653896961690885,
-                "profit_factor": 1.4138906874307464,
-                "coverage": 0.44517833553500663
+                "hit_rate": 0.20343461030383092,
+                "avg_return": 0.3576886393659181,
+                "pred_accuracy": 0.571994715984148,
+                "profit_factor": 1.5581393287535332,
+                "coverage": 0.3910171730515192
               },
               {
-                "hit_rate": 0.22192866578599735,
-                "avg_return": -0.2785430647291942,
-                "pred_accuracy": 0.5270805812417437,
-                "profit_factor": 0.7383168001286715,
-                "coverage": 0.5257595772787318
+                "hit_rate": 0.2047556142668428,
+                "avg_return": -0.22944557463672388,
+                "pred_accuracy": 0.5521796565389696,
+                "profit_factor": 0.7480806575621575,
+                "coverage": 0.4715984147952444
               },
               {
-                "hit_rate": 0.17040951122853368,
-                "avg_return": -0.44385455746367247,
-                "pred_accuracy": 0.43989431968295906,
-                "profit_factor": 0.5797617759678515,
-                "coverage": 0.4583883751651255
+                "hit_rate": 0.15852047556142668,
+                "avg_return": -0.4379660501981506,
+                "pred_accuracy": 0.45970937912813736,
+                "profit_factor": 0.5596426406435369,
+                "coverage": 0.4200792602377807
               },
               {
-                "hit_rate": 0.23249669749009247,
-                "avg_return": 0.10138441215323643,
-                "pred_accuracy": 0.5389696169088507,
-                "profit_factor": 1.1296499074098165,
-                "coverage": 0.512549537648613
+                "hit_rate": 0.21796565389696168,
+                "avg_return": 0.09828929986789958,
+                "pred_accuracy": 0.5535006605019815,
+                "profit_factor": 1.1368492396089391,
+                "coverage": 0.47688243064729197
               }
             ],
             "out_of_time": {
-              "hit_rate": 0.20862676056338028,
-              "avg_return": -0.3039169894366197,
-              "pred_accuracy": 0.4762323943661972,
-              "profit_factor": 0.7069591594503442,
-              "coverage": 0.5096830985915493
+              "hit_rate": 0.22535211267605634,
+              "avg_return": -0.18784366197183097,
+              "pred_accuracy": 0.5132042253521126,
+              "profit_factor": 0.8064291455711963,
+              "coverage": 0.5079225352112676
             },
-            "overfit_gap": 0.23979952576422864,
+            "overfit_gap": 0.15863784955439372,
             "leakage_guards": {
               "feature_selection_train_only": true,
               "purged_walk_forward": true,
@@ -3280,27 +3770,276 @@
             },
             "class_balance_train": 0.40519137703475583,
             "class_balance_oot": 0.44014084507042256,
+            "feature_selection_preview": [
+              {
+                "feature": "Score_Gap",
+                "bucket": "signal_score",
+                "priority": 0,
+                "hit_rate": 0.5224373075230972,
+                "avg_return": 0.5018818961724593,
+                "profit_factor": 1.2974196202313666,
+                "expectancy": 0.5018818961724593,
+                "score": 57.91141919687129,
+                "corr_abs": 0.10071844208151624,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "Regime_TrendStrength_X_ScoreGap",
+                "bucket": "interaction",
+                "priority": 1,
+                "hit_rate": 0.5224373075230972,
+                "avg_return": 0.5018818961724593,
+                "profit_factor": 1.2974196202313666,
+                "expectancy": 0.5018818961724593,
+                "score": 57.9048609169845,
+                "corr_abs": 0.09765927574128679,
+                "active_ratio": 0.9995600527936648
+              },
+              {
+                "feature": "MACD_Hist",
+                "bucket": "momentum",
+                "priority": 0,
+                "hit_rate": 0.5145182578090629,
+                "avg_return": 0.37423922129344483,
+                "profit_factor": 1.2136952631287274,
+                "expectancy": 0.37423922129344483,
+                "score": 44.88760490034856,
+                "corr_abs": 0.052402464892365046,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "Volume_Z20",
+                "bucket": "tradeability",
+                "priority": 1,
+                "hit_rate": 0.5169379674439067,
+                "avg_return": 0.013134601847778255,
+                "profit_factor": 1.0067990550766515,
+                "expectancy": 0.013134601847778255,
+                "score": 8.500263207647485,
+                "corr_abs": 0.007621869510229736,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Return_Z20",
+                "bucket": "momentum",
+                "priority": 1,
+                "hit_rate": 0.49692036955565333,
+                "avg_return": -0.04209509458864934,
+                "profit_factor": 0.9785167990511858,
+                "expectancy": -0.04209509458864934,
+                "score": 2.764647548223523,
+                "corr_abs": 0.015527979073628614,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Intraday_Return",
+                "bucket": "price_action",
+                "priority": 1,
+                "hit_rate": 0.4903211614606247,
+                "avg_return": -0.061022943246810374,
+                "profit_factor": 0.9690066800861045,
+                "expectancy": -0.061022943246810374,
+                "score": 0.7270357337415909,
+                "corr_abs": 0.021010787276488797,
+                "active_ratio": 0.9150901891772987
+              },
+              {
+                "feature": "Gap_Pct",
+                "bucket": "price_action",
+                "priority": 1,
+                "hit_rate": 0.47822261328640564,
+                "avg_return": -0.0751543554773427,
+                "profit_factor": 0.9619658807204301,
+                "expectancy": -0.0751543554773427,
+                "score": -0.851957979409958,
+                "corr_abs": 0.042242865359353836,
+                "active_ratio": 0.8347998240211175
+              },
+              {
+                "feature": "Overnight_Return",
+                "bucket": "price_action",
+                "priority": 1,
+                "hit_rate": 0.47822261328640564,
+                "avg_return": -0.0751543554773427,
+                "profit_factor": 0.9619658807204301,
+                "expectancy": -0.0751543554773427,
+                "score": -0.851957979409958,
+                "corr_abs": 0.042242865359353836,
+                "active_ratio": 0.8347998240211175
+              },
+              {
+                "feature": "Distance_To_Range_Top",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.68854370888392,
+                "corr_abs": 0.09847216552969966,
+                "active_ratio": 0.9582050153981522
+              },
+              {
+                "feature": "RSI",
+                "bucket": "momentum",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.690375131605826,
+                "corr_abs": 0.07720889587574183,
+                "active_ratio": 0.9989001319841619
+              },
+              {
+                "feature": "Range_Position_Pct",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.694704964729038,
+                "corr_abs": 0.08780244829785737,
+                "active_ratio": 0.973383194016718
+              },
+              {
+                "feature": "ADV20_Proxy",
+                "bucket": "tradeability",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.70519895735187,
+                "corr_abs": 0.07155677182805989,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Distance_To_Range_Bottom",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.715985426375713,
+                "corr_abs": 0.08387141237113253,
+                "active_ratio": 0.9599648042234932
+              },
+              {
+                "feature": "ATR14",
+                "bucket": "volatility",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.786119751274875,
+                "corr_abs": 0.028786652033298478,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "RealizedVol_20",
+                "bucket": "volatility",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.803237092026496,
+                "corr_abs": 0.0225377044907488,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "Trend_Confidence",
+                "bucket": "regime_confidence",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.806240866084817,
+                "corr_abs": 0.02103581746158728,
+                "active_ratio": 0.9953805543334799
+              },
+              {
+                "feature": "BB_Width",
+                "bucket": "volatility",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.808802227462646,
+                "corr_abs": 0.01744541393941207,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "ATR_Pct_Pctl",
+                "bucket": "volatility",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.8112318500475,
+                "corr_abs": 0.01623060264698711,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "ATR_Pctl_252",
+                "bucket": "volatility",
+                "priority": 1,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.812394382257203,
+                "corr_abs": 0.01564933654213479,
+                "active_ratio": 1.0
+              },
+              {
+                "feature": "Range_Width_Pct",
+                "bucket": "directional_range",
+                "priority": 0,
+                "hit_rate": 0.4335679718433788,
+                "avg_return": -0.2605342938847338,
+                "profit_factor": 0.8740566146981221,
+                "expectancy": -0.2605342938847338,
+                "score": -19.813090306863547,
+                "corr_abs": 0.01530137423896326,
+                "active_ratio": 1.0
+              }
+            ],
+            "warnings": [
+              "oot_profit_factor_below_floor",
+              "oot_hit_rate_below_floor"
+            ],
             "promotion": {
-              "status": "promoted_best",
-              "version": "trained_20260411_003519"
+              "status": "restored_pretrain",
+              "version": "pretrain_20260412_212407",
+              "reason": "promotion_floor_not_met"
             },
             "regimes": {
               "趨勢多頭": {
                 "status": "SAVE",
-                "rows": 2861,
-                "feature_count": 4
+                "rows": 2048,
+                "feature_count": 12
               },
               "區間盤整": {
                 "status": "SAVE",
-                "rows": 622,
-                "feature_count": 4
+                "rows": 1089,
+                "feature_count": 12
               },
               "趨勢空頭": {
                 "status": "SAVE",
-                "rows": 1063,
-                "feature_count": 4
+                "rows": 1409,
+                "feature_count": 12
               }
-            }
+            },
+            "overall_score": -15.724415924851336,
+            "promotion_ready": false
           },
           "failures": [
             "overfit_gap_too_large"
@@ -3313,7 +4052,7 @@
           "status": "training_integrity_blocked"
         },
         "candidate_evaluation": {
-          "generated_at": "2026-04-12 17:12:09",
+          "generated_at": "2026-04-12 21:24:19",
           "system_name": "正式交易主控版_v83_official_main",
           "thresholds": {
             "min_win_rate": 0.5,
@@ -3323,15 +4062,15 @@
             "max_shadow_return_drift_pct": 0.08
           },
           "metrics": {
-            "win_rate": 0.20862676056338028,
-            "profit_factor": 0.7069591594503442,
+            "win_rate": 0.22535211267605634,
+            "profit_factor": 0.8064291455711963,
             "max_drawdown_pct": 0.08
           },
           "walk_forward": {
-            "score": -5.442537867448831
+            "score": -1.8948421114032004
           },
           "shadow_result": {
-            "return_drift_pct": 0.23979952576422864
+            "return_drift_pct": 0.15863784955439372
           },
           "failures": [
             "win_rate_below_threshold",
@@ -3346,7 +4085,7 @@
           "status": "candidate_blocked"
         },
         "live_health": {
-          "generated_at": "2026-04-12 17:12:09",
+          "generated_at": "2026-04-12 21:24:19",
           "thresholds": {
             "min_live_win_rate": 0.42,
             "max_consecutive_losses": 5,
@@ -3383,7 +4122,7 @@
     "model_registry": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_registry_runtime.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "models_dir": "C:\\test\\test-2026-3-22OK\\models",
         "candidates": [
@@ -3413,14 +4152,14 @@
             "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
             "is_file": true,
             "is_dir": false,
-            "size_bytes": 14858
+            "size_bytes": 31869
           },
           {
             "name": "model_registry.json",
             "path": "C:\\test\\test-2026-3-22OK\\models\\model_registry.json",
             "is_file": true,
             "is_dir": false,
-            "size_bytes": 32488
+            "size_bytes": 71928
           },
           {
             "name": "model_區間盤整.pkl",
@@ -4469,9 +5208,1209 @@
               "metrics": {},
               "note": "重訓前自動備份（任務收尾版）",
               "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_171353",
+              "timestamp": "2026-04-12 17:13:53",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_171357",
+              "timestamp": "2026-04-12 17:13:57",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_171400",
+              "timestamp": "2026-04-12 17:14:00",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_171407",
+              "timestamp": "2026-04-12 17:14:07",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_195100",
+              "timestamp": "2026-04-12 19:51:00",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_200413",
+              "timestamp": "2026-04-12 20:04:13",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_200416",
+              "timestamp": "2026-04-12 20:04:16",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_200419",
+              "timestamp": "2026-04-12 20:04:19",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_200426",
+              "timestamp": "2026-04-12 20:04:26",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_200722",
+              "timestamp": "2026-04-12 20:07:22",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_201908",
+              "timestamp": "2026-04-12 20:19:08",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_202013",
+              "timestamp": "2026-04-12 20:20:13",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_202023",
+              "timestamp": "2026-04-12 20:20:23",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_202337",
+              "timestamp": "2026-04-12 20:23:37",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_203036",
+              "timestamp": "2026-04-12 20:30:36",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_203116",
+              "timestamp": "2026-04-12 20:31:16",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_210053",
+              "timestamp": "2026-04-12 21:00:53",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "trained_20260412_210058",
+              "timestamp": "2026-04-12 21:00:58",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 286,
+                  "sha256": "186faf71aa2e9a794ca7bf33d0b4d8758e11213ffe9d588628e390007994b627"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1919865,
+                  "sha256": "42c07a9265d1a72dad3d2eae5da12bd8c4b0dfc335c77396900c39a2d652bf95"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1318265,
+                  "sha256": "054fa70f455ad2191b135233d1f100cfa5a4f12a376f5e4dde238d61e22cbd33"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1621145,
+                  "sha256": "bc768f6898475bf4dbf72a7a42f6532aaad5be79baa0baeb7ba3fc9cb8c41de1"
+                }
+              ],
+              "metrics": {
+                "overall_score": -15.7244,
+                "out_of_time": {
+                  "hit_rate": 0.22535211267605634,
+                  "avg_return": -0.18784366197183097,
+                  "pred_accuracy": 0.5132042253521126,
+                  "profit_factor": 0.8064291455711963,
+                  "coverage": 0.5079225352112676
+                },
+                "walk_forward": {
+                  "ret_mean": -0.02920581241743725,
+                  "hit_rate_mean": 0.18467635402906207,
+                  "pf_mean": 1.0257391303405246,
+                  "coverage_mean": 0.4145310435931308,
+                  "effective_splits": 5,
+                  "score": -1.8948421114032004
+                },
+                "feature_count": 12
+              },
+              "note": "任務收尾版訓練完成快照",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_210259",
+              "timestamp": "2026-04-12 21:02:59",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "trained_20260412_210304",
+              "timestamp": "2026-04-12 21:03:04",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 286,
+                  "sha256": "186faf71aa2e9a794ca7bf33d0b4d8758e11213ffe9d588628e390007994b627"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1919865,
+                  "sha256": "42c07a9265d1a72dad3d2eae5da12bd8c4b0dfc335c77396900c39a2d652bf95"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1318265,
+                  "sha256": "054fa70f455ad2191b135233d1f100cfa5a4f12a376f5e4dde238d61e22cbd33"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1621145,
+                  "sha256": "bc768f6898475bf4dbf72a7a42f6532aaad5be79baa0baeb7ba3fc9cb8c41de1"
+                }
+              ],
+              "metrics": {
+                "overall_score": -15.7244,
+                "out_of_time": {
+                  "hit_rate": 0.22535211267605634,
+                  "avg_return": -0.18784366197183097,
+                  "pred_accuracy": 0.5132042253521126,
+                  "profit_factor": 0.8064291455711963,
+                  "coverage": 0.5079225352112676
+                },
+                "walk_forward": {
+                  "ret_mean": -0.02920581241743725,
+                  "hit_rate_mean": 0.18467635402906207,
+                  "pf_mean": 1.0257391303405246,
+                  "coverage_mean": 0.4145310435931308,
+                  "effective_splits": 5,
+                  "score": -1.8948421114032004
+                },
+                "feature_count": 12
+              },
+              "note": "任務收尾版訓練完成快照",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_210511",
+              "timestamp": "2026-04-12 21:05:11",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "trained_20260412_210520",
+              "timestamp": "2026-04-12 21:05:21",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 286,
+                  "sha256": "186faf71aa2e9a794ca7bf33d0b4d8758e11213ffe9d588628e390007994b627"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1919865,
+                  "sha256": "42c07a9265d1a72dad3d2eae5da12bd8c4b0dfc335c77396900c39a2d652bf95"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1318265,
+                  "sha256": "054fa70f455ad2191b135233d1f100cfa5a4f12a376f5e4dde238d61e22cbd33"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1621145,
+                  "sha256": "bc768f6898475bf4dbf72a7a42f6532aaad5be79baa0baeb7ba3fc9cb8c41de1"
+                }
+              ],
+              "metrics": {
+                "overall_score": -15.7244,
+                "out_of_time": {
+                  "hit_rate": 0.22535211267605634,
+                  "avg_return": -0.18784366197183097,
+                  "pred_accuracy": 0.5132042253521126,
+                  "profit_factor": 0.8064291455711963,
+                  "coverage": 0.5079225352112676
+                },
+                "walk_forward": {
+                  "ret_mean": -0.02920581241743725,
+                  "hit_rate_mean": 0.18467635402906207,
+                  "pf_mean": 1.0257391303405246,
+                  "coverage_mean": 0.4145310435931308,
+                  "effective_splits": 5,
+                  "score": -1.8948421114032004
+                },
+                "feature_count": 12
+              },
+              "note": "任務收尾版訓練完成快照",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_211758",
+              "timestamp": "2026-04-12 21:17:58",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "trained_20260412_211806",
+              "timestamp": "2026-04-12 21:18:06",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 286,
+                  "sha256": "186faf71aa2e9a794ca7bf33d0b4d8758e11213ffe9d588628e390007994b627"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1919865,
+                  "sha256": "42c07a9265d1a72dad3d2eae5da12bd8c4b0dfc335c77396900c39a2d652bf95"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1318265,
+                  "sha256": "054fa70f455ad2191b135233d1f100cfa5a4f12a376f5e4dde238d61e22cbd33"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1621145,
+                  "sha256": "bc768f6898475bf4dbf72a7a42f6532aaad5be79baa0baeb7ba3fc9cb8c41de1"
+                }
+              ],
+              "metrics": {
+                "overall_score": -15.7244,
+                "out_of_time": {
+                  "hit_rate": 0.22535211267605634,
+                  "avg_return": -0.18784366197183097,
+                  "pred_accuracy": 0.5132042253521126,
+                  "profit_factor": 0.8064291455711963,
+                  "coverage": 0.5079225352112676
+                },
+                "walk_forward": {
+                  "ret_mean": -0.02920581241743725,
+                  "hit_rate_mean": 0.18467635402906207,
+                  "pf_mean": 1.0257391303405246,
+                  "coverage_mean": 0.4145310435931308,
+                  "effective_splits": 5,
+                  "score": -1.8948421114032004
+                },
+                "feature_count": 12
+              },
+              "note": "任務收尾版訓練完成快照",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_212022",
+              "timestamp": "2026-04-12 21:20:22",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "trained_20260412_212031",
+              "timestamp": "2026-04-12 21:20:31",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 286,
+                  "sha256": "186faf71aa2e9a794ca7bf33d0b4d8758e11213ffe9d588628e390007994b627"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1919865,
+                  "sha256": "42c07a9265d1a72dad3d2eae5da12bd8c4b0dfc335c77396900c39a2d652bf95"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1318265,
+                  "sha256": "054fa70f455ad2191b135233d1f100cfa5a4f12a376f5e4dde238d61e22cbd33"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1621145,
+                  "sha256": "bc768f6898475bf4dbf72a7a42f6532aaad5be79baa0baeb7ba3fc9cb8c41de1"
+                }
+              ],
+              "metrics": {
+                "overall_score": -15.7244,
+                "out_of_time": {
+                  "hit_rate": 0.22535211267605634,
+                  "avg_return": -0.18784366197183097,
+                  "pred_accuracy": 0.5132042253521126,
+                  "profit_factor": 0.8064291455711963,
+                  "coverage": 0.5079225352112676
+                },
+                "walk_forward": {
+                  "ret_mean": -0.02920581241743725,
+                  "hit_rate_mean": 0.18467635402906207,
+                  "pf_mean": 1.0257391303405246,
+                  "coverage_mean": 0.4145310435931308,
+                  "effective_splits": 5,
+                  "score": -1.8948421114032004
+                },
+                "feature_count": 12
+              },
+              "note": "任務收尾版訓練完成快照",
+              "status": "snapshot"
+            },
+            {
+              "version": "pretrain_20260412_212407",
+              "timestamp": "2026-04-12 21:24:07",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 87,
+                  "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 2177417,
+                  "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1293737,
+                  "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1641577,
+                  "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+                }
+              ],
+              "metrics": {},
+              "note": "重訓前自動備份（任務收尾版）",
+              "status": "snapshot"
+            },
+            {
+              "version": "trained_20260412_212415",
+              "timestamp": "2026-04-12 21:24:16",
+              "files": [
+                "selected_features.pkl",
+                "model_趨勢多頭.pkl",
+                "model_區間盤整.pkl",
+                "model_趨勢空頭.pkl"
+              ],
+              "artifacts": [
+                {
+                  "name": "selected_features.pkl",
+                  "exists": true,
+                  "size_bytes": 286,
+                  "sha256": "186faf71aa2e9a794ca7bf33d0b4d8758e11213ffe9d588628e390007994b627"
+                },
+                {
+                  "name": "model_趨勢多頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1919865,
+                  "sha256": "42c07a9265d1a72dad3d2eae5da12bd8c4b0dfc335c77396900c39a2d652bf95"
+                },
+                {
+                  "name": "model_區間盤整.pkl",
+                  "exists": true,
+                  "size_bytes": 1318265,
+                  "sha256": "054fa70f455ad2191b135233d1f100cfa5a4f12a376f5e4dde238d61e22cbd33"
+                },
+                {
+                  "name": "model_趨勢空頭.pkl",
+                  "exists": true,
+                  "size_bytes": 1621145,
+                  "sha256": "bc768f6898475bf4dbf72a7a42f6532aaad5be79baa0baeb7ba3fc9cb8c41de1"
+                }
+              ],
+              "metrics": {
+                "overall_score": -15.7244,
+                "out_of_time": {
+                  "hit_rate": 0.22535211267605634,
+                  "avg_return": -0.18784366197183097,
+                  "pred_accuracy": 0.5132042253521126,
+                  "profit_factor": 0.8064291455711963,
+                  "coverage": 0.5079225352112676
+                },
+                "walk_forward": {
+                  "ret_mean": -0.02920581241743725,
+                  "hit_rate_mean": 0.18467635402906207,
+                  "pf_mean": 1.0257391303405246,
+                  "coverage_mean": 0.4145310435931308,
+                  "effective_splits": 5,
+                  "score": -1.8948421114032004
+                },
+                "feature_count": 12
+              },
+              "note": "任務收尾版訓練完成快照",
+              "status": "snapshot"
             }
           ],
-          "current_version": "pretrain_20260412_171205",
+          "current_version": "pretrain_20260412_212407",
           "best_version": "trained_20260411_003519",
           "last_candidate_version": null,
           "last_shadow_version": null,
@@ -4482,87 +6421,95 @@
     "model_selection_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_selection_gate.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_model_linkage": true,
         "governance": {
-          "generated_at": "2026-04-12 17:12:09",
+          "generated_at": "2026-04-12 21:24:19",
           "module_version": "v83_training_governance_mainline_hardened",
           "system_name": "正式交易主控版_v83_official_main",
           "orchestrator_status": "training_governed_v83",
-          "training_readiness_pct": 49,
+          "training_readiness_pct": 78,
           "backend": {
             "executed": false,
             "status": "summary_only",
             "path": "C:\\test\\test-2026-3-22OK\\runtime\\trainer_backend_report.json",
             "report": {
-              "generated_at": "2026-04-11 00:35:17",
+              "generated_at": "2026-04-12 21:24:13",
               "status": "trained",
               "dataset_path": "data\\ml_training_data.csv",
               "rows_total": 5682,
               "rows_train": 4546,
               "rows_out_of_time": 1136,
-              "selected_features_count": 4,
+              "selected_features_count": 12,
               "selected_features": [
-                "MACD_Hist",
                 "Score_Gap",
+                "Regime_TrendStrength_X_ScoreGap",
+                "MACD_Hist",
                 "Volume_Z20",
-                "Regime_TrendStrength_X_ScoreGap"
+                "Gap_Pct",
+                "Distance_To_Range_Top",
+                "MA_Slope_Flatness",
+                "buy_c6",
+                "Score_Gap_X_Distance_To_Range_Top",
+                "Score_Gap_X_MA_Slope_Flatness",
+                "MACD_Hist_X_Distance_To_Range_Top",
+                "MACD_Hist_X_MA_Slope_Flatness"
               ],
-              "feature_to_sample_ratio": 0.0008798944126704796,
+              "feature_to_sample_ratio": 0.0026396832380114386,
               "walk_forward_summary": {
-                "ret_mean": -0.06411746367239106,
-                "hit_rate_mean": 0.20026420079260238,
-                "pf_mean": 0.9692084997902753,
-                "coverage_mean": 0.4520475561426684,
+                "ret_mean": -0.02920581241743725,
+                "hit_rate_mean": 0.18467635402906207,
+                "pf_mean": 1.0257391303405246,
+                "coverage_mean": 0.4145310435931308,
                 "effective_splits": 5,
-                "score": -5.442537867448831
+                "score": -1.8948421114032004
               },
               "walk_forward_results": [
                 {
-                  "hit_rate": 0.14002642007926025,
-                  "avg_return": -0.008215455746367235,
-                  "pred_accuracy": 0.5852047556142669,
-                  "profit_factor": 0.9844233280142907,
-                  "coverage": 0.31836195508586523
+                  "hit_rate": 0.13870541611624834,
+                  "avg_return": 0.06540462351387055,
+                  "pred_accuracy": 0.5799207397622193,
+                  "profit_factor": 1.1259837851344565,
+                  "coverage": 0.3130779392338177
                 },
                 {
-                  "hit_rate": 0.23645970937912814,
-                  "avg_return": 0.3086413474240422,
-                  "pred_accuracy": 0.5653896961690885,
-                  "profit_factor": 1.4138906874307464,
-                  "coverage": 0.44517833553500663
+                  "hit_rate": 0.20343461030383092,
+                  "avg_return": 0.3576886393659181,
+                  "pred_accuracy": 0.571994715984148,
+                  "profit_factor": 1.5581393287535332,
+                  "coverage": 0.3910171730515192
                 },
                 {
-                  "hit_rate": 0.22192866578599735,
-                  "avg_return": -0.2785430647291942,
-                  "pred_accuracy": 0.5270805812417437,
-                  "profit_factor": 0.7383168001286715,
-                  "coverage": 0.5257595772787318
+                  "hit_rate": 0.2047556142668428,
+                  "avg_return": -0.22944557463672388,
+                  "pred_accuracy": 0.5521796565389696,
+                  "profit_factor": 0.7480806575621575,
+                  "coverage": 0.4715984147952444
                 },
                 {
-                  "hit_rate": 0.17040951122853368,
-                  "avg_return": -0.44385455746367247,
-                  "pred_accuracy": 0.43989431968295906,
-                  "profit_factor": 0.5797617759678515,
-                  "coverage": 0.4583883751651255
+                  "hit_rate": 0.15852047556142668,
+                  "avg_return": -0.4379660501981506,
+                  "pred_accuracy": 0.45970937912813736,
+                  "profit_factor": 0.5596426406435369,
+                  "coverage": 0.4200792602377807
                 },
                 {
-                  "hit_rate": 0.23249669749009247,
-                  "avg_return": 0.10138441215323643,
-                  "pred_accuracy": 0.5389696169088507,
-                  "profit_factor": 1.1296499074098165,
-                  "coverage": 0.512549537648613
+                  "hit_rate": 0.21796565389696168,
+                  "avg_return": 0.09828929986789958,
+                  "pred_accuracy": 0.5535006605019815,
+                  "profit_factor": 1.1368492396089391,
+                  "coverage": 0.47688243064729197
                 }
               ],
               "out_of_time": {
-                "hit_rate": 0.20862676056338028,
-                "avg_return": -0.3039169894366197,
-                "pred_accuracy": 0.4762323943661972,
-                "profit_factor": 0.7069591594503442,
-                "coverage": 0.5096830985915493
+                "hit_rate": 0.22535211267605634,
+                "avg_return": -0.18784366197183097,
+                "pred_accuracy": 0.5132042253521126,
+                "profit_factor": 0.8064291455711963,
+                "coverage": 0.5079225352112676
               },
-              "overfit_gap": 0.23979952576422864,
+              "overfit_gap": 0.15863784955439372,
               "leakage_guards": {
                 "feature_selection_train_only": true,
                 "purged_walk_forward": true,
@@ -4570,31 +6517,280 @@
               },
               "class_balance_train": 0.40519137703475583,
               "class_balance_oot": 0.44014084507042256,
+              "feature_selection_preview": [
+                {
+                  "feature": "Score_Gap",
+                  "bucket": "signal_score",
+                  "priority": 0,
+                  "hit_rate": 0.5224373075230972,
+                  "avg_return": 0.5018818961724593,
+                  "profit_factor": 1.2974196202313666,
+                  "expectancy": 0.5018818961724593,
+                  "score": 57.91141919687129,
+                  "corr_abs": 0.10071844208151624,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "Regime_TrendStrength_X_ScoreGap",
+                  "bucket": "interaction",
+                  "priority": 1,
+                  "hit_rate": 0.5224373075230972,
+                  "avg_return": 0.5018818961724593,
+                  "profit_factor": 1.2974196202313666,
+                  "expectancy": 0.5018818961724593,
+                  "score": 57.9048609169845,
+                  "corr_abs": 0.09765927574128679,
+                  "active_ratio": 0.9995600527936648
+                },
+                {
+                  "feature": "MACD_Hist",
+                  "bucket": "momentum",
+                  "priority": 0,
+                  "hit_rate": 0.5145182578090629,
+                  "avg_return": 0.37423922129344483,
+                  "profit_factor": 1.2136952631287274,
+                  "expectancy": 0.37423922129344483,
+                  "score": 44.88760490034856,
+                  "corr_abs": 0.052402464892365046,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "Volume_Z20",
+                  "bucket": "tradeability",
+                  "priority": 1,
+                  "hit_rate": 0.5169379674439067,
+                  "avg_return": 0.013134601847778255,
+                  "profit_factor": 1.0067990550766515,
+                  "expectancy": 0.013134601847778255,
+                  "score": 8.500263207647485,
+                  "corr_abs": 0.007621869510229736,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Return_Z20",
+                  "bucket": "momentum",
+                  "priority": 1,
+                  "hit_rate": 0.49692036955565333,
+                  "avg_return": -0.04209509458864934,
+                  "profit_factor": 0.9785167990511858,
+                  "expectancy": -0.04209509458864934,
+                  "score": 2.764647548223523,
+                  "corr_abs": 0.015527979073628614,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Intraday_Return",
+                  "bucket": "price_action",
+                  "priority": 1,
+                  "hit_rate": 0.4903211614606247,
+                  "avg_return": -0.061022943246810374,
+                  "profit_factor": 0.9690066800861045,
+                  "expectancy": -0.061022943246810374,
+                  "score": 0.7270357337415909,
+                  "corr_abs": 0.021010787276488797,
+                  "active_ratio": 0.9150901891772987
+                },
+                {
+                  "feature": "Gap_Pct",
+                  "bucket": "price_action",
+                  "priority": 1,
+                  "hit_rate": 0.47822261328640564,
+                  "avg_return": -0.0751543554773427,
+                  "profit_factor": 0.9619658807204301,
+                  "expectancy": -0.0751543554773427,
+                  "score": -0.851957979409958,
+                  "corr_abs": 0.042242865359353836,
+                  "active_ratio": 0.8347998240211175
+                },
+                {
+                  "feature": "Overnight_Return",
+                  "bucket": "price_action",
+                  "priority": 1,
+                  "hit_rate": 0.47822261328640564,
+                  "avg_return": -0.0751543554773427,
+                  "profit_factor": 0.9619658807204301,
+                  "expectancy": -0.0751543554773427,
+                  "score": -0.851957979409958,
+                  "corr_abs": 0.042242865359353836,
+                  "active_ratio": 0.8347998240211175
+                },
+                {
+                  "feature": "Distance_To_Range_Top",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.68854370888392,
+                  "corr_abs": 0.09847216552969966,
+                  "active_ratio": 0.9582050153981522
+                },
+                {
+                  "feature": "RSI",
+                  "bucket": "momentum",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.690375131605826,
+                  "corr_abs": 0.07720889587574183,
+                  "active_ratio": 0.9989001319841619
+                },
+                {
+                  "feature": "Range_Position_Pct",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.694704964729038,
+                  "corr_abs": 0.08780244829785737,
+                  "active_ratio": 0.973383194016718
+                },
+                {
+                  "feature": "ADV20_Proxy",
+                  "bucket": "tradeability",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.70519895735187,
+                  "corr_abs": 0.07155677182805989,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Distance_To_Range_Bottom",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.715985426375713,
+                  "corr_abs": 0.08387141237113253,
+                  "active_ratio": 0.9599648042234932
+                },
+                {
+                  "feature": "ATR14",
+                  "bucket": "volatility",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.786119751274875,
+                  "corr_abs": 0.028786652033298478,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "RealizedVol_20",
+                  "bucket": "volatility",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.803237092026496,
+                  "corr_abs": 0.0225377044907488,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Trend_Confidence",
+                  "bucket": "regime_confidence",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.806240866084817,
+                  "corr_abs": 0.02103581746158728,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "BB_Width",
+                  "bucket": "volatility",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.808802227462646,
+                  "corr_abs": 0.01744541393941207,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "ATR_Pct_Pctl",
+                  "bucket": "volatility",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.8112318500475,
+                  "corr_abs": 0.01623060264698711,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "ATR_Pctl_252",
+                  "bucket": "volatility",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.812394382257203,
+                  "corr_abs": 0.01564933654213479,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "Range_Width_Pct",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.813090306863547,
+                  "corr_abs": 0.01530137423896326,
+                  "active_ratio": 1.0
+                }
+              ],
+              "warnings": [
+                "oot_profit_factor_below_floor",
+                "oot_hit_rate_below_floor"
+              ],
               "promotion": {
-                "status": "promoted_best",
-                "version": "trained_20260411_003519"
+                "status": "restored_pretrain",
+                "version": "pretrain_20260412_212407",
+                "reason": "promotion_floor_not_met"
               },
               "regimes": {
                 "趨勢多頭": {
                   "status": "SAVE",
-                  "rows": 2861,
-                  "feature_count": 4
+                  "rows": 2048,
+                  "feature_count": 12
                 },
                 "區間盤整": {
                   "status": "SAVE",
-                  "rows": 622,
-                  "feature_count": 4
+                  "rows": 1089,
+                  "feature_count": 12
                 },
                 "趨勢空頭": {
                   "status": "SAVE",
-                  "rows": 1063,
-                  "feature_count": 4
+                  "rows": 1409,
+                  "feature_count": 12
                 }
-              }
+              },
+              "overall_score": -15.724415924851336,
+              "promotion_ready": false
             }
           },
           "training_integrity": {
-            "generated_at": "2026-04-12 17:12:09",
+            "generated_at": "2026-04-12 21:24:19",
             "thresholds": {
               "min_oot_hit_rate": 0.5,
               "min_oot_profit_factor": 1.0,
@@ -4602,73 +6798,81 @@
               "max_feature_to_sample_ratio": 0.35
             },
             "training_report": {
-              "generated_at": "2026-04-11 00:35:17",
+              "generated_at": "2026-04-12 21:24:13",
               "status": "trained",
               "dataset_path": "data\\ml_training_data.csv",
               "rows_total": 5682,
               "rows_train": 4546,
               "rows_out_of_time": 1136,
-              "selected_features_count": 4,
+              "selected_features_count": 12,
               "selected_features": [
-                "MACD_Hist",
                 "Score_Gap",
+                "Regime_TrendStrength_X_ScoreGap",
+                "MACD_Hist",
                 "Volume_Z20",
-                "Regime_TrendStrength_X_ScoreGap"
+                "Gap_Pct",
+                "Distance_To_Range_Top",
+                "MA_Slope_Flatness",
+                "buy_c6",
+                "Score_Gap_X_Distance_To_Range_Top",
+                "Score_Gap_X_MA_Slope_Flatness",
+                "MACD_Hist_X_Distance_To_Range_Top",
+                "MACD_Hist_X_MA_Slope_Flatness"
               ],
-              "feature_to_sample_ratio": 0.0008798944126704796,
+              "feature_to_sample_ratio": 0.0026396832380114386,
               "walk_forward_summary": {
-                "ret_mean": -0.06411746367239106,
-                "hit_rate_mean": 0.20026420079260238,
-                "pf_mean": 0.9692084997902753,
-                "coverage_mean": 0.4520475561426684,
+                "ret_mean": -0.02920581241743725,
+                "hit_rate_mean": 0.18467635402906207,
+                "pf_mean": 1.0257391303405246,
+                "coverage_mean": 0.4145310435931308,
                 "effective_splits": 5,
-                "score": -5.442537867448831
+                "score": -1.8948421114032004
               },
               "walk_forward_results": [
                 {
-                  "hit_rate": 0.14002642007926025,
-                  "avg_return": -0.008215455746367235,
-                  "pred_accuracy": 0.5852047556142669,
-                  "profit_factor": 0.9844233280142907,
-                  "coverage": 0.31836195508586523
+                  "hit_rate": 0.13870541611624834,
+                  "avg_return": 0.06540462351387055,
+                  "pred_accuracy": 0.5799207397622193,
+                  "profit_factor": 1.1259837851344565,
+                  "coverage": 0.3130779392338177
                 },
                 {
-                  "hit_rate": 0.23645970937912814,
-                  "avg_return": 0.3086413474240422,
-                  "pred_accuracy": 0.5653896961690885,
-                  "profit_factor": 1.4138906874307464,
-                  "coverage": 0.44517833553500663
+                  "hit_rate": 0.20343461030383092,
+                  "avg_return": 0.3576886393659181,
+                  "pred_accuracy": 0.571994715984148,
+                  "profit_factor": 1.5581393287535332,
+                  "coverage": 0.3910171730515192
                 },
                 {
-                  "hit_rate": 0.22192866578599735,
-                  "avg_return": -0.2785430647291942,
-                  "pred_accuracy": 0.5270805812417437,
-                  "profit_factor": 0.7383168001286715,
-                  "coverage": 0.5257595772787318
+                  "hit_rate": 0.2047556142668428,
+                  "avg_return": -0.22944557463672388,
+                  "pred_accuracy": 0.5521796565389696,
+                  "profit_factor": 0.7480806575621575,
+                  "coverage": 0.4715984147952444
                 },
                 {
-                  "hit_rate": 0.17040951122853368,
-                  "avg_return": -0.44385455746367247,
-                  "pred_accuracy": 0.43989431968295906,
-                  "profit_factor": 0.5797617759678515,
-                  "coverage": 0.4583883751651255
+                  "hit_rate": 0.15852047556142668,
+                  "avg_return": -0.4379660501981506,
+                  "pred_accuracy": 0.45970937912813736,
+                  "profit_factor": 0.5596426406435369,
+                  "coverage": 0.4200792602377807
                 },
                 {
-                  "hit_rate": 0.23249669749009247,
-                  "avg_return": 0.10138441215323643,
-                  "pred_accuracy": 0.5389696169088507,
-                  "profit_factor": 1.1296499074098165,
-                  "coverage": 0.512549537648613
+                  "hit_rate": 0.21796565389696168,
+                  "avg_return": 0.09828929986789958,
+                  "pred_accuracy": 0.5535006605019815,
+                  "profit_factor": 1.1368492396089391,
+                  "coverage": 0.47688243064729197
                 }
               ],
               "out_of_time": {
-                "hit_rate": 0.20862676056338028,
-                "avg_return": -0.3039169894366197,
-                "pred_accuracy": 0.4762323943661972,
-                "profit_factor": 0.7069591594503442,
-                "coverage": 0.5096830985915493
+                "hit_rate": 0.22535211267605634,
+                "avg_return": -0.18784366197183097,
+                "pred_accuracy": 0.5132042253521126,
+                "profit_factor": 0.8064291455711963,
+                "coverage": 0.5079225352112676
               },
-              "overfit_gap": 0.23979952576422864,
+              "overfit_gap": 0.15863784955439372,
               "leakage_guards": {
                 "feature_selection_train_only": true,
                 "purged_walk_forward": true,
@@ -4676,27 +6880,276 @@
               },
               "class_balance_train": 0.40519137703475583,
               "class_balance_oot": 0.44014084507042256,
+              "feature_selection_preview": [
+                {
+                  "feature": "Score_Gap",
+                  "bucket": "signal_score",
+                  "priority": 0,
+                  "hit_rate": 0.5224373075230972,
+                  "avg_return": 0.5018818961724593,
+                  "profit_factor": 1.2974196202313666,
+                  "expectancy": 0.5018818961724593,
+                  "score": 57.91141919687129,
+                  "corr_abs": 0.10071844208151624,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "Regime_TrendStrength_X_ScoreGap",
+                  "bucket": "interaction",
+                  "priority": 1,
+                  "hit_rate": 0.5224373075230972,
+                  "avg_return": 0.5018818961724593,
+                  "profit_factor": 1.2974196202313666,
+                  "expectancy": 0.5018818961724593,
+                  "score": 57.9048609169845,
+                  "corr_abs": 0.09765927574128679,
+                  "active_ratio": 0.9995600527936648
+                },
+                {
+                  "feature": "MACD_Hist",
+                  "bucket": "momentum",
+                  "priority": 0,
+                  "hit_rate": 0.5145182578090629,
+                  "avg_return": 0.37423922129344483,
+                  "profit_factor": 1.2136952631287274,
+                  "expectancy": 0.37423922129344483,
+                  "score": 44.88760490034856,
+                  "corr_abs": 0.052402464892365046,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "Volume_Z20",
+                  "bucket": "tradeability",
+                  "priority": 1,
+                  "hit_rate": 0.5169379674439067,
+                  "avg_return": 0.013134601847778255,
+                  "profit_factor": 1.0067990550766515,
+                  "expectancy": 0.013134601847778255,
+                  "score": 8.500263207647485,
+                  "corr_abs": 0.007621869510229736,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Return_Z20",
+                  "bucket": "momentum",
+                  "priority": 1,
+                  "hit_rate": 0.49692036955565333,
+                  "avg_return": -0.04209509458864934,
+                  "profit_factor": 0.9785167990511858,
+                  "expectancy": -0.04209509458864934,
+                  "score": 2.764647548223523,
+                  "corr_abs": 0.015527979073628614,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Intraday_Return",
+                  "bucket": "price_action",
+                  "priority": 1,
+                  "hit_rate": 0.4903211614606247,
+                  "avg_return": -0.061022943246810374,
+                  "profit_factor": 0.9690066800861045,
+                  "expectancy": -0.061022943246810374,
+                  "score": 0.7270357337415909,
+                  "corr_abs": 0.021010787276488797,
+                  "active_ratio": 0.9150901891772987
+                },
+                {
+                  "feature": "Gap_Pct",
+                  "bucket": "price_action",
+                  "priority": 1,
+                  "hit_rate": 0.47822261328640564,
+                  "avg_return": -0.0751543554773427,
+                  "profit_factor": 0.9619658807204301,
+                  "expectancy": -0.0751543554773427,
+                  "score": -0.851957979409958,
+                  "corr_abs": 0.042242865359353836,
+                  "active_ratio": 0.8347998240211175
+                },
+                {
+                  "feature": "Overnight_Return",
+                  "bucket": "price_action",
+                  "priority": 1,
+                  "hit_rate": 0.47822261328640564,
+                  "avg_return": -0.0751543554773427,
+                  "profit_factor": 0.9619658807204301,
+                  "expectancy": -0.0751543554773427,
+                  "score": -0.851957979409958,
+                  "corr_abs": 0.042242865359353836,
+                  "active_ratio": 0.8347998240211175
+                },
+                {
+                  "feature": "Distance_To_Range_Top",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.68854370888392,
+                  "corr_abs": 0.09847216552969966,
+                  "active_ratio": 0.9582050153981522
+                },
+                {
+                  "feature": "RSI",
+                  "bucket": "momentum",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.690375131605826,
+                  "corr_abs": 0.07720889587574183,
+                  "active_ratio": 0.9989001319841619
+                },
+                {
+                  "feature": "Range_Position_Pct",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.694704964729038,
+                  "corr_abs": 0.08780244829785737,
+                  "active_ratio": 0.973383194016718
+                },
+                {
+                  "feature": "ADV20_Proxy",
+                  "bucket": "tradeability",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.70519895735187,
+                  "corr_abs": 0.07155677182805989,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Distance_To_Range_Bottom",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.715985426375713,
+                  "corr_abs": 0.08387141237113253,
+                  "active_ratio": 0.9599648042234932
+                },
+                {
+                  "feature": "ATR14",
+                  "bucket": "volatility",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.786119751274875,
+                  "corr_abs": 0.028786652033298478,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "RealizedVol_20",
+                  "bucket": "volatility",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.803237092026496,
+                  "corr_abs": 0.0225377044907488,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "Trend_Confidence",
+                  "bucket": "regime_confidence",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.806240866084817,
+                  "corr_abs": 0.02103581746158728,
+                  "active_ratio": 0.9953805543334799
+                },
+                {
+                  "feature": "BB_Width",
+                  "bucket": "volatility",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.808802227462646,
+                  "corr_abs": 0.01744541393941207,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "ATR_Pct_Pctl",
+                  "bucket": "volatility",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.8112318500475,
+                  "corr_abs": 0.01623060264698711,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "ATR_Pctl_252",
+                  "bucket": "volatility",
+                  "priority": 1,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.812394382257203,
+                  "corr_abs": 0.01564933654213479,
+                  "active_ratio": 1.0
+                },
+                {
+                  "feature": "Range_Width_Pct",
+                  "bucket": "directional_range",
+                  "priority": 0,
+                  "hit_rate": 0.4335679718433788,
+                  "avg_return": -0.2605342938847338,
+                  "profit_factor": 0.8740566146981221,
+                  "expectancy": -0.2605342938847338,
+                  "score": -19.813090306863547,
+                  "corr_abs": 0.01530137423896326,
+                  "active_ratio": 1.0
+                }
+              ],
+              "warnings": [
+                "oot_profit_factor_below_floor",
+                "oot_hit_rate_below_floor"
+              ],
               "promotion": {
-                "status": "promoted_best",
-                "version": "trained_20260411_003519"
+                "status": "restored_pretrain",
+                "version": "pretrain_20260412_212407",
+                "reason": "promotion_floor_not_met"
               },
               "regimes": {
                 "趨勢多頭": {
                   "status": "SAVE",
-                  "rows": 2861,
-                  "feature_count": 4
+                  "rows": 2048,
+                  "feature_count": 12
                 },
                 "區間盤整": {
                   "status": "SAVE",
-                  "rows": 622,
-                  "feature_count": 4
+                  "rows": 1089,
+                  "feature_count": 12
                 },
                 "趨勢空頭": {
                   "status": "SAVE",
-                  "rows": 1063,
-                  "feature_count": 4
+                  "rows": 1409,
+                  "feature_count": 12
                 }
-              }
+              },
+              "overall_score": -15.724415924851336,
+              "promotion_ready": false
             },
             "failures": [
               "overfit_gap_too_large"
@@ -4709,7 +7162,7 @@
             "status": "training_integrity_blocked"
           },
           "candidate_evaluation": {
-            "generated_at": "2026-04-12 17:12:09",
+            "generated_at": "2026-04-12 21:24:19",
             "system_name": "正式交易主控版_v83_official_main",
             "thresholds": {
               "min_win_rate": 0.5,
@@ -4719,15 +7172,15 @@
               "max_shadow_return_drift_pct": 0.08
             },
             "metrics": {
-              "win_rate": 0.20862676056338028,
-              "profit_factor": 0.7069591594503442,
+              "win_rate": 0.22535211267605634,
+              "profit_factor": 0.8064291455711963,
               "max_drawdown_pct": 0.08
             },
             "walk_forward": {
-              "score": -5.442537867448831
+              "score": -1.8948421114032004
             },
             "shadow_result": {
-              "return_drift_pct": 0.23979952576422864
+              "return_drift_pct": 0.15863784955439372
             },
             "failures": [
               "win_rate_below_threshold",
@@ -4742,7 +7195,7 @@
             "status": "candidate_blocked"
           },
           "live_health": {
-            "generated_at": "2026-04-12 17:12:09",
+            "generated_at": "2026-04-12 21:24:19",
             "thresholds": {
               "min_live_win_rate": 0.42,
               "max_consecutive_losses": 5,
@@ -4813,7 +7266,7 @@
     "launch_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\launch_gate.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_execution": true,
         "failures": [],
@@ -4840,7 +7293,7 @@
     "live_safety_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_safety_gate.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -4860,7 +7313,7 @@
     "broker_approval_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_approval_gate.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -4873,7 +7326,7 @@
     "submission_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\submission_contract_gate.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_submission_contract": true,
         "failures": [],
@@ -4893,7 +7346,7 @@
     "validation_suite": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\validation_suite_report.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": {
           "launch_gate": true,
@@ -4914,45 +7367,30 @@
     "reconciliation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
-        "system_name": "正式交易主控版_v83_official_main",
-        "summary": {
-          "local_orders": 0,
-          "broker_orders": 0,
-          "local_fills": 0,
-          "broker_fills": 0,
-          "local_positions": 0,
-          "broker_positions": 0,
-          "order_mismatch_count": 0,
-          "fill_mismatch_count": 0,
-          "position_mismatch_count": 0,
-          "corporate_action_suspect_count": 0,
-          "orphan_broker_orders": 0,
-          "orphan_broker_fills": 0,
-          "cash_matched": true,
-          "all_green": true,
-          "broker_status_mix": {}
+        "generated_at": "2026-04-12 21:24:19",
+        "status": "reconciled",
+        "order_issue_count": 0,
+        "issues": [],
+        "lane_issue_breakdown": {},
+        "cash_diff": 0.0,
+        "directional_order_mix": {},
+        "directional_fill_mix": {},
+        "repair_workflow": {
+          "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+          "payload": {
+            "generated_at": "2026-04-12 21:24:19",
+            "status": "repair_workflow_executed",
+            "executed_actions": [],
+            "count": 0
+          }
         },
-        "cash_check": {
-          "local_cash": 3000000.0,
-          "broker_cash": 3000000.0,
-          "cash_diff": 0.0,
-          "matched": true
-        },
-        "order_mismatches": [],
-        "fill_mismatches": [],
-        "position_mismatches": [],
-        "corporate_action_suspects": [],
-        "orphan_broker_orders": [],
-        "orphan_broker_fills": [],
-        "repair_actions": [],
-        "status": "reconciliation_green"
+        "directional_repair_actions": []
       }
     },
     "recovery": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_plan.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "snapshot_found": true,
         "broker_snapshot_found": false,
@@ -4972,7 +7410,7 @@
     "recovery_validation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_validation.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": [
           {
@@ -5014,14 +7452,14 @@
     "live_release_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_release_gate.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "status": "live_release_blocked",
-        "allow_pre_live_dryrun": true,
+        "allow_pre_live_dryrun": false,
         "allow_live": false,
         "checks": {
           "promotion_clear": false,
           "safety_clear": true,
-          "reconciliation_green": true,
+          "reconciliation_green": false,
           "recovery_ready": true,
           "broker_contract_defined": true,
           "operator_approved": false
@@ -5086,7 +7524,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\interface_audit.json",
       "payload": {
-        "generated_at": "2026-04-12 17:12:09",
+        "generated_at": "2026-04-12 21:24:19",
         "system_name": "正式交易主控版_v83_official_main",
         "aligned": {
           "etl_to_main_control": true,
