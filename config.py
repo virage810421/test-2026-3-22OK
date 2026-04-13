@@ -182,19 +182,28 @@ PARAMS.setdefault("ENABLE_DIRECTIONAL_MODEL_LOADING", True)
 PARAMS.setdefault("ENABLE_DIRECTIONAL_WATCHLIST_IN_LIVE", True)
 
 
-# ---- deepest tri-lane orchestration / repair mutator ----
-PARAMS.setdefault("ENABLE_TRI_LANE_FULL_STAGE_SPLIT", True)
-PARAMS.setdefault("ENABLE_DIRECTIONAL_REPAIR_MUTATOR", True)
-PARAMS.setdefault("ENABLE_DIRECTIONAL_REPAIR_AUTO_EXECUTE", True)
-PARAMS.setdefault("ENABLE_DIRECTIONAL_BROKER_LEDGER_SHADOW", True)
-PARAMS.setdefault("TRI_LANE_STAGE_LIST", [
-    "promotion",
-    "watchlist_load",
-    "model_loading",
-    "candidate_filter",
-    "callback_pipeline",
-    "state_machine",
-    "ledger",
-    "reconciliation",
-    "repair_execution",
-])
+# ---- directional strengthening pack ----
+PARAMS.setdefault("ENABLE_DIRECTIONAL_ARTIFACT_BOOTSTRAP", True)
+PARAMS.setdefault("DIRECTIONAL_BOOTSTRAP_FORCE_SHARED", True)
+PARAMS.setdefault("DIRECTIONAL_SEED_FROM_CORE_WATCHLIST", True)
+PARAMS.setdefault("DIRECTIONAL_SCOREBOARD_AUTO_BUILD", True)
+PARAMS.setdefault("DIRECTIONAL_PROMOTION_MIN_COUNT", 3)
+PARAMS.setdefault("LONG_SEED_SCORE", 0.35)
+PARAMS.setdefault("SHORT_SEED_SCORE", 0.25)
+PARAMS.setdefault("RANGE_SEED_SCORE", 0.25)
+PARAMS.setdefault("SHORT_FALLBACK_FROM_CORE", True)
+PARAMS.setdefault("RANGE_FALLBACK_FROM_CORE", True)
+PARAMS.setdefault("LIVE_WATCHLIST_SHORT_MAX_NAMES", max(int(PARAMS.get("LIVE_WATCHLIST_SHORT_MAX_NAMES", 8)), 5))
+PARAMS.setdefault("LIVE_WATCHLIST_RANGE_MAX_NAMES", max(int(PARAMS.get("LIVE_WATCHLIST_RANGE_MAX_NAMES", 8)), 5))
+
+# ---- long/range activation + short/range event flow ----
+PARAMS.setdefault("LIVE_WATCHLIST_MIN_PER_LANE_LONG", 2)
+PARAMS.setdefault("LIVE_WATCHLIST_MIN_PER_LANE_SHORT", 2)
+PARAMS.setdefault("LIVE_WATCHLIST_MIN_PER_LANE_RANGE", 2)
+PARAMS.setdefault("LIVE_WATCHLIST_UNKNOWN_SECTOR_SOFT_CAP", True)
+PARAMS.setdefault("DIRECTIONAL_DECISION_AUGMENT", True)
+PARAMS.setdefault("DIRECTIONAL_DECISION_AUGMENT_MAX_PER_LANE", 2)
+PARAMS.setdefault("DIRECTIONAL_DECISION_AUGMENT_USE_SCREENING", True)
+PARAMS.setdefault("DIRECTIONAL_SYNTHETIC_KELLY", 0.03)
+PARAMS.setdefault("LONG_SEED_SCORE", max(float(PARAMS.get("LONG_SEED_SCORE", 0.35)), 0.45))
+PARAMS.setdefault("RANGE_SEED_SCORE", max(float(PARAMS.get("RANGE_SEED_SCORE", 0.25)), 0.35))

@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -54,15 +58,59 @@ except Exception:
         except Exception:
             return default
 
+    @contextmanager
+    def _file_lock(path: Path, timeout: float = 5.0, poll: float = 0.05):
+        lock_path = Path(str(path) + '.lock')
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        start = time.time()
+        fd = None
+        while True:
+            try:
+                fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_RDWR)
+                break
+            except FileExistsError:
+                if time.time() - start > timeout:
+                    raise TimeoutError(f'Lock timeout: {lock_path}')
+                time.sleep(poll)
+        try:
+            yield lock_path
+        finally:
+            try:
+                if fd is not None:
+                    os.close(fd)
+            except Exception:
+                pass
+            try:
+                lock_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+
     def write_json(path: Path, payload: Any) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        serialized = json.dumps(payload, ensure_ascii=False, indent=2)
+        with _file_lock(path):
+            fd, tmp_name = tempfile.mkstemp(prefix=path.name + '.', suffix='.tmp', dir=str(path.parent))
+            try:
+                with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                    f.write(serialized)
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.replace(tmp_name, path)
+            finally:
+                try:
+                    Path(tmp_name).unlink(missing_ok=True)
+                except Exception:
+                    pass
         return path
 
     def append_jsonl(path: Path, payload: Any) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, 'a', encoding='utf-8') as f:
-            f.write(json.dumps(payload, ensure_ascii=False) + '\n')
+        line = json.dumps(payload, ensure_ascii=False) + '\n'
+        with _file_lock(path):
+            with open(path, 'a', encoding='utf-8') as f:
+                f.write(line)
+                f.flush()
+                os.fsync(f.fileno())
         return path
 
     def safe_float(value: Any, default: float = 0.0) -> float:

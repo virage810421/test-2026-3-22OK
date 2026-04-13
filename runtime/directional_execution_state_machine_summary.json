@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-04-12 21:48:25",
+  "status": "state_machine_ready",
+  "lane_order_counts": {
+    "LONG": 1,
+    "SHORT": 0,
+    "RANGE": 0,
+    "UNKNOWN": 0
+  }
+}

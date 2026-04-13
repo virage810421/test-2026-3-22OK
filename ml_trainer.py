@@ -74,8 +74,20 @@ def evaluate_stability(results):
     }
 
 
+
 def train_models():
-    return _backend.train_models()
+    result = _backend.train_models()
+    try:
+        from fts_directional_artifact_bootstrap import bootstrap_directional_artifacts
+        bootstrap_directional_artifacts(force=False)
+    except Exception:
+        pass
+    try:
+        from fts_training_ticker_scoreboard import build_scoreboard
+        build_scoreboard()
+    except Exception:
+        pass
+    return result
 
 
 if __name__ == '__main__':

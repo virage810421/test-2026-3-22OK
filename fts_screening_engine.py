@@ -80,8 +80,8 @@ class ScreeningEngine:
     def _infer_regime(df: pd.DataFrame, params: dict[str, Any]) -> pd.DataFrame:
         out = df.copy()
         close = pd.to_numeric(out['Close'], errors='coerce').fillna(0.0)
-        ma20 = pd.to_numeric(out['MA20'], errors='coerce').fillna(method='bfill').fillna(close)
-        ma60 = pd.to_numeric(out['MA60'], errors='coerce').fillna(method='bfill').fillna(ma20)
+        ma20 = pd.to_numeric(out['MA20'], errors='coerce').bfill().fillna(close)
+        ma60 = pd.to_numeric(out['MA60'], errors='coerce').bfill().fillna(ma20)
         adx = pd.to_numeric(out['ADX14'], errors='coerce').fillna(20.0)
         atr_pct = pd.to_numeric(out['ATR_Pct'], errors='coerce').fillna(0.0)
         atr_pctl = pd.to_numeric(out['ATR_Pct_Pctl'], errors='coerce').fillna(0.5)

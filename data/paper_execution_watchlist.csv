@@ -1,4 +1,4 @@
 ﻿Ticker,Action,Reference_Price,Target_Qty,MarketRuleReason,SizingReason,Client_Order_ID
-2330.TW,SELL,1950.0,72,ok_odd_lot_allowed,paper_odd_lot_min_of_risk_cap,CL-20260410-E143E66A86D289E7
-2471.TW,SELL,52.0,1000,ok,strict_min_of_risk_cap,CL-20260410-E7A05F97FB76AF63
-2467.TW,SELL,449.0,185,ok_odd_lot_allowed,paper_odd_lot_min_of_risk_cap,CL-20260410-1FB30619976D5C0F
+2330.TW,SELL,1950.0,72,ok_odd_lot_allowed,paper_odd_lot_min_of_risk_cap,CL-20260413-EA25ECA40205B5E5
+2471.TW,SELL,52.0,1000,ok,strict_min_of_risk_cap,CL-20260413-BFF60D1A1D2C5720
+2467.TW,SELL,449.0,185,ok_odd_lot_allowed,paper_odd_lot_min_of_risk_cap,CL-20260413-691433A3CBC86F76

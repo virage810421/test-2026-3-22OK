@@ -1,0 +1,14 @@
+這包修復你最新實際跑出來的問題：
+1. fts_chip_enrichment_service.py 的 __future__ 位置錯誤
+2. fts_project_healthcheck.py 缺少 _training_dataset_audit
+3. run_project_healthcheck.py --deep 的 cp950/utf-8 子程序解碼問題
+4. fts_model_layer dataclass 欄位排序造成 tri-lane import 失敗
+5. fts_screening_engine 使用 fillna(method=...) 在新版 pandas 相容性問題
+6. db_setup.py 補 execution_* 四張核心表
+7. live_paper_trading.py 在 healthcheck 模式下的 pyodbc 依賴降級
+
+建議重跑：
+python db_setup.py --mode upgrade
+python ml_data_generator.py
+python ml_trainer.py
+python run_project_healthcheck.py --deep

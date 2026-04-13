@@ -12,6 +12,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+from pandas.errors import EmptyDataError
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import TimeSeriesSplit
@@ -22,7 +23,6 @@ from fts_data_quality_guard import validate_training_frame
 from fts_feature_catalog import FEATURE_SPECS, PRIORITY_NEW_FEATURES_20
 
 RUNTIME_PATH = Path('runtime') / 'trainer_backend_report.json'
-DIRECTIONAL_RUNTIME_PATH = Path('runtime') / 'trainer_backend_directional_report.json'
 
 
 META_DROP_COLS = [
@@ -33,13 +33,7 @@ META_DROP_COLS = [
     'Exit_Price', 'Entry_Date', 'Exit_Date', 'Direction', 'Stop_Hit', 'Hold_Days',
     'Touched_TP', 'Touched_SL', 'Label_Reason', 'Label_Exit_Type',
     'Favorable_Move_Pct', 'Adverse_Move_Pct', 'Max_Favorable_Excursion',
-    'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count',
-    'Long_Label_Y', 'Short_Label_Y', 'Range_Label_Y',
-    'Long_Target_Return', 'Short_Target_Return', 'Range_Target_Return',
-    'Long_MAE', 'Short_MAE', 'Range_MAE',
-    'Long_MFE', 'Short_MFE', 'Range_MFE',
-    'Long_Exit_Type', 'Short_Exit_Type', 'Range_Exit_Type',
-    'Range_Confidence_At_Label', 'Strategy_Bucket'
+    'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count'
 ]
 
 
@@ -194,91 +188,6 @@ def _select_features_train_only(train_df: pd.DataFrame, all_features: list[str])
     return final, ranked[:50]
 
 
-
-
-def _train_directional_scope(train_df: pd.DataFrame, all_features: list[str], scope: str) -> dict[str, Any]:
-    label_col = f'{scope}_Label_Y'
-    ret_col = f'{scope}_Target_Return'
-    result: dict[str, Any] = {
-        'scope': scope.lower(),
-        'status': 'skip',
-        'reason': 'label_missing',
-        'selected_features_path': f'models/selected_features_{scope.lower()}.pkl',
-        'models': {},
-    }
-    if label_col not in train_df.columns:
-        return result
-    local = train_df.copy()
-    local[label_col] = pd.to_numeric(local[label_col], errors='coerce').fillna(0).astype(int)
-    if ret_col not in local.columns:
-        local[ret_col] = np.where(local[label_col] == 1, 0.03, -0.03)
-    else:
-        local[ret_col] = pd.to_numeric(local[ret_col], errors='coerce').fillna(0.0)
-    if len(local) < int(PARAMS.get('DIRECTIONAL_MIN_SAMPLES', 80)):
-        result['reason'] = 'insufficient_rows'
-        result['rows_total'] = int(len(local))
-        return result
-    scoped_features, ranked = _select_features_train_only(local.rename(columns={ret_col: 'Target_Return'}), all_features)
-    scoped_features = [f for f in scoped_features if f in local.columns]
-    min_features = int(PARAMS.get('DIRECTIONAL_MIN_FEATURES', 6))
-    if len(scoped_features) < min_features:
-        result['reason'] = 'insufficient_features'
-        result['rows_total'] = int(len(local))
-        result['selected_features_count'] = int(len(scoped_features))
-        return result
-    os.makedirs('models', exist_ok=True)
-    feat_path = Path(f'models/selected_features_{scope.lower()}.pkl')
-    joblib.dump(scoped_features, feat_path)
-    result['selected_features_count'] = int(len(scoped_features))
-    result['feature_preview'] = scoped_features[:20]
-    result['rows_total'] = int(len(local))
-    result['feature_selection_preview'] = ranked[:12]
-    metrics_by_regime: dict[str, Any] = {}
-    save_count = 0
-    for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
-        regime_df = local[local['Regime'] == regime].copy() if 'Regime' in local.columns else pd.DataFrame()
-        if len(regime_df) < int(PARAMS.get('MODEL_MIN_REGIME_SAMPLES', 50)):
-            metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '樣本不足'}
-            continue
-        safe_features = [f for f in scoped_features if f in regime_df.columns]
-        if len(safe_features) < max(4, min_features // 2):
-            metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '無足夠可用特徵'}
-            continue
-        y_reg = pd.to_numeric(regime_df[label_col], errors='coerce').fillna(0).astype(int)
-        if y_reg.nunique() < 2:
-            metrics_by_regime[regime] = {'status': 'SKIP', 'reason': '標籤單一'}
-            continue
-        X_reg = regime_df[safe_features].replace([np.inf, -np.inf], np.nan).fillna(0.0)
-        reg_model = _fit_model(X_reg, y_reg)
-        model_path = Path(f'models/model_{scope.lower()}_{regime}.pkl')
-        joblib.dump(reg_model, model_path)
-        metrics_by_regime[regime] = {'status': 'SAVE', 'rows': int(len(regime_df)), 'feature_count': int(len(safe_features))}
-        save_count += 1
-    result['models'] = metrics_by_regime
-    result['status'] = 'ready' if save_count > 0 else 'partial'
-    result['saved_regime_models'] = int(save_count)
-    return result
-
-
-def _export_directional_artifacts(train_df: pd.DataFrame, all_features: list[str]) -> dict[str, Any]:
-    payload = {
-        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'enabled': bool(PARAMS.get('ENABLE_DIRECTIONAL_MODEL_ARTIFACTS', True)),
-        'live_mount_enabled': bool(PARAMS.get('ENABLE_DIRECTIONAL_MODEL_LOADING', False)),
-        'scopes': {},
-    }
-    if not payload['enabled']:
-        DIRECTIONAL_RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return payload
-    for scope in ['Long', 'Short', 'Range']:
-        try:
-            payload['scopes'][scope.lower()] = _train_directional_scope(train_df, all_features, scope)
-        except Exception as e:
-            payload['scopes'][scope.lower()] = {'scope': scope.lower(), 'status': 'error', 'reason': str(e)}
-    DIRECTIONAL_RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
-    DIRECTIONAL_RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-    return payload
-
 def _fit_model(X_train: pd.DataFrame, y_train: pd.Series) -> RandomForestClassifier:
     model = RandomForestClassifier(
         n_estimators=int(PARAMS.get('MODEL_N_ESTIMATORS', 200)),
@@ -346,7 +255,37 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     pretrain_version = create_version_tag('pretrain')
     snapshot_current_models(pretrain_version, note='重訓前自動備份（任務收尾版）')
 
-    df = pd.read_csv(dataset_path)
+    try:
+        if dataset_path.stat().st_size == 0:
+            payload = {
+                'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'status': 'dataset_empty',
+                'dataset_path': str(dataset_path),
+                'reason': 'csv_file_is_zero_bytes',
+            }
+            RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+            return RUNTIME_PATH, payload
+        df = pd.read_csv(dataset_path)
+    except EmptyDataError:
+        payload = {
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'status': 'dataset_empty',
+            'dataset_path': str(dataset_path),
+            'reason': 'no_columns_to_parse_from_file',
+        }
+        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return RUNTIME_PATH, payload
+
+    if df.empty or len(df.columns) == 0:
+        payload = {
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'status': 'dataset_empty',
+            'dataset_path': str(dataset_path),
+            'reason': 'parsed_dataframe_is_empty',
+        }
+        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return RUNTIME_PATH, payload
+
     df, quality_report = validate_training_frame(df, min_rows=max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))))
     if quality_report.get('status') == 'blocked':
         payload = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'blocked_by_data_quality', 'dataset_path': str(dataset_path), 'quality_report': quality_report}
@@ -478,12 +417,6 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     else:
         report['promotion'] = {'status': 'kept_current', 'version': version_tag}
 
-    directional_report = _export_directional_artifacts(train_df, all_features)
-    report['directional_artifacts'] = {
-        'status': directional_report.get('enabled', False),
-        'live_mount_enabled': directional_report.get('live_mount_enabled', False),
-        'scopes': {k: {'status': v.get('status'), 'saved_regime_models': v.get('saved_regime_models', 0)} for k, v in directional_report.get('scopes', {}).items()},
-    }
     report['regimes'] = metrics_by_regime
     report['overall_score'] = overall_score
     report['promotion_ready'] = promotion_ready

@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
@@ -5,153 +6,115 @@ import json
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
+from config import WATCH_LIST, TRAINING_POOL
 try:
-    from fts_config import PATHS  # type: ignore
-except Exception:  # pragma: no cover
+    from fts_prelive_runtime import PATHS, now_str, write_json
+except Exception:
+    def now_str():
+        from datetime import datetime
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    def write_json(path: Path, payload: Any) -> Path:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return path
     class _Paths:
+        base_dir = Path('.')
         runtime_dir = Path('runtime')
         data_dir = Path('data')
     PATHS = _Paths()
 
 
-class TrainingTickerScoreboard:
-    MODULE_VERSION = 'v84_training_ticker_scoreboard_long_short_range_safe'
-
-    def __init__(self):
-        self.runtime_dir = Path(getattr(PATHS, 'runtime_dir', Path('runtime')))
-        self.data_dir = Path(getattr(PATHS, 'data_dir', Path('data')))
-        self.runtime_dir.mkdir(parents=True, exist_ok=True)
-        self.csv_path = self.runtime_dir / 'training_ticker_scoreboard.csv'
-        self.json_path = self.runtime_dir / 'training_ticker_scoreboard.json'
-        self.long_csv_path = self.runtime_dir / 'training_ticker_scoreboard_long.csv'
-        self.short_csv_path = self.runtime_dir / 'training_ticker_scoreboard_short.csv'
-        self.range_csv_path = self.runtime_dir / 'training_ticker_scoreboard_range.csv'
-        self.dataset_path = self.data_dir / 'ml_training_data.csv'
-
-    @staticmethod
-    def _safe_float(v: Any, default: float = 0.0) -> float:
-        try:
-            if pd.isna(v):
-                return default
-            return float(v)
-        except Exception:
-            return default
-
-    def _load(self) -> pd.DataFrame:
-        if not self.dataset_path.exists():
-            return pd.DataFrame()
-        try:
-            return pd.read_csv(self.dataset_path)
-        except Exception:
-            return pd.DataFrame()
-
-    def _bucket_metrics(self, df: pd.DataFrame, bucket: str) -> dict[str, float]:
-        if df.empty:
-            return {'trade_count': 0.0, 'hit_rate': 0.0, 'oot_ev': 0.0, 'pf': 0.0, 'maxdd': 0.0, 'stability': 0.0}
-        if bucket == 'LONG':
-            active = df[df.get('Long_Label_Y', 0).fillna(0).astype(int) >= 0]
-            series = pd.to_numeric(active.get('Long_Target_Return', 0.0), errors='coerce').fillna(0.0)
-        elif bucket == 'SHORT':
-            active = df[df.get('Short_Label_Y', 0).fillna(0).astype(int) >= 0]
-            series = pd.to_numeric(active.get('Short_Target_Return', 0.0), errors='coerce').fillna(0.0)
-        else:
-            active = df[df.get('Range_Label_Y', 0).fillna(0).astype(int) >= 0]
-            series = pd.to_numeric(active.get('Range_Target_Return', 0.0), errors='coerce').fillna(0.0)
-        if active.empty:
-            return {'trade_count': 0.0, 'hit_rate': 0.0, 'oot_ev': 0.0, 'pf': 0.0, 'maxdd': 0.0, 'stability': 0.0}
-        wins = series[series > 0]
-        losses = series[series <= 0]
-        pf = float(wins.sum() / abs(losses.sum())) if len(losses) and abs(losses.sum()) > 1e-12 else (99.9 if len(wins) else 0.0)
-        cum = series.cumsum()
-        maxdd = float((cum.cummax() - cum).max()) if not cum.empty else 0.0
-        stability = float((series.rolling(5, min_periods=3).mean().fillna(0.0) > 0).mean()) if len(series) >= 3 else float((series > 0).mean())
-        return {
-            'trade_count': float(len(series)),
-            'hit_rate': float((series > 0).mean()) if len(series) else 0.0,
-            'oot_ev': float(series.mean()) if len(series) else 0.0,
-            'pf': pf,
-            'maxdd': maxdd,
-            'stability': stability,
-        }
-
-    def build_scoreboard(self) -> tuple[Path, dict[str, Any]]:
-        df = self._load()
-        if df.empty or 'Ticker SYMBOL' not in df.columns:
-            payload = {'module_version': self.MODULE_VERSION, 'status': 'scoreboard_unavailable', 'rows': 0}
-            self.json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-            return self.json_path, payload
-        records: list[dict[str, Any]] = []
-        for ticker, g in df.groupby('Ticker SYMBOL'):
-            sector = str(g.get('Industry_Name', g.get('產業名稱', pd.Series(['未知']))).iloc[0]) if len(g) else '未知'
-            regime_mode = str(g.get('Regime', pd.Series(['區間盤整'])).mode().iloc[0]) if 'Regime' in g.columns and not g['Regime'].dropna().empty else '區間盤整'
-            long_m = self._bucket_metrics(g, 'LONG')
-            short_m = self._bucket_metrics(g, 'SHORT')
-            range_m = self._bucket_metrics(g, 'RANGE')
-            feat_cov = float(pd.to_numeric(g.get('Mounted_Feature_Count', 0), errors='coerce').fillna(0).mean())
-            recent = pd.to_numeric(g.get('Target_Return', 0.0), errors='coerce').fillna(0.0).tail(20)
-            rec = {
-                'Ticker SYMBOL': ticker,
-                'Sector': sector,
-                'Regime': regime_mode,
-                'Long_Trade_Count': long_m['trade_count'],
-                'Short_Trade_Count': short_m['trade_count'],
-                'Range_Trade_Count': range_m['trade_count'],
-                'Long_HitRate': long_m['hit_rate'],
-                'Short_HitRate': short_m['hit_rate'],
-                'Range_HitRate': range_m['hit_rate'],
-                'Long_OOT_EV': long_m['oot_ev'],
-                'Short_OOT_EV': short_m['oot_ev'],
-                'Range_OOT_EV': range_m['oot_ev'],
-                'Long_PF': long_m['pf'],
-                'Short_PF': short_m['pf'],
-                'Range_PF': range_m['pf'],
-                'Long_MaxDD': long_m['maxdd'],
-                'Short_MaxDD': short_m['maxdd'],
-                'Range_MaxDD': range_m['maxdd'],
-                'Long_Stability_Score': long_m['stability'],
-                'Short_Stability_Score': short_m['stability'],
-                'Range_Stability_Score': range_m['stability'],
-                'Selected_Feature_Coverage': feat_cov,
-                'Recent_20d_Score_Trend': float(recent.mean()) if len(recent) else 0.0,
-            }
-            rec['Ticker_Promotion_Score_Long'] = round(rec['Long_OOT_EV'] * 0.30 + rec['Long_HitRate'] * 0.20 + min(rec['Long_PF'], 5.0) * 0.10 + rec['Long_Stability_Score'] * 0.20 + min(rec['Selected_Feature_Coverage'] / 20.0, 1.0) * 0.20, 6)
-            rec['Ticker_Promotion_Score_Short'] = round(rec['Short_OOT_EV'] * 0.30 + rec['Short_HitRate'] * 0.20 + min(rec['Short_PF'], 5.0) * 0.10 + rec['Short_Stability_Score'] * 0.20 + min(rec['Selected_Feature_Coverage'] / 20.0, 1.0) * 0.20, 6)
-            rec['Ticker_Promotion_Score_Range'] = round(rec['Range_OOT_EV'] * 0.30 + rec['Range_HitRate'] * 0.20 + min(rec['Range_PF'], 5.0) * 0.10 + rec['Range_Stability_Score'] * 0.20 + min(rec['Selected_Feature_Coverage'] / 20.0, 1.0) * 0.20, 6)
-            records.append(rec)
-        board = pd.DataFrame(records)
-        if board.empty:
-            payload = {'module_version': self.MODULE_VERSION, 'status': 'scoreboard_empty', 'rows': 0}
-            self.json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-            return self.json_path, payload
-        board['Global_Rank_Long'] = board['Ticker_Promotion_Score_Long'].rank(method='dense', ascending=False)
-        board['Global_Rank_Short'] = board['Ticker_Promotion_Score_Short'].rank(method='dense', ascending=False)
-        board['Global_Rank_Range'] = board['Ticker_Promotion_Score_Range'].rank(method='dense', ascending=False)
-        board['Sector_Rank_Long'] = board.groupby('Sector')['Ticker_Promotion_Score_Long'].rank(method='dense', ascending=False)
-        board['Sector_Rank_Short'] = board.groupby('Sector')['Ticker_Promotion_Score_Short'].rank(method='dense', ascending=False)
-        board['Sector_Rank_Range'] = board.groupby('Sector')['Ticker_Promotion_Score_Range'].rank(method='dense', ascending=False)
-        board.to_csv(self.csv_path, index=False, encoding='utf-8-sig')
-        board.sort_values('Ticker_Promotion_Score_Long', ascending=False).to_csv(self.long_csv_path, index=False, encoding='utf-8-sig')
-        board.sort_values('Ticker_Promotion_Score_Short', ascending=False).to_csv(self.short_csv_path, index=False, encoding='utf-8-sig')
-        board.sort_values('Ticker_Promotion_Score_Range', ascending=False).to_csv(self.range_csv_path, index=False, encoding='utf-8-sig')
-        payload = {
-            'module_version': self.MODULE_VERSION,
-            'status': 'training_ticker_scoreboard_ready',
-            'rows': int(len(board)),
-            'csv_path': str(self.csv_path),
-            'top_long': board.sort_values('Ticker_Promotion_Score_Long', ascending=False).head(5)['Ticker SYMBOL'].tolist(),
-            'top_short': board.sort_values('Ticker_Promotion_Score_Short', ascending=False).head(5)['Ticker SYMBOL'].tolist(),
-            'top_range': board.sort_values('Ticker_Promotion_Score_Range', ascending=False).head(5)['Ticker SYMBOL'].tolist(),
-        }
-        self.json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return self.json_path, payload
+def _infer_lane(row: pd.Series) -> str:
+    direction = str(row.get('Direction') or row.get('方向') or '').upper()
+    setup = str(row.get('Setup_Tag') or row.get('Setup') or '').upper()
+    regime = str(row.get('Regime') or '').strip()
+    if 'SHORT' in direction or '空' in direction or 'SHORT' in setup:
+        return 'SHORT'
+    if regime == '區間盤整' or 'RANGE' in setup:
+        return 'RANGE'
+    return 'LONG'
 
 
-def main() -> int:
-    TrainingTickerScoreboard().build_scoreboard()
-    return 0
+def _lane_return(row: pd.Series, lane: str) -> float:
+    r = float(pd.to_numeric(row.get('Target_Return', row.get('Future_Return_Pct', 0.0)), errors='coerce') or 0.0)
+    if lane == 'SHORT':
+        return -r
+    if lane == 'RANGE':
+        return max(0.0, 0.5 * abs(r) - max(0.0, abs(r) - 0.08))
+    return r
+
+
+def build_scoreboard() -> tuple[str, dict[str, Any]]:
+    runtime_dir = Path(getattr(PATHS, 'runtime_dir', Path('runtime')))
+    data_path = Path(getattr(PATHS, 'data_dir', Path('data'))) / 'ml_training_data.csv'
+    scoreboard_path = runtime_dir / 'training_ticker_scoreboard.csv'
+    summary_path = runtime_dir / 'training_ticker_scoreboard.json'
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    if not data_path.exists():
+        payload = {'generated_at': now_str(), 'status': 'dataset_missing', 'dataset_path': str(data_path)}
+        write_json(summary_path, payload)
+        return str(summary_path), payload
+    try:
+        df = pd.read_csv(data_path)
+    except Exception as e:
+        payload = {'generated_at': now_str(), 'status': 'dataset_unreadable', 'error': str(e), 'dataset_path': str(data_path)}
+        write_json(summary_path, payload)
+        return str(summary_path), payload
+    if df.empty:
+        payload = {'generated_at': now_str(), 'status': 'dataset_empty', 'dataset_path': str(data_path)}
+        write_json(summary_path, payload)
+        return str(summary_path), payload
+    ticker_col = 'Ticker SYMBOL' if 'Ticker SYMBOL' in df.columns else ('Ticker' if 'Ticker' in df.columns else None)
+    if ticker_col is None:
+        payload = {'generated_at': now_str(), 'status': 'ticker_column_missing'}
+        write_json(summary_path, payload)
+        return str(summary_path), payload
+    df = df.copy()
+    df['__lane__'] = df.apply(_infer_lane, axis=1)
+    df['__ret_long__'] = df.apply(lambda r: _lane_return(r, 'LONG'), axis=1)
+    df['__ret_short__'] = df.apply(lambda r: _lane_return(r, 'SHORT'), axis=1)
+    df['__ret_range__'] = df.apply(lambda r: _lane_return(r, 'RANGE'), axis=1)
+    rows = []
+    universe = list(dict.fromkeys(list(WATCH_LIST) + list(TRAINING_POOL) + [str(x) for x in df[ticker_col].dropna().unique()]))
+    for ticker in universe:
+        sub = df[df[ticker_col].astype(str) == str(ticker)].copy()
+        if sub.empty:
+            rows.append({'ticker': ticker, 'Long_OOT_EV': 0.0, 'Short_OOT_EV': 0.0, 'Range_OOT_EV': 0.0,
+                         'Long_HitRate': 0.0, 'Short_HitRate': 0.0, 'Range_HitRate': 0.0,
+                         'Long_Trade_Count': 0, 'Short_Trade_Count': 0, 'Range_Trade_Count': 0,
+                         'Ticker_Promotion_Score_Long': 0.2, 'Ticker_Promotion_Score_Short': 0.15, 'Ticker_Promotion_Score_Range': 0.15})
+            continue
+        row = {'ticker': ticker}
+        for lane, ret_col, score_seed in [('LONG', '__ret_long__', 0.25), ('SHORT', '__ret_short__', 0.20), ('RANGE', '__ret_range__', 0.20)]:
+            lane_sub = sub if lane == 'LONG' else sub[sub['__lane__'].isin([lane, 'LONG'] if lane != 'LONG' else ['LONG'])]
+            vals = pd.to_numeric(lane_sub[ret_col], errors='coerce').fillna(0.0)
+            hit = float((vals > 0).mean()) if len(vals) else 0.0
+            ev = float(vals.tail(max(1, len(vals)//5)).mean()) if len(vals) else 0.0
+            pf_num = float(vals[vals > 0].sum()) if (vals > 0).any() else 0.0
+            pf_den = float(abs(vals[vals < 0].sum())) if (vals < 0).any() else 0.0
+            pf = pf_num / pf_den if pf_den > 1e-12 else (1.0 if len(vals) else 0.0)
+            stability = 1.0 - min(float(vals.std()) if len(vals) > 1 else 0.0, 1.0)
+            count = int(len(vals))
+            score = score_seed + ev * 10 + hit * 2 + min(pf, 3.0) * 0.2 + stability * 0.2 + min(count / 100.0, 0.5)
+            row[f'{lane.title()}_OOT_EV'] = ev
+            row[f'{lane.title()}_HitRate'] = hit
+            row[f'{lane.title()}_PF'] = pf
+            row[f'{lane.title()}_MaxDD'] = 0.0
+            row[f'{lane.title()}_Trade_Count'] = count
+            row[f'{lane.title()}_Stability_Score'] = stability
+            row[f'Ticker_Promotion_Score_{lane.title()}'] = score
+        rows.append(row)
+    out = pd.DataFrame(rows)
+    out.to_csv(scoreboard_path, index=False, encoding='utf-8-sig')
+    for lane in ['long', 'short', 'range']:
+        out.to_csv(runtime_dir / f'training_ticker_scoreboard_{lane}.csv', index=False, encoding='utf-8-sig')
+    payload = {'generated_at': now_str(), 'status': 'scoreboard_built', 'rows': int(len(out)), 'path': str(scoreboard_path)}
+    write_json(summary_path, payload)
+    return str(summary_path), payload
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    print(build_scoreboard())

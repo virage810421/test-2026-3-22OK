@@ -1,35 +1,20 @@
 {
-  "generated_at": "2026-04-12 17:12:09",
-  "system_name": "正式交易主控版_v83_official_main",
-  "summary": {
-    "local_orders": 0,
-    "broker_orders": 0,
-    "local_fills": 0,
-    "broker_fills": 0,
-    "local_positions": 0,
-    "broker_positions": 0,
-    "order_mismatch_count": 0,
-    "fill_mismatch_count": 0,
-    "position_mismatch_count": 0,
-    "corporate_action_suspect_count": 0,
-    "orphan_broker_orders": 0,
-    "orphan_broker_fills": 0,
-    "cash_matched": true,
-    "all_green": true,
-    "broker_status_mix": {}
+  "generated_at": "2026-04-13 00:58:39",
+  "status": "reconciled",
+  "order_issue_count": 0,
+  "issues": [],
+  "lane_issue_breakdown": {},
+  "cash_diff": 0.0,
+  "directional_order_mix": {},
+  "directional_fill_mix": {},
+  "repair_workflow": {
+    "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
+    "payload": {
+      "generated_at": "2026-04-13 00:58:39",
+      "status": "repair_workflow_executed",
+      "executed_actions": [],
+      "count": 0
+    }
   },
-  "cash_check": {
-    "local_cash": 3000000.0,
-    "broker_cash": 3000000.0,
-    "cash_diff": 0.0,
-    "matched": true
-  },
-  "order_mismatches": [],
-  "fill_mismatches": [],
-  "position_mismatches": [],
-  "corporate_action_suspects": [],
-  "orphan_broker_orders": [],
-  "orphan_broker_fills": [],
-  "repair_actions": [],
-  "status": "reconciliation_green"
+  "directional_repair_actions": []
 }

@@ -1,0 +1,8 @@
+這包是針對文件 10(6) 剩餘兩塊缺口做的深補版：
+1. fts_control_tower.py / fts_tri_lane_orchestrator.py 往 deepest full split 再往前推，至少讓每個 lane 都有獨立 stage runner 結果與 tri-lane execution status。
+2. repair / ledger 往更深的 mutator 推進，新增 broker shadow ledger mutator，並讓 callback -> state machine -> ledger -> reconciliation -> repair workflow 串成主幹。
+
+注意：
+- 這包是可覆蓋 patch，不是全專案快照。
+- 仍保留 fallback，不會因 directional 檔缺失就整套停擺。
+- 尚未直接改真實 broker side ledger / broker API 狀態，屬於 shadow ledger mutation。

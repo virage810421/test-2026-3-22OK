@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-04-11 00:35:12",
-  "module_version": "v84_feature_service_execaware_registry_strict",
-  "selected_feature_count": 0,
-  "registry_row_count": 84,
-  "selected_features_present": false,
+  "generated_at": "2026-04-12 21:53:40",
+  "module_version": "v85_feature_service_directional_range_safe",
+  "selected_feature_count": 4,
+  "registry_row_count": 108,
+  "selected_features_present": true,
   "status": "training_feature_registry_ready"
 }

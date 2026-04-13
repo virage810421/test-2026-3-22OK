@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 from collections import defaultdict
-import pandas as pd
 
 from fts_prelive_runtime import PATHS, now_str, load_json, write_json, normalize_key
-from config import WATCH_LIST, PARAMS
+from config import WATCH_LIST, TRAINING_POOL, PARAMS
 
 LANES = ['LONG', 'SHORT', 'RANGE']
+
 
 class LiveWatchlistLoader:
     def __init__(self):
@@ -22,16 +22,52 @@ class LiveWatchlistLoader:
         items = payload.get('items', payload if isinstance(payload, list) else [])
         return items if isinstance(items, list) else []
 
-    def _fallback(self) -> list[dict[str, Any]]:
-        return [{'ticker': t, 'lane': 'LONG', 'sector': '未知', 'promotion_score': 0.0, 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'WATCH_LIST'} for t in WATCH_LIST]
+    def _fallback_lane(self, lane: str, count: int) -> list[dict[str, Any]]:
+        universe = list(dict.fromkeys(list(WATCH_LIST) + list(TRAINING_POOL)))
+        if lane == 'SHORT':
+            universe = list(reversed(universe))
+        elif lane == 'RANGE':
+            universe = universe[::2] + universe[1::2]
+        return [{
+            'ticker': t, 'lane': lane, 'sector': '未知', 'promotion_score': 0.1,
+            'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'lane_fallback',
+            'approval_reason': 'lane_fallback', 'oot_ev': 0.0, 'hit_rate': 0.5,
+        } for t in universe[:count]]
+
+    def _sanitize_lane_items(self, items: list[dict[str, Any]], lane: str, min_liq: float, min_cov: float) -> list[dict[str, Any]]:
+        best: dict[str, dict[str, Any]] = {}
+        for raw in items:
+            item = dict(raw)
+            t = str(item.get('ticker') or '').strip()
+            if not t:
+                continue
+            liq = float(item.get('liquidity_score', 1.0) or 0.0)
+            cov = float(item.get('feature_coverage', 1.0) or 0.0)
+            if liq < min_liq or cov < min_cov:
+                continue
+            item['lane'] = lane
+            item['promotion_score'] = float(item.get('promotion_score', 0.0) or 0.0)
+            cur = best.get(t)
+            if cur is None or item['promotion_score'] > float(cur.get('promotion_score', 0.0) or 0.0):
+                best[t] = item
+        return sorted(best.values(), key=lambda x: float(x.get('promotion_score', 0.0) or 0.0), reverse=True)
 
     def resolve_live_watchlist(self) -> tuple[str, dict[str, Any]]:
         lane_items = {lane: self._approved(lane) for lane in LANES}
-        if not any(lane_items.values()):
-            merged = self._fallback()
-            payload = {'generated_at': now_str(), 'status': 'fallback_watch_list', 'items': merged, 'lanes': {lane: [] for lane in LANES}, 'total_count': len(merged)}
-            write_json(self.summary_path, payload)
-            return str(self.summary_path), payload
+        min_counts = {
+            'LONG': int(PARAMS.get('LIVE_WATCHLIST_MIN_PER_LANE_LONG', 2)),
+            'SHORT': int(PARAMS.get('LIVE_WATCHLIST_MIN_PER_LANE_SHORT', 2)),
+            'RANGE': int(PARAMS.get('LIVE_WATCHLIST_MIN_PER_LANE_RANGE', 2)),
+        }
+        # ensure each lane has some raw items before optimization
+        for lane in LANES:
+            if len(lane_items[lane]) < max(1, min_counts[lane]):
+                seed = self._fallback_lane(lane, max(1, min_counts[lane]))
+                seen = {str(x.get('ticker')) for x in lane_items[lane]}
+                for item in seed:
+                    if item['ticker'] not in seen:
+                        lane_items[lane].append(item)
+                        seen.add(item['ticker'])
 
         max_per_sector = int(PARAMS.get('LIVE_WATCHLIST_MAX_PER_SECTOR', 3))
         total_cap = int(PARAMS.get('LIVE_WATCHLIST_TOTAL_MAX_NAMES', 18))
@@ -39,51 +75,65 @@ class LiveWatchlistLoader:
         min_cov = float(PARAMS.get('LIVE_WATCHLIST_MIN_FEATURE_COVERAGE', 0.95))
         max_short_over_long = float(PARAMS.get('LIVE_WATCHLIST_MAX_NET_SHORT_OVER_LONG', 0.60))
         max_long_over_short = float(PARAMS.get('LIVE_WATCHLIST_MAX_NET_LONG_OVER_SHORT', 1.20))
+        unknown_soft_cap = bool(PARAMS.get('LIVE_WATCHLIST_UNKNOWN_SECTOR_SOFT_CAP', True))
 
-        by_ticker: dict[str, dict[str, Any]] = {}
-        for lane, items in lane_items.items():
-            for item in items:
-                t = str(item.get('ticker') or '').strip()
-                if not t:
-                    continue
-                score = float(item.get('promotion_score', 0.0) or 0.0)
-                liq = float(item.get('liquidity_score', 1.0) or 0.0)
-                cov = float(item.get('feature_coverage', 1.0) or 0.0)
-                if liq < min_liq or cov < min_cov:
-                    continue
-                current = by_ticker.get(t)
-                if current is None or score > float(current.get('promotion_score', 0.0) or 0.0):
-                    merged = dict(item)
-                    merged['lane'] = lane
-                    by_ticker[t] = merged
-        items = list(by_ticker.values())
-        # optimizer penalty proxy: sector concentration and overlap penalty
+        lane_pools = {lane: self._sanitize_lane_items(items, lane, min_liq, min_cov) for lane, items in lane_items.items()}
+
+        selected: list[dict[str, Any]] = []
+        selected_keys: set[tuple[str, str]] = set()
         sector_counts = defaultdict(int)
-        selected = []
-        long_n = short_n = range_n = 0
-        for item in sorted(items, key=lambda x: float(x.get('promotion_score', 0.0) or 0.0), reverse=True):
+        lane_counts = {'LONG': 0, 'SHORT': 0, 'RANGE': 0}
+
+        def sector_key(item: dict[str, Any]) -> str:
             lane = normalize_key(item.get('lane')) or 'LONG'
             sector = str(item.get('sector') or '未知')
-            if sector_counts[sector] >= max_per_sector:
-                continue
-            projected_long = long_n + (1 if lane == 'LONG' else 0)
-            projected_short = short_n + (1 if lane == 'SHORT' else 0)
-            if projected_long > 0 and projected_short / projected_long > max_short_over_long:
-                if lane == 'SHORT':
-                    continue
-            if projected_short > 0 and projected_long / max(projected_short, 1) > max_long_over_short:
-                if lane == 'LONG' and projected_short > 0 and projected_long > 1:
-                    continue
-            item = dict(item)
-            item['optimizer_penalty'] = sector_counts[sector] * 0.05
+            if unknown_soft_cap and sector == '未知':
+                return f'未知::{lane}'
+            return sector
+
+        def accept(item: dict[str, Any], phase: str) -> bool:
+            nonlocal lane_counts
+            lane = normalize_key(item.get('lane')) or 'LONG'
+            t = str(item.get('ticker') or '').strip()
+            key = (t, lane)
+            if not t or key in selected_keys:
+                return False
+            s_key = sector_key(item)
+            if sector_counts[s_key] >= max_per_sector:
+                return False
+            projected = dict(lane_counts)
+            projected[lane] += 1
+            if phase == 'fill':
+                if projected['LONG'] > 0 and lane == 'SHORT' and projected['SHORT'] / projected['LONG'] > max_short_over_long:
+                    return False
+                if projected['SHORT'] > 0 and lane == 'LONG' and projected['LONG'] / max(projected['SHORT'], 1) > max_long_over_short and projected['LONG'] > 1:
+                    return False
+            item['optimizer_penalty'] = sector_counts[s_key] * 0.05
             item['optimized_score'] = float(item.get('promotion_score', 0.0) or 0.0) - item['optimizer_penalty']
             selected.append(item)
-            sector_counts[sector] += 1
-            long_n = projected_long
-            short_n = projected_short
-            range_n = range_n + (1 if lane == 'RANGE' else 0)
+            selected_keys.add(key)
+            sector_counts[s_key] += 1
+            lane_counts = projected
+            return True
+
+        # phase 1: guarantee minimum names per lane
+        for lane in LANES:
+            target = min_counts[lane]
+            for item in lane_pools[lane]:
+                if lane_counts[lane] >= target or len(selected) >= total_cap:
+                    break
+                accept(dict(item), phase='guarantee')
+
+        # phase 2: fill remainder globally by optimized score
+        remaining: list[dict[str, Any]] = []
+        for lane in LANES:
+            remaining.extend(lane_pools[lane])
+        remaining.sort(key=lambda x: float(x.get('promotion_score', 0.0) or 0.0), reverse=True)
+        for item in remaining:
             if len(selected) >= total_cap:
                 break
+            accept(dict(item), phase='fill')
+
         lanes = {lane: [x for x in selected if normalize_key(x.get('lane')) == lane] for lane in LANES}
         payload = {
             'generated_at': now_str(),
@@ -92,7 +142,12 @@ class LiveWatchlistLoader:
             'lanes': lanes,
             'total_count': len(selected),
             'sector_counts': dict(sector_counts),
-            'net_exposure_proxy': {'LONG': long_n, 'SHORT': short_n, 'RANGE': range_n},
+            'net_exposure_proxy': dict(lane_counts),
+            'min_counts': min_counts,
         }
         write_json(self.summary_path, payload)
         return str(self.summary_path), payload
+
+
+if __name__ == '__main__':
+    print(LiveWatchlistLoader().resolve_live_watchlist())

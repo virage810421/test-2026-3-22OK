@@ -5,18 +5,15 @@ from __future__ import annotations
 from typing import Any
 import pandas as pd
 
-from fts_prelive_runtime import PATHS, now_str, write_json, normalize_key
+from fts_prelive_runtime import PATHS, now_str, write_json
 from fts_live_watchlist_registry import LiveWatchlistRegistry
-from config import PARAMS
+from config import PARAMS, WATCH_LIST, TRAINING_POOL
 
 LANES = ['LONG', 'SHORT', 'RANGE']
-LANE_SCORE_COL = {
-    'LONG': 'Ticker_Promotion_Score_Long',
-    'SHORT': 'Ticker_Promotion_Score_Short',
-    'RANGE': 'Ticker_Promotion_Score_Range',
-}
+LANE_SCORE_COL = {'LONG': 'Ticker_Promotion_Score_Long', 'SHORT': 'Ticker_Promotion_Score_Short', 'RANGE': 'Ticker_Promotion_Score_Range'}
 LANE_HR_COL = {'LONG': 'Long_HitRate', 'SHORT': 'Short_HitRate', 'RANGE': 'Range_HitRate'}
 LANE_EV_COL = {'LONG': 'Long_OOT_EV', 'SHORT': 'Short_OOT_EV', 'RANGE': 'Range_OOT_EV'}
+SEED_SCORE = {'LONG': float(PARAMS.get('LONG_SEED_SCORE', 0.45)), 'SHORT': float(PARAMS.get('SHORT_SEED_SCORE', 0.25)), 'RANGE': float(PARAMS.get('RANGE_SEED_SCORE', 0.35))}
 
 class LiveWatchlistPromoter:
     def __init__(self):
@@ -25,33 +22,72 @@ class LiveWatchlistPromoter:
         self.summary_path = self.runtime_dir / 'live_watchlist_promoter.json'
 
     def _scoreboard(self) -> pd.DataFrame:
-        for p in [self.runtime_dir / 'training_ticker_scoreboard.csv', PATHS.base_dir / 'training_ticker_scoreboard.csv']:
+        candidates = [self.runtime_dir / 'training_ticker_scoreboard.csv', PATHS.base_dir / 'training_ticker_scoreboard.csv']
+        for p in candidates:
             if p.exists():
                 try:
-                    return pd.read_csv(p)
+                    df = pd.read_csv(p)
+                    if not df.empty:
+                        return df
                 except Exception:
-                    continue
+                    pass
+        if bool(PARAMS.get('DIRECTIONAL_SCOREBOARD_AUTO_BUILD', True)):
+            try:
+                from fts_training_ticker_scoreboard import build_scoreboard
+                build_scoreboard()
+                for p in candidates:
+                    if p.exists():
+                        try:
+                            df = pd.read_csv(p)
+                            if not df.empty:
+                                return df
+                        except Exception:
+                            pass
+            except Exception:
+                pass
         return pd.DataFrame()
 
+    def _seed_items(self, lane: str, count: int) -> list[dict[str, Any]]:
+        universe = list(dict.fromkeys(list(WATCH_LIST) + list(TRAINING_POOL)))
+        if lane == 'SHORT':
+            universe = list(reversed(universe))
+        elif lane == 'RANGE':
+            universe = universe[::2] + universe[1::2]
+        items = []
+        for t in universe[:count]:
+            items.append({
+                'ticker': t,
+                'lane': lane,
+                'promotion_score': SEED_SCORE[lane],
+                'oot_ev': 0.0,
+                'hit_rate': 0.5 if lane == 'LONG' else 0.48,
+                'sector': '未知',
+                'liquidity_score': 1.0,
+                'feature_coverage': 1.0,
+                'approval_reason': 'seed_from_core_watchlist',
+            })
+        return items
+
     def _records_for_lane(self, df: pd.DataFrame, lane: str) -> list[dict[str, Any]]:
+        lane_max = int(PARAMS.get(f'LIVE_WATCHLIST_{lane}_MAX_NAMES', 8))
+        min_count = max(int(PARAMS.get('DIRECTIONAL_PROMOTION_MIN_COUNT', 3)), int(PARAMS.get(f'LIVE_WATCHLIST_MIN_PER_LANE_{lane}', 2)))
         if df is None or df.empty:
-            return []
+            return self._seed_items(lane, max(min_count, lane_max // 2))
         score_col = LANE_SCORE_COL[lane]
         hr_col = LANE_HR_COL[lane]
         ev_col = LANE_EV_COL[lane]
         if score_col not in df.columns:
             df = df.copy()
-            df[score_col] = df.get('training_universe_score', 0.0)
+            df[score_col] = float(SEED_SCORE[lane])
         items = []
-        lane_max = int(PARAMS.get(f'LIVE_WATCHLIST_{lane}_MAX_NAMES', 8))
-        for _, row in df.sort_values(score_col, ascending=False).head(max(lane_max * 3, lane_max)).iterrows():
+        for _, row in df.sort_values(score_col, ascending=False).iterrows():
             ticker = str(row.get('ticker') or row.get('Ticker') or row.get('Ticker SYMBOL') or row.get('股票代號') or '').strip()
             if not ticker:
                 continue
             item = {
                 'ticker': ticker,
                 'lane': lane,
-                'promotion_score': float(row.get(score_col, 0.0) or 0.0),
+                'promotion_score': float(row.get(score_col, SEED_SCORE[lane]) or 0.0),
                 'oot_ev': float(row.get(ev_col, 0.0) or 0.0),
                 'hit_rate': float(row.get(hr_col, 0.0) or 0.0),
                 'sector': str(row.get('industry') or row.get('產業類別') or row.get('sector') or '未知'),
@@ -60,6 +96,14 @@ class LiveWatchlistPromoter:
                 'approval_reason': 'scoreboard_promotion',
             }
             items.append(item)
+            if len(items) >= lane_max:
+                break
+        if len(items) < min_count and bool(PARAMS.get('DIRECTIONAL_SEED_FROM_CORE_WATCHLIST', True)):
+            seen = {x['ticker'] for x in items}
+            for extra in self._seed_items(lane, min_count - len(items)):
+                if extra['ticker'] not in seen:
+                    items.append(extra)
+                    seen.add(extra['ticker'])
         return items[:lane_max]
 
     def build(self) -> tuple[str, dict[str, Any]]:
