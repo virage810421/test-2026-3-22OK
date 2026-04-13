@@ -33,9 +33,12 @@ DIRECTIONAL_MODELS: dict[str, dict[str, Any]] = {'LONG': {}, 'SHORT': {}, 'RANGE
 DIRECTIONAL_FEATURES: dict[str, list[str]] = {'LONG': [], 'SHORT': [], 'RANGE': []}
 STRICT_PARITY = bool(PARAMS.get('LIVE_REQUIRE_SELECTED_FEATURES', True)) or bool(getattr(CONFIG, 'strict_feature_parity', True))
 MIN_LIVE_FEATURES = int(getattr(CONFIG, 'selected_features_min_count_for_live', 6))
+MIN_DIRECTIONAL_LIVE_FEATURES = int(getattr(CONFIG, 'live_directional_min_feature_count', 4))
 ENABLE_DIRECTIONAL = bool(PARAMS.get('ENABLE_DIRECTIONAL_MODEL_LOADING', True))
 ENABLE_BOOTSTRAP = bool(PARAMS.get('ENABLE_DIRECTIONAL_ARTIFACT_BOOTSTRAP', True))
 ALLOW_HEURISTIC_FALLBACK = bool(getattr(CONFIG, 'allow_heuristic_model_fallback', False))
+DIRECTIONAL_LIVE_ENABLED = bool(getattr(CONFIG, 'enable_directional_features_in_live', True)) and (not bool(getattr(CONFIG, 'force_shared_feature_universe', False)))
+ALLOW_SHARED_FALLBACK_PER_LANE = bool(getattr(CONFIG, 'live_allow_directional_shared_fallback', True))
 
 
 @dataclass
@@ -125,10 +128,21 @@ def _load_artifacts() -> None:
             _lane_seed_from_shared(scope)
 
 
+def _selected_features_for_scope(scope: str = 'SHARED') -> list[str]:
+    scope = _normalize_scope(scope)
+    if scope == 'SHARED' or not ENABLE_DIRECTIONAL or not DIRECTIONAL_LIVE_ENABLED:
+        return list(dict.fromkeys(SELECTED_FEATURES))
+    lane = list(DIRECTIONAL_FEATURES.get(scope, []))
+    shared = list(SELECTED_FEATURES) if ALLOW_SHARED_FALLBACK_PER_LANE else []
+    merged = [str(x) for x in lane + shared if str(x).strip()]
+    return list(dict.fromkeys(merged))
+
+
 def selected_features_ready(scope: str = 'SHARED') -> bool:
     scope = _normalize_scope(scope)
-    feats = SELECTED_FEATURES if scope == 'SHARED' else DIRECTIONAL_FEATURES.get(scope, [])
-    return len(feats) >= MIN_LIVE_FEATURES
+    feats = _selected_features_for_scope(scope)
+    threshold = MIN_LIVE_FEATURES if scope == 'SHARED' else min(MIN_LIVE_FEATURES, max(MIN_DIRECTIONAL_LIVE_FEATURES, 1))
+    return len(feats) >= threshold
 
 
 def refresh_model_runtime() -> Path:
@@ -138,6 +152,7 @@ def refresh_model_runtime() -> Path:
         'selected_features_present': bool(SELECTED_FEATURES),
         'selected_feature_count': len(SELECTED_FEATURES),
         'selected_features_ready': selected_features_ready('SHARED'),
+        'effective_directional_feature_counts': {k: len(_selected_features_for_scope(k)) for k in DIRECTIONAL_FEATURES},
         'selected_features_min_required': MIN_LIVE_FEATURES,
         'loaded_regimes': sorted(list(AI_MODELS.keys())),
         'strict_parity': bool(STRICT_PARITY),
@@ -156,7 +171,7 @@ def _feature_input_from_row(latest_row, regime: str, scope: str = 'SHARED') -> t
     source = 'signal_confidence_fallback'
     scope = _normalize_scope(scope)
     models = AI_MODELS if scope == 'SHARED' else DIRECTIONAL_MODELS.get(scope, {})
-    selected = SELECTED_FEATURES if scope == 'SHARED' else DIRECTIONAL_FEATURES.get(scope, [])
+    selected = _selected_features_for_scope(scope)
     if regime in models and selected_features_ready(scope):
         try:
             from screening import extract_ai_features
@@ -188,7 +203,7 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         payload, model_source = _feature_input_from_row(latest_row, regime, direction_scope)
         proba = float(payload.get('proba', signal_conf))
 
-    heuristic_fallback_active = 'signal_confidence' in str(model_source) or 'bootstrapped' in str(model_source)
+    heuristic_fallback_active = 'signal_confidence' in str(model_source)
     if heuristic_fallback_active and not ALLOW_HEURISTIC_FALLBACK:
         veto_reasons.append('heuristic_model_fallback_blocked')
 
@@ -225,7 +240,7 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         feature_scope=direction_scope,
         direction_scope=direction_scope,
         heuristic_fallback_active=heuristic_fallback_active,
-        debug={'selected_count': len(SELECTED_FEATURES if direction_scope == 'SHARED' else DIRECTIONAL_FEATURES.get(direction_scope, [])), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK)},
+        debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK)},
     )
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(decision.as_dict(), ensure_ascii=False, indent=2), encoding='utf-8')

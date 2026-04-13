@@ -24,6 +24,9 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
     realized_ev = safe_float(row.get('Realized_EV', 0.0), 0.0)
     health = str(row.get('Health', 'KEEP')).upper()
     direction = _infer_direction(row)
+    fallback_build = bool(row.get('FallbackBuild', False))
+    desk_usable = bool(row.get('DeskUsable', True))
+    execution_eligible = bool(row.get('ExecutionEligible', True))
 
     blockers: list[str] = []
     warnings: list[str] = []
@@ -35,6 +38,12 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         blockers.append('health_blocked')
     if health in {'REVIEW_REQUIRED', 'FALLBACK_BUILD'}:
         blockers.append('manual_review_required')
+    if fallback_build:
+        blockers.append('fallback_build_unusable')
+    if not desk_usable:
+        blockers.append('decision_desk_unusable')
+    if not execution_eligible:
+        blockers.append('execution_not_eligible')
     if realized_ev <= 0:
         blockers.append('non_positive_ev')
     if ai_proba < 0.50:

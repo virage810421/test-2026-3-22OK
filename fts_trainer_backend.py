@@ -37,6 +37,33 @@ META_DROP_COLS = [
 ]
 
 
+LANES = ['LONG', 'SHORT', 'RANGE']
+REGIMES = ['趨勢多頭', '區間盤整', '趨勢空頭']
+
+
+def _infer_lane_from_row(row: pd.Series) -> str:
+    text = ' '.join(str(row.get(k, '')) for k in ['Direction', 'Action', 'Golden_Type', 'Structure', 'Setup', 'Setup_Tag', 'Regime']).upper()
+    if 'RANGE' in text or '區間' in text:
+        return 'RANGE'
+    if 'SHORT' in text or 'SELL' in text or '空' in text:
+        return 'SHORT'
+    return 'LONG'
+
+
+def _build_lane_series(df: pd.DataFrame) -> pd.Series:
+    if df is None or df.empty:
+        return pd.Series(dtype=str)
+    return df.apply(_infer_lane_from_row, axis=1)
+
+
+def _directional_feature_pkl(lane: str) -> Path:
+    return Path('models') / f'selected_features_{str(lane).lower()}.pkl'
+
+
+def _directional_model_pkl(lane: str, regime: str) -> Path:
+    return Path('models') / f'model_{str(lane).lower()}_{regime}.pkl'
+
+
 def _evaluate_alpha(signal: pd.Series, future_return: pd.Series) -> dict[str, float] | None:
     df = pd.DataFrame({'signal': pd.to_numeric(signal, errors='coerce'), 'ret': pd.to_numeric(future_return, errors='coerce')}).dropna()
     if len(df) < 40:
@@ -368,7 +395,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     os.makedirs('models', exist_ok=True)
     joblib.dump(selected_features, 'models/selected_features.pkl')
 
-    regimes = ['趨勢多頭', '區間盤整', '趨勢空頭']
+    regimes = list(REGIMES)
     metrics_by_regime: dict[str, Any] = {}
     save_count = 0
     for regime in regimes:
@@ -391,9 +418,73 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         metrics_by_regime[regime] = {'status': 'SAVE', 'rows': int(len(regime_df)), 'feature_count': int(len(safe_features))}
         save_count += 1
 
+    lane_series = _build_lane_series(train_df)
+    lane_artifacts: dict[str, Any] = {}
+    min_selected = int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8))
+    for lane in LANES:
+        lane_mask = lane_series == lane
+        lane_df = train_df.loc[lane_mask].copy()
+        lane_report: dict[str, Any] = {
+            'rows': int(len(lane_df)),
+            'selected_features_path': str(_directional_feature_pkl(lane)),
+            'selection_source': 'shared_fallback',
+            'selected_feature_count': 0,
+            'selected_features_preview': [],
+            'ranked_preview': [],
+            'models': {},
+        }
+        lane_selected = list(selected_features)
+        lane_ranked: list[dict[str, Any]] = []
+        if len(lane_df) >= max(60, min_selected * 8) and lane_df['Label_Y'].nunique() >= 2:
+            lane_features, lane_ranked = _select_features_train_only(lane_df, all_features)
+            lane_df = _materialize_interactions(lane_df, lane_features)
+            lane_features = [f for f in lane_features if f in lane_df.columns]
+            if len(lane_features) >= max(4, min_selected // 2):
+                lane_selected = lane_features
+                lane_report['selection_source'] = 'lane_train_only'
+            else:
+                lane_report['selection_source'] = 'shared_fallback_low_feature_count'
+        else:
+            lane_report['selection_source'] = 'shared_fallback_low_samples'
+        lane_selected = list(dict.fromkeys([f for f in lane_selected if f in train_df.columns]))
+        if not lane_selected:
+            lane_selected = list(selected_features)
+        joblib.dump(lane_selected, _directional_feature_pkl(lane))
+        lane_report['selected_feature_count'] = int(len(lane_selected))
+        lane_report['selected_features_preview'] = lane_selected[:20]
+        lane_report['ranked_preview'] = lane_ranked[:15]
+
+        lane_save_count = 0
+        for regime in REGIMES:
+            lane_reg_df = train_df.loc[lane_mask & (train_df['Regime'] == regime)].copy() if 'Regime' in train_df.columns else pd.DataFrame()
+            model_path = _directional_model_pkl(lane, regime)
+            if len(lane_reg_df) >= int(PARAMS.get('MODEL_MIN_REGIME_SAMPLES', 50)) and lane_reg_df['Label_Y'].nunique() >= 2:
+                safe_features = [f for f in lane_selected if f in lane_reg_df.columns]
+                if len(safe_features) >= max(4, min_selected // 2):
+                    X_lane = lane_reg_df[safe_features].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+                    y_lane = lane_reg_df['Label_Y']
+                    lane_model = _fit_model(X_lane, y_lane)
+                    joblib.dump(lane_model, model_path)
+                    lane_report['models'][regime] = {'status': 'SAVE', 'rows': int(len(lane_reg_df)), 'feature_count': int(len(safe_features)), 'path': str(model_path)}
+                    lane_save_count += 1
+                    continue
+            shared_model_path = Path(f'models/model_{regime}.pkl')
+            if shared_model_path.exists():
+                try:
+                    shared_model = joblib.load(shared_model_path)
+                    joblib.dump(shared_model, model_path)
+                    lane_report['models'][regime] = {'status': 'BOOTSTRAPPED_FROM_SHARED', 'rows': int(len(lane_reg_df)), 'path': str(model_path)}
+                    lane_save_count += 1
+                except Exception as exc:
+                    lane_report['models'][regime] = {'status': 'SKIP', 'reason': f'bootstrap_failed:{exc}'}
+            else:
+                lane_report['models'][regime] = {'status': 'SKIP', 'reason': 'shared_regime_model_missing'}
+        lane_report['saved_model_count'] = lane_save_count
+        lane_artifacts[lane] = lane_report
+
     overall_score = float(oot_metrics['avg_return'] * 100 + min(oot_metrics['profit_factor'], 5.0) + oot_metrics['hit_rate'] * 10)
     version_tag = create_version_tag('trained')
-    snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features)}, note='任務收尾版訓練完成快照')
+    snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features), 'directional_lane_feature_counts': {k: v.get('selected_feature_count', 0) for k, v in lane_artifacts.items()}, 'directional_lane_model_counts': {k: v.get('saved_model_count', 0) for k, v in lane_artifacts.items()}}, note='任務收尾版訓練完成快照')
 
     promotion_ready = (
         save_count > 0
@@ -418,6 +509,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         report['promotion'] = {'status': 'kept_current', 'version': version_tag}
 
     report['regimes'] = metrics_by_regime
+    report['directional_lane_artifacts'] = lane_artifacts
     report['overall_score'] = overall_score
     report['promotion_ready'] = promotion_ready
     RUNTIME_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

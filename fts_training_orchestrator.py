@@ -26,6 +26,11 @@ class TrainingOrchestrator:
             self.models_dir / "model_區間盤整.pkl",
             self.models_dir / "model_趨勢空頭.pkl",
         ]
+        self.directional_feature_files = [
+            self.models_dir / "selected_features_long.pkl",
+            self.models_dir / "selected_features_short.pkl",
+            self.models_dir / "selected_features_range.pkl",
+        ]
 
     def _find_decision_source(self) -> Path | None:
         for p in [PATHS.base_dir / 'daily_decision_desk.csv', PATHS.data_dir / 'normalized_decision_output.csv']:
@@ -137,13 +142,21 @@ class TrainingOrchestrator:
     def _model_summary(self) -> Dict[str, Any]:
         files = [{"path": str(p), "exists": p.exists()} for p in self.required_model_files]
         existing = sum(1 for x in files if x["exists"])
-        score = 5 + existing * 15
+        directional_feature_files = [{"path": str(p), "exists": p.exists()} for p in self.directional_feature_files]
+        directional_model_files = sorted(self.models_dir.glob('model_long_*.pkl')) + sorted(self.models_dir.glob('model_short_*.pkl')) + sorted(self.models_dir.glob('model_range_*.pkl'))
+        directional_feature_count = sum(1 for x in directional_feature_files if x["exists"])
+        directional_model_count = len(directional_model_files)
+        score = 5 + existing * 12 + directional_feature_count * 5 + min(directional_model_count, 9) * 2
         return {
             "models_dir_exists": self.models_dir.exists(),
             "required_files": files,
             "existing_required_count": existing,
             "all_required_present": existing == len(files),
-            "readiness_score": min(score, 65),
+            "directional_feature_files": directional_feature_files,
+            "directional_feature_count": directional_feature_count,
+            "directional_model_count": directional_model_count,
+            "directional_model_paths_preview": [str(p) for p in directional_model_files[:12]],
+            "readiness_score": min(score, 90),
         }
 
     def _run_script(self, script_name: str) -> Dict[str, Any]:

@@ -30,8 +30,14 @@ class ApprovedArtifactLoader:
         safe = str(scope).replace('/', '_').replace('\\', '_')
         return self.root / f'approved_feature_snapshot_{safe}.pkl'
 
+    def _default_selected_feature_source(self, scope: str = 'default') -> Path:
+        scope_upper = str(scope or 'default').upper()
+        if scope_upper in {'LONG', 'SHORT', 'RANGE'}:
+            return PATHS.model_dir / f'selected_features_{scope_upper.lower()}.pkl'
+        return PATHS.model_dir / 'selected_features.pkl'
+
     def capture_selected_features_snapshot(self, source_path: str | Path | None = None, scope: str = 'default', approver: str = 'auto') -> dict[str, Any]:
-        src = Path(source_path) if source_path else (PATHS.model_dir / 'selected_features.pkl')
+        src = Path(source_path) if source_path else self._default_selected_feature_source(scope)
         if not src.exists():
             return {'status': 'source_missing', 'source_path': str(src)}
         dst = self._feature_pkl_path(scope)
@@ -74,7 +80,13 @@ class ApprovedArtifactLoader:
         approved = self._feature_pkl_path(scope)
         if use_approved and approved.exists():
             return approved
-        return PATHS.model_dir / 'selected_features.pkl'
+        return self._default_selected_feature_source(scope)
+
+    def capture_directional_selected_feature_snapshots(self, approver: str = 'auto') -> dict[str, Any]:
+        payload = {'generated_at': now_str(), 'status': 'directional_snapshot_batch_ready', 'scopes': {}}
+        for scope in ['LONG', 'SHORT', 'RANGE']:
+            payload['scopes'][scope] = self.capture_selected_features_snapshot(scope=scope, approver=approver)
+        return payload
 
     def approved_params_summary(self, scope: str = 'default') -> dict[str, Any]:
         row = load_approved_params(scope)

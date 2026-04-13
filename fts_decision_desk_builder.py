@@ -15,7 +15,7 @@ from fts_signal_gate import evaluate_signal_gate
 
 
 class DecisionDeskBuilder:
-    MODULE_VERSION = 'v86_decision_desk_builder_fallback_hardened'
+    MODULE_VERSION = 'v87_decision_desk_builder_hard_fail_fallback'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'decision_desk_builder.json'
@@ -53,11 +53,19 @@ class DecisionDeskBuilder:
             'Weighted_Sell_Score': safe_float(result.get('Weighted_Sell_Score', result.get('Sell_Score', 0.0)), 0.0),
             'Score_Gap': safe_float(result.get('Score_Gap', 0.0), 0.0),
             'Kelly_Pos': 0.0,
-            'Health': 'REVIEW_REQUIRED',
-            'DecisionSource': 'fallback_build',
+            'Target_Qty': 0,
+            'Reference_Price': 0.0,
+            'Health': 'FALLBACK_BUILD',
+            'DecisionSource': 'fallback_build_unusable',
             'RequiresReview': True,
             'FallbackBuild': True,
             'CanAutoSubmit': False,
+            'DeskUsable': False,
+            'ExecutionEligible': False,
+            'DeskIntegrity': 'degraded_fallback_only',
+            'ReviewSeverity': 'HARD_BLOCK',
+            'FallbackReason': 'upstream_decision_csv_missing_or_unhealthy',
+            'UpstreamHealthy': False,
         }
         gate = evaluate_signal_gate(row)
         row['SignalGatePassed'] = bool(gate['passed'])
@@ -90,18 +98,22 @@ class DecisionDeskBuilder:
         desk = self.build_decision_desk()
         climate = self.market.analyze_market_climate()
         fallback_rows = int((desk.get('FallbackBuild', pd.Series(dtype=bool)).fillna(False)).sum()) if not desk.empty else 0
+        usable_rows = int((desk.get('DeskUsable', pd.Series(dtype=bool)).fillna(False)).sum()) if not desk.empty else 0
         payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
             'output_path': str(self.output_path),
             'row_count': int(len(desk)),
             'fallback_row_count': fallback_rows,
+            'usable_row_count': usable_rows,
             'market_climate': climate,
-            'status': 'decision_desk_ready_with_review_fallbacks' if fallback_rows > 0 else 'decision_desk_ready',
+            'status': 'decision_desk_blocked_fallback_only' if fallback_rows > 0 and usable_rows == 0 else ('decision_desk_degraded_mixed' if fallback_rows > 0 else 'decision_desk_ready'),
             'fallback_policy': {
                 'kelly_default': 0.0,
-                'health_default': 'REVIEW_REQUIRED',
+                'health_default': 'FALLBACK_BUILD',
                 'auto_submit_allowed': False,
+                'execution_eligible_default': False,
+                'desk_usable_default': False,
             },
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')

@@ -30,6 +30,7 @@ from fts_recovery_engine import RecoveryEngine
 from fts_recovery_validation import RecoveryValidationBuilder
 from fts_reconciliation_engine import ReconciliationEngine
 from fts_tri_lane_orchestrator import TriLaneOrchestrator
+from fts_compat import DecisionCompatibilityLayer, apply_decision_integrity_flags
 from fts_prelive_runtime import write_json
 
 RUNTIME_DIR = PATHS.runtime_dir
@@ -120,12 +121,25 @@ def _safe_build(module_name: str, class_name: str, method_name: str, kwargs: Opt
 
 
 def _load_decision_df() -> pd.DataFrame:
-    for candidate in [PATHS.base_dir / 'daily_decision_desk.csv', PATHS.data_dir / 'daily_decision_desk.csv']:
-        if candidate.exists():
-            try:
-                return pd.read_csv(candidate)
-            except Exception:
-                continue
+    compat = DecisionCompatibilityLayer()
+    candidates = [
+        PATHS.data_dir / 'normalized_decision_output_enriched.csv',
+        PATHS.data_dir / 'normalized_decision_output.csv',
+        PATHS.base_dir / 'daily_decision_desk.csv',
+        PATHS.data_dir / 'daily_decision_desk.csv',
+    ]
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        try:
+            if candidate.name.startswith('normalized_decision_output'):
+                df = pd.read_csv(candidate)
+                df, _ = apply_decision_integrity_flags(df)
+            else:
+                df, _ = compat.normalize(candidate)
+            return df
+        except Exception:
+            continue
     return pd.DataFrame()
 
 
@@ -141,8 +155,13 @@ def _normalize_orders(df: pd.DataFrame) -> list[dict[str, Any]]:
         action = 'BUY'
         if '空' in direction or 'SHORT' in direction.upper():
             action = 'SHORT'
-        qty = int(max(1, round(float(row.get('Target_Qty', row.get('TargetQty', 1000)) or 1000))))
-        ref_price = float(row.get('Reference_Price', row.get('ref_price', 100.0)) or 100.0)
+        desk_usable = bool(row.get('DeskUsable', not bool(row.get('FallbackBuild', False))))
+        execution_eligible = bool(row.get('ExecutionEligible', row.get('CanAutoSubmit', False)))
+        market_rule_passed = bool(row.get('MarketRulePassed', False))
+        qty = int(max(0, round(float(row.get('Target_Qty', row.get('TargetQty', 0)) or 0))))
+        ref_price = float(row.get('Reference_Price', row.get('ref_price', 0.0)) or 0.0)
+        if not desk_usable or not execution_eligible or qty <= 0 or ref_price <= 0 or ('MarketRulePassed' in row and not market_rule_passed):
+            continue
         orders.append({
             'ticker': ticker,
             'action': action,

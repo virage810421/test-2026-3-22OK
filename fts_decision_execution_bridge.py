@@ -8,6 +8,7 @@ from fts_config import PATHS, CONFIG
 from fts_market_rules_tw import validate_order_payload
 from fts_price_gap_bridge import PriceGapBridge
 from fts_utils import now_str, log
+from fts_compat import DecisionCompatibilityLayer, apply_decision_integrity_flags
 
 
 class DecisionExecutionBridge:
@@ -20,13 +21,19 @@ class DecisionExecutionBridge:
         self.price_gap_bridge = PriceGapBridge()
 
     def _load_normalized(self) -> pd.DataFrame:
+        compat = DecisionCompatibilityLayer()
         for p in [PATHS.data_dir / 'normalized_decision_output_enriched.csv', PATHS.data_dir / 'normalized_decision_output.csv', PATHS.base_dir / 'daily_decision_desk.csv']:
-            if p.exists():
+            if not p.exists():
+                continue
+            if p.name.startswith('normalized_decision_output'):
                 df = pd.read_csv(p, encoding='utf-8-sig')
-                if 'Action' not in df.columns and 'Direction' in df.columns:
-                    mp = {'做多(Long)': 'BUY', '多方進場': 'BUY', 'BUY': 'BUY', '做空(Short)': 'SELL', '空方進場': 'SELL', 'SELL': 'SELL'}
-                    df['Action'] = df['Direction'].map(lambda x: mp.get(str(x).strip(), str(x).strip().upper()))
-                return df
+            else:
+                df, _ = compat.normalize(p)
+            if 'Action' not in df.columns and 'Direction' in df.columns:
+                mp = {'做多(Long)': 'BUY', '多方進場': 'BUY', 'BUY': 'BUY', '做空(Short)': 'SELL', '空方進場': 'SELL', 'SELL': 'SELL'}
+                df['Action'] = df['Direction'].map(lambda x: mp.get(str(x).strip(), str(x).strip().upper()))
+            df, _ = apply_decision_integrity_flags(df)
+            return df
         return pd.DataFrame()
 
     def _merge_prices(self, df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
@@ -63,6 +70,17 @@ class DecisionExecutionBridge:
             self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
             return self.output_path, payload
         df['Ticker'] = df['Ticker'].astype(str).str.strip()
+        pre_filter_rows = int(len(df))
+        executable_mask = df.get('DeskUsable', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool) & df.get('ExecutionEligible', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool)
+        integrity_invalid_rows = int((~df.get('DeskUsable', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool)).sum())
+        incomplete_rows = int((df.get('DeskUsable', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool) & ~df.get('ExecutionEligible', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool)).sum())
+        blocked_preview = df.loc[~executable_mask, 'Ticker'].astype(str).tolist()[:20] if len(df) else []
+        df = df.loc[executable_mask].copy()
+        filtered_out_rows = pre_filter_rows - int(len(df))
+        if df.empty:
+            payload = {'generated_at': now_str(), 'module_version': self.MODULE_VERSION, 'status': 'no_executable_signals_after_desk_integrity_filter', 'rows_total_before_filter': pre_filter_rows, 'rows_filtered_out': filtered_out_rows, 'integrity_invalid_rows': integrity_invalid_rows, 'incomplete_rows': incomplete_rows, 'blocked_tickers_preview': blocked_preview, 'output_path': str(self.output_path), 'watchlist_output_path': str(self.watchlist_output_path)}
+            self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+            return self.output_path, payload
         if 'Reference_Price' not in df.columns:
             existing_price_col = next((c for c in ('Close', 'Latest_Close', '收盤價', '最新收盤價') if c in df.columns), None)
             df['Reference_Price'] = pd.to_numeric(df[existing_price_col], errors='coerce').fillna(0) if existing_price_col else 0.0
@@ -155,6 +173,8 @@ class DecisionExecutionBridge:
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
             'rows_total': rows_total,
+            'rows_total_before_integrity_filter': pre_filter_rows,
+            'rows_filtered_out_by_desk_integrity': filtered_out_rows,
             'rows_with_price': rows_with_price,
             'rows_with_qty': rows_with_qty,
             'rows_market_rule_passed': rows_passed,
@@ -165,6 +185,8 @@ class DecisionExecutionBridge:
             'failed_tickers_preview': [x.get('ticker') for x in checks if not x.get('passed')][:20],
             'missing_price_tickers': df.loc[pd.to_numeric(df['Reference_Price'], errors='coerce').fillna(0) <= 0, 'Ticker'].astype(str).tolist(),
             'rows_board_lot_ready': int(((df['LotMode'] == 'board') & (pd.to_numeric(df['Reference_Price'], errors='coerce').fillna(0) > 0)).sum()),
+            'integrity_invalid_rows': integrity_invalid_rows,
+            'incomplete_rows': incomplete_rows,
             'rows_odd_lot_ready_for_paper': int(((df['LotMode'] == 'odd') & (df['MarketRulePassed'])).sum()),
             'execution_readiness_pct': execution_readiness_pct,
             'output_path': str(self.output_path),
