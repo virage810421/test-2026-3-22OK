@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-"""Level-2 wrapper for legacy yahoo_csv_to_sql.
+"""Legacy CLI facade for yahoo_csv_to_sql.
 
-保留舊檔名，但基本面 ETL 主線交給 fts_fundamentals_etl_mainline。
-修正：將 fundamentals_etl_mainline_ready / partial 視為成功狀態，
-避免 bootstrap 顯示 ok=False。
+新主線請直接走 fts_fundamentals_etl_mainline.FundamentalsETLMainline。
 """
+
+import warnings
 
 from fts_fundamentals_etl_mainline import FundamentalsETLMainline
 from fts_utils import log
 
-BRIDGE_LEVEL = 'level_2'
-BRIDGE_TARGET = 'fts_fundamentals_etl_mainline.FundamentalsETLMainline'
-LEGACY_SOURCE = 'legacy yahoo_csv_to_sql.py'
+LEGACY_FACADE = True
+SERVICE_ENTRYPOINT = 'fts_fundamentals_etl_mainline.FundamentalsETLMainline'
 
 SUCCESS_STATUSES = {
     'summary_ready',
@@ -25,10 +24,16 @@ SUCCESS_STATUSES = {
 }
 
 
+def smart_sync(*args, **kwargs):
+    warnings.warn('yahoo_csv_to_sql.py 已退役為 legacy facade；新主線請改用 fts_fundamentals_etl_mainline。', DeprecationWarning, stacklevel=2)
+    return FundamentalsETLMainline().smart_sync(*args, **kwargs)
+
+
 def main() -> int:
+    warnings.warn('yahoo_csv_to_sql.py 已退役為 legacy facade；新主線請改用 fts_fundamentals_etl_mainline。', DeprecationWarning, stacklevel=2)
     path, payload = FundamentalsETLMainline().build_summary()
     status = str(payload.get('status', '')).strip()
-    log(f'✅ yahoo_csv_to_sql 第二級主線完成：{path}')
+    log(f'✅ yahoo_csv_to_sql 主線完成：{path}')
     return 0 if status in SUCCESS_STATUSES else 1
 
 

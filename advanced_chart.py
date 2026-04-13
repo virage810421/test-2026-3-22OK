@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Level-1 compatibility bridge for advanced_chart.
+"""Legacy facade for advanced_chart.
 
-保留舊門牌 advanced_chart.py，真正圖表能力由 fts_chart_service.py 提供。
-採延後載入，避免單純 import / audit 時因 plotly、yfinance 等重依賴失敗。
+核心主線禁止依賴本檔；真正實作請走 fts_chart_service。
 """
 from __future__ import annotations
 
-BRIDGE_LEVEL = "level_1"
-BRIDGE_TARGET = "fts_chart_service.draw_chart"
-LEGACY_SOURCE = "advanced_chart(1).zip::advanced_chart.py"
+import warnings
+
+LEGACY_FACADE = True
+SERVICE_ENTRYPOINT = 'fts_chart_service.draw_chart'
+LEGACY_SOURCE = 'advanced_chart(1).zip::advanced_chart.py'
 
 
 def draw_chart(*args, **kwargs):
+    warnings.warn('advanced_chart.py 已退役為 legacy facade；新主線請改用 fts_chart_service.draw_chart。', DeprecationWarning, stacklevel=2)
     from fts_chart_service import draw_chart as _draw_chart
     return _draw_chart(*args, **kwargs)
 
 
-__all__ = ["draw_chart", "BRIDGE_LEVEL", "BRIDGE_TARGET", "LEGACY_SOURCE"]
+__all__ = ['draw_chart', 'LEGACY_FACADE', 'SERVICE_ENTRYPOINT', 'LEGACY_SOURCE']

@@ -3,10 +3,10 @@ from __future__ import annotations
 
 """Level-2 mainline orchestrator.
 
-目標：
-1. 保留舊研究/決策主體，但不讓舊版 master_pipeline.py 直接擔任唯一入口。
-2. 讓 ETL / decision / legacy pipeline 進入同一條可追蹤的 mainline。
-3. 供第三級控制塔 formal_trading_system_v83_official_main.py 統一調度。
+收尾目標：
+1. 預設改成 service-first，不再默默執行 legacy decision engine。
+2. 只有在明確開啟 execute_legacy_pipeline 時，才進入 legacy compatibility。
+3. 將 heuristics / model / execution 的分層狀態寫入 runtime，避免新舊主線混在一起。
 """
 
 import contextlib
@@ -96,7 +96,7 @@ class StageManager:
                 stdout_tail='\n'.join(buf_out.getvalue().splitlines()[-20:]),
                 stderr_tail='\n'.join(buf_err.getvalue().splitlines()[-20:]),
             )
-        except Exception as exc:
+        except Exception:
             return StageResult(
                 stage='python',
                 target=f'{module_name}.{attr_name}',
@@ -104,10 +104,11 @@ class StageManager:
                 mode='inprocess',
                 error=traceback.format_exc()[-4000:],
                 stdout_tail='\n'.join(buf_out.getvalue().splitlines()[-20:]),
-                stderr_tail='\n'.join(buf_err.getvalue().splitlines()[-20:]) + ('\n' + repr(exc)),
+                stderr_tail='\n'.join(buf_err.getvalue().splitlines()[-20:]),
             )
 
-    def run(self, execute_legacy: bool = True) -> dict[str, Any]:
+    def run(self, execute_legacy: bool = False) -> dict[str, Any]:
+        execute_legacy = bool(execute_legacy and getattr(CONFIG, 'execute_legacy_pipeline', False))
         etl_results = []
         for script_name in ['daily_chip_etl.py', 'monthly_revenue_simple.py', 'yahoo_csv_to_sql.py']:
             result = self.runner.run_script(script_name, timeout=getattr(CONFIG, 'upstream_timeout_seconds', 3600), critical=False)
@@ -119,27 +120,37 @@ class StageManager:
             result = self._call_module_main('fts_legacy_master_pipeline_impl', 'main')
             legacy_result = asdict(result)
             log(f"🧠 legacy decision engine | ok={result.ok}")
+        else:
+            log('🧭 level-2 mainline | legacy decision engine skipped (service-first mode)')
 
+        etl_ok = all(r['ok'] or r['skipped'] for r in etl_results)
         payload = {
             'generated_at': now_str(),
-            'module_version': 'v83_level2_mainline_integrated',
-            'status': 'mainline_ready' if (all(r['ok'] or r['skipped'] for r in etl_results) and (legacy_result['ok'] or legacy_result['skipped'])) else 'mainline_degraded',
+            'module_version': 'v86_level2_service_first_hardened',
+            'status': 'mainline_ready' if (etl_ok and (legacy_result['ok'] or legacy_result['skipped'])) else 'mainline_degraded',
+            'legacy_mode': 'compatibility_enabled' if execute_legacy else 'service_first',
+            'legacy_pipeline_enabled': bool(execute_legacy),
             'etl': etl_results,
             'legacy_pipeline': legacy_result,
             'decision_csv': str(PATHS.base_dir / 'daily_decision_desk.csv'),
             'model_dir': str(PATHS.model_dir),
+            'boundary_status': {
+                'heuristic_scope': 'setup_diagnostics_only',
+                'model_scope': 'edge_probability_and_expectancy',
+                'execution_scope': 'sizing_and_order_constraints',
+            },
         }
         RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         return payload
 
 
-def run_level2_mainline(execute_legacy: bool = True) -> tuple[str, dict[str, Any]]:
+def run_level2_mainline(execute_legacy: bool = False) -> tuple[str, dict[str, Any]]:
     payload = StageManager().run(execute_legacy=execute_legacy)
     return str(RUNTIME_PATH), payload
 
 
 def main() -> int:
-    path, payload = run_level2_mainline(execute_legacy=True)
+    path, payload = run_level2_mainline(execute_legacy=False)
     log(f'✅ level-2 mainline 完成：{path}')
     return 0 if payload.get('status') in {'mainline_ready', 'mainline_degraded'} else 1
 

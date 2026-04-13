@@ -1,21 +1,30 @@
 {
-  "generated_at": "2026-04-13 00:58:39",
+  "generated_at": "2026-04-13 15:08:13",
   "status": "directional_watchlists_promoted",
   "lanes": {
     "LONG": {
       "candidate_path": "C:\\test\\test-2026-3-22OK\\runtime\\candidate_live_watchlist_long.json",
       "approved_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_long.json",
-      "count": 8
+      "count": 8,
+      "provisional_count": 0,
+      "approved_count": 8,
+      "readiness_status": "approved_only"
     },
     "SHORT": {
       "candidate_path": "C:\\test\\test-2026-3-22OK\\runtime\\candidate_live_watchlist_short.json",
       "approved_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_short.json",
-      "count": 8
+      "count": 8,
+      "provisional_count": 0,
+      "approved_count": 8,
+      "readiness_status": "approved_only"
     },
     "RANGE": {
       "candidate_path": "C:\\test\\test-2026-3-22OK\\runtime\\candidate_live_watchlist_range.json",
       "approved_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
-      "count": 8
+      "count": 8,
+      "provisional_count": 0,
+      "approved_count": 8,
+      "readiness_status": "approved_only"
     }
   }
 }

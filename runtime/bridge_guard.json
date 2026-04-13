@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-04-13 13:41:56",
+  "mode": "PAPER",
+  "force_service_api_only": true,
+  "legacy_facade_callers": {
+    "screening": [],
+    "strategies": [],
+    "advanced_chart": []
+  },
+  "offender_count": 0,
+  "offenders": [],
+  "ok": true,
+  "status": "service_api_only"
+}

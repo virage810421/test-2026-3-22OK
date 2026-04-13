@@ -1,0 +1,8 @@
+{
+  "generated_at": "2026-04-13 13:21:44",
+  "module_version": "v20260413_db_migrations",
+  "schema_version": "20260413_architecture_finish_v2",
+  "created_tables": [],
+  "altered_columns": [],
+  "status": "db_upgrade_ready"
+}

@@ -5,7 +5,7 @@ from fts_utils import now_str, log
 
 class LegacyBridgeMapBuilder:
     def __init__(self):
-        self.path = PATHS.runtime_dir / "legacy_bridge_map.json"
+        self.path = PATHS.runtime_dir / "service_detachment_map.json"
 
     def build(self):
         payload = {

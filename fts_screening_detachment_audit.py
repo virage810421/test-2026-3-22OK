@@ -23,19 +23,20 @@ class ScreeningDetachmentAudit:
                 text = path.read_text(encoding='utf-8')
             except Exception:
                 continue
-            if 'import screening' in text or 'from screening import' in text:
-                if path.name == 'screening.py':
-                    continue
-                wrapper_imports.append(path.name)
+            for mod in ['screening', 'strategies', 'advanced_chart', 'master_pipeline', 'ml_data_generator', 'ml_trainer', 'yahoo_csv_to_sql']:
+                if f'import {mod}' in text or f'from {mod} import' in text:
+                    if path.name == f'{mod}.py':
+                        continue
+                    wrapper_imports.append(f'{path.name}:{mod}')
             if path.name != 'fts_screening_detachment_audit.py' and '_legacy_screening' in text:
                 direct_imports.append(path.name)
         payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
             'direct_legacy_fallback_modules': sorted(direct_imports),
-            'legacy_screening_import_callers': sorted(wrapper_imports),
-            'status': 'screening_detachment_audited',
-            'note': '目標是讓 service 不再反向 import 舊 screening.py；舊 screening.py 只保留相容 wrapper。',
+            'legacy_facade_import_callers': sorted(wrapper_imports),
+            'status': 'legacy_detachment_audited',
+            'note': '目標是讓核心主線不再反向 import 任一 legacy facade；legacy 檔只保留 CLI / 外部相容入口。',
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🧪 screening detachment audited: {self.runtime_path}')

@@ -12,7 +12,7 @@ import yfinance as yf
 
 from performance import check_strategy_health, get_strategy_ev
 from fundamental_screener import get_vip_stock_pool
-from screening import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
+from fts_service_api import add_chip_data, extract_ai_features, inspect_stock, normalize_ticker_symbol, smart_download
 from portfolio_risk import apply_portfolio_risk
 from system_guard import run_system_guard
 from fts_sql_table_name_map import sql_table

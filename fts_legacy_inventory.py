@@ -9,7 +9,7 @@ class LegacyInventoryBuilder:
         self.path = PATHS.runtime_dir / "legacy_inventory.json"
 
     def build(self):
-        keep_as_legacy_bridge = [
+        keep_as_service_facade = [
             "daily_chip_etl.py",
             "monthly_revenue_simple.py",
             "yahoo_csv_to_sql.py",
@@ -34,19 +34,19 @@ class LegacyInventoryBuilder:
             "formal_trading_system_v52.py",
         ]
         rows = []
-        for name in keep_as_legacy_bridge + likely_redundant_or_review:
+        for name in keep_as_service_facade + likely_redundant_or_review:
             p = PATHS.base_dir / name
             rows.append({
                 "file": name,
                 "exists": p.exists(),
-                "category": "legacy_bridge_keep" if name in keep_as_legacy_bridge else "older_mainline_review",
+                "category": "service_facade_keep" if name in keep_as_service_facade else "older_mainline_review",
             })
 
         payload = {
             "generated_at": now_str(),
             "system_name": CONFIG.system_name,
             "summary": {
-                "legacy_bridge_keep_count": len(keep_as_legacy_bridge),
+                "service_facade_keep_count": len(keep_as_service_facade),
                 "older_mainline_review_count": len(likely_redundant_or_review),
             },
             "rows": rows,

@@ -10,6 +10,15 @@
         "last_mutation_type": "callback_fill",
         "last_mutation_reason": "callback_fill",
         "updated_at": "2026-04-12 22:31:29"
+      },
+      "HC1": {
+        "order_id": "HC1",
+        "lane": "LONG",
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW",
+        "last_mutation_type": "callback_fill",
+        "last_mutation_reason": "callback_fill",
+        "updated_at": "2026-04-13 15:07:53"
       }
     },
     "SHORT": {},
@@ -63,6 +72,149 @@
       "at": "2026-04-12 22:31:29",
       "lane": "LONG",
       "order_id": "B1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 12:58:59",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 12:59:46",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:00:16",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:04:53",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:06:21",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:22:39",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:36:34",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:37:02",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:41:28",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 13:54:56",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 15:01:44",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 15:02:13",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-13 15:07:53",
+      "lane": "LONG",
+      "order_id": "HC1",
       "mutation_type": "callback_fill",
       "reason": "callback_fill",
       "patch": {

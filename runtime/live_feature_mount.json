@@ -1,12 +1,95 @@
 {
-  "generated_at": "2026-04-13 01:22:44",
+  "generated_at": "2026-04-13 15:16:29",
   "module_version": "v85_feature_service_directional_range_safe",
-  "ticker": "2603.TW",
+  "ticker": "1325.TW",
   "selected_feature_count": 4,
   "mounted_feature_count": 0,
   "selected_features_present": true,
   "strict_feature_parity": true,
   "official_percentile_mode": true,
   "precise_event_calendar_mode": true,
+  "feature_manifest_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_feature_manifest.json",
+  "manifest_checks": {
+    "manifest_present": true,
+    "manifest_selected_feature_count": 4,
+    "selected_feature_count_live": 4,
+    "selected_features_match": true,
+    "missing_from_live": [],
+    "extra_in_live": [],
+    "directional_required_in_live": false,
+    "directional_live_enabled": false,
+    "directional_alignment_ok": true,
+    "runtime_artifacts_ready": true,
+    "artifact_status": {
+      "generated_at": "2026-04-13 15:16:29",
+      "artifact_max_age_days": 7,
+      "require_runtime_artifacts": true,
+      "artifacts": {
+        "event_runtime": {
+          "path": "C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
+          "exists": true,
+          "fresh": true,
+          "age_days": 0.0064,
+          "missing_columns": [],
+          "row_count": null,
+          "coverage_ratio": null,
+          "source_data_cutoff": "2026-04-13 15:07:19",
+          "status": "ready",
+          "ok": true
+        },
+        "event_table": {
+          "path": "C:\\test\\test-2026-3-22OK\\data\\feature_event_calendar.csv",
+          "exists": true,
+          "fresh": true,
+          "age_days": 0.0064,
+          "missing_columns": [],
+          "row_count": 3207,
+          "coverage_ratio": 1.0,
+          "source_data_cutoff": null,
+          "status": "ready",
+          "ok": true
+        },
+        "percentile_runtime": {
+          "path": "C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
+          "exists": true,
+          "fresh": true,
+          "age_days": 0.0064,
+          "missing_columns": [],
+          "row_count": null,
+          "coverage_ratio": null,
+          "source_data_cutoff": "2026-04-13 15:07:18",
+          "status": "ready",
+          "ok": true
+        },
+        "percentile_snapshot": {
+          "path": "C:\\test\\test-2026-3-22OK\\data\\feature_cross_section_snapshot.csv",
+          "exists": true,
+          "fresh": true,
+          "age_days": 0.0064,
+          "missing_columns": [],
+          "row_count": 1071,
+          "coverage_ratio": 1.0,
+          "source_data_cutoff": null,
+          "status": "ready",
+          "ok": true
+        },
+        "selected_features": {
+          "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features.pkl",
+          "exists": true,
+          "fresh": true,
+          "age_days": 2.612,
+          "missing_columns": [],
+          "row_count": null,
+          "coverage_ratio": null,
+          "source_data_cutoff": null,
+          "status": "ready",
+          "ok": true
+        }
+      },
+      "runtime_artifacts_ready": true
+    },
+    "status": "ready",
+    "ok": true
+  },
   "status": "live_feature_mount_waiting_for_selected_features"
 }

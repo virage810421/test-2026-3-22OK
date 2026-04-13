@@ -31,7 +31,7 @@ class BridgeReplacementPlanBuilder:
                 },
                 {
                     "wave": 3,
-                    "focus": "保留少數高價值專業引擎",
+                    "focus": "保留少數外部 facade，但核心流程全面改走 service API",
                     "targets": [
                         "advanced_chart.py",
                         "daily_chip_etl.py"

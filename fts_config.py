@@ -158,6 +158,7 @@ class SystemConfig:
     feature_manifest_filename: str = 'training_feature_manifest.json'
     feature_parity_require_runtime_artifacts: bool = True
     feature_artifact_max_age_days: int = 7
+    force_shared_feature_universe: bool = True
     broker_contract_filename: str = 'broker_submission_contract.json'
     broker_requirements_filename: str = 'broker_requirements_contract.json'
     model_min_oot_pf: float = 1.0
@@ -165,11 +166,18 @@ class SystemConfig:
     model_min_promotion_score: float = 0.0
 
     # ---- 文件8：directional/range maturity safe overlay ----
-    enable_directional_features_in_training: bool = True
+    enable_directional_features_in_training: bool = False
     enable_directional_features_in_live: bool = False
     enable_directional_alpha_miner: bool = True
     enable_range_confidence_service: bool = True
     directional_backtest_safe_mode: bool = True
+
+    # ---- legacy detachment / service-first guard ----
+    force_service_api_only: bool = True
+    allow_legacy_facade_in_research: bool = False
+    allow_legacy_facade_in_live: bool = False
+    bridge_guard_fail_closed: bool = True
+    prefer_sqlalchemy_db: bool = True
 
 
 @dataclass

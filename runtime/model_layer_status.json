@@ -1,24 +1,25 @@
 {
-  "regime": "區間盤整",
-  "model_source": "parity_locked_signal_confidence",
-  "proba": 0.7,
-  "realized_ev": 0.0,
-  "sample_size": 232,
-  "signal_confidence": 0.7,
-  "min_proba": 0.53,
-  "approved": false,
-  "veto_reasons": [
-    "selected_features_not_ready:min_required_6",
-    "non_positive_ev:0.0000"
-  ],
-  "conviction_multiplier": 0.0,
+  "selected_features_present": true,
+  "selected_feature_count": 4,
   "selected_features_ready": false,
+  "selected_features_min_required": 6,
+  "loaded_regimes": [
+    "區間盤整",
+    "趨勢多頭",
+    "趨勢空頭"
+  ],
   "strict_parity": true,
-  "model_scope": "RANGE",
-  "model_bucket": "RANGE",
-  "feature_scope": "RANGE",
-  "direction_scope": "RANGE",
-  "debug": {
-    "selected_count": 4
-  }
+  "directional_model_counts": {
+    "LONG": 3,
+    "SHORT": 3,
+    "RANGE": 3
+  },
+  "directional_bootstrap_enabled": true,
+  "directional_feature_counts": {
+    "LONG": 4,
+    "SHORT": 4,
+    "RANGE": 4
+  },
+  "status": "model_layer_degraded",
+  "allow_heuristic_model_fallback": false
 }

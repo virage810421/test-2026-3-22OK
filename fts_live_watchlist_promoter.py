@@ -65,11 +65,8 @@ class LiveWatchlistPromoter:
                 'liquidity_score': 1.0,
                 'feature_coverage': 1.0,
                 'approval_reason': 'seed_from_core_watchlist',
-<<<<<<< HEAD
                 'provisional': True,
                 'readiness_tier': 'seed_only',
-=======
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
             })
         return items
 

@@ -1,8 +1,9 @@
 {
-  "generated_at": "2026-04-12 21:53:40",
+  "generated_at": "2026-04-13 15:16:46",
   "module_version": "v85_feature_service_directional_range_safe",
   "selected_feature_count": 4,
-  "registry_row_count": 108,
+  "registry_row_count": 85,
   "selected_features_present": true,
-  "status": "training_feature_registry_ready"
+  "status": "training_feature_registry_ready",
+  "feature_manifest_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_feature_manifest.json"
 }

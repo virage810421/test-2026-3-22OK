@@ -12,9 +12,9 @@ class ChartBridgeRegistry:
             "generated_at": now_str(),
             "system_name": CONFIG.system_name,
             "charting": {
-                "current_mode": "legacy_bridge",
-                "rendering_source": "舊版 research/chart 模組為主，新主控負責掛回與治理",
-                "status": "partially_migrated",
+                "current_mode": "service_facade_only",
+                "rendering_source": "正式主線已改走 fts_chart_service，舊檔名僅保留外部相容入口",
+                "status": "legacy_facade_decommissioning",
                 "notes": [
                     "目前畫圖/圖表多數仍沿用舊版模組輸出",
                     "新主控已可把 research/decision/execution 納回流程，但尚未完全重寫成新圖表引擎",

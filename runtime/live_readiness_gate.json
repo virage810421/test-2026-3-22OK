@@ -1,5 +1,5 @@
 {
-  "module_version": "v64",
+  "module_version": "v86_split_readiness",
   "checks": {
     "mode_is_live": false,
     "broker_is_real": false,
@@ -8,12 +8,59 @@
     "kill_switch_defined": true,
     "credentials_file_present": false,
     "price_snapshot_present": false,
-    "training_artifacts_present": true
+    "training_artifacts_present": true,
+    "feature_observability_present": true,
+    "shared_only_live_mode": true,
+    "directional_research_not_live": false
   },
   "payload_check_total": 0,
   "payload_check_passed": 0,
   "payload_checks": [],
   "hard_blocks": [],
+  "warnings": [],
+  "prelive_ready": true,
+  "broker_production_ready": false,
   "live_ready": false,
+  "score_split": {
+    "research_paper_prelive_score": 4,
+    "true_broker_score": 1,
+    "executable_score": 4
+  },
+  "feature_observability": {
+    "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
+    "payload": {
+      "generated_at": "2026-04-13 15:08:11",
+      "module_version": "v86_feature_observability",
+      "strict_feature_parity": true,
+      "force_shared_feature_universe": true,
+      "directional_live_enabled": false,
+      "selected_feature_count": 4,
+      "shared_selected_count": 4,
+      "directional_selected_counts": {
+        "LONG": 4,
+        "SHORT": 4,
+        "RANGE": 4
+      },
+      "shared_live_features": [
+        "MACD_Hist",
+        "Regime_TrendStrength_X_ScoreGap",
+        "Score_Gap",
+        "Volume_Z20"
+      ],
+      "mounted_directional_live_features": [],
+      "blocked_directional_live_features": [],
+      "research_only_features": [],
+      "live_feature_policy": "shared_only",
+      "artifacts": {
+        "selected_features.pkl": true,
+        "selected_features_long.pkl": true,
+        "selected_features_short.pkl": true,
+        "selected_features_range.pkl": true,
+        "feature_parity_status.json": true,
+        "live_feature_mount.json": true
+      },
+      "status": "observable"
+    }
+  },
   "status": "ready"
 }

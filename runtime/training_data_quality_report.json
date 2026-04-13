@@ -1,14 +1,11 @@
 {
-  "generated_at": "2026-04-13 00:58:33",
+  "generated_at": "2026-04-13 15:16:44",
   "dataset_name": "ml_training_generated",
-  "rows": 5682,
-  "columns": 108,
+  "rows": 41813,
+  "columns": 85,
   "missing_required_columns": [],
   "required_columns_with_null_rate": {},
   "columns_with_null_rate": {},
   "status": "ok",
-  "missing_flag_columns_added": [],
-  "validation_failures": [],
-  "validation_warnings": [],
-  "validated_rows": 5682
+  "missing_flag_columns_added": []
 }

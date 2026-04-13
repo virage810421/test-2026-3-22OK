@@ -119,8 +119,30 @@ def build_entry_metrics(row, params=PARAMS):
     }
 
 
+def _lane_thresholds(strategy_bucket: str, params=PARAMS) -> tuple[float, float, float]:
+    lane = str(strategy_bucket or 'LONG').upper()
+    if lane == 'SHORT':
+        return (
+            float(params.get('SHORT_MIN_PROBA', params.get('LONG_MIN_PROBA', 0.52))),
+            float(params.get('SHORT_MIN_OOT_EV', 0.0)),
+            float(params.get('SHORT_MIN_CONFIDENCE', 0.50)),
+        )
+    if lane == 'RANGE':
+        return (
+            float(params.get('RANGE_MIN_PROBA', params.get('LONG_MIN_PROBA', 0.52))),
+            float(params.get('RANGE_MIN_OOT_EV', 0.0)),
+            float(params.get('RANGE_MIN_CONFIDENCE', 0.50)),
+        )
+    return (
+        float(params.get('LONG_MIN_PROBA', 0.52)),
+        float(params.get('LONG_MIN_OOT_EV', 0.0)),
+        float(params.get('LONG_MIN_CONFIDENCE', 0.50)),
+    )
+
+
 def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
     reasons: list[str] = []
+    diagnostics: list[str] = []
     kelly_pct = _safe_float(row.get('Kelly_Pos', 0.0), 0.0)
     weighted_buy = _safe_float(row.get('Weighted_Buy_Score', 0.0), 0.0)
     weighted_sell = _safe_float(row.get('Weighted_Sell_Score', 0.0), 0.0)
@@ -137,50 +159,62 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
     if strategy_bucket not in {'LONG', 'SHORT', 'RANGE'}:
         strategy_bucket = raw_direction if raw_direction in {'LONG', 'SHORT', 'RANGE'} else 'LONG'
 
-    trigger = float(params.get('TRIGGER_SCORE', 2))
-    if strategy_bucket == 'SHORT':
-        trigger = float(params.get('SHORT_TRIGGER_SCORE', trigger))
-    elif strategy_bucket == 'RANGE':
-        trigger = float(params.get('RANGE_TRIGGER_SCORE', max(1.0, trigger - 0.5)))
+    min_proba, min_ev, min_conf = _lane_thresholds(strategy_bucket, params)
+    ai_proba = _safe_float(row.get('AI_Proba', 0.0), 0.0)
+    realized_ev = _safe_float(row.get('Realized_EV', 0.0), 0.0)
+    signal_conf = _safe_float(row.get('訊號信心分數(%)', ai_proba * 100.0), ai_proba * 100.0) / 100.0
 
+    # Weighted scores are kept as secondary diagnostics, not as the alpha gate.
     if strategy_bucket == 'SHORT':
         short_gap = weighted_sell - weighted_buy
-        if weighted_sell < max(1.0, trigger):
-            reasons.append('weighted_sell_below_trigger')
+        if weighted_sell < max(1.0, float(params.get('SHORT_TRIGGER_SCORE', params.get('TRIGGER_SCORE', 2.0)))):
+            diagnostics.append('diag_weighted_sell_below_trigger')
         if weighted_buy >= weighted_sell:
-            reasons.append('buy_pressure_not_cleared')
+            diagnostics.append('diag_buy_pressure_not_cleared')
         if short_gap <= 0:
-            reasons.append('negative_short_score_gap')
+            diagnostics.append('diag_negative_short_score_gap')
     elif strategy_bucket == 'RANGE':
         dominant_range_score = max(weighted_buy, weighted_sell)
-        max_range_gap = float(params.get('RANGE_MAX_SCORE_GAP_ABS', max(0.75, trigger)))
-        range_confidence = _safe_float(row.get('Range_Confidence', row.get('Range_Confidence_At_Label', 0.0)), 0.0)
-        min_range_conf = float(params.get('RANGE_MIN_CONFIDENCE', 0.0))
-        if dominant_range_score < max(1.0, trigger):
-            reasons.append('range_score_below_trigger')
+        max_range_gap = float(params.get('RANGE_MAX_SCORE_GAP_ABS', 1.25))
+        range_confidence = _safe_float(row.get('Range_Confidence', row.get('Range_Confidence_At_Label', signal_conf)), signal_conf)
+        if dominant_range_score < max(1.0, float(params.get('RANGE_TRIGGER_SCORE', 1.0))):
+            diagnostics.append('diag_range_score_below_trigger')
         if abs(score_gap) > max_range_gap:
-            reasons.append('range_score_gap_too_wide')
-        if range_confidence < min_range_conf:
+            diagnostics.append('diag_range_score_gap_too_wide')
+        if range_confidence < min_conf:
             reasons.append('range_confidence_low')
     else:
-        if weighted_buy < max(1.0, trigger):
-            reasons.append('weighted_buy_below_trigger')
+        if weighted_buy < max(1.0, float(params.get('TRIGGER_SCORE', 2.0))):
+            diagnostics.append('diag_weighted_buy_below_trigger')
         if weighted_sell >= weighted_buy:
-            reasons.append('sell_pressure_not_cleared')
+            diagnostics.append('diag_sell_pressure_not_cleared')
         if score_gap <= 0:
-            reasons.append('negative_score_gap')
+            diagnostics.append('diag_negative_score_gap')
 
-    if model_decision is not None and not bool(getattr(model_decision, 'approved', False)):
-        reasons.extend(list(getattr(model_decision, 'veto_reasons', [])))
-    elif model_decision is None:
-        ai_proba = _safe_float(row.get('AI_Proba', 0.0), 0.0)
-        realized_ev = _safe_float(row.get('Realized_EV', 0.0), 0.0)
-        if ai_proba < 0.50:
-            reasons.append('ai_proba_low')
-        if realized_ev <= 0:
-            reasons.append('realized_ev_non_positive')
+    if model_decision is not None:
+        if not bool(getattr(model_decision, 'approved', False)):
+            reasons.extend(list(getattr(model_decision, 'veto_reasons', [])))
+        else:
+            decision_proba = _safe_float(getattr(model_decision, 'proba', ai_proba), ai_proba)
+            decision_ev = _safe_float(getattr(model_decision, 'realized_ev', realized_ev), realized_ev)
+            decision_conf = _safe_float(getattr(model_decision, 'signal_confidence', signal_conf), signal_conf)
+            if decision_proba < min_proba:
+                reasons.append(f'model_proba_low:{decision_proba:.3f}<{min_proba:.3f}')
+            if decision_ev < min_ev:
+                reasons.append(f'model_ev_low:{decision_ev:.4f}<{min_ev:.4f}')
+            if decision_conf < min_conf:
+                reasons.append(f'model_confidence_low:{decision_conf:.3f}<{min_conf:.3f}')
+    else:
+        if ai_proba < min_proba:
+            reasons.append(f'ai_proba_low:{ai_proba:.3f}<{min_proba:.3f}')
+        if realized_ev < min_ev:
+            reasons.append(f'realized_ev_low:{realized_ev:.4f}<{min_ev:.4f}')
+        if signal_conf < min_conf:
+            reasons.append(f'signal_confidence_low:{signal_conf:.3f}<{min_conf:.3f}')
 
-    return GateDecision(allowed=not reasons, reasons=reasons)
+    # Expose heuristic weaknesses without blocking a model-approved trade.
+    row['_signal_gate_diagnostics'] = diagnostics
+    return GateDecision(allowed=not reasons, reasons=reasons + diagnostics[:0])
 
 
 def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', params=PARAMS) -> GateDecision:

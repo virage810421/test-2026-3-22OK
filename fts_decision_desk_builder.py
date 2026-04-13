@@ -11,11 +11,11 @@ from fts_utils import now_str, log, resolve_decision_csv, safe_float
 from fts_watchlist_service import WatchlistService
 from fts_market_climate_service import MarketClimateService
 from fts_screening_engine import ScreeningEngine
-from fts_signal_gate import passes_signal_gate
+from fts_signal_gate import evaluate_signal_gate
 
 
 class DecisionDeskBuilder:
-    MODULE_VERSION = 'v83_decision_desk_builder'
+    MODULE_VERSION = 'v86_decision_desk_builder_fallback_hardened'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'decision_desk_builder.json'
@@ -38,12 +38,34 @@ class DecisionDeskBuilder:
             df = df.rename(columns=rename_map)
         return df
 
-    @staticmethod
-    def _metric_from_result(result: dict[str, Any], key: str, default: float = 0.0) -> float:
-        nested = result.get('ai_features_latest', {}) if isinstance(result.get('ai_features_latest', {}), dict) else {}
-        if key in result:
-            return safe_float(result.get(key, default), default)
-        return safe_float(nested.get(key, default), default)
+    def _fallback_row(self, ticker: str, result: dict[str, Any]) -> dict[str, Any]:
+        direction = str(result.get('Golden_Type', result.get('Direction', 'LONG')) or 'LONG')
+        row = {
+            'Ticker': ticker,
+            'Structure': result.get('Structure', 'AI訊號'),
+            'Regime': result.get('Regime', '區間盤整'),
+            'Direction': direction,
+            'Golden_Type': direction,
+            'AI_Proba': safe_float(result.get('AI_Proba', 0.5), 0.5),
+            'Realized_EV': safe_float(result.get('Realized_EV', 0.0), 0.0),
+            'Sample_Size': int(safe_float(result.get('Sample_Size', result.get('歷史訊號樣本數', 0)), 0)),
+            'Weighted_Buy_Score': safe_float(result.get('Weighted_Buy_Score', result.get('Buy_Score', 0.0)), 0.0),
+            'Weighted_Sell_Score': safe_float(result.get('Weighted_Sell_Score', result.get('Sell_Score', 0.0)), 0.0),
+            'Score_Gap': safe_float(result.get('Score_Gap', 0.0), 0.0),
+            'Kelly_Pos': 0.0,
+            'Health': 'REVIEW_REQUIRED',
+            'DecisionSource': 'fallback_build',
+            'RequiresReview': True,
+            'FallbackBuild': True,
+            'CanAutoSubmit': False,
+        }
+        gate = evaluate_signal_gate(row)
+        row['SignalGatePassed'] = bool(gate['passed'])
+        row['SignalGateNote'] = gate['note']
+        row['SignalGateBlockers'] = '|'.join(gate['blockers'])
+        row['SignalGateWarnings'] = '|'.join(gate['warnings'])
+        row['HeuristicRole'] = gate['heuristic_role']
+        return row
 
     def build_decision_desk(self, limit: int = 12) -> pd.DataFrame:
         existing = resolve_decision_csv()
@@ -55,23 +77,7 @@ class DecisionDeskBuilder:
                 result = self.screen.inspect_stock(ticker)
                 if not result:
                     continue
-                row = {
-                    'Ticker': ticker,
-                    'Structure': result.get('Structure', 'AI訊號'),
-                    'Regime': result.get('Regime', '區間盤整'),
-                    'AI_Proba': result.get('AI_Proba', 0.5),
-                    'Realized_EV': result.get('Realized_EV', 0.0),
-                    'Sample_Size': result.get('Sample_Size', 0),
-                    'Weighted_Buy_Score': self._metric_from_result(result, 'Weighted_Buy_Score', 0.0),
-                    'Weighted_Sell_Score': self._metric_from_result(result, 'Weighted_Sell_Score', 0.0),
-                    'Score_Gap': self._metric_from_result(result, 'Score_Gap', 0.0),
-                    'Kelly_Pos': 0.05,
-                    'Health': 'KEEP',
-                }
-                gate, note = passes_signal_gate(row)
-                row['SignalGatePassed'] = gate
-                row['SignalGateNote'] = note
-                rows.append(row)
+                rows.append(self._fallback_row(ticker, result))
             df = pd.DataFrame(rows)
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         try:
@@ -83,13 +89,20 @@ class DecisionDeskBuilder:
     def build_summary(self) -> tuple[Any, dict[str, Any]]:
         desk = self.build_decision_desk()
         climate = self.market.analyze_market_climate()
+        fallback_rows = int((desk.get('FallbackBuild', pd.Series(dtype=bool)).fillna(False)).sum()) if not desk.empty else 0
         payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
             'output_path': str(self.output_path),
             'row_count': int(len(desk)),
+            'fallback_row_count': fallback_rows,
             'market_climate': climate,
-            'status': 'wave3_decision_desk_rules_ready',
+            'status': 'decision_desk_ready_with_review_fallbacks' if fallback_rows > 0 else 'decision_desk_ready',
+            'fallback_policy': {
+                'kelly_default': 0.0,
+                'health_default': 'REVIEW_REQUIRED',
+                'auto_submit_allowed': False,
+            },
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🧭 decision desk builder ready: {self.runtime_path}')

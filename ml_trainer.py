@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
-"""Level-1 compatibility bridge for ml_trainer.
-
-保留 advanced_chart(1) 時代的函式名稱；主訓練主線改由 fts_trainer_backend 提供。
-"""
+"""Legacy facade for ml_trainer."""
 from __future__ import annotations
 
+import warnings
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
 import fts_trainer_backend as _backend
 
-BRIDGE_LEVEL = 'level_1'
-BRIDGE_TARGET = 'fts_trainer_backend.train_models'
-LEGACY_SOURCE = 'advanced_chart(1).zip::ml_trainer.py'
+LEGACY_FACADE = True
+SERVICE_ENTRYPOINT = 'fts_trainer_backend.train_models'
 
 
 def evaluate_alpha_full(signal, future_return):
+    warnings.warn('ml_trainer.py 已退役為 legacy facade；新主線請改用 fts_trainer_backend。', DeprecationWarning, stacklevel=2)
     return _backend._evaluate_alpha(pd.Series(signal), pd.Series(future_return))
 
 
@@ -54,13 +52,7 @@ def walk_forward_analysis(X, y, target_return, p=None):
 
 def evaluate_stability(results):
     if not results:
-        return {
-            'ret_mean': 0.0,
-            'consistency': 0.0,
-            'pf_mean': 0.0,
-            'sharpe_mean': 0.0,
-            'coverage_mean': 0.0,
-        }
+        return {'ret_mean': 0.0, 'consistency': 0.0, 'pf_mean': 0.0, 'sharpe_mean': 0.0, 'coverage_mean': 0.0}
     returns = [r.get('return', 0.0) for r in results]
     pfs = [r.get('profit_factor', 0.0) for r in results]
     sharpes = [r.get('sharpe_like', 0.0) for r in results]
@@ -74,20 +66,9 @@ def evaluate_stability(results):
     }
 
 
-
 def train_models():
-    result = _backend.train_models()
-    try:
-        from fts_directional_artifact_bootstrap import bootstrap_directional_artifacts
-        bootstrap_directional_artifacts(force=False)
-    except Exception:
-        pass
-    try:
-        from fts_training_ticker_scoreboard import build_scoreboard
-        build_scoreboard()
-    except Exception:
-        pass
-    return result
+    warnings.warn('ml_trainer.py 已退役為 legacy facade；新主線請改用 fts_trainer_backend。', DeprecationWarning, stacklevel=2)
+    return _backend.train_models()
 
 
 if __name__ == '__main__':

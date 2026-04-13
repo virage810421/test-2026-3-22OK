@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-04-13 01:22:37",
+  "generated_at": "2026-04-13 15:08:13",
   "status": "directional_watchlist_loaded",
+  "readiness_status": "approved_only",
   "items": [
     {
       "ticker": "2330.TW",
@@ -12,6 +13,8 @@
       "liquidity_score": 1.0,
       "feature_coverage": 1.0,
       "approval_reason": "scoreboard_promotion",
+      "provisional": false,
+      "readiness_tier": "approved",
       "optimizer_penalty": 0.0,
       "optimized_score": 6.015452898388236
     },
@@ -25,6 +28,8 @@
       "liquidity_score": 1.0,
       "feature_coverage": 1.0,
       "approval_reason": "scoreboard_promotion",
+      "provisional": false,
+      "readiness_tier": "approved",
       "optimizer_penalty": 0.05,
       "optimized_score": -2.587921016785129
     },
@@ -38,6 +43,8 @@
       "liquidity_score": 1.0,
       "feature_coverage": 1.0,
       "approval_reason": "scoreboard_promotion",
+      "provisional": false,
+      "readiness_tier": "approved",
       "optimizer_penalty": 0.0,
       "optimized_score": 18.781209438848293
     },
@@ -51,6 +58,8 @@
       "liquidity_score": 1.0,
       "feature_coverage": 1.0,
       "approval_reason": "scoreboard_promotion",
+      "provisional": false,
+      "readiness_tier": "approved",
       "optimizer_penalty": 0.05,
       "optimized_score": 15.240199761041156
     },
@@ -64,6 +73,8 @@
       "liquidity_score": 1.0,
       "feature_coverage": 1.0,
       "approval_reason": "scoreboard_promotion",
+      "provisional": false,
+      "readiness_tier": "approved",
       "optimizer_penalty": 0.0,
       "optimized_score": 1.250737798691429
     },
@@ -77,6 +88,8 @@
       "liquidity_score": 1.0,
       "feature_coverage": 1.0,
       "approval_reason": "scoreboard_promotion",
+      "provisional": false,
+      "readiness_tier": "approved",
       "optimizer_penalty": 0.05,
       "optimized_score": 1.1527848674857768
     },
@@ -90,6 +103,8 @@
       "liquidity_score": 1.0,
       "feature_coverage": 1.0,
       "approval_reason": "scoreboard_promotion",
+      "provisional": false,
+      "readiness_tier": "approved",
       "optimizer_penalty": 0.1,
       "optimized_score": 1.1023287513734434
     }
@@ -106,6 +121,8 @@
         "liquidity_score": 1.0,
         "feature_coverage": 1.0,
         "approval_reason": "scoreboard_promotion",
+        "provisional": false,
+        "readiness_tier": "approved",
         "optimizer_penalty": 0.0,
         "optimized_score": 6.015452898388236
       },
@@ -119,6 +136,8 @@
         "liquidity_score": 1.0,
         "feature_coverage": 1.0,
         "approval_reason": "scoreboard_promotion",
+        "provisional": false,
+        "readiness_tier": "approved",
         "optimizer_penalty": 0.05,
         "optimized_score": -2.587921016785129
       }
@@ -134,6 +153,8 @@
         "liquidity_score": 1.0,
         "feature_coverage": 1.0,
         "approval_reason": "scoreboard_promotion",
+        "provisional": false,
+        "readiness_tier": "approved",
         "optimizer_penalty": 0.0,
         "optimized_score": 18.781209438848293
       },
@@ -147,6 +168,8 @@
         "liquidity_score": 1.0,
         "feature_coverage": 1.0,
         "approval_reason": "scoreboard_promotion",
+        "provisional": false,
+        "readiness_tier": "approved",
         "optimizer_penalty": 0.05,
         "optimized_score": 15.240199761041156
       }
@@ -162,6 +185,8 @@
         "liquidity_score": 1.0,
         "feature_coverage": 1.0,
         "approval_reason": "scoreboard_promotion",
+        "provisional": false,
+        "readiness_tier": "approved",
         "optimizer_penalty": 0.0,
         "optimized_score": 1.250737798691429
       },
@@ -175,6 +200,8 @@
         "liquidity_score": 1.0,
         "feature_coverage": 1.0,
         "approval_reason": "scoreboard_promotion",
+        "provisional": false,
+        "readiness_tier": "approved",
         "optimizer_penalty": 0.05,
         "optimized_score": 1.1527848674857768
       },
@@ -188,12 +215,36 @@
         "liquidity_score": 1.0,
         "feature_coverage": 1.0,
         "approval_reason": "scoreboard_promotion",
+        "provisional": false,
+        "readiness_tier": "approved",
         "optimizer_penalty": 0.1,
         "optimized_score": 1.1023287513734434
       }
     ]
   },
+  "lane_readiness": {
+    "LONG": {
+      "count": 2,
+      "approved_count": 2,
+      "provisional_count": 0,
+      "status": "approved_only"
+    },
+    "SHORT": {
+      "count": 2,
+      "approved_count": 2,
+      "provisional_count": 0,
+      "status": "approved_only"
+    },
+    "RANGE": {
+      "count": 3,
+      "approved_count": 3,
+      "provisional_count": 0,
+      "status": "approved_only"
+    }
+  },
   "total_count": 7,
+  "provisional_item_count": 0,
+  "approved_item_count": 7,
   "sector_counts": {
     "未知::LONG": 2,
     "未知::SHORT": 2,

@@ -12,7 +12,7 @@ class ChartArtifactRegistry:
             "generated_at": now_str(),
             "system_name": CONFIG.system_name,
             "artifact_policy": {
-                "source_mode": "legacy_bridge_primary",
+                "source_mode": "service_primary_with_external_facade",
                 "expected_artifacts": [
                     "advanced_chart output",
                     "research chart png/html artifact",

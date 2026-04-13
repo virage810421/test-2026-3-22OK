@@ -16,17 +16,19 @@ EXCLUDE_DIRS = {
     "archive", ".mypy_cache", ".pytest_cache"
 }
 
-WRAPPER_MAP = {
-    "advanced_chart.py": "fts_chart_service.py",
-    "daily_chip_etl.py": "fts_etl_daily_chip_service.py",
-    "monthly_revenue_simple.py": "fts_etl_monthly_revenue_service.py",
-    "ml_data_generator.py": "fts_training_data_builder.py",
-    "ml_trainer.py": "fts_trainer_backend.py",
-    "screening.py": "fts_screening_engine.py",
-    "master_pipeline.py": "fts_pipeline.py",
-    "yahoo_csv_to_sql.py": "fts_fundamentals_etl_mainline.py",
-    "formal_trading_system_v83_official_main.py": "fts_control_tower.py",
+WRAPPER_POLICY = {
+    "advanced_chart.py": {"service": "fts_chart_service.py", "mode": "required"},
+    "daily_chip_etl.py": {"service": "fts_etl_daily_chip_service.py", "mode": "required"},
+    "monthly_revenue_simple.py": {"service": "fts_etl_monthly_revenue_service.py", "mode": "required"},
+    "ml_data_generator.py": {"service": "fts_training_data_builder.py", "mode": "required"},
+    "ml_trainer.py": {"service": "fts_trainer_backend.py", "mode": "required"},
+    "screening.py": {"service": "fts_screening_engine.py", "mode": "retired_wrapper_optional"},
+    "master_pipeline.py": {"service": "fts_pipeline.py", "mode": "retired_entry_optional"},
+    "yahoo_csv_to_sql.py": {"service": "fts_fundamentals_etl_mainline.py", "mode": "required"},
+    "formal_trading_system_v83_official_main.py": {"service": "fts_control_tower.py", "mode": "required"},
 }
+
+WRAPPER_MAP = {k: v["service"] for k, v in WRAPPER_POLICY.items()}
 
 CORE_MODULES = [
     "formal_trading_system_v83_official_main",
@@ -257,13 +259,32 @@ class ProjectHealthcheck:
 
     def _wrapper_linkage(self) -> Dict[str, Dict[str, object]]:
         payload: Dict[str, Dict[str, object]] = {}
-        for wrapper, service in WRAPPER_MAP.items():
+        for wrapper, spec in WRAPPER_POLICY.items():
+            service = spec["service"]
+            mode = spec.get("mode", "required")
             wp = self.project_root / wrapper
             sp = self.project_root / service
+            wrapper_exists = wp.exists()
+            service_exists = sp.exists()
+
+            if mode == "required":
+                linked_ok = wrapper_exists and service_exists
+                status = "required_wrapper" if linked_ok else "missing_required_wrapper"
+            else:
+                linked_ok = service_exists
+                if wrapper_exists:
+                    status = "legacy_wrapper_present"
+                elif service_exists:
+                    status = mode
+                else:
+                    status = "missing_service"
+
             payload[wrapper] = {
-                "wrapper_exists": wp.exists(),
-                "service_exists": sp.exists(),
-                "linked_ok": wp.exists() and sp.exists(),
+                "wrapper_exists": wrapper_exists,
+                "service_exists": service_exists,
+                "linked_ok": linked_ok,
+                "mode": mode,
+                "status": status,
             }
         return payload
 

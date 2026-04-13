@@ -9,7 +9,7 @@ from typing import Any
 import numpy as np
 
 from config import PARAMS, TRAINING_POOL
-from screening import inspect_stock
+from fts_service_api import inspect_stock
 from kline_cache import get_smart_klines
 from param_storage import save_candidate_params
 from fts_research_lab import ResearchLab

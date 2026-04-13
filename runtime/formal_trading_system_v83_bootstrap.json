@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-04-12 20:23:39",
+  "generated_at": "2026-04-13 15:08:13",
   "mode": "bootstrap",
-  "module_version": "v83_level3_control_tower_integrated",
+  "module_version": "v86_level3_control_tower_split_ready",
   "steps": [
     {
       "status": "ok",
@@ -11,7 +11,7 @@
         "--mode",
         "upgrade"
       ],
-      "stdout_tail": "========================================================\n?? db_setup �۰ʤƪ����Ұ�\n�Ҧ��䴩�Gupgrade / reset\n�w�]�Gupgrade�]�w������Ҧ��^\n========================================================\n? �}�l�ˬd / �إ֤߮߸�ƪ��P���...\n? ��ƪ��P����ˬd����\n   �Ҧ��Gupgrade\n   �ʧ@�G�O�d��� + �ɻ��ʪ� / ����",
+      "stdout_tail": "========================================================\n🛠️ db_setup 自動化版本啟動\n模式支援：upgrade / reset\n預設：upgrade（安全補欄模式）\n========================================================\n🔧 開始檢查 / 建立核心資料表與欄位...\n✅ 資料表與欄位檢查完成\n   模式：upgrade\n   動作：保留資料 + 補齊缺表 / 缺欄",
       "stderr_tail": ""
     },
     {
@@ -19,7 +19,7 @@
       "script": "db_setup_research_plus.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "? research plus tables ready",
+      "stdout_tail": "✅ research plus tables ready",
       "stderr_tail": ""
     },
     {
@@ -27,7 +27,7 @@
       "script": "run_full_market_percentile_snapshot.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "[20:22:51] ? cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
+      "stdout_tail": "[15:07:18] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
       "stderr_tail": ""
     },
     {
@@ -35,18 +35,23 @@
       "script": "run_precise_event_calendar_build.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "[20:22:52] ?? event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n�����G C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
-      "stderr_tail": ""
+      "stdout_tail": "[15:07:19] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
+      "stderr_tail": "C:\\test\\test-2026-3-22OK\\fts_event_calendar_service.py:142: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.\n  df = pd.concat([self._revenue_events(), self._earnings_events(), self._dividend_events()], ignore_index=True)"
     },
     {
       "status": "ok",
       "script": "run_sync_feature_snapshots_to_sql.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "? sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 1}, 'notes': {}}\n(WindowsPath('C:/test/test-2026-3-22OK/runtime/sql_feature_snapshot_sync.json'), {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 1}, 'notes': {}})",
+      "stdout_tail": "✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 1}, 'notes': {}}\n(WindowsPath('C:/test/test-2026-3-22OK/runtime/sql_feature_snapshot_sync.json'), {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 1}, 'notes': {}})",
       "stderr_tail": ""
     }
   ],
   "daily_status": "control_tower_ready",
+  "daily_readiness_split": {
+    "research_paper_prelive_score": 4,
+    "true_broker_score": 1,
+    "executable_score": 4
+  },
   "status": "bootstrap_ready"
 }

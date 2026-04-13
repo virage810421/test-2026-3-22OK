@@ -30,14 +30,9 @@ class LiveWatchlistLoader:
             universe = universe[::2] + universe[1::2]
         return [{
             'ticker': t, 'lane': lane, 'sector': '未知', 'promotion_score': 0.1,
-<<<<<<< HEAD
             'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'lane_fallback_provisional',
             'approval_reason': 'lane_fallback_provisional', 'oot_ev': 0.0, 'hit_rate': 0.5,
             'provisional': True, 'readiness_tier': 'fallback_only',
-=======
-            'liquidity_score': 1.0, 'feature_coverage': 1.0, 'source': 'lane_fallback',
-            'approval_reason': 'lane_fallback', 'oot_ev': 0.0, 'hit_rate': 0.5,
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
         } for t in universe[:count]]
 
     def _sanitize_lane_items(self, items: list[dict[str, Any]], lane: str, min_liq: float, min_cov: float) -> list[dict[str, Any]]:
@@ -53,11 +48,8 @@ class LiveWatchlistLoader:
                 continue
             item['lane'] = lane
             item['promotion_score'] = float(item.get('promotion_score', 0.0) or 0.0)
-<<<<<<< HEAD
             item['provisional'] = bool(item.get('provisional', False))
             item['readiness_tier'] = str(item.get('readiness_tier', 'approved')).strip() or 'approved'
-=======
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
             cur = best.get(t)
             if cur is None or item['promotion_score'] > float(cur.get('promotion_score', 0.0) or 0.0):
                 best[t] = item

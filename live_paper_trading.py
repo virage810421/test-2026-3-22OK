@@ -9,8 +9,8 @@ import pandas as pd
 import pyodbc
 
 from config import PARAMS
-from screening import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
-from strategies import get_active_strategy
+from fts_service_api import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
+from fts_service_api import get_active_strategy
 from fts_strategy_policy_layer import get_strategy_policy
 from fts_model_layer import evaluate_model_signal
 from fts_execution_layer import build_entry_metrics as _build_entry_metrics_layer, signal_gate as _signal_gate_layer, portfolio_gate as _portfolio_gate_layer, compute_position_plan
@@ -615,44 +615,15 @@ def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str,
             row = dict(row or {})
             row['Ticker'] = ticker
             row.setdefault('Ticker SYMBOL', ticker)
-<<<<<<< HEAD
-            chosen_side = 'LONG'
             if lane == 'SHORT':
-                chosen_side = 'SHORT'
-=======
-            if lane == 'SHORT':
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
                 row['Direction'] = '做空(Short)'
                 row.setdefault('Regime', '趨勢空頭')
                 row.setdefault('Structure', '趨勢空頭追擊')
             elif lane == 'RANGE':
-<<<<<<< HEAD
-                range_side = str(item.get('preferred_side') or item.get('range_side') or '').upper()
-                weighted_buy_existing = float(row.get('Weighted_Buy_Score', 0.0) or 0.0)
-                weighted_sell_existing = float(row.get('Weighted_Sell_Score', 0.0) or 0.0)
-                if range_side not in {'LONG', 'SHORT'}:
-                    if weighted_sell_existing > weighted_buy_existing:
-                        range_side = 'SHORT'
-                    elif weighted_buy_existing > weighted_sell_existing:
-                        range_side = 'LONG'
-                    else:
-                        range_side = 'SHORT' if (take % 2 == 1) else 'LONG'
-                chosen_side = range_side
-                row['Regime'] = '區間盤整'
-                if chosen_side == 'SHORT':
-                    row['Direction'] = '做空(Short)'
-                    row.setdefault('Structure', '盤整高拋')
-                else:
-                    row['Direction'] = '做多(Long)'
-                    row.setdefault('Structure', '盤整低吸')
-            else:
-                chosen_side = 'LONG'
-=======
                 row['Direction'] = '做多(Long)'
                 row['Regime'] = '區間盤整'
                 row.setdefault('Structure', '盤整均值回歸')
             else:
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
                 row['Direction'] = '做多(Long)'
                 row.setdefault('Regime', '趨勢多頭')
                 row.setdefault('Structure', '趨勢多頭攻堅')
@@ -660,19 +631,9 @@ def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str,
             row.setdefault('Realized_EV', float(item.get('oot_ev', 0.0) or 0.0))
             row.setdefault('Kelly_Pos', float(PARAMS.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03)))
             row.setdefault('Health', 'KEEP')
-<<<<<<< HEAD
-            if chosen_side == 'SHORT':
-                row.setdefault('Weighted_Sell_Score', trigger + 0.25)
-                row.setdefault('Weighted_Buy_Score', max(0.0, trigger - 0.75))
-            else:
-                row.setdefault('Weighted_Buy_Score', trigger + 0.25)
-                row.setdefault('Weighted_Sell_Score', max(0.0, trigger - 0.75))
-            row.setdefault('Score_Gap', float(row['Weighted_Buy_Score']) - float(row['Weighted_Sell_Score']))
-=======
             row.setdefault('Weighted_Buy_Score', trigger + 0.25)
             row.setdefault('Weighted_Sell_Score', max(0.0, trigger - 0.75))
             row.setdefault('Score_Gap', max(0.1, float(row['Weighted_Buy_Score']) - float(row['Weighted_Sell_Score'])))
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
             aug_rows.append(row)
             existing.add(ticker)
             take += 1

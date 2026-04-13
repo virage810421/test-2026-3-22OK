@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 
 from config import PARAMS, WATCH_LIST
-from screening import smart_download, add_chip_data, inspect_stock, normalize_ticker_symbol
-from strategies import get_active_strategy
+from fts_service_api import smart_download, add_chip_data, inspect_stock, normalize_ticker_symbol
+from fts_service_api import get_active_strategy
 
 warnings.filterwarnings('ignore', category=UserWarning)
 

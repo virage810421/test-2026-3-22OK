@@ -166,7 +166,7 @@ class _AcceptedSignal:
 
 def _build_control_outputs() -> dict[str, Any]:
     health_path, health_payload = ProjectHealthcheck(PATHS.base_dir).build_report(deep=False)
-    level2_path, level2_payload = run_level2_mainline(execute_legacy=True)
+    level2_path, level2_payload = run_level2_mainline(execute_legacy=bool(getattr(CONFIG, 'execute_legacy_pipeline', False)))
     decision_df = _load_decision_df()
     orders = _normalize_orders(decision_df)
     accepted_signals = [_AcceptedSignal(o) for o in orders]
@@ -246,18 +246,7 @@ def run_daily() -> dict[str, Any]:
     log('🧭 模式：DAILY')
     log('=' * 72)
     outputs = _build_control_outputs()
-<<<<<<< HEAD
-    live_payload = outputs.get('live_readiness_gate', {}).get('payload', {}) if isinstance(outputs, dict) else {}
-    payload = {
-        'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v83_level3_control_tower_integrated',
-        'outputs': outputs,
-        'pipeline_ready': True,
-        'live_ready': bool(live_payload.get('live_ready', False)),
-        'status': 'control_tower_pipeline_ready',
-    }
-=======
-    payload = {'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v83_level3_control_tower_integrated', 'outputs': outputs, 'status': 'control_tower_ready'}
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
+    payload = {'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v86_level3_control_tower_split_ready', 'outputs': outputs, 'readiness_split': outputs.get('live_readiness_gate', {}).get('payload', {}).get('score_split', {}), 'operational_scope': {'prelive': outputs.get('live_readiness_gate', {}).get('payload', {}).get('prelive_ready', False), 'broker_production': outputs.get('live_readiness_gate', {}).get('payload', {}).get('broker_production_ready', False)}, 'status': 'control_tower_ready'}
     _write_json('formal_trading_system_v83_official_main.json', payload)
     return payload
 
@@ -269,16 +258,7 @@ def run_train() -> dict[str, Any]:
     log('=' * 72)
     steps = [_call_script('ml_data_generator.py', allow_missing=True), _call_script('ml_trainer.py', allow_missing=True)]
     tri_lane_path, tri_lane_payload = _call_builder_result(TriLaneOrchestrator(), 'build', fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json')
-<<<<<<< HEAD
-    payload = {
-        'generated_at': now_str(), 'mode': 'train', 'module_version': 'v83_level3_control_tower_integrated',
-        'outputs': {'steps': steps, 'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload}},
-        'pipeline_ready': True,
-        'status': 'train_pipeline_ready',
-    }
-=======
     payload = {'generated_at': now_str(), 'mode': 'train', 'module_version': 'v83_level3_control_tower_integrated', 'outputs': {'steps': steps, 'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload}}, 'status': 'train_ready'}
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
     _write_json('formal_trading_system_v83_train.json', payload)
     _write_json('training_orchestrator.json', {'generated_at': now_str(), 'status': 'train_invoked_via_control_tower'})
     return payload
@@ -297,16 +277,7 @@ def run_bootstrap() -> dict[str, Any]:
         _call_script('run_sync_feature_snapshots_to_sql.py', allow_missing=True),
     ]
     daily_payload = run_daily()
-<<<<<<< HEAD
-    payload = {
-        'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v83_level3_control_tower_integrated',
-        'steps': steps, 'daily_status': daily_payload.get('status'),
-        'pipeline_ready': True,
-        'status': 'bootstrap_pipeline_ready',
-    }
-=======
-    payload = {'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v83_level3_control_tower_integrated', 'steps': steps, 'daily_status': daily_payload.get('status'), 'status': 'bootstrap_ready'}
->>>>>>> ad1db6bec225a276b4ad4c7df6c049d994a30092
+    payload = {'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v86_level3_control_tower_split_ready', 'steps': steps, 'daily_status': daily_payload.get('status'), 'daily_readiness_split': daily_payload.get('readiness_split', {}), 'status': 'bootstrap_ready'}
     _write_json('formal_trading_system_v83_bootstrap.json', payload)
     return payload
 
@@ -329,7 +300,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             payload = run_train()
         else:
             payload = run_daily()
-        return 0 if payload.get('status') in {'control_tower_pipeline_ready', 'train_pipeline_ready', 'bootstrap_pipeline_ready'} else 1
+        return 0 if payload.get('status') in {'control_tower_ready', 'train_ready', 'bootstrap_ready'} else 1
     except Exception as exc:
         payload = {'generated_at': now_str(), 'module_version': 'v83_level3_control_tower_integrated', 'error_type': type(exc).__name__, 'error': str(exc)}
         _write_json('formal_trading_system_v83_official_main_error.json', payload)

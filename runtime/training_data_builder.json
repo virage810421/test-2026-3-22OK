@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-04-12 21:53:40",
+  "generated_at": "2026-04-13 15:16:46",
   "dataset_path": "data\\ml_training_data.csv",
   "status": "ok",
-  "tickers_requested": 8,
-  "rows_generated": 5682,
+  "tickers_requested": 60,
+  "rows_generated": 41813,
   "quality_report": {
-    "generated_at": "2026-04-12 21:53:39",
+    "generated_at": "2026-04-13 15:16:44",
     "dataset_name": "ml_training_generated",
-    "rows": 5682,
-    "columns": 108,
+    "rows": 41813,
+    "columns": 85,
     "missing_required_columns": [],
     "required_columns_with_null_rate": {},
     "columns_with_null_rate": {},
@@ -71,6 +71,372 @@
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
+    },
+    {
+      "ticker": "2303.TW",
+      "rows_added": 704,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2308.TW",
+      "rows_added": 698,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2382.TW",
+      "rows_added": 709,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2408.TW",
+      "rows_added": 712,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2882.TW",
+      "rows_added": 702,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2891.TW",
+      "rows_added": 704,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "3711.TW",
+      "rows_added": 706,
+      "status": "ok",
+      "download_rows": 726,
+      "computed_rows": 726
+    },
+    {
+      "ticker": "6505.TW",
+      "rows_added": 710,
+      "status": "ok",
+      "download_rows": 726,
+      "computed_rows": 726
+    },
+    {
+      "ticker": "1101.TW",
+      "rows_added": 718,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1102.TW",
+      "rows_added": 704,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1103.TW",
+      "rows_added": 706,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1104.TW",
+      "rows_added": 708,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1108.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1109.TW",
+      "rows_added": 712,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1110.TW",
+      "rows_added": 703,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1201.TW",
+      "rows_added": 705,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1203.TW",
+      "rows_added": 710,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1210.TW",
+      "rows_added": 715,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1215.TW",
+      "rows_added": 713,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1216.TW",
+      "rows_added": 705,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1217.TW",
+      "rows_added": 705,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1218.TW",
+      "rows_added": 717,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1219.TW",
+      "rows_added": 705,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1220.TW",
+      "rows_added": 716,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1225.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 728,
+      "error": "TypeError: boolean value of NA is ambiguous"
+    },
+    {
+      "ticker": "1227.TW",
+      "rows_added": 709,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1229.TW",
+      "rows_added": 704,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1231.TW",
+      "rows_added": 708,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1232.TW",
+      "rows_added": 716,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1233.TW",
+      "rows_added": 695,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1234.TW",
+      "rows_added": 695,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1235.TW",
+      "rows_added": 714,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1236.TW",
+      "rows_added": 718,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1256.TW",
+      "rows_added": 707,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1301.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1303.TW",
+      "rows_added": 698,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1304.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1305.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1307.TW",
+      "rows_added": 710,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1308.TW",
+      "rows_added": 709,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1309.TW",
+      "rows_added": 719,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1310.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1312.TW",
+      "rows_added": 711,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1313.TW",
+      "rows_added": 709,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1314.TW",
+      "rows_added": 706,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1315.TW",
+      "rows_added": 708,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1316.TW",
+      "rows_added": 715,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1319.TW",
+      "rows_added": 699,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1321.TW",
+      "rows_added": 707,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1323.TW",
+      "rows_added": 714,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1324.TW",
+      "rows_added": 710,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "1325.TW",
+      "rows_added": 708,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
     }
-  ]
+  ],
+  "selected_feature_count": 4,
+  "feature_manifest_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_feature_manifest.json"
 }

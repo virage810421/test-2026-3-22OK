@@ -24,6 +24,9 @@ except Exception:  # pragma: no cover
     class _Config:
         strict_feature_parity = True
         selected_features_required_for_live = True
+        force_shared_feature_universe = True
+        enable_directional_features_in_training = False
+        enable_directional_features_in_live = False
     PATHS = _Paths()
     CONFIG = _Config()
 
@@ -68,10 +71,34 @@ class FeatureService:
         self.min_live_feature_count = int(getattr(CONFIG, 'selected_features_min_count_for_live', 6))
         Path(PATHS.runtime_dir).mkdir(parents=True, exist_ok=True)
         Path(PATHS.data_dir).mkdir(parents=True, exist_ok=True)
+
         if not self.live_mount_csv.exists():
             pd.DataFrame(columns=['ticker', 'feature_name', 'feature_value']).to_csv(
                 self.live_mount_csv, index=False, encoding='utf-8-sig'
             )
+
+    @staticmethod
+    def _is_directional_feature_name(name: str) -> bool:
+        s = str(name or '')
+        return s.startswith(('Short_', 'Range_'))
+
+    @staticmethod
+    def _is_live_safe_feature_name(name: str) -> bool:
+        s = str(name or '').strip()
+        if not s:
+            return False
+        if s in LIVE_SAFE_FEATURES:
+            return True
+        if '_X_' in s:
+            parts = [x for x in s.split('_X_') if x]
+            return bool(parts) and all(part in LIVE_SAFE_FEATURES for part in parts)
+        return False
+
+    def _filter_selected_features_for_runtime(self, selected: Sequence[str]) -> list[str]:
+        out = [str(x) for x in selected if str(x).strip()]
+        if bool(getattr(CONFIG, 'force_shared_feature_universe', True)) and not bool(getattr(CONFIG, 'enable_directional_features_in_training', False)):
+            out = [x for x in out if self._is_live_safe_feature_name(x)]
+        return list(dict.fromkeys(out))
 
     @staticmethod
     def _rolling_percentile(series: pd.Series, window: int) -> pd.Series:
@@ -186,7 +213,7 @@ class FeatureService:
                 obj = pickle.load(fh)
             if isinstance(obj, (list, tuple)):
                 out = [str(x) for x in obj if str(x).strip()]
-                return list(dict.fromkeys(out))
+                return self._filter_selected_features_for_runtime(out)
         except Exception:
             return []
         return []
@@ -205,7 +232,7 @@ class FeatureService:
         dataset_columns: Sequence[str] | None = None,
         selected_features: Sequence[str] | None = None,
     ) -> tuple[Path, dict[str, Any]]:
-        selected = [str(x) for x in (selected_features or self.load_selected_features()) if str(x).strip()]
+        selected = self._filter_selected_features_for_runtime(selected_features or self.load_selected_features())
         dataset_cols = [str(c) for c in (dataset_columns or list(sample_row.keys()) if sample_row else [])]
         meta_cols = {
             'Ticker', 'Ticker SYMBOL', 'Date', 'Setup', 'Setup_Tag', 'Regime',
@@ -248,130 +275,155 @@ class FeatureService:
         return self.training_registry_csv, payload
 
 
-@staticmethod
-def _read_json_if_exists(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    try:
-        return json.loads(path.read_text(encoding='utf-8'))
-    except Exception:
-        return {}
-
-def _artifact_status(self, path: Path, required_columns: Sequence[str] | None = None) -> dict[str, Any]:
-    exists = path.exists()
-    status = {
-        'path': str(path),
-        'exists': bool(exists),
-        'fresh': False,
-        'age_days': None,
-        'missing_columns': [],
-        'ok': False,
-    }
-    if not exists:
-        return status
-    try:
-        age_seconds = max(0.0, __import__('time').time() - path.stat().st_mtime)
-        age_days = age_seconds / 86400.0
-        status['age_days'] = round(age_days, 4)
-        status['fresh'] = bool(age_days <= float(self.artifact_max_age_days))
-    except Exception:
-        status['fresh'] = False
-    if required_columns:
+    @staticmethod
+    def _read_json_if_exists(path: Path) -> dict[str, Any]:
+        if not path.exists():
+            return {}
         try:
-            df = pd.read_csv(path, nrows=3)
-            status['missing_columns'] = [c for c in required_columns if c not in df.columns]
+            return json.loads(path.read_text(encoding='utf-8'))
         except Exception:
+            return {}
+    
+    def _artifact_status(self, path: Path, required_columns: Sequence[str] | None = None) -> dict[str, Any]:
+        exists = path.exists()
+        status = {
+            'path': str(path),
+            'exists': bool(exists),
+            'fresh': False,
+            'age_days': None,
+            'missing_columns': [],
+            'row_count': None,
+            'coverage_ratio': None,
+            'source_data_cutoff': None,
+            'status': 'missing',
+            'ok': False,
+        }
+        if not exists:
+            return status
+        try:
+            age_seconds = max(0.0, __import__('time').time() - path.stat().st_mtime)
+            age_days = age_seconds / 86400.0
+            status['age_days'] = round(age_days, 4)
+            status['fresh'] = bool(age_days <= float(self.artifact_max_age_days))
+        except Exception:
+            status['fresh'] = False
+        if path.suffix.lower() == '.json':
+            payload = self._read_json_if_exists(path)
+            if isinstance(payload, dict):
+                status['source_data_cutoff'] = payload.get('as_of') or payload.get('generated_at') or payload.get('snapshot_date')
+                status['coverage_ratio'] = payload.get('coverage_ratio')
+                status['row_count'] = payload.get('row_count') or payload.get('total_count')
+        elif path.suffix.lower() == '.csv':
+            try:
+                df = pd.read_csv(path)
+                status['row_count'] = int(len(df))
+                if required_columns:
+                    status['missing_columns'] = [c for c in required_columns if c not in df.columns]
+                status['coverage_ratio'] = 1.0 if status['row_count'] else 0.0
+                if 'Date' in df.columns and not df.empty:
+                    status['source_data_cutoff'] = str(df['Date'].iloc[-1])
+            except Exception:
+                if required_columns:
+                    status['missing_columns'] = list(required_columns)
+        elif required_columns:
             status['missing_columns'] = list(required_columns)
-    status['ok'] = bool(status['exists'] and status['fresh'] and not status['missing_columns'])
-    return status
-
-def build_runtime_artifact_status(self) -> dict[str, Any]:
-    required = {
-        'event_runtime': self._artifact_status(PATHS.runtime_dir / 'event_calendar_service.json'),
-        'event_table': self._artifact_status(PATHS.data_dir / 'feature_event_calendar.csv', ['ticker', 'event_date', 'event_type']),
-        'percentile_runtime': self._artifact_status(PATHS.runtime_dir / 'cross_sectional_percentile_service.json'),
-        'percentile_snapshot': self._artifact_status(PATHS.data_dir / 'feature_cross_section_snapshot.csv', ['Ticker SYMBOL', 'RS_vs_Market_20_Pctl', 'Revenue_YoY_Pctl', 'Chip_Total_Ratio_Pctl']),
-        'selected_features': self._artifact_status(self.selected_features_path),
-    }
-    ok = all(v.get('ok', False) for v in required.values())
-    return {
-        'generated_at': now_str(),
-        'artifact_max_age_days': self.artifact_max_age_days,
-        'require_runtime_artifacts': bool(getattr(CONFIG, 'feature_parity_require_runtime_artifacts', True)),
-        'artifacts': required,
-        'runtime_artifacts_ready': ok,
-    }
-
-def write_feature_manifest(
-    self,
-    sample_row: Mapping[str, Any] | None = None,
-    dataset_columns: Sequence[str] | None = None,
-    selected_features: Sequence[str] | None = None,
-) -> tuple[Path, dict[str, Any]]:
-    selected = [str(x) for x in (selected_features or self.load_selected_features()) if str(x).strip()]
-    dataset_cols = [str(c) for c in (dataset_columns or list(sample_row.keys()) if sample_row else [])]
-    directional_prefixes = ('Short_', 'Range_')
-    selected_directional = [c for c in selected if c.startswith(directional_prefixes)]
-    payload = {
-        'generated_at': now_str(),
-        'module_version': self.MODULE_VERSION,
-        'selected_features': selected,
-        'selected_feature_count': int(len(selected)),
-        'dataset_columns': dataset_cols,
-        'dataset_column_count': int(len(dataset_cols)),
-        'strict_feature_parity': bool(getattr(CONFIG, 'strict_feature_parity', True)),
-        'selected_features_required_for_live': bool(getattr(CONFIG, 'selected_features_required_for_live', True)),
-        'directional_features_used_in_training': bool(selected_directional) or bool(getattr(CONFIG, 'enable_directional_features_in_training', True)),
-        'directional_features_required_in_live': bool(selected_directional),
-        'directional_selected_features': selected_directional,
-        'required_runtime_artifacts': [
-            'event_calendar_service.json',
-            'feature_event_calendar.csv',
-            'cross_sectional_percentile_service.json',
-            'feature_cross_section_snapshot.csv',
-            str(self.selected_features_path.name),
-        ],
-        'status': 'training_feature_manifest_ready',
-    }
-    self.feature_manifest_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-    return self.feature_manifest_path, payload
-
-def load_feature_manifest(self) -> dict[str, Any]:
-    return self._read_json_if_exists(self.feature_manifest_path)
-
-def validate_live_feature_parity(
-    self,
-    selected_features: Sequence[str] | None = None,
-) -> dict[str, Any]:
-    selected = [str(x) for x in (selected_features or self.load_selected_features()) if str(x).strip()]
-    manifest = self.load_feature_manifest()
-    artifact_status = self.build_runtime_artifact_status()
-    selected_from_manifest = [str(x) for x in manifest.get('selected_features', []) if str(x).strip()]
-    missing_from_live = [x for x in selected_from_manifest if x not in selected]
-    extra_in_live = [x for x in selected if x not in selected_from_manifest]
-    directional_required = bool(manifest.get('directional_features_required_in_live', False))
-    live_directional_enabled = bool(getattr(CONFIG, 'enable_directional_features_in_live', False))
-    manifest_present = bool(manifest)
-    checks = {
-        'manifest_present': manifest_present,
-        'manifest_selected_feature_count': int(len(selected_from_manifest)),
-        'selected_feature_count_live': int(len(selected)),
-        'selected_features_match': selected == selected_from_manifest if manifest_present else False,
-        'missing_from_live': missing_from_live,
-        'extra_in_live': extra_in_live,
-        'directional_required_in_live': directional_required,
-        'directional_live_enabled': live_directional_enabled,
-        'directional_alignment_ok': (not directional_required) or live_directional_enabled,
-        'runtime_artifacts_ready': bool(artifact_status.get('runtime_artifacts_ready', False)),
-        'artifact_status': artifact_status,
-    }
-    checks['ok'] = bool(
-        checks['manifest_present']
-        and checks['selected_features_match']
-        and checks['directional_alignment_ok']
-        and (checks['runtime_artifacts_ready'] or not bool(getattr(CONFIG, 'feature_parity_require_runtime_artifacts', True)))
-    )
-    return checks
+        if not status['fresh']:
+            status['status'] = 'stale'
+        elif status['missing_columns']:
+            status['status'] = 'partial'
+        else:
+            status['status'] = 'ready'
+        status['ok'] = bool(status['exists'] and status['fresh'] and not status['missing_columns'])
+        return status
+    
+    def build_runtime_artifact_status(self) -> dict[str, Any]:
+        required = {
+            'event_runtime': self._artifact_status(PATHS.runtime_dir / 'event_calendar_service.json'),
+            'event_table': self._artifact_status(PATHS.data_dir / 'feature_event_calendar.csv', ['ticker', 'event_date', 'event_type']),
+            'percentile_runtime': self._artifact_status(PATHS.runtime_dir / 'cross_sectional_percentile_service.json'),
+            'percentile_snapshot': self._artifact_status(PATHS.data_dir / 'feature_cross_section_snapshot.csv', ['Ticker SYMBOL', 'RS_vs_Market_20_Pctl', 'Revenue_YoY_Pctl', 'Chip_Total_Ratio_Pctl']),
+            'selected_features': self._artifact_status(self.selected_features_path),
+        }
+        ok = all(v.get('ok', False) for v in required.values())
+        return {
+            'generated_at': now_str(),
+            'artifact_max_age_days': self.artifact_max_age_days,
+            'require_runtime_artifacts': bool(getattr(CONFIG, 'feature_parity_require_runtime_artifacts', True)),
+            'artifacts': required,
+            'runtime_artifacts_ready': ok,
+        }
+    
+    def write_feature_manifest(
+        self,
+        sample_row: Mapping[str, Any] | None = None,
+        dataset_columns: Sequence[str] | None = None,
+        selected_features: Sequence[str] | None = None,
+    ) -> tuple[Path, dict[str, Any]]:
+        selected = self._filter_selected_features_for_runtime(selected_features or self.load_selected_features())
+        dataset_cols = [str(c) for c in (dataset_columns or list(sample_row.keys()) if sample_row else [])]
+        directional_prefixes = ('Short_', 'Range_')
+        selected_directional = [c for c in selected if c.startswith(directional_prefixes)]
+        payload = {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'selected_features': selected,
+            'selected_feature_count': int(len(selected)),
+            'dataset_columns': dataset_cols,
+            'dataset_column_count': int(len(dataset_cols)),
+            'strict_feature_parity': bool(getattr(CONFIG, 'strict_feature_parity', True)),
+            'selected_features_required_for_live': bool(getattr(CONFIG, 'selected_features_required_for_live', True)),
+            'directional_features_used_in_training': bool(selected_directional) and bool(getattr(CONFIG, 'enable_directional_features_in_training', False)),
+            'directional_features_required_in_live': bool(selected_directional),
+            'directional_selected_features': selected_directional,
+            'required_runtime_artifacts': [
+                'event_calendar_service.json',
+                'feature_event_calendar.csv',
+                'cross_sectional_percentile_service.json',
+                'feature_cross_section_snapshot.csv',
+                str(self.selected_features_path.name),
+            ],
+            'status': 'training_feature_manifest_ready',
+        }
+        self.feature_manifest_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return self.feature_manifest_path, payload
+    
+    def load_feature_manifest(self) -> dict[str, Any]:
+        return self._read_json_if_exists(self.feature_manifest_path)
+    
+    def validate_live_feature_parity(
+        self,
+        selected_features: Sequence[str] | None = None,
+    ) -> dict[str, Any]:
+        selected = self._filter_selected_features_for_runtime(selected_features or self.load_selected_features())
+        manifest = self.load_feature_manifest()
+        artifact_status = self.build_runtime_artifact_status()
+        selected_from_manifest = [str(x) for x in manifest.get('selected_features', []) if str(x).strip()]
+        missing_from_live = [x for x in selected_from_manifest if x not in selected]
+        extra_in_live = [x for x in selected if x not in selected_from_manifest]
+        directional_required = bool(manifest.get('directional_features_required_in_live', False))
+        live_directional_enabled = bool(getattr(CONFIG, 'enable_directional_features_in_live', False))
+        manifest_present = bool(manifest)
+        checks = {
+            'manifest_present': manifest_present,
+            'manifest_selected_feature_count': int(len(selected_from_manifest)),
+            'selected_feature_count_live': int(len(selected)),
+            'selected_features_match': (selected == selected_from_manifest) if manifest_present else False,
+            'missing_from_live': missing_from_live,
+            'extra_in_live': extra_in_live,
+            'directional_required_in_live': directional_required,
+            'directional_live_enabled': live_directional_enabled,
+            'directional_alignment_ok': (not directional_required) or live_directional_enabled,
+            'runtime_artifacts_ready': bool(artifact_status.get('runtime_artifacts_ready', False)),
+            'artifact_status': artifact_status,
+        }
+        checks['status'] = 'ready' if bool(
+            checks['manifest_present']
+            and checks['selected_features_match']
+            and checks['directional_alignment_ok']
+            and (checks['runtime_artifacts_ready'] or not bool(getattr(CONFIG, 'feature_parity_require_runtime_artifacts', True)))
+        ) else 'blocked'
+        checks['ok'] = checks['status'] == 'ready'
+        return checks
 
     def _combo_feature(self, name: str, features: Mapping[str, Any]) -> float:
         parts = [p for p in str(name).split('_X_') if p]
@@ -389,7 +441,7 @@ def validate_live_feature_parity(
         selected_features: Sequence[str] | None = None,
         strict: bool | None = None,
     ) -> dict[str, float]:
-        picked = [str(x) for x in (selected_features or self.load_selected_features()) if str(x).strip()]
+        picked = self._filter_selected_features_for_runtime(selected_features or self.load_selected_features())
         strict_mode = bool(getattr(CONFIG, 'strict_feature_parity', True)) if strict is None else bool(strict)
 
         if not picked or len(picked) < self.min_live_feature_count:
@@ -412,7 +464,7 @@ def validate_live_feature_parity(
         missing: list[str] = []
         allow_directional_live = bool(getattr(CONFIG, 'enable_directional_features_in_live', False))
         for key in picked:
-            if (not allow_directional_live) and key not in LIVE_SAFE_FEATURES:
+            if (not allow_directional_live) and (not self._is_live_safe_feature_name(key)):
                 missing.append(key)
                 continue
             if '_X_' in key:
@@ -531,7 +583,7 @@ def validate_live_feature_parity(
         features['Regime_TrendStrength_X_ScoreGap'] = safe_float(row.get('Regime_TrendStrength_X_ScoreGap', (features['ADX'] / 100.0) * features['Score_Gap']), 0)
         features['Volatility_X_SignalConflict'] = safe_float(row.get('Volatility_X_SignalConflict', features.get('ATR_Pctl_252', 0.0) * features['Signal_Conflict']), 0)
         directional = self._compute_directional_features(row, history_df=history_df)
-        if bool(getattr(CONFIG, 'enable_directional_features_in_training', True)):
+        if bool(getattr(CONFIG, 'enable_directional_features_in_training', False)):
             features.update(directional)
         return features
 
@@ -546,8 +598,9 @@ def validate_live_feature_parity(
         features.update(event_service.event_vector(ticker, as_of_date))
         from fts_cross_sectional_percentile_service import CrossSectionalPercentileService
         features = CrossSectionalPercentileService().enrich_row(ticker, features)
-        selected = self.load_selected_features()
+        selected = self._filter_selected_features_for_runtime(self.load_selected_features())
         mounted = self.select_live_features(features, selected_features=selected, strict=getattr(CONFIG, 'strict_feature_parity', True))
+        mount_checks = self.validate_live_feature_parity(selected)
         mount_payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
@@ -559,8 +612,8 @@ def validate_live_feature_parity(
             'official_percentile_mode': True,
             'precise_event_calendar_mode': True,
             'feature_manifest_path': str(self.feature_manifest_path),
-            'manifest_checks': self.validate_live_feature_parity(selected),
-            'status': 'live_feature_mount_ready' if mounted else 'live_feature_mount_waiting_for_selected_features',
+            'manifest_checks': mount_checks,
+            'status': 'live_feature_mount_ready' if mount_checks.get('ok', False) and mounted else ('live_feature_mount_blocked' if not mount_checks.get('ok', False) else 'live_feature_mount_waiting_for_selected_features'),
         }
         self.live_mount_path.write_text(json.dumps(mount_payload, ensure_ascii=False, indent=2), encoding='utf-8')
         mount_rows = [
@@ -579,7 +632,7 @@ def validate_live_feature_parity(
     def build_summary(self) -> tuple[Path, dict[str, Any]]:
         sample_df = pd.DataFrame({'Open':[98,100,101,102],'High':[101,103,104,105],'Low':[97,99,100,100],'Close':[100,101,103,104],'Volume':[1000,1100,900,1500]}, index=pd.date_range('2026-01-01', periods=4))
         sample = self.extract_ai_features(self.enrich_from_history(sample_df).iloc[-1].to_dict(), history_df=sample_df)
-        selected = self.load_selected_features()
+        selected = self._filter_selected_features_for_runtime(self.load_selected_features())
         payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
@@ -587,7 +640,7 @@ def validate_live_feature_parity(
             'selected_features_present': bool(selected),
             'selected_feature_count': len(selected),
             'feature_buckets': {k: len(v) for k, v in FEATURE_BUCKETS.items()},
-            'directional_training_enabled': bool(getattr(CONFIG, 'enable_directional_features_in_training', True)),
+            'directional_training_enabled': bool(getattr(CONFIG, 'enable_directional_features_in_training', False)),
             'directional_live_enabled': bool(getattr(CONFIG, 'enable_directional_features_in_live', False)),
             'live_feature_groups': get_live_feature_groups(),
             'training_feature_groups': get_training_feature_groups(),
@@ -604,3 +657,6 @@ def validate_live_feature_parity(
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🧩 feature service ready: {self.runtime_path}')
         return self.runtime_path, payload
+
+# Safety bindings for helper methods patched into class scope
+FeatureService._read_json_if_exists = staticmethod(FeatureService._read_json_if_exists)

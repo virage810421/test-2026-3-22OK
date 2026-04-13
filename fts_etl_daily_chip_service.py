@@ -1108,7 +1108,7 @@ def run_monthly_revenue_module():
 
 def run_fundamentals_module():
     try:
-        from yahoo_csv_to_sql import smart_sync as yahoo_fundamentals_sync
+        from fts_service_api import fundamentals_smart_sync as yahoo_fundamentals_sync
         yahoo_fundamentals_sync()
         print("✅ 季財報模組執行完成。")
         return True

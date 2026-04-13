@@ -518,3 +518,170 @@
 [23:32:16] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
 [00:58:42] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
 [01:22:37] 🧩 已輸出 execution bridge：C:\test\test-2026-3-22OK\runtime\decision_execution_bridge.json
+[12:59:48] ========================================================================
+[12:59:48] 🚀 啟動 正式交易主控版_v83_official_main
+[12:59:48] 🧭 模式：DAILY
+[12:59:48] ========================================================================
+[13:00:22] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[13:00:23] 🔁 mainline stage | monthly_revenue_simple.py | ok=False | skipped=False
+[13:00:29] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:00:29] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:00:30] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[13:00:38] 🧠 legacy decision engine | ok=True
+[13:00:40] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:00:40] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:00:40] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[13:00:40] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[13:00:40] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:00:40] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[13:00:41] ========================================================================
+[13:00:41] 🚀 啟動 正式交易主控版_v83_official_main
+[13:00:41] 🧭 模式：TRAIN
+[13:00:41] ========================================================================
+[13:03:54] ========================================================================
+[13:03:54] 🚀 啟動 正式交易主控版_v83_official_main
+[13:03:54] 🧭 模式：BOOTSTRAP
+[13:03:54] ========================================================================
+[13:03:57] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[13:04:18] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[13:04:19] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[13:04:24] ========================================================================
+[13:04:24] 🚀 啟動 正式交易主控版_v83_official_main
+[13:04:24] 🧭 模式：DAILY
+[13:04:24] ========================================================================
+[13:05:00] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[13:05:02] 🔁 mainline stage | monthly_revenue_simple.py | ok=False | skipped=False
+[13:05:08] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:05:08] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:05:08] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[13:05:17] 🧠 legacy decision engine | ok=True
+[13:05:19] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:05:19] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:05:19] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[13:05:19] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[13:05:19] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:05:19] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[13:05:51] ========================================================================
+[13:05:51] 🚀 啟動 正式交易主控版_v83_official_main
+[13:05:51] 🧭 模式：DAILY
+[13:05:51] ========================================================================
+[13:06:29] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[13:06:30] 🔁 mainline stage | monthly_revenue_simple.py | ok=False | skipped=False
+[13:06:36] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:06:36] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:06:37] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[13:06:46] 🧠 legacy decision engine | ok=True
+[13:06:47] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:06:47] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:06:47] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[13:06:47] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[13:06:47] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:06:47] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[13:21:28] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[13:21:42] ========================================================================
+[13:21:42] 🚀 啟動 正式交易主控版_v83_official_main
+[13:21:42] 🧭 模式：BOOTSTRAP
+[13:21:42] ========================================================================
+[13:21:44] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[13:22:04] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[13:22:05] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[13:22:09] ========================================================================
+[13:22:09] 🚀 啟動 正式交易主控版_v83_official_main
+[13:22:09] 🧭 模式：DAILY
+[13:22:09] ========================================================================
+[13:22:45] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[13:22:47] 🔁 mainline stage | monthly_revenue_simple.py | ok=False | skipped=False
+[13:22:53] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:22:53] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:22:53] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[13:23:01] 🧠 legacy decision engine | ok=True
+[13:23:03] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:23:03] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:23:03] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[13:23:03] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[13:23:03] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:23:03] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[13:36:36] ========================================================================
+[13:36:36] 🚀 啟動 正式交易主控版_v83_official_main
+[13:36:36] 🧭 模式：DAILY
+[13:36:36] ========================================================================
+[13:37:11] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[13:37:13] 🔁 mainline stage | monthly_revenue_simple.py | ok=True | skipped=False
+[13:37:18] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:37:18] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:37:19] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[13:37:27] 🧠 legacy decision engine | ok=True
+[13:37:29] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:37:29] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:37:29] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[13:37:29] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[13:37:29] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:37:29] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[13:37:30] ========================================================================
+[13:37:30] 🚀 啟動 正式交易主控版_v83_official_main
+[13:37:30] 🧭 模式：TRAIN
+[13:37:30] ========================================================================
+[13:40:30] ========================================================================
+[13:40:30] 🚀 啟動 正式交易主控版_v83_official_main
+[13:40:30] 🧭 模式：BOOTSTRAP
+[13:40:30] ========================================================================
+[13:40:52] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[13:40:53] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[13:40:58] ========================================================================
+[13:40:58] 🚀 啟動 正式交易主控版_v83_official_main
+[13:40:58] 🧭 模式：DAILY
+[13:40:58] ========================================================================
+[13:41:37] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[13:41:40] 🔁 mainline stage | monthly_revenue_simple.py | ok=True | skipped=False
+[13:41:46] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:41:46] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:41:47] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[13:41:56] 🧠 legacy decision engine | ok=True
+[13:41:58] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:41:58] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:41:58] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[13:41:58] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[13:41:58] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:41:58] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[15:01:46] ========================================================================
+[15:01:46] 🚀 啟動 正式交易主控版_v83_official_main
+[15:01:46] 🧭 模式：DAILY
+[15:01:46] ========================================================================
+[15:02:21] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[15:02:23] 🔁 mainline stage | monthly_revenue_simple.py | ok=True | skipped=False
+[15:02:29] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:02:29] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:02:29] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[15:02:29] 🧭 level-2 mainline | legacy decision engine skipped (service-first mode)
+[15:02:31] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:02:31] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[15:02:31] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[15:02:31] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[15:02:31] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[15:02:31] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[15:02:32] ========================================================================
+[15:02:32] 🚀 啟動 正式交易主控版_v83_official_main
+[15:02:32] 🧭 模式：TRAIN
+[15:02:32] ========================================================================
+[15:06:56] ========================================================================
+[15:06:56] 🚀 啟動 正式交易主控版_v83_official_main
+[15:06:56] 🧭 模式：BOOTSTRAP
+[15:06:56] ========================================================================
+[15:07:18] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[15:07:19] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[15:07:24] ========================================================================
+[15:07:24] 🚀 啟動 正式交易主控版_v83_official_main
+[15:07:24] 🧭 模式：DAILY
+[15:07:24] ========================================================================
+[15:08:02] 🔁 mainline stage | daily_chip_etl.py | ok=True | skipped=False
+[15:08:04] 🔁 mainline stage | monthly_revenue_simple.py | ok=True | skipped=False
+[15:08:11] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:08:11] ✅ yahoo_csv_to_sql 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[15:08:11] 🔁 mainline stage | yahoo_csv_to_sql.py | ok=True | skipped=False
+[15:08:11] 🧭 level-2 mainline | legacy decision engine skipped (service-first mode)
+[15:08:13] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[15:08:13] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[15:08:13] 🚦 Launch Gate | go_for_execution=True | failures=0 | warnings=2
+[15:08:13] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
+[15:08:13] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[15:08:13] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
