@@ -16,6 +16,10 @@ from fts_service_api import add_chip_data, extract_ai_features, inspect_stock, n
 from portfolio_risk import apply_portfolio_risk
 from system_guard import run_system_guard
 from fts_sql_table_name_map import sql_table
+try:
+    from fts_model_layer import evaluate_exit_signal
+except Exception:
+    evaluate_exit_signal = None
 
 TABLE_TRADE_HISTORY = sql_table('trade_history')
 TABLE_DAILY_CHIP = sql_table('daily_chip_data')
@@ -328,7 +332,8 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
         sample_boost = min(1.0, sample_size / 20.0)
         ev_norm = max(-0.05, min(0.10, realized_ev / 100.0))
         strategy_ev_norm = max(-0.05, min(0.10, realized_strategy_ev / 100.0))
-        gap_norm = max(-0.20, min(0.20, score_gap / 10.0))
+        legacy_influence = float(PARAMS.get("LEGACY_CONFIRM_INFLUENCE", 0.0))
+        gap_norm = max(-0.20, min(0.20, score_gap / 10.0)) * legacy_influence
 
         base_score = (
             ai_proba * 0.38 +
@@ -350,10 +355,25 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
             base_kelly *= 0.25
         if sample_size < 8:
             base_kelly *= 0.5
-        if score_gap <= 0:
+        if legacy_influence > 0 and score_gap <= 0:
             base_kelly *= 0.5
 
         final_kelly = 0.0 if health_status == "KILL" else round(base_kelly * global_risk_multiplier, 4)
+
+        exit_decision = None
+        if evaluate_exit_signal is not None:
+            try:
+                exit_decision = evaluate_exit_signal(latest_row)
+            except Exception:
+                exit_decision = None
+        exit_state = str(getattr(exit_decision, 'exit_state', result.get('Exit_State', 'HOLD'))).upper() if exit_decision is not None else str(result.get('Exit_State', 'HOLD')).upper()
+        exit_action = str(getattr(exit_decision, 'exit_action', result.get('Exit_Action', 'HOLD'))) if exit_decision is not None else str(result.get('Exit_Action', 'HOLD'))
+        exit_defend_p = float(getattr(exit_decision, 'defend_proba', result.get('Exit_Defend_Proba', 0.0))) if exit_decision is not None else float(result.get('Exit_Defend_Proba', 0.0))
+        exit_reduce_p = float(getattr(exit_decision, 'reduce_proba', result.get('Exit_Reduce_Proba', 0.0))) if exit_decision is not None else float(result.get('Exit_Reduce_Proba', 0.0))
+        exit_confirm_p = float(getattr(exit_decision, 'confirm_proba', result.get('Exit_Confirm_Proba', 0.0))) if exit_decision is not None else float(result.get('Exit_Confirm_Proba', 0.0))
+        exit_model_source = str(getattr(exit_decision, 'model_source', 'none')) if exit_decision is not None else 'none'
+        target_mult = float(getattr(exit_decision, 'target_position_multiplier', result.get('Target_Position_Multiplier', 1.0))) if exit_decision is not None else float(result.get('Target_Position_Multiplier', 1.0))
+        stop_mult = float(getattr(exit_decision, 'stop_tighten_multiplier', result.get('Stop_Tighten_Multiplier', 1.0))) if exit_decision is not None else float(result.get('Stop_Tighten_Multiplier', 1.0))
 
         rows.append({
             "Ticker": ticker,
@@ -384,6 +404,19 @@ def build_decision_desk(watch_list, market_data, global_risk_multiplier):
             "StateMachine_Direction": direction_lane,
             "StateMachine_Kelly_Pos": round(float(result.get('StateMachine_Kelly_Pos', final_kelly)), 4),
             "Legacy_Golden_Type": result.get('Golden_Type_Legacy', ''),
+            "Legacy_Confirm_Influence": float(result.get('Legacy_Confirm_Influence', PARAMS.get('LEGACY_CONFIRM_INFLUENCE', 0.0))),
+            "Legacy_Score_Alert_Only": int(bool(result.get('Legacy_Score_Alert_Only', PARAMS.get('LEGACY_SCORE_ALERT_ONLY', True)))),
+            "Legacy_Long_Confirm_Pressure": round(float(result.get('Legacy_Long_Confirm_Pressure', 0.0)), 4),
+            "Legacy_Short_Confirm_Pressure": round(float(result.get('Legacy_Short_Confirm_Pressure', 0.0)), 4),
+            "Legacy_Range_Confirm_Pressure": round(float(result.get('Legacy_Range_Confirm_Pressure', 0.0)), 4),
+            "Exit_State": exit_state,
+            "Exit_Action": exit_action,
+            "Exit_Model_Source": exit_model_source,
+            "Exit_Defend_Proba": round(exit_defend_p, 4),
+            "Exit_Reduce_Proba": round(exit_reduce_p, 4),
+            "Exit_Confirm_Proba": round(exit_confirm_p, 4),
+            "Target_Position_Multiplier": round(target_mult, 4),
+            "Stop_Tighten_Multiplier": round(stop_mult, 4),
         })
 
     df_report = pd.DataFrame(rows)

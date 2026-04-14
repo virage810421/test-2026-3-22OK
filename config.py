@@ -97,12 +97,7 @@ PARAMS = {
     "STRATEGY_LAYER_MODE": "independent",
     "MODEL_LAYER_MODE": "independent",
     "EXECUTION_LAYER_MODE": "independent",
-
-    "EXECUTION_SQL_SYNC_ENABLED": True,
-    "EXECUTION_SQL_SYNC_SNAPSHOTS": True,
-    "EXECUTION_SQL_SYNC_STOP_ORDERS": True,
 }
-
 
 WATCH_LIST = [
     "2330.TW",
@@ -295,6 +290,33 @@ PARAMS.setdefault("BRIDGE_GUARD_FAIL_CLOSED", True)
 PARAMS.setdefault("PREFER_SQLALCHEMY_DB", True)
 
 
+
+# ---- legacy confirmation influence guard ----
+# 0.0 means buy_c2~c9 / sell_c2~c9 / weighted scores are alert-only diagnostics.
+PARAMS.setdefault("LEGACY_CONFIRM_INFLUENCE", 0.0)
+PARAMS.setdefault("LEGACY_AI_PROBA_INFLUENCE", 0.0)
+PARAMS.setdefault("LEGACY_SCORE_ALERT_ONLY", True)
+
+# ---- independent exit AI model workflow ----
+PARAMS.setdefault("ENABLE_EXIT_MODEL_WORKFLOW", True)
+PARAMS.setdefault("EXIT_MODEL_PRIMARY", True)
+PARAMS.setdefault("EXIT_MODEL_MIN_FEATURES", 6)
+PARAMS.setdefault("EXIT_MODEL_FALLBACK_TO_HAZARD", True)
+PARAMS.setdefault("EXIT_DEFEND_THRESHOLD", 0.58)
+PARAMS.setdefault("EXIT_REDUCE_THRESHOLD", 0.62)
+PARAMS.setdefault("EXIT_CONFIRM_THRESHOLD", 0.66)
+PARAMS.setdefault("EXIT_DEFEND_POSITION_MULTIPLIER", 0.60)
+PARAMS.setdefault("EXIT_REDUCE_POSITION_MULTIPLIER", 0.35)
+PARAMS.setdefault("EXIT_CONFIRM_POSITION_MULTIPLIER", 0.00)
+PARAMS.setdefault("EXIT_DEFEND_STOP_TIGHTEN", 0.80)
+PARAMS.setdefault("EXIT_REDUCE_STOP_TIGHTEN", 0.60)
+PARAMS.setdefault("EXIT_CONFIRM_STOP_TIGHTEN", 0.00)
+PARAMS.setdefault("EXIT_LABEL_DEFEND_HAZARD", 0.55)
+PARAMS.setdefault("EXIT_LABEL_REDUCE_HAZARD", 0.68)
+PARAMS.setdefault("EXIT_LABEL_CONFIRM_HAZARD", 0.82)
+PARAMS.setdefault("EXIT_LABEL_DEFEND_ADVERSE_PCT", 1.20)
+PARAMS.setdefault("EXIT_LABEL_REDUCE_ADVERSE_PCT", 2.00)
+
 # ---- exit defend / stop replace workflow ----
 PARAMS.setdefault("EXIT_STOP_REPLACE_MIN_BPS", 20)
 PARAMS.setdefault("EXIT_STOP_MIN_GAP_PCT", 0.003)
@@ -303,8 +325,20 @@ PARAMS.setdefault("EXIT_BREAK_EVEN_BUFFER_PCT", 0.0005)
 PARAMS.setdefault("EXIT_STOP_WORKFLOW_ENABLE", True)
 PARAMS.setdefault("EXIT_STOP_WORKFLOW_ALLOW_UPSERT", True)
 PARAMS.setdefault("EXIT_DEFEND_ORDER_NOTE", "DEFEND stop tighten")
-PARAMS.setdefault("EXIT_STOP_TRIGGER_ENABLE", True)
-PARAMS.setdefault("EXIT_STOP_TRIGGER_FILL_PRIORITY", "worse_of_market_and_stop")
-PARAMS.setdefault("EXIT_SQL_STOP_SYNC_ENABLE", True)
-PARAMS.setdefault("EXIT_SQL_STOP_SOURCE_FILE", "stop_replace_payloads.csv")
-PARAMS.setdefault("EXIT_LEGACY_ROUTE_ENABLE", True)
+
+PARAMS.setdefault("REGIME_HYSTERESIS_SWITCH_BAND", 0.08)
+PARAMS.setdefault("REGIME_HYSTERESIS_CONFIRM_BARS", 2)
+PARAMS.setdefault("REGIME_HYSTERESIS_MIN_HOLD_BARS", 2)
+PARAMS.setdefault("REGIME_HYSTERESIS_TAIL_BARS", 15)
+PARAMS.setdefault("EXECUTION_SQL_SYNC_ENABLED", True)
+PARAMS.setdefault("EXECUTION_SQL_SYNC_SNAPSHOTS", True)
+PARAMS.setdefault("EXECUTION_SQL_SYNC_STOP_ORDERS", True)
+# vNext lot-level / callback / reconciliation workflow switches
+LOT_LEVEL_POSITION_MODEL_ENABLED = True
+LOT_LEVEL_FIFO_CLOSE = True
+EXECUTION_CALLBACK_INGEST_ENABLED = True
+EXECUTION_RECONCILIATION_ENABLED = True
+EXECUTION_RECONCILIATION_WRITE_SQL = True
+EXECUTION_LOT_SNAPSHOT_CSV = 'execution_logs/position_lot_snapshot.csv'
+EXECUTION_CALLBACK_BLOTTER_CSV = 'execution_logs/broker_callback_blotter.csv'
+EXECUTION_RECONCILIATION_BLOTTER_CSV = 'execution_logs/execution_reconciliation_blotter.csv'

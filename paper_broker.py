@@ -376,3 +376,248 @@ class PaperBroker(BrokerBase):
         fills = list(self.pending_fills)
         self.pending_fills.clear()
         return fills
+
+# =============================================================================
+# vNext lot-level / multi-batch position extension
+# - Keeps the original aggregated self.positions behavior intact.
+# - Adds FIFO lot tracking used by execution SQL snapshots and reconciliation.
+# =============================================================================
+try:
+    _PB_ORIG_INIT = PaperBroker.__init__
+    _PB_ORIG_APPEND_FILL = PaperBroker._append_fill
+    _PB_ORIG_PROCESS_STOPS = PaperBroker.process_protective_stops
+
+    def _pb_lot_now() -> str:
+        return _now()
+
+    def _pb_lot_side_from_order_side(side) -> str:
+        side_v = side.value if hasattr(side, 'value') else str(side)
+        side_v = str(side_v).upper()
+        if side_v in {'BUY', 'LONG'}:
+            return 'LONG'
+        if side_v in {'SHORT'}:
+            return 'SHORT'
+        return side_v
+
+    def _pb_close_side_from_order_side(side) -> str:
+        side_v = side.value if hasattr(side, 'value') else str(side)
+        side_v = str(side_v).upper()
+        if side_v == 'SELL':
+            return 'LONG'
+        if side_v in {'COVER', 'BUY_TO_COVER'}:
+            return 'SHORT'
+        return ''
+
+    def _pb_init_lot_book(self) -> None:
+        if not hasattr(self, 'position_lots') or self.position_lots is None:
+            self.position_lots = []
+        if not hasattr(self, '_lot_seq'):
+            self._lot_seq = 0
+        if not hasattr(self, 'lot_close_history'):
+            self.lot_close_history = []
+
+    def _pb_next_lot_id(self, symbol: str) -> str:
+        _pb_init_lot_book(self)
+        self._lot_seq += 1
+        return f"LOT-{str(symbol).replace('.', '')}-{self._lot_seq:06d}"
+
+    def _pb_open_lot(self, symbol: str, side: str, qty: int, price: float, order_id: str = '', strategy_name: str = '', signal_id: str = '', note: str = '') -> dict:
+        _pb_init_lot_book(self)
+        qty = int(qty or 0)
+        if qty <= 0:
+            return {}
+        lot = {
+            'lot_id': _pb_next_lot_id(self, symbol),
+            'ticker': str(symbol),
+            'symbol': str(symbol),
+            'side': str(side).upper(),
+            'direction_bucket': str(side).upper(),
+            'open_qty': qty,
+            'remaining_qty': qty,
+            'avg_cost': float(price or 0.0),
+            'entry_price': float(price or 0.0),
+            'entry_time': _pb_lot_now(),
+            'entry_order_id': str(order_id or ''),
+            'strategy_name': str(strategy_name or ''),
+            'signal_id': str(signal_id or ''),
+            'status': 'OPEN',
+            'realized_pnl': 0.0,
+            'close_qty': 0,
+            'close_price': 0.0,
+            'close_time': '',
+            'note': str(note or ''),
+        }
+        self.position_lots.append(lot)
+        return dict(lot)
+
+    def _pb_close_lots_fifo(self, symbol: str, close_side: str, qty: int, price: float, order_id: str = '', note: str = '') -> list[dict]:
+        _pb_init_lot_book(self)
+        symbol = str(symbol)
+        close_side = str(close_side).upper()
+        remaining = int(qty or 0)
+        closed: list[dict] = []
+        if remaining <= 0 or close_side not in {'LONG', 'SHORT'}:
+            return closed
+        for lot in self.position_lots:
+            if remaining <= 0:
+                break
+            if str(lot.get('ticker', lot.get('symbol', ''))) != symbol:
+                continue
+            if str(lot.get('side', '')).upper() != close_side:
+                continue
+            if str(lot.get('status', 'OPEN')).upper() != 'OPEN':
+                continue
+            lot_rem = int(lot.get('remaining_qty', 0) or 0)
+            if lot_rem <= 0:
+                continue
+            take = min(lot_rem, remaining)
+            entry_px = float(lot.get('avg_cost', lot.get('entry_price', 0)) or 0.0)
+            if close_side == 'LONG':
+                pnl = (float(price) - entry_px) * take
+            else:
+                pnl = (entry_px - float(price)) * take
+            lot['remaining_qty'] = lot_rem - take
+            lot['close_qty'] = int(lot.get('close_qty', 0) or 0) + take
+            lot['realized_pnl'] = round(float(lot.get('realized_pnl', 0) or 0) + pnl, 4)
+            lot['close_price'] = float(price or 0.0)
+            lot['close_time'] = _pb_lot_now()
+            lot['exit_order_id'] = str(order_id or '')
+            if lot['remaining_qty'] <= 0:
+                lot['status'] = 'CLOSED'
+            event = {
+                'lot_id': lot.get('lot_id'),
+                'ticker': symbol,
+                'side': close_side,
+                'closed_qty': take,
+                'entry_price': entry_px,
+                'close_price': float(price or 0.0),
+                'realized_pnl': round(pnl, 4),
+                'exit_order_id': str(order_id or ''),
+                'closed_at': _pb_lot_now(),
+                'note': str(note or ''),
+            }
+            self.lot_close_history.append(event)
+            closed.append(event)
+            remaining -= take
+        return closed
+
+    def _pb_apply_lot_fill(self, order, qty: int, px: float, note: str = '') -> None:
+        _pb_init_lot_book(self)
+        symbol = getattr(order, 'symbol', '') or (order.get('symbol') if isinstance(order, dict) else '')
+        side = getattr(order, 'side', '') or (order.get('side') if isinstance(order, dict) else '')
+        order_id = getattr(order, 'order_id', '') or (order.get('order_id') if isinstance(order, dict) else '')
+        strategy_name = getattr(order, 'strategy_name', '') or (order.get('strategy_name') if isinstance(order, dict) else '')
+        signal_id = getattr(order, 'signal_id', '') or (order.get('signal_id') if isinstance(order, dict) else '')
+        side_v = side.value if hasattr(side, 'value') else str(side)
+        side_v = side_v.upper()
+        if side_v in {'BUY', 'SHORT'}:
+            lot_side = _pb_lot_side_from_order_side(side_v)
+            _pb_open_lot(self, symbol, lot_side, int(qty), float(px), order_id=order_id, strategy_name=strategy_name, signal_id=signal_id, note=note)
+        elif side_v in {'SELL', 'COVER', 'BUY_TO_COVER'}:
+            close_side = _pb_close_side_from_order_side(side_v)
+            _pb_close_lots_fifo(self, symbol, close_side, int(qty), float(px), order_id=order_id, note=note)
+
+    def _pb_patched_init(self, *args, **kwargs):
+        _PB_ORIG_INIT(self, *args, **kwargs)
+        _pb_init_lot_book(self)
+
+    def _pb_patched_append_fill(self, order, qty: int, px: float, commission: float, tax: float) -> None:
+        _PB_ORIG_APPEND_FILL(self, order, qty, px, commission, tax)
+        try:
+            _pb_apply_lot_fill(self, order, int(qty), float(px), note=getattr(order, 'note', '') or 'paper_fill')
+        except Exception as exc:
+            # Lot tracking must never break the original broker fill path.
+            if not hasattr(self, 'lot_tracking_errors'):
+                self.lot_tracking_errors = []
+            self.lot_tracking_errors.append({'time': _pb_lot_now(), 'error': repr(exc)})
+
+    def _pb_patched_process_stops(self, price_map=None):
+        before = len(getattr(self, 'stop_trigger_history', []) or [])
+        events = _PB_ORIG_PROCESS_STOPS(self, price_map)
+        try:
+            new_events = list((getattr(self, 'stop_trigger_history', []) or [])[before:])
+            for ev in new_events:
+                dummy = {'symbol': ev.get('symbol', ''), 'side': ev.get('side', ''), 'order_id': ev.get('order_id', ''), 'strategy_name': 'protective_stop', 'signal_id': ev.get('order_id', '')}
+                # Original process_stops updates aggregate positions directly, so only update lots here.
+                side = str(ev.get('side', '')).upper()
+                if side in {'SELL', 'COVER', 'BUY'}:
+                    close_side = 'LONG' if side == 'SELL' else 'SHORT'
+                    _pb_close_lots_fifo(self, ev.get('symbol', ''), close_side, int(ev.get('qty', 0) or 0), float(ev.get('fill_price', 0) or 0), order_id=str(ev.get('order_id', '') or ''), note='protective_stop_triggered')
+        except Exception as exc:
+            if not hasattr(self, 'lot_tracking_errors'):
+                self.lot_tracking_errors = []
+            self.lot_tracking_errors.append({'time': _pb_lot_now(), 'error': repr(exc), 'phase': 'stop_trigger_lots'})
+        return events
+
+    def _pb_get_position_lots(self, include_closed: bool = False) -> list[dict]:
+        _pb_init_lot_book(self)
+        rows = []
+        for lot in self.position_lots:
+            if include_closed or str(lot.get('status', '')).upper() == 'OPEN':
+                row = dict(lot)
+                market_px = float(self.last_prices.get(row.get('ticker', row.get('symbol', '')), row.get('avg_cost', 0)) or 0.0)
+                rem = int(row.get('remaining_qty', 0) or 0)
+                avg = float(row.get('avg_cost', 0) or 0.0)
+                row['market_price'] = market_px
+                row['market_value'] = abs(rem) * market_px
+                row['unrealized_pnl'] = round((market_px - avg) * rem if row.get('side') == 'LONG' else (avg - market_px) * rem, 4)
+                rows.append(row)
+        return rows
+
+    def _pb_get_position_lot_summary(self) -> list[dict]:
+        lots = _pb_get_position_lots(self, include_closed=False)
+        out: dict[tuple[str, str], dict] = {}
+        for lot in lots:
+            key = (lot.get('ticker', lot.get('symbol', '')), lot.get('side', 'LONG'))
+            bucket = out.setdefault(key, {'ticker': key[0], 'direction_bucket': key[1], 'qty': 0, 'market_value': 0.0, 'cost_value': 0.0, 'lot_count': 0, 'realized_pnl': 0.0, 'unrealized_pnl': 0.0})
+            qty = int(lot.get('remaining_qty', 0) or 0)
+            bucket['qty'] += qty if key[1] == 'LONG' else -qty
+            bucket['market_value'] += float(lot.get('market_value', 0) or 0.0)
+            bucket['cost_value'] += qty * float(lot.get('avg_cost', 0) or 0.0)
+            bucket['lot_count'] += 1
+            bucket['unrealized_pnl'] += float(lot.get('unrealized_pnl', 0) or 0.0)
+        for row in out.values():
+            abs_qty = abs(int(row.get('qty', 0) or 0))
+            row['avg_cost'] = round(row['cost_value'] / abs_qty, 4) if abs_qty else 0.0
+            row['unrealized_pnl'] = round(row['unrealized_pnl'], 4)
+        return list(out.values())
+
+    def _pb_reconcile_lots_to_positions(self) -> dict:
+        lots = _pb_get_position_lots(self, include_closed=False)
+        lot_pos: dict[str, int] = {}
+        for lot in lots:
+            sym = lot.get('ticker', lot.get('symbol', ''))
+            rem = int(lot.get('remaining_qty', 0) or 0)
+            lot_pos[sym] = lot_pos.get(sym, 0) + (rem if lot.get('side') == 'LONG' else -rem)
+        diffs = []
+        symbols = set(lot_pos) | set(getattr(self, 'positions', {}).keys())
+        for sym in sorted(symbols):
+            agg = int(getattr(self, 'positions', {}).get(sym, 0) or 0)
+            lot_qty = int(lot_pos.get(sym, 0) or 0)
+            if agg != lot_qty:
+                diffs.append({'ticker': sym, 'aggregate_qty': agg, 'lot_qty': lot_qty, 'diff_qty': agg - lot_qty})
+        return {'ok': len(diffs) == 0, 'diffs': diffs, 'lot_count': len(lots)}
+
+    # Patch class methods.
+    PaperBroker.__init__ = _pb_patched_init
+    PaperBroker._append_fill = _pb_patched_append_fill
+    PaperBroker.process_protective_stops = _pb_patched_process_stops
+    PaperBroker.get_position_lots = _pb_get_position_lots
+    PaperBroker.get_position_lot_summary = _pb_get_position_lot_summary
+    PaperBroker.reconcile_lots_to_positions = _pb_reconcile_lots_to_positions
+
+    _PB_ORIG_EXPORT = PaperBroker.export_runtime_snapshot
+    def _pb_patched_export_runtime_snapshot(self) -> Dict[str, Any]:
+        snap = _PB_ORIG_EXPORT(self)
+        try:
+            snap['position_lots'] = self.get_position_lots(include_closed=True)
+            snap['position_lot_summary'] = self.get_position_lot_summary()
+            snap['lot_reconciliation'] = self.reconcile_lots_to_positions()
+        except Exception as exc:
+            snap['lot_reconciliation_error'] = repr(exc)
+        return snap
+    PaperBroker.export_runtime_snapshot = _pb_patched_export_runtime_snapshot
+
+except Exception:
+    # Keep import safety even if a downstream legacy PaperBroker differs.
+    pass

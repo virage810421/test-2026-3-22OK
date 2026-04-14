@@ -176,8 +176,16 @@ class SystemConfig:
     live_directional_min_feature_count: int = 4
     directional_live_require_approved_features: bool = True
 
+    # ---- legacy confirmation influence guard ----
+    legacy_confirm_influence: float = 0.0
+    legacy_ai_proba_influence: float = 0.0
+    legacy_score_alert_only: bool = True
+
     # ---- exit model / auto reduce-close workflow ----
     enable_exit_model_workflow: bool = True
+    exit_model_primary: bool = True
+    exit_model_min_features: int = 6
+    exit_model_fallback_to_hazard: bool = True
     exit_selected_features_filename: str = 'selected_features_exit.pkl'
     exit_defend_model_filename: str = 'exit_model_defend.pkl'
     exit_reduce_model_filename: str = 'exit_model_reduce.pkl'
@@ -185,13 +193,7 @@ class SystemConfig:
     active_positions_csv_filename: str = 'active_positions.csv'
     active_open_orders_csv_filename: str = 'open_orders_snapshot.csv'
     stop_replace_payload_filename: str = 'stop_replace_payloads.csv'
-    stop_trigger_blotter_filename: str = 'stop_trigger_blotter.csv'
-    enable_protective_stop_trigger_workflow: bool = True
-    live_paper_apply_stop_workflow: bool = True
     enable_exit_stop_replace_workflow: bool = True
-    enable_execution_sql_sync: bool = True
-    execution_sql_sync_snapshots: bool = True
-    execution_sql_sync_stop_orders: bool = True
     exit_stop_replace_min_bps: int = 20
     exit_stop_min_gap_pct: float = 0.003
     exit_break_even_trigger_r: float = 0.80
@@ -218,3 +220,26 @@ BASE_DIR = _detect_base_dir()
 PATHS = AppPaths.build(BASE_DIR)
 CONFIG = SystemConfig()
 DB = DBConfig()
+
+
+# runtime hysteresis / execution SQL sync defaults
+if not hasattr(CONFIG, 'regime_hysteresis_switch_band'): CONFIG.regime_hysteresis_switch_band = 0.08
+if not hasattr(CONFIG, 'regime_hysteresis_confirm_bars'): CONFIG.regime_hysteresis_confirm_bars = 2
+if not hasattr(CONFIG, 'regime_hysteresis_min_hold_bars'): CONFIG.regime_hysteresis_min_hold_bars = 2
+if not hasattr(CONFIG, 'regime_hysteresis_tail_bars'): CONFIG.regime_hysteresis_tail_bars = 15
+if not hasattr(CONFIG, 'enable_execution_sql_sync'): CONFIG.enable_execution_sql_sync = True
+if not hasattr(CONFIG, 'execution_sql_sync_snapshots'): CONFIG.execution_sql_sync_snapshots = True
+if not hasattr(CONFIG, 'execution_sql_sync_stop_orders'): CONFIG.execution_sql_sync_stop_orders = True
+
+# vNext lot-level / true-broker callback / execution reconciliation settings
+try:
+    CONFIG.lot_level_position_model_enabled = True
+    CONFIG.lot_level_fifo_close = True
+    CONFIG.execution_callback_ingest_enabled = True
+    CONFIG.execution_reconciliation_enabled = True
+    CONFIG.execution_reconciliation_write_sql = True
+    CONFIG.execution_lot_snapshot_csv = 'execution_logs/position_lot_snapshot.csv'
+    CONFIG.execution_callback_blotter_csv = 'execution_logs/broker_callback_blotter.csv'
+    CONFIG.execution_reconciliation_blotter_csv = 'execution_logs/execution_reconciliation_blotter.csv'
+except Exception:
+    pass

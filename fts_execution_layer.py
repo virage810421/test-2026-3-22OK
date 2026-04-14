@@ -81,6 +81,7 @@ def build_entry_metrics(row, params=PARAMS):
     weighted_buy = _safe_float(row.get('Weighted_Buy_Score', 0.0), 0.0)
     weighted_sell = _safe_float(row.get('Weighted_Sell_Score', 0.0), 0.0)
     score_gap = _safe_float(row.get('Score_Gap', 0.0), 0.0)
+    legacy_influence = _safe_float(params.get('LEGACY_CONFIRM_INFLUENCE', row.get('Legacy_Confirm_Influence', 0.0)), 0.0)
     entry_readiness = _safe_float(row.get('Entry_Readiness', 0.0), 0.0)
     breakout_risk = _safe_float(row.get('Breakout_Risk_Next3', 0.0), 0.0)
     reversal_risk = _safe_float(row.get('Reversal_Risk_Next3', 0.0), 0.0)
@@ -114,7 +115,7 @@ def build_entry_metrics(row, params=PARAMS):
         risk_budget_ratio = 0.03
     if realized_ev <= 0 or ai_proba < 0.5:
         risk_budget_ratio = min(risk_budget_ratio, 0.02)
-    if score_gap <= 0:
+    if legacy_influence > 0 and score_gap <= 0:
         risk_budget_ratio = min(risk_budget_ratio, 0.015)
     if breakout_risk >= 0.75 or reversal_risk >= 0.75 or exit_hazard >= 0.75:
         risk_budget_ratio = min(risk_budget_ratio, 0.0125)

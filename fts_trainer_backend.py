@@ -34,7 +34,8 @@ META_DROP_COLS = [
     'Touched_TP', 'Touched_SL', 'Label_Reason', 'Label_Exit_Type',
     'Favorable_Move_Pct', 'Adverse_Move_Pct', 'Max_Favorable_Excursion',
     'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count',
-    'Setup_Ready_Label', 'Trigger_Confirm_Label', 'Entry_State_At_Label', 'Early_Path_State_At_Label', 'Confirm_Path_State_At_Label'
+    'Setup_Ready_Label', 'Trigger_Confirm_Label', 'Entry_State_At_Label', 'Early_Path_State_At_Label', 'Confirm_Path_State_At_Label',
+    'Exit_Defend_Label', 'Exit_Reduce_Label', 'Exit_Confirm_Label', 'Exit_State_At_Label', 'Target_Position_At_Label'
 ]
 
 
@@ -56,6 +57,72 @@ def _build_lane_series(df: pd.DataFrame) -> pd.Series:
         return pd.Series(dtype=str)
     return df.apply(_infer_lane_from_row, axis=1)
 
+
+
+def _exit_selected_feature_pkl() -> Path:
+    return Path('models') / 'selected_features_exit.pkl'
+
+
+def _exit_model_pkl(label_key: str) -> Path:
+    mapping = {
+        'Exit_Defend_Label': 'exit_model_defend.pkl',
+        'Exit_Reduce_Label': 'exit_model_reduce.pkl',
+        'Exit_Confirm_Label': 'exit_model_confirm.pkl',
+    }
+    return Path('models') / mapping[label_key]
+
+
+def _train_exit_models(train_df: pd.DataFrame, all_features: list[str], selected_features: list[str]) -> dict[str, Any]:
+    report: dict[str, Any] = {'enabled': bool(PARAMS.get('ENABLE_EXIT_MODEL_WORKFLOW', True)), 'models': {}, 'selected_features_path': str(_exit_selected_feature_pkl())}
+    if not report['enabled']:
+        report['status'] = 'disabled'
+        return report
+    label_cols = ['Exit_Defend_Label', 'Exit_Reduce_Label', 'Exit_Confirm_Label']
+    present = [c for c in label_cols if c in train_df.columns]
+    if not present:
+        report['status'] = 'missing_exit_labels'
+        return report
+    priority = [
+        'Exit_Hazard_Score','Breakout_Risk_Next3','Reversal_Risk_Next3','Trend_Exhaustion_Score',
+        'Trend_Confidence_Delta','Range_Confidence_Delta','Proba_Delta_3d','Entry_Readiness',
+        'Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range',
+        'Hysteresis_Switch_Armed','Hysteresis_Locked','ATR_Pct','ATR_Pct_Pctl','RealizedVol_20',
+        'Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Score_Gap_Slope_3d'
+    ]
+    candidates = list(dict.fromkeys([f for f in priority + selected_features + all_features if f in train_df.columns and f not in META_DROP_COLS]))
+    numeric_candidates: list[str] = []
+    for f in candidates:
+        vals = pd.to_numeric(train_df[f], errors='coerce')
+        if vals.notna().sum() >= max(30, int(len(train_df) * 0.05)) and vals.fillna(0).nunique() > 1:
+            numeric_candidates.append(f)
+    min_features = int(PARAMS.get('EXIT_MODEL_MIN_FEATURES', 6))
+    exit_selected = numeric_candidates[:max(min_features, min(24, len(numeric_candidates)))]
+    if len(exit_selected) < min_features:
+        report['status'] = 'insufficient_exit_features'
+        report['selected_feature_count'] = len(exit_selected)
+        return report
+    joblib.dump(exit_selected, _exit_selected_feature_pkl())
+    report['selected_feature_count'] = len(exit_selected)
+    report['selected_features_preview'] = exit_selected[:20]
+    X = train_df[exit_selected].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    saved = 0
+    for label in label_cols:
+        y = pd.to_numeric(train_df.get(label, 0), errors='coerce').fillna(0).astype(int)
+        ratio = float(y.mean()) if len(y) else 0.0
+        info = {'positive_ratio': ratio, 'rows': int(len(y)), 'path': str(_exit_model_pkl(label))}
+        if label not in present:
+            info.update({'status': 'SKIP', 'reason': 'label_missing'})
+        elif y.nunique() < 2 or int(y.sum()) < int(PARAMS.get('EXIT_MODEL_MIN_POSITIVES', 20)):
+            info.update({'status': 'SKIP', 'reason': 'label_single_class_or_too_few_positives'})
+        else:
+            model = _fit_model(X, y)
+            joblib.dump(model, _exit_model_pkl(label))
+            info.update({'status': 'SAVE', 'feature_count': int(len(exit_selected))})
+            saved += 1
+        report['models'][label] = info
+    report['saved_model_count'] = saved
+    report['status'] = 'trained' if saved else 'no_exit_models_saved'
+    return report
 
 def _directional_feature_pkl(lane: str) -> Path:
     return Path('models') / f'selected_features_{str(lane).lower()}.pkl'
@@ -483,6 +550,8 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         lane_report['saved_model_count'] = lane_save_count
         lane_artifacts[lane] = lane_report
 
+    exit_model_artifacts = _train_exit_models(train_df, all_features, selected_features)
+
     overall_score = float(oot_metrics['avg_return'] * 100 + min(oot_metrics['profit_factor'], 5.0) + oot_metrics['hit_rate'] * 10)
     version_tag = create_version_tag('trained')
     snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features), 'directional_lane_feature_counts': {k: v.get('selected_feature_count', 0) for k, v in lane_artifacts.items()}, 'directional_lane_model_counts': {k: v.get('saved_model_count', 0) for k, v in lane_artifacts.items()}}, note='任務收尾版訓練完成快照')
@@ -524,6 +593,10 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         report['trigger_confirm_positive_ratio'] = float(pd.to_numeric(df['Trigger_Confirm_Label'], errors='coerce').fillna(0).mean())
     report['regimes'] = metrics_by_regime
     report['directional_lane_artifacts'] = lane_artifacts
+    report['exit_model_artifacts'] = exit_model_artifacts
+    for _exit_label in ['Exit_Defend_Label','Exit_Reduce_Label','Exit_Confirm_Label']:
+        if _exit_label in df.columns:
+            report[_exit_label + '_positive_ratio'] = float(pd.to_numeric(df[_exit_label], errors='coerce').fillna(0).mean())
     report['overall_score'] = overall_score
     report['promotion_ready'] = promotion_ready
     RUNTIME_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

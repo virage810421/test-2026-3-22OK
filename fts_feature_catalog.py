@@ -100,86 +100,17 @@ FEATURE_SPECS: Dict[str, FeatureSpec] = {
     'Dividend_Window_7': _fs('Dividend_Window_7', 'events', 'dividend calendar', 'Dividend event window 7 day.', True, True, False, True),
 }
 
-FEATURE_SPECS.update({
-    'PreEntry_Long_Score': _fs('PreEntry_Long_Score', 'entry_state_machine', 'screening/state machine', 'Preemptive long-layout score.', True, True, False, False, 'shared', 'LONG_ONLY', 'live_vetted', True),
-    'PreEntry_Short_Score': _fs('PreEntry_Short_Score', 'entry_state_machine', 'screening/state machine', 'Preemptive short-layout score.', True, True, False, False, 'shared', 'SHORT_ONLY', 'live_vetted', True),
-    'PreEntry_Range_Score': _fs('PreEntry_Range_Score', 'entry_state_machine', 'screening/state machine', 'Preemptive range-layout score.', True, True, False, False, 'shared', 'RANGE_ONLY', 'live_vetted', True),
-    'PreEntry_Score': _fs('PreEntry_Score', 'entry_state_machine', 'screening/state machine', 'Dominant preentry score used by state machine.', True),
-    'Confirm_Long_Score': _fs('Confirm_Long_Score', 'entry_state_machine', 'screening/state machine', 'Confirmed-entry long score.', True),
-    'Confirm_Short_Score': _fs('Confirm_Short_Score', 'entry_state_machine', 'screening/state machine', 'Confirmed-entry short score.', True),
-    'Confirm_Range_Score': _fs('Confirm_Range_Score', 'entry_state_machine', 'screening/state machine', 'Confirmed-entry range score.', True),
-    'Confirm_Entry_Score': _fs('Confirm_Entry_Score', 'entry_state_machine', 'screening/state machine', 'Dominant confirmed-entry score used by state machine.', True),
-    'Legacy_Long_Confirm_Pressure': _fs('Legacy_Long_Confirm_Pressure', 'entry_state_machine', 'legacy c2-c9', 'Legacy confirmation pressure from bullish c2-c9 ladder.', True),
-    'Legacy_Short_Confirm_Pressure': _fs('Legacy_Short_Confirm_Pressure', 'entry_state_machine', 'legacy c2-c9', 'Legacy confirmation pressure from bearish c2-c9 ladder.', True),
-    'Legacy_Range_Confirm_Pressure': _fs('Legacy_Range_Confirm_Pressure', 'entry_state_machine', 'legacy scoring', 'Legacy score neutrality used for range confirmation.', True),
-    'Watch_Eligible': _fs('Watch_Eligible', 'entry_state_machine', 'screening/state machine', '1 if watch/prepare path is eligible.', True),
-    'Pilot_Eligible': _fs('Pilot_Eligible', 'entry_state_machine', 'screening/state machine', '1 if pilot-entry path is eligible.', True),
-    'Full_Eligible': _fs('Full_Eligible', 'entry_state_machine', 'screening/state machine', '1 if full confirmed-entry path is eligible.', True),
-    'Pilot_Position_Multiplier': _fs('Pilot_Position_Multiplier', 'entry_state_machine', 'screening/state machine', 'Position-size multiplier for pilot path.', True),
-    'Full_Position_Multiplier': _fs('Full_Position_Multiplier', 'entry_state_machine', 'screening/state machine', 'Position-size multiplier for confirmed path.', True),
-    'StateMachine_Kelly_Pos': _fs('StateMachine_Kelly_Pos', 'entry_state_machine', 'screening/state machine', 'Kelly allocation after state-machine scaling.', True),
-    'Confirm_Transition_Aligned': _fs('Confirm_Transition_Aligned', 'entry_state_machine', 'screening/state machine', '1 if transition and dominant lane are aligned for confirmation.', True),
-    'Early_Path_State': _fs('Early_Path_State', 'entry_state_machine', 'screening/state machine', 'Early-layout state (NO_ENTRY/PREPARE/PILOT_ENTRY).', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
-    'Confirm_Path_State': _fs('Confirm_Path_State', 'entry_state_machine', 'screening/state machine', 'Confirmation path state (WAIT_CONFIRM/FULL_ENTRY).', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
-    'Entry_State': _fs('Entry_State', 'entry_state_machine', 'screening/state machine', 'Final state-machine action state.', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
-    'Entry_Path': _fs('Entry_Path', 'entry_state_machine', 'screening/state machine', 'Which path dominates current action.', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
-    'StateMachine_Direction': _fs('StateMachine_Direction', 'entry_state_machine', 'screening/state machine', 'Dominant state-machine lane/direction.', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
-    'Exit_State': _fs('Exit_State', 'entry_state_machine', 'screening/state machine', 'State-machine exit status (HOLD/REDUCE/DEFEND/EXIT).', True, True, False, False, 'shared', 'SHARED', 'live_vetted', False),
-})
-
-FEATURE_SPECS.update({
-    'Buy_Score_Slope_3d': _fs('Buy_Score_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of buy score.', True),
-    'Buy_Score_Slope_5d': _fs('Buy_Score_Slope_5d', 'lead_timing', 'screening/scoring', '5-bar slope of buy score.', True),
-    'Sell_Score_Slope_3d': _fs('Sell_Score_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of sell score.', True),
-    'Sell_Score_Slope_5d': _fs('Sell_Score_Slope_5d', 'lead_timing', 'screening/scoring', '5-bar slope of sell score.', True),
-    'Score_Gap_Slope_3d': _fs('Score_Gap_Slope_3d', 'lead_timing', 'screening/scoring', '3-bar slope of score gap.', True),
-    'Score_Gap_Slope_5d': _fs('Score_Gap_Slope_5d', 'lead_timing', 'screening/scoring', '5-bar slope of score gap.', True),
-    'ADX_Delta_3d': _fs('ADX_Delta_3d', 'lead_timing', 'OHLCV', '3-bar change in ADX.', True),
-    'MACD_Hist_Delta_3d': _fs('MACD_Hist_Delta_3d', 'lead_timing', 'OHLCV', '3-bar change in MACD histogram.', True),
-    'RSI_Reclaim_Speed': _fs('RSI_Reclaim_Speed', 'lead_timing', 'OHLCV', 'Speed of RSI reclaim from weak state.', True),
-    'BB_Squeeze_Release': _fs('BB_Squeeze_Release', 'lead_timing', 'OHLCV', 'Compression-to-release transition signal.', True),
-    'ATR_Expansion_Start': _fs('ATR_Expansion_Start', 'lead_timing', 'OHLCV', 'Early-stage ATR expansion signal.', True),
-    'Volume_Z20_Delta': _fs('Volume_Z20_Delta', 'lead_timing', 'OHLCV', '3-bar change in volume z-score.', True),
-    'Foreign_Ratio_Delta_3d': _fs('Foreign_Ratio_Delta_3d', 'lead_timing', 'chip_flow', '3-bar change in foreign ratio.', True),
-    'Total_Ratio_Delta_3d': _fs('Total_Ratio_Delta_3d', 'lead_timing', 'chip_flow', '3-bar change in total ratio.', True),
-    'Bull_Emerging_Score': _fs('Bull_Emerging_Score', 'transition_regime', 'regime service', 'Probability-like score for bullish transition emerging.', True),
-    'Bear_Emerging_Score': _fs('Bear_Emerging_Score', 'transition_regime', 'regime service', 'Probability-like score for bearish transition emerging.', True),
-    'Range_Compression_Score': _fs('Range_Compression_Score', 'transition_regime', 'regime service', 'Compression score prior to range breakout.', True),
-    'Breakout_Readiness': _fs('Breakout_Readiness', 'transition_regime', 'regime service', 'Readiness of compressed regime to break out.', True),
-    'Trend_Exhaustion_Score': _fs('Trend_Exhaustion_Score', 'transition_regime', 'regime service', 'Probability-like score of trend exhaustion.', True),
-    'Entry_Readiness': _fs('Entry_Readiness', 'timing', 'feature/regime fusion', 'Composite readiness for early entry.', True),
-    'Breakout_Risk_Next3': _fs('Breakout_Risk_Next3', 'timing', 'regime service', 'Risk of range resolving in next ~3 bars.', True),
-    'Reversal_Risk_Next3': _fs('Reversal_Risk_Next3', 'timing', 'regime service', 'Risk of trend reversal in next ~3 bars.', True),
-    'Exit_Hazard_Score': _fs('Exit_Hazard_Score', 'timing', 'feature/regime fusion', 'Composite hazard score for early exit defense.', True),
-    'Proba_Delta_3d': _fs('Proba_Delta_3d', 'timing', 'model/signal proxy', '3-bar change in probability proxy.', True),
-    'Trend_Confidence_Delta': _fs('Trend_Confidence_Delta', 'timing', 'regime service', 'Change in trend confidence.', True),
-    'Range_Confidence_Delta': _fs('Range_Confidence_Delta', 'timing', 'regime service', 'Change in range confidence.', True),
-    'Regime_Label': _fs('Regime_Label', 'transition_regime', 'regime service', 'Primary regime label from regime service.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Regime_Confidence': _fs('Regime_Confidence', 'transition_regime', 'regime service', 'Confidence of primary regime label.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Next_Regime_Prob_Bull': _fs('Next_Regime_Prob_Bull', 'transition_regime', 'regime service', 'Forward bull-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Next_Regime_Prob_Bear': _fs('Next_Regime_Prob_Bear', 'transition_regime', 'regime service', 'Forward bear-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Next_Regime_Prob_Range': _fs('Next_Regime_Prob_Range', 'transition_regime', 'regime service', 'Forward range-transition probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Transition_Label': _fs('Transition_Label', 'transition_regime', 'regime service', 'Transition-state label from regime service.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Regime_Label': _fs('Hysteresis_Regime_Label', 'transition_regime', 'regime service', 'Regime label after hysteresis smoothing.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Stable_Bars': _fs('Hysteresis_Stable_Bars', 'transition_regime', 'regime service', 'Count of stable bars in current hysteresis regime.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Switch_Armed': _fs('Hysteresis_Switch_Armed', 'transition_regime', 'regime service', '1 if regime switch is armed but not yet confirmed.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Switch_Margin': _fs('Hysteresis_Switch_Margin', 'transition_regime', 'regime service', 'Margin between challenger and incumbent regime probability.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Pending_Label': _fs('Hysteresis_Pending_Label', 'transition_regime', 'regime service', 'Pending regime label awaiting hysteresis confirmation.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Pending_Bars': _fs('Hysteresis_Pending_Bars', 'transition_regime', 'regime service', 'Pending confirmation bar count for hysteresis switch.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Regime_Changed': _fs('Hysteresis_Regime_Changed', 'transition_regime', 'regime service', '1 if hysteresis regime changed on this bar.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-    'Hysteresis_Locked': _fs('Hysteresis_Locked', 'transition_regime', 'regime service', '1 if minimum hold constraint kept prior regime.', True, True, False, False, 'regime', 'SHARED', 'live_vetted', True),
-})
-
 FEATURE_BUCKETS: Dict[str, List[str]] = {}
 for name, spec in FEATURE_SPECS.items():
     FEATURE_BUCKETS.setdefault(spec.bucket, []).append(name)
 
 PRIORITY_NEW_FEATURES_20: List[str] = [
-    'Score_Gap_Slope_3d', 'Score_Gap_Slope_5d', 'ADX_Delta_3d', 'MACD_Hist_Delta_3d', 'RSI_Reclaim_Speed',
-    'BB_Squeeze_Release', 'ATR_Expansion_Start', 'Volume_Z20_Delta', 'Foreign_Ratio_Delta_3d', 'Total_Ratio_Delta_3d',
-    'Bull_Emerging_Score', 'Bear_Emerging_Score', 'Range_Compression_Score', 'Breakout_Readiness', 'Trend_Exhaustion_Score',
-    'Entry_Readiness', 'Breakout_Risk_Next3', 'Reversal_Risk_Next3', 'Exit_Hazard_Score', 'PreEntry_Score',
-    'Confirm_Entry_Score', 'Proba_Delta_3d',
+    'ATR14', 'ATR_Pct', 'ATR_Pctl_252', 'RealizedVol_20', 'RealizedVol_60',
+    'Gap_Pct', 'Overnight_Return', 'Intraday_Return', 'Turnover_Proxy', 'ADV20_Proxy',
+    'DollarVol20_Proxy', 'Volume_Z20', 'Return_Z20', 'RS_vs_Market_20', 'RS_vs_Sector_20',
+    'Revenue_YoY_Rank', 'Chip_Total_Ratio_Rank', 'Event_Days_Since_Revenue',
+    'Earnings_Window_Flag', 'Regime_TrendStrength_X_ScoreGap',
+    'Breakout_Risk_Next3', 'Reversal_Risk_Next3', 'Exit_Hazard_Score',
 ]
 
 
@@ -208,6 +139,17 @@ FEATURE_SPECS.update({
     'MA_Slope_Flatness': _fs('MA_Slope_Flatness', 'regime_confidence', 'regime service', 'Flatness of MA slope.', True, True, False, False, 'regime', 'RANGE_ONLY', 'live_vetted', True),
     'BB_Width_Pctl': _fs('BB_Width_Pctl', 'regime_confidence', 'regime service', 'Percentile of Bollinger width.', True, True, True, False, 'regime', 'RANGE_ONLY', 'live_vetted', True),
     'ADX_Low_Regime_Flag': _fs('ADX_Low_Regime_Flag', 'regime_confidence', 'regime service', 'Flag for low-ADX range-like regime.', True, True, False, False, 'regime', 'RANGE_ONLY', 'live_vetted', True),
+})
+
+
+FEATURE_SPECS.update({
+    'Breakout_Risk_Next3': _fs('Breakout_Risk_Next3', 'exit_timing', 'OHLCV + momentum', 'Risk that a breakout fails over the next three bars.', True, True, False, False, 'exit', 'SHARED', 'live_vetted', True),
+    'Reversal_Risk_Next3': _fs('Reversal_Risk_Next3', 'exit_timing', 'OHLCV + RSI + chip', 'Risk that reversal pressure rises over the next three bars.', True, True, False, False, 'exit', 'SHARED', 'live_vetted', True),
+    'Exit_Trend_Decay': _fs('Exit_Trend_Decay', 'exit_timing', 'trend confidence delta', 'Trend decay score for early defensive action.', True, True, False, False, 'exit', 'SHARED', 'live_vetted', True),
+    'Exit_Chip_Weakening': _fs('Exit_Chip_Weakening', 'exit_timing', 'chip delta', 'Weakening chip-flow pressure for exit timing.', True, True, False, False, 'exit', 'SHARED', 'live_vetted', True),
+    'Exit_Regime_Deterioration': _fs('Exit_Regime_Deterioration', 'exit_timing', 'regime confidence', 'Deterioration of active regime into hostile state.', True, True, False, False, 'exit', 'SHARED', 'live_vetted', True),
+    'Exit_Hazard_Score': _fs('Exit_Hazard_Score', 'exit_timing', 'composite exit timing', 'Composite early-exit hazard score.', True, True, False, False, 'exit', 'SHARED', 'live_vetted', True),
+    'Exit_Stop_Tighten_Suggested': _fs('Exit_Stop_Tighten_Suggested', 'exit_timing', 'composite exit timing', 'Suggested stop-tightening multiplier when exit risk rises.', True, True, False, False, 'exit', 'SHARED', 'live_vetted', True),
 })
 
 FEATURE_BUCKETS = {}
@@ -246,3 +188,41 @@ APPROVED_LIVE_DIRECTIONAL_FEATURES: List[str] = [
 def is_feature_live_approved(name: str) -> bool:
     spec = FEATURE_SPECS.get(str(name or '').strip())
     return bool(spec and spec.is_live_safe and spec.approval_scope in {'live_vetted', 'candidate_only'})
+
+
+# --- transition / hysteresis / lead-feature sync patch ---
+FEATURE_SPECS.update({
+    'Buy_Score_Slope_3d': _fs('Buy_Score_Slope_3d','lead_timing','screening scores','3-bar slope of buy score.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Buy_Score_Slope_5d': _fs('Buy_Score_Slope_5d','lead_timing','screening scores','5-bar slope of buy score.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Sell_Score_Slope_3d': _fs('Sell_Score_Slope_3d','lead_timing','screening scores','3-bar slope of sell score.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Sell_Score_Slope_5d': _fs('Sell_Score_Slope_5d','lead_timing','screening scores','5-bar slope of sell score.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Score_Gap_Slope_3d': _fs('Score_Gap_Slope_3d','lead_timing','screening scores','3-bar slope of score gap.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Score_Gap_Slope_5d': _fs('Score_Gap_Slope_5d','lead_timing','screening scores','5-bar slope of score gap.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'ADX_Delta_3d': _fs('ADX_Delta_3d','lead_timing','OHLCV','3-bar change in ADX.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'MACD_Hist_Delta_3d': _fs('MACD_Hist_Delta_3d','lead_timing','OHLCV','3-bar change in MACD histogram.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'RSI_Reclaim_Speed': _fs('RSI_Reclaim_Speed','lead_timing','OHLCV','Speed of RSI reclaim from weak zone.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'BB_Squeeze_Release': _fs('BB_Squeeze_Release','lead_timing','OHLCV','Bollinger squeeze release score.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'ATR_Expansion_Start': _fs('ATR_Expansion_Start','lead_timing','OHLCV','ATR expansion start score.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Volume_Z20_Delta': _fs('Volume_Z20_Delta','lead_timing','OHLCV','3-bar change in Volume_Z20.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Foreign_Ratio_Delta_3d': _fs('Foreign_Ratio_Delta_3d','lead_timing','chip_flow','3-bar change in foreign ratio.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Total_Ratio_Delta_3d': _fs('Total_Ratio_Delta_3d','lead_timing','chip_flow','3-bar change in total ratio.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Bull_Emerging_Score': _fs('Bull_Emerging_Score','transition_regime','regime service','Bullish transition score.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Bear_Emerging_Score': _fs('Bear_Emerging_Score','transition_regime','regime service','Bearish transition score.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Range_Compression_Score': _fs('Range_Compression_Score','transition_regime','regime service','Range compression score.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Breakout_Readiness': _fs('Breakout_Readiness','transition_regime','regime service','Breakout readiness score.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Trend_Exhaustion_Score': _fs('Trend_Exhaustion_Score','transition_regime','regime service','Trend exhaustion score.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Entry_Readiness': _fs('Entry_Readiness','timing_state','regime service','Composite entry readiness score.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Proba_Delta_3d': _fs('Proba_Delta_3d','timing_state','model/regime','3-bar change in AI probability.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Trend_Confidence_Delta': _fs('Trend_Confidence_Delta','timing_state','regime service','3-bar change in trend confidence.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Range_Confidence_Delta': _fs('Range_Confidence_Delta','timing_state','regime service','3-bar change in range confidence.',True,True,False,False,'timing','SHARED','live_vetted',True),
+    'Transition_Label': _fs('Transition_Label','transition_regime','regime service','Transition regime label.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Next_Regime_Prob_Bull': _fs('Next_Regime_Prob_Bull','transition_regime','regime service','Probability of bullish next regime.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Next_Regime_Prob_Bear': _fs('Next_Regime_Prob_Bear','transition_regime','regime service','Probability of bearish next regime.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Next_Regime_Prob_Range': _fs('Next_Regime_Prob_Range','transition_regime','regime service','Probability of range next regime.',True,True,False,False,'regime','SHARED','live_vetted',True),
+    'Hysteresis_Regime_Label': _fs('Hysteresis_Regime_Label','transition_regime','regime service','Hysteresis-smoothed regime label.',True,True,False,False,'regime','SHARED','live_vetted',True),
+})
+FEATURE_BUCKETS = {}
+for _n,_s in FEATURE_SPECS.items(): FEATURE_BUCKETS.setdefault(_s.bucket, []).append(_n)
+for _f in ['Buy_Score_Slope_3d','Score_Gap_Slope_3d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release','ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Bull_Emerging_Score','Bear_Emerging_Score','Range_Compression_Score','Breakout_Readiness','Trend_Exhaustion_Score','Entry_Readiness','Proba_Delta_3d','Trend_Confidence_Delta','Range_Confidence_Delta','Transition_Label','Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range','Hysteresis_Regime_Label']:
+    if _f not in PRIORITY_NEW_FEATURES_20: PRIORITY_NEW_FEATURES_20.append(_f)
+LIVE_SAFE_FEATURES = [name for name, spec in FEATURE_SPECS.items() if spec.is_live_safe]

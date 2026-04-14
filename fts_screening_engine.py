@@ -100,7 +100,7 @@ class ScreeningEngine:
             return pd.Series([default] * len(out), index=out.index, dtype=float)
 
         trigger = max(1.0, float(params.get('TRIGGER_SCORE', 2.0)))
-        legacy_influence = float(params.get('LEGACY_CONFIRM_INFLUENCE', 0.10))
+        legacy_influence = max(0.0, min(1.0, float(params.get('LEGACY_CONFIRM_INFLUENCE', 0.0))))
         watch_th = float(params.get('PREENTRY_WATCH_THRESHOLD', 0.42))
         pilot_th = float(params.get('PREENTRY_PILOT_THRESHOLD', 0.58))
         full_th = float(params.get('CONFIRM_FULL_THRESHOLD', 0.66))
@@ -111,7 +111,9 @@ class ScreeningEngine:
         weighted_buy = _series('Weighted_Buy_Score', 0.0) if 'Weighted_Buy_Score' in out.columns else _series('Buy_Score', 0.0)
         weighted_sell = _series('Weighted_Sell_Score', 0.0) if 'Weighted_Sell_Score' in out.columns else _series('Sell_Score', 0.0)
         score_gap = _series('Score_Gap', 0.0) if 'Score_Gap' in out.columns else (weighted_buy - weighted_sell)
-        ai_proba_legacy = (_series('AI_Proba', 0.5) if 'AI_Proba' in out.columns else (0.5 + score_gap.clip(-2, 2) * 0.10)).clip(0.01, 0.99)
+        raw_ai_proba_legacy = (_series('AI_Proba', 0.5) if 'AI_Proba' in out.columns else (0.5 + score_gap.clip(-2, 2) * 0.10)).clip(0.01, 0.99)
+        legacy_ai_influence = max(0.0, min(1.0, float(params.get('LEGACY_AI_PROBA_INFLUENCE', legacy_influence))))
+        ai_proba_legacy = (0.5 * (1.0 - legacy_ai_influence) + raw_ai_proba_legacy * legacy_ai_influence).clip(0.01, 0.99)
         entry_readiness = self._clip01(_series('Entry_Readiness', 0.0))
         breakout_risk = self._clip01(_series('Breakout_Risk_Next3', 0.0))
         reversal_risk = self._clip01(_series('Reversal_Risk_Next3', 0.0))
@@ -127,24 +129,27 @@ class ScreeningEngine:
         volume_delta = _series('Volume_Z20_Delta', 0.0).clip(-1.0, 1.0)
         foreign_delta = _series('Foreign_Ratio_Delta_3d', 0.0).clip(-1.0, 1.0)
         total_delta = _series('Total_Ratio_Delta_3d', 0.0).clip(-1.0, 1.0)
-        score_gap_slope = _series('Score_Gap_Slope_3d', 0.0).clip(-2.0, 2.0)
+        score_gap_slope = _series('Score_Gap_Slope_3d', 0.0).clip(-2.0, 2.0) * legacy_influence
         proba_delta = _series('Proba_Delta_3d', 0.0).clip(-0.5, 0.5)
         next_bull = self._clip01(_series('Next_Regime_Prob_Bull', 0.34))
         next_bear = self._clip01(_series('Next_Regime_Prob_Bear', 0.33))
         next_range = self._clip01(_series('Next_Regime_Prob_Range', 0.33))
         transition_label = out['Transition_Label'].astype(str) if 'Transition_Label' in out.columns else pd.Series(['Stable'] * len(out), index=out.index)
 
-        legacy_long = self._clip01((weighted_buy / max(trigger, 1.0)).clip(0.0, 1.5) / 1.5)
-        legacy_short = self._clip01((weighted_sell / max(trigger, 1.0)).clip(0.0, 1.5) / 1.5)
-        legacy_range = self._clip01(1.0 - (score_gap.abs() / max(trigger, 1.0)).clip(0.0, 1.0))
+        legacy_long_raw = self._clip01((weighted_buy / max(trigger, 1.0)).clip(0.0, 1.5) / 1.5)
+        legacy_short_raw = self._clip01((weighted_sell / max(trigger, 1.0)).clip(0.0, 1.5) / 1.5)
+        legacy_range_raw = self._clip01(1.0 - (score_gap.abs() / max(trigger, 1.0)).clip(0.0, 1.0))
+        legacy_long = legacy_long_raw * legacy_influence
+        legacy_short = legacy_short_raw * legacy_influence
+        legacy_range = legacy_range_raw * legacy_influence
 
         long_pre = self._clip01(0.28 * bull_emerge + 0.18 * entry_readiness + 0.14 * ((score_gap_slope.clip(lower=0.0)) / 2.0) + 0.10 * ((volume_delta.clip(lower=0.0)) / 1.0) + 0.10 * ((foreign_delta.clip(lower=0.0) + total_delta.clip(lower=0.0)) / 2.0) + 0.10 * breakout_readiness + 0.10 * rs_mkt.clip(lower=0.0))
         short_pre = self._clip01(0.28 * bear_emerge + 0.18 * entry_readiness + 0.14 * (((-score_gap_slope).clip(lower=0.0)) / 2.0) + 0.10 * (((-volume_delta).clip(lower=0.0)) / 1.0) + 0.10 * (((-foreign_delta).clip(lower=0.0) + (-total_delta).clip(lower=0.0)) / 2.0) + 0.10 * breakout_readiness + 0.10 * (1.0 - rs_mkt))
         range_pre = self._clip01(0.30 * range_compression + 0.22 * range_conf + 0.15 * legacy_range + 0.10 * (1.0 - breakout_risk) + 0.08 * (1.0 - reversal_risk) + 0.08 * self._clip01(_series('Range_Bounce_Quality', 0.0)) + 0.07 * self._clip01(_series('Range_Fade_Quality', 0.0)))
 
-        long_confirm = self._clip01(0.30 * long_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_long * legacy_influence)
-        short_confirm = self._clip01(0.30 * short_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_short * legacy_influence)
-        range_confirm = self._clip01(0.32 * range_pre + 0.20 * range_conf + 0.15 * ai_proba_legacy + 0.15 * (1.0 - breakout_risk) + 0.08 * (1.0 - exit_hazard) + 0.10 * legacy_range * legacy_influence)
+        long_confirm = self._clip01(0.30 * long_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_long)
+        short_confirm = self._clip01(0.30 * short_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_short)
+        range_confirm = self._clip01(0.32 * range_pre + 0.20 * range_conf + 0.15 * ai_proba_legacy + 0.15 * (1.0 - breakout_risk) + 0.08 * (1.0 - exit_hazard) + 0.10 * legacy_range)
 
         dominant_pre = pd.concat({'LONG': long_pre, 'SHORT': short_pre, 'RANGE': range_pre}, axis=1)
         dominant_confirm = pd.concat({'LONG': long_confirm, 'SHORT': short_confirm, 'RANGE': range_confirm}, axis=1)
@@ -170,17 +175,32 @@ class ScreeningEngine:
         entry_state = np.where(full_ok, 'FULL_ENTRY', np.where(pilot_ok, 'PILOT_ENTRY', np.where(watch_ok, 'PREPARE', 'NO_ENTRY')))
         entry_path = np.where(full_ok, 'CONFIRMATION', np.where(watch_ok, 'PREEMPTIVE', 'NONE'))
 
+        exit_warn = float(params.get('EXIT_WARN_HAZARD', 0.45))
         exit_reduce = float(params.get('STATE_EXIT_REDUCE_HAZARD', 0.55))
         exit_defend = float(params.get('STATE_EXIT_DEFEND_HAZARD', 0.72))
         exit_hard = float(params.get('STATE_EXIT_HARD_EXIT', 0.88))
         exit_state = np.where(exit_hazard >= exit_hard, 'EXIT', np.where(exit_hazard >= exit_defend, 'DEFEND', np.where(exit_hazard >= exit_reduce, 'REDUCE', 'HOLD')))
+        exit_path_state = np.where(exit_hazard >= exit_hard, 'EXIT', np.where(exit_hazard >= exit_defend, 'DEFEND', np.where(exit_hazard >= exit_reduce, 'REDUCE', np.where(exit_hazard >= exit_warn, 'WATCH_EXIT', 'HOLD'))))
 
         pilot_mult = float(params.get('PILOT_ALLOC_MULTIPLIER', 0.33))
         full_mult = float(params.get('FULL_ALLOC_MULTIPLIER', 1.00))
+        exit_defend_mult = float(params.get('EXIT_DEFEND_POSITION_MULTIPLIER', 0.60))
+        exit_reduce_mult = float(params.get('EXIT_REDUCE_POSITION_MULTIPLIER', 0.35))
+        exit_hard_mult = float(params.get('EXIT_HARD_EXIT_POSITION_MULTIPLIER', 0.00))
+        stop_tighten_defend = float(params.get('EXIT_STOP_TIGHTEN_DEFEND', 0.80))
+        stop_tighten_reduce = float(params.get('EXIT_STOP_TIGHTEN_REDUCE', 0.60))
+        stop_tighten_exit = float(params.get('EXIT_STOP_TIGHTEN_EXIT', 0.00))
         synthetic_kelly = float(params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03))
         raw_kelly = _series('Kelly建議倉位', 0.0) if 'Kelly建議倉位' in out.columns else _series('Kelly_Pos', 0.0)
         effective_kelly = raw_kelly.where(raw_kelly > 0, synthetic_kelly)
-        state_kelly = np.where(entry_state == 'FULL_ENTRY', effective_kelly * full_mult, np.where(entry_state == 'PILOT_ENTRY', effective_kelly * pilot_mult, 0.0))
+        entry_position_mult = np.where(entry_state == 'FULL_ENTRY', full_mult, np.where(entry_state == 'PILOT_ENTRY', pilot_mult, 0.0))
+        exit_position_mult = np.where(exit_state == 'EXIT', exit_hard_mult, np.where(exit_state == 'REDUCE', exit_reduce_mult, np.where(exit_state == 'DEFEND', exit_defend_mult, 1.0)))
+        target_position_mult = entry_position_mult * exit_position_mult
+        state_kelly = effective_kelly * target_position_mult
+        stop_tighten_mult = np.where(exit_state == 'EXIT', stop_tighten_exit, np.where(exit_state == 'REDUCE', stop_tighten_reduce, np.where(exit_state == 'DEFEND', stop_tighten_defend, 1.0)))
+        can_add_position = ((entry_state == 'FULL_ENTRY') & (exit_state == 'HOLD')).astype(int)
+        can_open_fresh = ((entry_state == 'FULL_ENTRY') & (exit_state == 'HOLD')).astype(int)
+        exit_action = np.where(exit_state == 'EXIT', 'FLAT_EXIT', np.where(exit_state == 'REDUCE', 'TRIM_POSITION', np.where(exit_state == 'DEFEND', 'TIGHTEN_AND_DEFEND', np.where(exit_path_state == 'WATCH_EXIT', 'WATCH_EXIT', 'HOLD'))))
 
         lane_to_tag = {'LONG': '多方進場', 'SHORT': '空方進場', 'RANGE': '區間進場'}
         dominant_tag = dominant_lane.map(lane_to_tag).fillna('無')
@@ -193,9 +213,11 @@ class ScreeningEngine:
         out['Confirm_Short_Score'] = short_confirm.round(6)
         out['Confirm_Range_Score'] = range_confirm.round(6)
         out['Confirm_Entry_Score'] = dominant_confirm_score.round(6)
-        out['Legacy_Long_Confirm_Pressure'] = legacy_long.round(6)
-        out['Legacy_Short_Confirm_Pressure'] = legacy_short.round(6)
-        out['Legacy_Range_Confirm_Pressure'] = legacy_range.round(6)
+        out['Legacy_Long_Confirm_Pressure'] = legacy_long_raw.round(6)
+        out['Legacy_Short_Confirm_Pressure'] = legacy_short_raw.round(6)
+        out['Legacy_Range_Confirm_Pressure'] = legacy_range_raw.round(6)
+        out['Legacy_Confirm_Influence'] = float(legacy_influence)
+        out['Legacy_Score_Alert_Only'] = int(bool(params.get('LEGACY_SCORE_ALERT_ONLY', legacy_influence <= 0.0)))
         out['Watch_Eligible'] = watch_ok.astype(int)
         out['Pilot_Eligible'] = pilot_ok.astype(int)
         out['Full_Eligible'] = full_ok.astype(int)
@@ -209,7 +231,16 @@ class ScreeningEngine:
         out['Full_Position_Multiplier'] = float(full_mult)
         out['StateMachine_Kelly_Pos'] = pd.Series(state_kelly, index=out.index).round(6)
         out['Exit_State'] = pd.Series(exit_state, index=out.index)
-        out['AI_Proba_Legacy'] = ai_proba_legacy.round(6)
+        out['Exit_Path_State'] = pd.Series(exit_path_state, index=out.index)
+        out['Exit_Position_Multiplier'] = pd.Series(exit_position_mult, index=out.index).round(6)
+        out['Target_Position_Multiplier'] = pd.Series(target_position_mult, index=out.index).round(6)
+        out['Target_Position'] = pd.Series(state_kelly, index=out.index).round(6)
+        out['Stop_Tighten_Multiplier'] = pd.Series(stop_tighten_mult, index=out.index).round(6)
+        out['Can_Add_Position'] = pd.Series(can_add_position, index=out.index)
+        out['Can_Open_Fresh_Position'] = pd.Series(can_open_fresh, index=out.index)
+        out['Exit_Action'] = pd.Series(exit_action, index=out.index)
+        out['AI_Proba_Legacy'] = raw_ai_proba_legacy.round(6)
+        out['AI_Proba_Legacy_Effective'] = ai_proba_legacy.round(6)
         state_proba = self._clip01(0.58 * dominant_confirm_score + 0.22 * dominant_pre_score + 0.12 * (1.0 - max_risk) + 0.08 * self._clip01(0.5 + proba_delta))
         out['AI_Proba'] = ((ai_proba_legacy * 0.30) + (state_proba * 0.70)).clip(0.01, 0.99).round(6)
         out['Golden_Type'] = dominant_tag.where(pd.Series(entry_state, index=out.index) != 'NO_ENTRY', '無')
@@ -357,6 +388,11 @@ class ScreeningEngine:
             out['Regime_Source'] = out.get('Regime_Source', 'direction_strength_environment_v2').astype(str) + '|transition_hysteresis_v1'
         except Exception:
             out['Regime_Hysteresis_Applied'] = 0
+
+        try:
+            out = self.features.enrich_from_history(out)
+        except Exception:
+            pass
 
         stats = _compute_realized_signal_stats(out, params, hold_days=int(params.get('ML_LABEL_HOLD_DAYS', 5)))
         for k, v in stats.items():

@@ -625,3 +625,184 @@ class ExecutionEngine:
             return float(x)
         except Exception:
             return default
+
+# =============================================================================
+# vNext lot-level / broker callback / reconciliation extension
+# =============================================================================
+try:
+    _EE_ORIG_RUN_FROM_CSV = ExecutionEngine.run_from_csv
+    _EE_ORIG_SYNC_SQL_RUNTIME = ExecutionEngine._sync_execution_sql_runtime
+    _EE_ORIG_WRITE_LEVEL3 = ExecutionEngine._write_level3_runtime
+
+    CALLBACK_BLOTTER_PATH = os.path.join(LOG_DIR, 'broker_callback_blotter.csv')
+    RECONCILIATION_BLOTTER_PATH = os.path.join(LOG_DIR, 'execution_reconciliation_blotter.csv')
+    LOT_SNAPSHOT_PATH = os.path.join(LOG_DIR, 'position_lot_snapshot.csv')
+
+    def _ee_broker_lots_for_runtime(self) -> list[dict[str, Any]]:
+        getter = getattr(self.broker, 'get_position_lots', None)
+        if callable(getter):
+            try:
+                return getter(include_closed=True) or []
+            except TypeError:
+                try:
+                    return getter() or []
+                except Exception:
+                    return []
+            except Exception:
+                return []
+        snapper = getattr(self.broker, 'export_runtime_snapshot', None)
+        if callable(snapper):
+            try:
+                snap = snapper() or {}
+                return list(snap.get('position_lots', []) or [])
+            except Exception:
+                return []
+        return []
+
+    def _ee_broker_callbacks_for_runtime(self, clear: bool = True) -> list[dict[str, Any]]:
+        # Prefer cursor-style drain to avoid re-ingesting all historical callbacks every run.
+        drain = getattr(self.broker, 'drain_new_callbacks', None)
+        if callable(drain):
+            try:
+                return drain() or []
+            except Exception:
+                pass
+        poll = getattr(self.broker, 'poll_callbacks', None)
+        if callable(poll):
+            try:
+                return poll(clear=clear) or []
+            except TypeError:
+                try:
+                    return poll() or []
+                except Exception:
+                    return []
+            except Exception:
+                return []
+        return []
+
+    def _ee_ingest_broker_callbacks(self, callbacks: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+        callbacks = callbacks if callbacks is not None else self._broker_callbacks_for_runtime(clear=True)
+        rows: list[dict[str, Any]] = []
+        for event in callbacks or []:
+            row = dict(event)
+            row.setdefault('ingested_at', datetime.now().isoformat(timespec='seconds'))
+            rows.append(row)
+            try:
+                self._append_csv_row(CALLBACK_BLOTTER_PATH, row)
+            except Exception:
+                pass
+            if self.db_logger:
+                try:
+                    self.db_logger.ingest_broker_callback(row)
+                except Exception as exc:
+                    print(f"⚠️ broker callback SQL ingest 失敗：{exc}")
+        return rows
+
+    def _ee_append_lot_snapshot(self, lots: list[dict[str, Any]]) -> None:
+        for lot in lots or []:
+            row = dict(lot)
+            row.setdefault('snapshot_time', datetime.now().isoformat(timespec='seconds'))
+            try:
+                self._append_csv_row(LOT_SNAPSHOT_PATH, row)
+            except Exception:
+                pass
+
+    def _ee_sync_lot_snapshot(self, note: str = '') -> list[dict[str, Any]]:
+        lots = self._broker_lots_for_runtime()
+        self._append_lot_snapshot(lots)
+        if self.db_logger:
+            try:
+                self.db_logger.replace_position_lots(lots, snapshot_time=datetime.now().isoformat(timespec='seconds'))
+            except Exception as exc:
+                print(f"⚠️ lot-level SQL sync 失敗：{exc}")
+        return lots
+
+    def _ee_reconcile_execution_state(self, callbacks: list[dict[str, Any]] | None = None, note: str = '') -> dict[str, Any]:
+        local_orders = self._broker_orders_for_runtime()
+        broker_orders = self._broker_orders_for_runtime()
+        local_fills = self._broker_fills_for_runtime()
+        broker_fills = self._broker_fills_for_runtime()
+        local_positions = self._broker_positions_for_runtime()
+        broker_positions = self._broker_positions_for_runtime()
+        lots = self._broker_lots_for_runtime()
+        cash = None
+        try:
+            cash = float(self.broker.get_cash())
+        except Exception:
+            pass
+        if self.db_logger and hasattr(self.db_logger, 'reconcile_execution_state'):
+            try:
+                summary = self.db_logger.reconcile_execution_state(
+                    local_orders=local_orders,
+                    broker_orders=broker_orders,
+                    local_fills=local_fills,
+                    broker_fills=broker_fills,
+                    local_positions=local_positions,
+                    broker_positions=broker_positions,
+                    local_lots=lots,
+                    broker_lots=lots,
+                    local_cash=cash,
+                    broker_cash=cash,
+                    note=note or 'execution_engine_runtime_reconcile',
+                )
+            except Exception as exc:
+                summary = {'status': 'ERROR', 'error': repr(exc)}
+        else:
+            summary = {'status': 'SKIPPED', 'reason': 'db_logger_missing'}
+        try:
+            self._append_csv_row(RECONCILIATION_BLOTTER_PATH, {'run_time': datetime.now().isoformat(timespec='seconds'), **summary})
+        except Exception:
+            pass
+        return summary
+
+    def _ee_patched_sync_sql_runtime(self, status: str, note: str = '') -> None:
+        # Keep original account/orders/positions behavior.
+        _EE_ORIG_SYNC_SQL_RUNTIME(self, status=status, note=note)
+        # Then sync lot-level detail and broker callback queue.
+        try:
+            callbacks = self._ee_ingest_broker_callbacks()
+            lots = self._ee_sync_lot_snapshot(note=note)
+            if self.db_logger:
+                # Also sync lots via account_row path so old callers still carry lot payload.
+                snap_time = datetime.now().isoformat(timespec='seconds')
+                acct = {'snapshot_time': snap_time, 'cash': float(self.broker.get_cash() or 0.0), 'equity': float(self.broker.get_cash() or 0.0), 'broker_type': self.broker.__class__.__name__, 'note': f'{status}|{note}', 'position_lots': lots}
+                try:
+                    self.db_logger.sync_runtime_snapshot(acct, self._broker_positions_for_runtime(), snapshot_time=snap_time, note=acct['note'])
+                except Exception:
+                    pass
+            self._ee_reconcile_execution_state(callbacks=callbacks, note=f'{status}|{note}')
+        except Exception as exc:
+            print(f"⚠️ callback/lot/reconcile runtime sync 失敗：{exc}")
+
+    def _ee_patched_write_level3_runtime(self, df, source_meta, order_rows, fill_rows, status, extra=None):
+        extra = dict(extra or {})
+        try:
+            extra['position_lots'] = self._broker_lots_for_runtime()
+            extra['lot_reconciliation'] = self.broker.reconcile_lots_to_positions() if hasattr(self.broker, 'reconcile_lots_to_positions') else {}
+            extra['broker_callbacks_pending'] = len(getattr(self.broker, '_callbacks', []) or [])
+        except Exception as exc:
+            extra['lot_runtime_error'] = repr(exc)
+        return _EE_ORIG_WRITE_LEVEL3(self, df, source_meta, order_rows, fill_rows, status, extra=extra)
+
+    def _ee_patched_run_from_csv(self, decision_csv_path: str) -> None:
+        _EE_ORIG_RUN_FROM_CSV(self, decision_csv_path)
+        # Final safety pass: callbacks generated after original final sync are ingested here.
+        try:
+            callbacks = self._ee_ingest_broker_callbacks()
+            self._ee_sync_lot_snapshot(note='post_run_final_safety_pass')
+            self._ee_reconcile_execution_state(callbacks=callbacks, note='post_run_final_safety_pass')
+        except Exception as exc:
+            print(f"⚠️ post-run callback/lot/reconcile pass 失敗：{exc}")
+
+    ExecutionEngine._broker_lots_for_runtime = _ee_broker_lots_for_runtime
+    ExecutionEngine._broker_callbacks_for_runtime = _ee_broker_callbacks_for_runtime
+    ExecutionEngine._ee_ingest_broker_callbacks = _ee_ingest_broker_callbacks
+    ExecutionEngine._ee_append_lot_snapshot = _ee_append_lot_snapshot
+    ExecutionEngine._ee_sync_lot_snapshot = _ee_sync_lot_snapshot
+    ExecutionEngine._ee_reconcile_execution_state = _ee_reconcile_execution_state
+    ExecutionEngine._sync_execution_sql_runtime = _ee_patched_sync_sql_runtime
+    ExecutionEngine._write_level3_runtime = _ee_patched_write_level3_runtime
+    ExecutionEngine.run_from_csv = _ee_patched_run_from_csv
+
+except Exception:
+    pass

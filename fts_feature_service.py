@@ -250,11 +250,7 @@ class FeatureService:
         try:
             from fts_regime_service import RegimeService
             regime_row = RegimeService().build_regime_row(row, history_df=history_df)
-            for k, v in regime_row.items():
-                if k in {'Regime_Label', 'Transition_Label', 'Hysteresis_Regime_Label', 'Hysteresis_Pending_Label'}:
-                    out[k] = str(v)
-                else:
-                    out[k] = safe_float(v, 0.0)
+            out.update({k: safe_float(v, 0.0) for k, v in regime_row.items()})
         except Exception:
             out.setdefault('Range_Confidence', 0.0)
             out.setdefault('Trend_Confidence', 0.0)
@@ -594,39 +590,80 @@ class FeatureService:
         out['ADV20_Pctl'] = self._rolling_percentile(out['ADV20_Proxy'], 252)
         out['ATR_Pct_Pctl'] = self._rolling_percentile(out['ATR_Pct'], 252)
         out['RealizedVol_20_Pctl'] = self._rolling_percentile(out['RealizedVol_20'], 252)
-
-        rsi = pd.to_numeric(out.get('RSI', 50.0), errors='coerce').fillna(50.0)
-        adx = pd.to_numeric(out.get('ADX14', out.get('ADX', 20.0)), errors='coerce').fillna(20.0)
-        macd_hist = pd.to_numeric(out.get('MACD_Hist', 0.0), errors='coerce').fillna(0.0)
-        bb_width = pd.to_numeric(out.get('BB_Width', 0.0), errors='coerce').fillna(0.0)
-        weighted_buy = pd.to_numeric(out.get('Weighted_Buy_Score', out.get('Buy_Score', 0.0)), errors='coerce').fillna(0.0)
-        weighted_sell = pd.to_numeric(out.get('Weighted_Sell_Score', out.get('Sell_Score', 0.0)), errors='coerce').fillna(0.0)
-        score_gap = pd.to_numeric(out.get('Score_Gap', weighted_buy - weighted_sell), errors='coerce').fillna(weighted_buy - weighted_sell)
-        foreign_ratio = pd.to_numeric(out.get('Foreign_Ratio', 0.0), errors='coerce').fillna(0.0)
-        total_ratio = pd.to_numeric(out.get('Total_Ratio', 0.0), errors='coerce').fillna(0.0)
-        ai_proba = pd.to_numeric(out.get('AI_Proba', 0.5 + score_gap.clip(-2, 2) * 0.1), errors='coerce').fillna(0.5)
-
-        width_mean = bb_width.rolling(20, min_periods=5).mean().replace(0, np.nan)
-        squeeze_flag = (bb_width < (width_mean * 0.85)).fillna(False).astype(float)
-        width_delta = bb_width.diff(3).fillna(0.0)
-        atr_pctl = pd.to_numeric(out.get('ATR_Pct_Pctl', 0.5), errors='coerce').fillna(0.5)
-
-        out['Buy_Score_Slope_3d'] = weighted_buy.diff(3).fillna(0.0)
-        out['Buy_Score_Slope_5d'] = weighted_buy.diff(5).fillna(0.0)
-        out['Sell_Score_Slope_3d'] = weighted_sell.diff(3).fillna(0.0)
-        out['Sell_Score_Slope_5d'] = weighted_sell.diff(5).fillna(0.0)
-        out['Score_Gap_Slope_3d'] = score_gap.diff(3).fillna(0.0)
-        out['Score_Gap_Slope_5d'] = score_gap.diff(5).fillna(0.0)
-        out['ADX_Delta_3d'] = adx.diff(3).fillna(0.0)
-        out['MACD_Hist_Delta_3d'] = macd_hist.diff(3).fillna(0.0)
-        out['RSI_Reclaim_Speed'] = (((rsi - rsi.shift(3)) / 3.0).fillna(0.0) + (((rsi > 50) & (rsi.shift(1).fillna(rsi) <= 50)).astype(float) * 0.35)).fillna(0.0)
-        out['BB_Squeeze_Release'] = (squeeze_flag.shift(1).fillna(0.0) * width_delta.clip(lower=0.0) * (1.0 + macd_hist.diff().fillna(0.0).clip(lower=0.0))).fillna(0.0)
-        out['ATR_Expansion_Start'] = (((atr_pctl.shift(1).fillna(0.5) < 0.45).astype(float)) * out['ATR_Pct'].diff(3).fillna(0.0).clip(lower=0.0)).fillna(0.0)
-        out['Volume_Z20_Delta'] = out['Volume_Z20'].diff(3).fillna(0.0)
-        out['Foreign_Ratio_Delta_3d'] = foreign_ratio.diff(3).fillna(0.0)
-        out['Total_Ratio_Delta_3d'] = total_ratio.diff(3).fillna(0.0)
-        out['Proba_Delta_3d'] = ai_proba.diff(3).fillna(0.0)
         return out
+
+
+    @staticmethod
+    def _history_delta(history_df: pd.DataFrame | None, col: str, periods: int = 3) -> float:
+        if history_df is None or history_df.empty or col not in history_df.columns or len(history_df) <= periods:
+            return 0.0
+        s = pd.to_numeric(history_df[col], errors='coerce').ffill().fillna(0.0)
+        try:
+            return float(s.iloc[-1] - s.iloc[-(periods + 1)])
+        except Exception:
+            return 0.0
+
+    def _compute_exit_timing_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, float]:
+        trend_conf = safe_float(row.get('Trend_Confidence', 0.5), 0.5)
+        range_conf = safe_float(row.get('Range_Confidence', 0.5), 0.5)
+        ai_proba = safe_float(row.get('AI_Proba', row.get('訊號信心分數(%)', 50.0) / 100.0), 0.5)
+        score_gap = safe_float(row.get('Score_Gap', 0.0), 0.0)
+        upper_shadow = safe_float(row.get('Upper_Shadow_Pct', row.get('Upper_Shadow', 0.0)), 0.0)
+        intraday = safe_float(row.get('Intraday_Return', 0.0), 0.0)
+        gap_pct = safe_float(row.get('Gap_Pct', 0.0), 0.0)
+        total_ratio = safe_float(row.get('Total_Ratio', 0.0), 0.0)
+        foreign_ratio = safe_float(row.get('Foreign_Ratio', 0.0), 0.0)
+        rsi = safe_float(row.get('RSI', 50.0), 50.0)
+        macd_hist = safe_float(row.get('MACD_Hist', 0.0), 0.0)
+
+        trend_conf_delta = self._history_delta(history_df, 'Trend_Confidence', 3)
+        range_conf_delta = self._history_delta(history_df, 'Range_Confidence', 3)
+        proba_delta = self._history_delta(history_df, 'AI_Proba', 3)
+        foreign_delta = self._history_delta(history_df, 'Foreign_Ratio', 3)
+        total_delta = self._history_delta(history_df, 'Total_Ratio', 3)
+        macd_delta = self._history_delta(history_df, 'MACD_Hist', 3)
+
+        breakout_risk = (
+            max(0.0, upper_shadow) * 0.20
+            + max(0.0, -intraday) * 0.20
+            + max(0.0, -gap_pct) * 0.10
+            + max(0.0, -macd_delta) * 0.20
+            + max(0.0, -proba_delta) * 0.15
+            + max(0.0, -trend_conf_delta) * 0.15
+        )
+        reversal_risk = (
+            max(0.0, (rsi - 68.0) / 20.0) * 0.15
+            + max(0.0, -foreign_delta) * 0.20
+            + max(0.0, -total_delta) * 0.20
+            + max(0.0, range_conf - trend_conf) * 0.20
+            + max(0.0, -score_gap) * 0.10
+            + max(0.0, -macd_hist) * 0.15
+        )
+        exit_trend_decay = max(0.0, -trend_conf_delta) * 0.45 + max(0.0, -proba_delta) * 0.35 + max(0.0, -macd_delta) * 0.20
+        exit_chip_weakening = max(0.0, -foreign_delta) * 0.55 + max(0.0, -total_delta) * 0.45
+        exit_regime_det = max(0.0, range_conf - trend_conf) * 0.70 + max(0.0, -trend_conf_delta) * 0.30
+        hazard_raw = (
+            breakout_risk * 0.30
+            + reversal_risk * 0.25
+            + exit_trend_decay * 0.20
+            + exit_chip_weakening * 0.10
+            + exit_regime_det * 0.10
+            + max(0.0, 0.55 - ai_proba) * 0.25
+        )
+        hazard = max(0.0, min(1.0, hazard_raw * 1.85))
+        stop_tighten = max(0.35, 1.0 - hazard * 0.60)
+        return {
+            'Breakout_Risk_Next3': round(float(breakout_risk), 6),
+            'Reversal_Risk_Next3': round(float(reversal_risk), 6),
+            'Exit_Trend_Decay': round(float(exit_trend_decay), 6),
+            'Exit_Chip_Weakening': round(float(exit_chip_weakening), 6),
+            'Exit_Regime_Deterioration': round(float(exit_regime_det), 6),
+            'Exit_Hazard_Score': round(float(hazard), 6),
+            'Exit_Stop_Tighten_Suggested': round(float(stop_tighten), 6),
+            'Trend_Confidence_Delta': round(float(trend_conf_delta), 6),
+            'Range_Confidence_Delta': round(float(range_conf_delta), 6),
+            'Proba_Delta_3d': round(float(proba_delta), 6),
+        }
 
     def extract_ai_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:
         features = {
@@ -648,24 +685,6 @@ class FeatureService:
             'Weighted_Sell_Score': safe_float(row.get('Weighted_Sell_Score', row.get('Sell_Score', 0.0)), 0.0),
             'Score_Gap': safe_float(row.get('Score_Gap', 0.0), 0.0),
             'Signal_Conflict': safe_float(row.get('Signal_Conflict', 0.0), 0.0),
-            'Legacy_Long_Confirm_Pressure': safe_float(row.get('Legacy_Long_Confirm_Pressure', 0.0), 0.0),
-            'Legacy_Short_Confirm_Pressure': safe_float(row.get('Legacy_Short_Confirm_Pressure', 0.0), 0.0),
-            'Legacy_Range_Confirm_Pressure': safe_float(row.get('Legacy_Range_Confirm_Pressure', 0.0), 0.0),
-            'PreEntry_Long_Score': safe_float(row.get('PreEntry_Long_Score', 0.0), 0.0),
-            'PreEntry_Short_Score': safe_float(row.get('PreEntry_Short_Score', 0.0), 0.0),
-            'PreEntry_Range_Score': safe_float(row.get('PreEntry_Range_Score', 0.0), 0.0),
-            'PreEntry_Score': safe_float(row.get('PreEntry_Score', 0.0), 0.0),
-            'Confirm_Long_Score': safe_float(row.get('Confirm_Long_Score', 0.0), 0.0),
-            'Confirm_Short_Score': safe_float(row.get('Confirm_Short_Score', 0.0), 0.0),
-            'Confirm_Range_Score': safe_float(row.get('Confirm_Range_Score', 0.0), 0.0),
-            'Confirm_Entry_Score': safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0),
-            'Watch_Eligible': safe_float(row.get('Watch_Eligible', 0.0), 0.0),
-            'Pilot_Eligible': safe_float(row.get('Pilot_Eligible', 0.0), 0.0),
-            'Full_Eligible': safe_float(row.get('Full_Eligible', 0.0), 0.0),
-            'Pilot_Position_Multiplier': safe_float(row.get('Pilot_Position_Multiplier', 0.0), 0.0),
-            'Full_Position_Multiplier': safe_float(row.get('Full_Position_Multiplier', 1.0), 1.0),
-            'StateMachine_Kelly_Pos': safe_float(row.get('StateMachine_Kelly_Pos', row.get('Kelly_Pos', 0.0)), 0.0),
-            'Confirm_Transition_Aligned': safe_float(row.get('Confirm_Transition_Aligned', 0.0), 0.0),
             'Vol_Squeeze': safe_float(row.get('Vol_Squeeze', 0.0), 0.0),
             'Absorption': safe_float(row.get('Absorption', 0.0), 0.0),
             'MR_Long_Spring': safe_float(row.get('MR_Long_Spring', 0.0), 0.0),
@@ -692,23 +711,12 @@ class FeatureService:
         if history_df is not None and not history_df.empty:
             enriched = self.enrich_from_history(history_df)
             latest = enriched.iloc[-1].to_dict()
-            for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20','Buy_Score_Slope_3d','Buy_Score_Slope_5d','Sell_Score_Slope_3d','Sell_Score_Slope_5d','Score_Gap_Slope_3d','Score_Gap_Slope_5d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release','ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Proba_Delta_3d','PreEntry_Long_Score','PreEntry_Short_Score','PreEntry_Range_Score','PreEntry_Score','Confirm_Long_Score','Confirm_Short_Score','Confirm_Range_Score','Confirm_Entry_Score','Legacy_Long_Confirm_Pressure','Legacy_Short_Confirm_Pressure','Legacy_Range_Confirm_Pressure','Watch_Eligible','Pilot_Eligible','Full_Eligible','Pilot_Position_Multiplier','Full_Position_Multiplier','StateMachine_Kelly_Pos','Confirm_Transition_Aligned']:
+            for k in ['ATR14','ATR_Pct','ATR_Pctl_252','RealizedVol_20','RealizedVol_60','Gap_Pct','Overnight_Return','Intraday_Return','Turnover_Proxy','ADV20_Proxy','DollarVol20_Proxy','Volume_Z20','Return_Z20']:
                 features[k] = safe_float(latest.get(k, features.get(k, 0.0)), features.get(k, 0.0))
-        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7','Bull_Emerging_Score','Bear_Emerging_Score','Range_Compression_Score','Breakout_Readiness','Trend_Exhaustion_Score','Entry_Readiness','Breakout_Risk_Next3','Reversal_Risk_Next3','Exit_Hazard_Score','Trend_Confidence_Delta','Range_Confidence_Delta','Regime_Confidence','PreEntry_Long_Score','PreEntry_Short_Score','PreEntry_Range_Score','PreEntry_Score','Confirm_Long_Score','Confirm_Short_Score','Confirm_Range_Score','Confirm_Entry_Score','Legacy_Long_Confirm_Pressure','Legacy_Short_Confirm_Pressure','Legacy_Range_Confirm_Pressure','Watch_Eligible','Pilot_Eligible','Full_Eligible','Pilot_Position_Multiplier','Full_Position_Multiplier','StateMachine_Kelly_Pos','Confirm_Transition_Aligned','Next_Regime_Prob_Bull','Next_Regime_Prob_Bear','Next_Regime_Prob_Range','Hysteresis_Stable_Bars','Hysteresis_Switch_Armed','Hysteresis_Switch_Margin','Hysteresis_Pending_Bars','Hysteresis_Regime_Changed','Hysteresis_Locked']
+        passthrough = ['RS_vs_Market_20','RS_vs_Sector_20','RS_vs_Market_20_Pctl','RS_vs_Sector_20_Pctl','Revenue_YoY','Revenue_YoY_Pctl','Chip_Total_Ratio','Chip_Total_Ratio_Pctl','Turnover_Pctl','ADV20_Pctl','ATR_Pct_Pctl','RealizedVol_20_Pctl','Event_Days_Since_Revenue','Event_Days_To_Revenue','Revenue_Window_1','Revenue_Window_3','Revenue_Window_5','Revenue_Window_10','Event_Days_Since_Earnings','Event_Days_To_Earnings','Earnings_Window_3','Earnings_Window_7','Earnings_Window_14','Earnings_Window_Flag','Dividend_Window_7']
         for k in passthrough:
             if k in row:
                 features[k] = safe_float(row.get(k, 0), 0)
-        if 'Regime_Label' in row:
-            features['Regime_Label'] = str(row.get('Regime_Label', row.get('Regime', '區間盤整')))
-        if 'Transition_Label' in row:
-            features['Transition_Label'] = str(row.get('Transition_Label', 'Stable'))
-        for sk in ['Early_Path_State', 'Confirm_Path_State', 'Entry_State', 'Entry_Path', 'StateMachine_Direction', 'Exit_State', 'Golden_Type_Legacy']:
-            if sk in row:
-                features[sk] = str(row.get(sk, ''))
-        if 'Hysteresis_Regime_Label' in row:
-            features['Hysteresis_Regime_Label'] = str(row.get('Hysteresis_Regime_Label', row.get('Regime_Label', row.get('Regime', '區間盤整'))))
-        if 'Hysteresis_Pending_Label' in row:
-            features['Hysteresis_Pending_Label'] = str(row.get('Hysteresis_Pending_Label', 'None'))
         features['Revenue_YoY_Rank'] = safe_float(row.get('Revenue_YoY_Rank', row.get('Revenue_YoY_Pctl', 0.5)), 0.5)
         features['Chip_Total_Ratio_Rank'] = safe_float(row.get('Chip_Total_Ratio_Rank', row.get('Chip_Total_Ratio_Pctl', 0.5)), 0.5)
         features['Regime_TrendStrength_X_ScoreGap'] = safe_float(row.get('Regime_TrendStrength_X_ScoreGap', (features['ADX'] / 100.0) * features['Score_Gap']), 0)
@@ -716,6 +724,7 @@ class FeatureService:
         directional = self._compute_directional_features(row, history_df=history_df)
         if bool(getattr(CONFIG, 'enable_directional_features_in_training', False)):
             features.update(directional)
+        features.update(self._compute_exit_timing_features({**row, **features}, history_df=history_df))
         return features
 
     def mount_live_features(self, ticker: str, as_of_row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> tuple[dict[str, Any], dict[str, float]]:
@@ -792,3 +801,104 @@ class FeatureService:
 
 # Safety bindings for helper methods patched into class scope
 FeatureService._read_json_if_exists = staticmethod(FeatureService._read_json_if_exists)
+
+
+# --- patched_sync_enrich_from_history / extract_ai_features ---
+from typing import Mapping as _PatchMapping
+try:
+    from fts_regime_service import RegimeService as _PatchedRegimeService
+except Exception:
+    _PatchedRegimeService = None
+
+_fts_orig_enrich_from_history = FeatureService.enrich_from_history
+_fts_orig_extract_ai_features = FeatureService.extract_ai_features
+
+def _patch_hist_delta(df: pd.DataFrame, col: str, periods: int) -> pd.Series:
+    if col not in df.columns:
+        return pd.Series([0.0]*len(df), index=df.index, dtype=float)
+    s = pd.to_numeric(df[col], errors='coerce').ffill().fillna(0.0)
+    return (s - s.shift(periods)).fillna(0.0)
+
+def _patch_clip01(series: pd.Series) -> pd.Series:
+    return pd.to_numeric(series, errors='coerce').fillna(0.0).clip(0.0, 1.0)
+
+def _patched_sync_enrich_from_history(self, df: pd.DataFrame) -> pd.DataFrame:
+    out = _fts_orig_enrich_from_history(self, df)
+    if out is None or out.empty:
+        return out
+    # ensure core columns exist
+    for col, default in [('Buy_Score',0.0),('Sell_Score',0.0),('Score_Gap',0.0),('ADX14',0.0),('MACD_Hist',0.0),('RSI',50.0),('BB_Width',0.0),('ATR_Pct',0.0),('Volume_Z20',0.0),('Foreign_Ratio',0.0),('Total_Ratio',0.0),('AI_Proba',0.5)]:
+        if col not in out.columns:
+            out[col] = default
+    out['Buy_Score_Slope_3d'] = _patch_hist_delta(out, 'Buy_Score', 3)
+    out['Buy_Score_Slope_5d'] = _patch_hist_delta(out, 'Buy_Score', 5)
+    out['Sell_Score_Slope_3d'] = _patch_hist_delta(out, 'Sell_Score', 3)
+    out['Sell_Score_Slope_5d'] = _patch_hist_delta(out, 'Sell_Score', 5)
+    out['Score_Gap_Slope_3d'] = _patch_hist_delta(out, 'Score_Gap', 3)
+    out['Score_Gap_Slope_5d'] = _patch_hist_delta(out, 'Score_Gap', 5)
+    out['ADX_Delta_3d'] = _patch_hist_delta(out, 'ADX14', 3)
+    out['MACD_Hist_Delta_3d'] = _patch_hist_delta(out, 'MACD_Hist', 3)
+    out['Volume_Z20_Delta'] = _patch_hist_delta(out, 'Volume_Z20', 3)
+    out['Foreign_Ratio_Delta_3d'] = _patch_hist_delta(out, 'Foreign_Ratio', 3)
+    out['Total_Ratio_Delta_3d'] = _patch_hist_delta(out, 'Total_Ratio', 3)
+    rsi = pd.to_numeric(out.get('RSI', 50.0), errors='coerce').fillna(50.0)
+    bb_width = pd.to_numeric(out.get('BB_Width', 0.0), errors='coerce').fillna(0.0)
+    atr_pct = pd.to_numeric(out.get('ATR_Pct', 0.0), errors='coerce').fillna(0.0)
+    out['RSI_Reclaim_Speed'] = ((rsi - rsi.shift(3).fillna(rsi)) / 20.0).clip(-1.0,1.0).fillna(0.0)
+    out['BB_Squeeze_Release'] = _patch_clip01((bb_width.rolling(3, min_periods=1).mean() - bb_width.rolling(10, min_periods=3).mean()).fillna(0.0) * 8.0)
+    out['ATR_Expansion_Start'] = _patch_clip01((atr_pct - atr_pct.rolling(10, min_periods=3).mean()).fillna(0.0) * 20.0)
+    if _PatchedRegimeService is not None and ('Transition_Label' not in out.columns or 'Hysteresis_Regime_Label' not in out.columns):
+        try:
+            out = _PatchedRegimeService().enrich_dataframe(out)
+        except Exception:
+            pass
+    return out
+
+def _patched_sync_extract_ai_features(self, row: _PatchMapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:
+    features = _fts_orig_extract_ai_features(self, row, history_df=history_df, ticker=ticker, as_of_date=as_of_date)
+    h = history_df.copy() if isinstance(history_df, pd.DataFrame) else pd.DataFrame()
+    if not h.empty:
+        h = self.enrich_from_history(h)
+        if 'AI_Proba' not in h.columns:
+            h['AI_Proba'] = pd.to_numeric(h.get('AI_Proba', 0.5), errors='coerce').fillna(0.5)
+    def _last(name, default=0.0):
+        if name in row:
+            return safe_float(row.get(name, default), default)
+        if not h.empty and name in h.columns:
+            return safe_float(h[name].iloc[-1], default)
+        return default
+    extras = {
+        'Buy_Score_Slope_3d': _last('Buy_Score_Slope_3d', 0.0),
+        'Buy_Score_Slope_5d': _last('Buy_Score_Slope_5d', 0.0),
+        'Sell_Score_Slope_3d': _last('Sell_Score_Slope_3d', 0.0),
+        'Sell_Score_Slope_5d': _last('Sell_Score_Slope_5d', 0.0),
+        'Score_Gap_Slope_3d': _last('Score_Gap_Slope_3d', 0.0),
+        'Score_Gap_Slope_5d': _last('Score_Gap_Slope_5d', 0.0),
+        'ADX_Delta_3d': _last('ADX_Delta_3d', 0.0),
+        'MACD_Hist_Delta_3d': _last('MACD_Hist_Delta_3d', 0.0),
+        'RSI_Reclaim_Speed': _last('RSI_Reclaim_Speed', 0.0),
+        'BB_Squeeze_Release': _last('BB_Squeeze_Release', 0.0),
+        'ATR_Expansion_Start': _last('ATR_Expansion_Start', 0.0),
+        'Volume_Z20_Delta': _last('Volume_Z20_Delta', 0.0),
+        'Foreign_Ratio_Delta_3d': _last('Foreign_Ratio_Delta_3d', 0.0),
+        'Total_Ratio_Delta_3d': _last('Total_Ratio_Delta_3d', 0.0),
+        'Bull_Emerging_Score': _last('Bull_Emerging_Score', 0.0),
+        'Bear_Emerging_Score': _last('Bear_Emerging_Score', 0.0),
+        'Range_Compression_Score': _last('Range_Compression_Score', 0.0),
+        'Breakout_Readiness': _last('Breakout_Readiness', 0.0),
+        'Trend_Exhaustion_Score': _last('Trend_Exhaustion_Score', 0.0),
+        'Entry_Readiness': _last('Entry_Readiness', 0.0),
+        'Transition_Label': str(row.get('Transition_Label', h['Transition_Label'].iloc[-1] if not h.empty and 'Transition_Label' in h.columns else 'Stable')),
+        'Next_Regime_Prob_Bull': _last('Next_Regime_Prob_Bull', 0.34),
+        'Next_Regime_Prob_Bear': _last('Next_Regime_Prob_Bear', 0.33),
+        'Next_Regime_Prob_Range': _last('Next_Regime_Prob_Range', 0.33),
+        'Hysteresis_Regime_Label': str(row.get('Hysteresis_Regime_Label', h['Hysteresis_Regime_Label'].iloc[-1] if not h.empty and 'Hysteresis_Regime_Label' in h.columns else row.get('Regime', '區間盤整'))),
+        'Proba_Delta_3d': _last('Proba_Delta_3d', 0.0),
+        'Trend_Confidence_Delta': _last('Trend_Confidence_Delta', 0.0),
+        'Range_Confidence_Delta': _last('Range_Confidence_Delta', 0.0),
+    }
+    features.update(extras)
+    return features
+
+FeatureService.enrich_from_history = _patched_sync_enrich_from_history
+FeatureService.extract_ai_features = _patched_sync_extract_ai_features

@@ -14,6 +14,10 @@ except Exception:  # pragma: no cover
         runtime_dir = Path('runtime')
     class _Config:
         enable_range_confidence_service = True
+        regime_hysteresis_switch_band = 0.08
+        regime_hysteresis_confirm_bars = 2
+        regime_hysteresis_min_hold_bars = 2
+        regime_hysteresis_tail_bars = 15
     PATHS = _Paths()
     CONFIG = _Config()
 
@@ -33,11 +37,15 @@ except Exception:  # pragma: no cover
 
 
 class RegimeService:
-    MODULE_VERSION = 'v88_regime_transition_engine'
+    MODULE_VERSION = 'v89_regime_transition_hysteresis_engine'
 
     def __init__(self) -> None:
         self.runtime_path = Path(PATHS.runtime_dir) / 'regime_service.json'
         Path(PATHS.runtime_dir).mkdir(parents=True, exist_ok=True)
+        self.switch_band = max(0.01, safe_float(getattr(CONFIG, 'regime_hysteresis_switch_band', 0.08), 0.08))
+        self.confirm_bars = max(1, int(safe_float(getattr(CONFIG, 'regime_hysteresis_confirm_bars', 2), 2)))
+        self.min_hold_bars = max(1, int(safe_float(getattr(CONFIG, 'regime_hysteresis_min_hold_bars', 2), 2)))
+        self.tail_bars = max(5, int(safe_float(getattr(CONFIG, 'regime_hysteresis_tail_bars', 15), 15)))
 
     @staticmethod
     def _calc_base(row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, float]:
@@ -90,7 +98,7 @@ class RegimeService:
             'direction_bias': max(-1.0, min(direction_bias, 1.0)),
         }
 
-    def build_regime_row(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, Any]:
+    def _raw_row_metrics(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, Any]:
         current = self._calc_base(row, history_df=history_df)
         prev = current
         if history_df is not None and len(history_df) >= 2:
@@ -138,7 +146,7 @@ class RegimeService:
             transition_label = 'Range_Compressing'
 
         proba_now = safe_float(row.get('AI_Proba', 0.5 + current['score_gap'] * 0.1), 0.5)
-        proba_prev = safe_float(row.get('AI_Proba', 0.5 + prev['score_gap'] * 0.1), 0.5)
+        proba_prev = safe_float(prev.get('ai_proba', 0.5 + prev['score_gap'] * 0.1), 0.5)
         proba_delta = proba_now - proba_prev
         entry_readiness = max(0.0, min(1.0, 0.35 * breakout_readiness + 0.25 * max(bull_emerging, bear_emerging) + 0.20 * max(proba_delta, 0.0) + 0.20 * max(current['trend_conf'] - current['range_conf'], 0.0)))
         breakout_risk_next3 = max(0.0, min(1.0, 0.65 * breakout_readiness + 0.35 * max(abs(score_gap_delta) / 1.5, 0.0)))
@@ -170,7 +178,98 @@ class RegimeService:
             'Next_Regime_Prob_Bear': round(max(0.0, min(bear_prob, 1.0)), 6),
             'Next_Regime_Prob_Range': round(max(0.0, min(range_prob, 1.0)), 6),
             'Transition_Label': transition_label,
+            '__probs': probs,
         }
+
+    def _apply_hysteresis(self, raw_metrics: Mapping[str, Any], prev_state: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        probs = raw_metrics.get('__probs', {}) if isinstance(raw_metrics.get('__probs', {}), dict) else {}
+        raw_label = str(raw_metrics.get('Regime_Label', '區間盤整'))
+        regime_conf = safe_float(raw_metrics.get('Regime_Confidence', 0.5), 0.5)
+        transition_label = str(raw_metrics.get('Transition_Label', 'Stable'))
+        prev_state = dict(prev_state or {})
+        prev_label = str(prev_state.get('Hysteresis_Regime_Label', raw_label) or raw_label)
+        prev_stable_bars = int(safe_float(prev_state.get('Hysteresis_Stable_Bars', 0), 0))
+        prev_pending_label = str(prev_state.get('Hysteresis_Pending_Label', ''))
+        prev_pending_bars = int(safe_float(prev_state.get('Hysteresis_Pending_Bars', 0), 0))
+        incumbent_prob = safe_float(probs.get(prev_label, regime_conf), regime_conf)
+        challenger_prob = safe_float(probs.get(raw_label, regime_conf), regime_conf)
+        switch_margin = challenger_prob - incumbent_prob
+        strong_transition = transition_label in {'Range_Breakout_Risk', 'Bull_Emerging', 'Bear_Emerging', 'Bull_Exhausting', 'Bear_Exhausting'}
+        min_hold_block = prev_stable_bars < self.min_hold_bars
+        same_as_prev = raw_label == prev_label
+
+        hysteresis_label = prev_label
+        pending_label = ''
+        pending_bars = 0
+        switch_armed = False
+        regime_changed = False
+
+        if same_as_prev:
+            hysteresis_label = raw_label
+            stable_bars = prev_stable_bars + 1 if prev_label == raw_label else 1
+        else:
+            armed_by_margin = switch_margin >= self.switch_band
+            armed_by_strong_transition = strong_transition and switch_margin >= (self.switch_band * 0.60)
+            urgent_reversal = transition_label in {'Bull_Exhausting', 'Bear_Exhausting'} and switch_margin >= (self.switch_band * 1.10)
+            switch_armed = bool(armed_by_margin or armed_by_strong_transition or urgent_reversal)
+            if switch_armed and not (min_hold_block and not urgent_reversal):
+                pending_label = raw_label
+                pending_bars = prev_pending_bars + 1 if prev_pending_label == raw_label else 1
+                confirm_target = 1 if urgent_reversal else self.confirm_bars
+                if pending_bars >= confirm_target:
+                    hysteresis_label = raw_label
+                    regime_changed = True
+                    stable_bars = 1
+                    pending_label = ''
+                    pending_bars = 0
+                else:
+                    hysteresis_label = prev_label
+                    stable_bars = prev_stable_bars + 1
+            else:
+                hysteresis_label = prev_label
+                stable_bars = prev_stable_bars + 1
+
+        return {
+            'Hysteresis_Regime_Label': hysteresis_label,
+            'Hysteresis_Stable_Bars': int(max(stable_bars, 1)),
+            'Hysteresis_Switch_Armed': float(bool(switch_armed)),
+            'Hysteresis_Switch_Margin': round(float(switch_margin), 6),
+            'Hysteresis_Pending_Label': pending_label or 'None',
+            'Hysteresis_Pending_Bars': int(max(pending_bars, 0)),
+            'Hysteresis_Regime_Changed': float(bool(regime_changed)),
+            'Hysteresis_Locked': float(bool(min_hold_block and not regime_changed and hysteresis_label == prev_label and not same_as_prev)),
+        }
+
+    def enrich_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        if df is None or df.empty:
+            return pd.DataFrame() if df is None else df.copy()
+        out = df.copy()
+        metrics_rows: list[dict[str, Any]] = []
+        prev_state: dict[str, Any] | None = None
+        for i in range(len(out)):
+            hist_slice = out.iloc[: i + 1].copy()
+            row = out.iloc[i].to_dict()
+            raw_metrics = self._raw_row_metrics(row, history_df=hist_slice)
+            hyst = self._apply_hysteresis(raw_metrics, prev_state=prev_state)
+            merged = {k: v for k, v in raw_metrics.items() if k != '__probs'}
+            merged.update(hyst)
+            metrics_rows.append(merged)
+            prev_state = merged
+        metrics_df = pd.DataFrame(metrics_rows, index=out.index)
+        for col in metrics_df.columns:
+            out[col] = metrics_df[col]
+        return out
+
+    def build_regime_row(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, Any]:
+        if history_df is None or history_df.empty:
+            raw_metrics = self._raw_row_metrics(row, history_df=None)
+            raw_metrics.update(self._apply_hysteresis(raw_metrics, prev_state=None))
+            raw_metrics.pop('__probs', None)
+            return raw_metrics
+        tail_df = history_df.tail(self.tail_bars).copy()
+        enriched = self.enrich_dataframe(tail_df)
+        latest = enriched.iloc[-1].to_dict()
+        return {k: v for k, v in latest.items() if k not in set(history_df.columns)}
 
     def build_summary(self) -> tuple[Path, dict[str, Any]]:
         payload = {
@@ -178,12 +277,21 @@ class RegimeService:
             'module_version': self.MODULE_VERSION,
             'enabled': bool(getattr(CONFIG, 'enable_range_confidence_service', True)),
             'status': 'regime_service_ready',
+            'hysteresis': {
+                'switch_band': self.switch_band,
+                'confirm_bars': self.confirm_bars,
+                'min_hold_bars': self.min_hold_bars,
+                'tail_bars': self.tail_bars,
+            },
             'outputs': [
                 'Range_Confidence', 'Trend_Confidence', 'Bull_Emerging_Score', 'Bear_Emerging_Score',
                 'Range_Compression_Score', 'Breakout_Readiness', 'Trend_Exhaustion_Score', 'Entry_Readiness',
                 'Breakout_Risk_Next3', 'Reversal_Risk_Next3', 'Exit_Hazard_Score', 'Proba_Delta_3d',
                 'Trend_Confidence_Delta', 'Range_Confidence_Delta', 'Regime_Label', 'Regime_Confidence',
-                'Next_Regime_Prob_Bull', 'Next_Regime_Prob_Bear', 'Next_Regime_Prob_Range', 'Transition_Label'
+                'Next_Regime_Prob_Bull', 'Next_Regime_Prob_Bear', 'Next_Regime_Prob_Range', 'Transition_Label',
+                'Hysteresis_Regime_Label', 'Hysteresis_Stable_Bars', 'Hysteresis_Switch_Armed',
+                'Hysteresis_Switch_Margin', 'Hysteresis_Pending_Label', 'Hysteresis_Pending_Bars',
+                'Hysteresis_Regime_Changed', 'Hysteresis_Locked',
             ],
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')

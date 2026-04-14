@@ -136,6 +136,11 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
 
     setup_ready_label = int(_safe_float(computed_df.iloc[i].get('PreEntry_Score', 0.0), 0.0) >= float(PARAMS.get('PREENTRY_PILOT_THRESHOLD', 0.58)) and favorable_move * 100.0 >= float(PARAMS.get('SETUP_READY_MIN_FAVORABLE_PCT', 1.50)))
     trigger_confirm_label = int(_safe_float(computed_df.iloc[i].get('Confirm_Entry_Score', 0.0), 0.0) >= float(PARAMS.get('CONFIRM_FULL_THRESHOLD', 0.66)) and favorable_move * 100.0 >= float(PARAMS.get('TRIGGER_CONFIRM_MIN_FAVORABLE_PCT', 3.00)) and int(label_y) == 1)
+    current_exit_hazard = _safe_float(computed_df.iloc[i].get('Exit_Hazard_Score', 0.0), 0.0)
+    exit_state_at_label = str(computed_df.iloc[i].get('Exit_State', 'HOLD'))
+    exit_defend_label = int(current_exit_hazard >= float(PARAMS.get('EXIT_LABEL_DEFEND_HAZARD', 0.55)) or adverse_move * 100.0 >= float(PARAMS.get('EXIT_LABEL_DEFEND_ADVERSE_PCT', 1.20)) or exit_state_at_label in {'DEFEND','REDUCE','EXIT'})
+    exit_reduce_label = int(current_exit_hazard >= float(PARAMS.get('EXIT_LABEL_REDUCE_HAZARD', 0.68)) or adverse_move * 100.0 >= float(PARAMS.get('EXIT_LABEL_REDUCE_ADVERSE_PCT', 2.00)) or exit_state_at_label in {'REDUCE','EXIT'} or bool(stop_hit))
+    exit_confirm_label = int(current_exit_hazard >= float(PARAMS.get('EXIT_LABEL_CONFIRM_HAZARD', 0.82)) or bool(stop_hit) or realized_return <= -abs(float(PARAMS.get('SL_MIN_PCT', 0.03))) * 0.75)
     return {
         'Label': int(label_y),
         'Label_Y': int(label_y),
@@ -163,6 +168,11 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
         'Entry_State_At_Label': str(computed_df.iloc[i].get('Entry_State', 'NO_ENTRY')),
         'Early_Path_State_At_Label': str(computed_df.iloc[i].get('Early_Path_State', 'NO_ENTRY')),
         'Confirm_Path_State_At_Label': str(computed_df.iloc[i].get('Confirm_Path_State', 'WAIT_CONFIRM')),
+        'Exit_Defend_Label': exit_defend_label,
+        'Exit_Reduce_Label': exit_reduce_label,
+        'Exit_Confirm_Label': exit_confirm_label,
+        'Exit_State_At_Label': exit_state_at_label,
+        'Target_Position_At_Label': _safe_float(computed_df.iloc[i].get('Target_Position', 0.0), 0.0),
     }
 
 
@@ -178,6 +188,7 @@ def generate_ml_dataset(tickers=None):
         'Label', 'Label_Y', 'Target_Return', 'Future_Return_Pct', 'Entry_Price', 'Exit_Price',
         'Entry_Date', 'Exit_Date', 'Hold_Days', 'Direction', 'Setup_Ready_Label', 'Trigger_Confirm_Label',
         'Entry_State_At_Label', 'Early_Path_State_At_Label', 'Confirm_Path_State_At_Label',
+        'Exit_Defend_Label', 'Exit_Reduce_Label', 'Exit_Confirm_Label', 'Exit_State_At_Label', 'Target_Position_At_Label',
     ]
 
     for ticker in tickers:
