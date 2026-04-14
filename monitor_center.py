@@ -81,13 +81,13 @@ def check_decision_desk_quality(df):
             "health": "FAIL",
             "rows": 0,
             "avg_ai_proba": 0.0,
-            "avg_realized_ev": 0.0,
+            "avg_expected_return": 0.0,
             "avg_score_gap": 0.0,
             "message": "決策桌為空",
         }
 
     avg_ai = _safe_float(df.get("AI_Proba", pd.Series(dtype=float)).mean(), 0.0)
-    avg_ev = _safe_float(df.get("Realized_EV", pd.Series(dtype=float)).mean(), 0.0)
+    avg_ev = _safe_float(df.get("Expected_Return", pd.Series(dtype=float)).mean(), 0.0)
     avg_gap = _safe_float(df.get("Score_Gap", pd.Series(dtype=float)).mean(), 0.0)
 
     health = "OK"
@@ -98,7 +98,7 @@ def check_decision_desk_quality(df):
         message = "決策桌標的偏少"
     if avg_ev <= 0:
         health = "WARN"
-        message = "決策桌平均 Realized_EV 不為正"
+        message = "決策桌平均 Expected_Return 不為正"
     if avg_ai < 0.50:
         health = "WARN"
         message = "決策桌平均 AI 勝率偏低"
@@ -107,7 +107,7 @@ def check_decision_desk_quality(df):
         "health": health,
         "rows": int(len(df)),
         "avg_ai_proba": round(avg_ai, 4),
-        "avg_realized_ev": round(avg_ev, 4),
+        "avg_expected_return": round(avg_ev, 4),
         "avg_score_gap": round(avg_gap, 4),
         "message": message,
     }
@@ -123,7 +123,7 @@ def check_portfolio_exposure(active_df):
             "message": "目前空手",
         }
 
-    invested = pd.to_numeric(active_df.get("投入資金", 0), errors="coerce").fillna(0.0)
+    invested = pd.to_numeric(active_df["投入資金"], errors="coerce").fillna(0.0) if "投入資金" in active_df.columns else pd.Series([0.0] * len(active_df), index=active_df.index, dtype=float)
     total_invested = float(invested.sum())
     max_single = float(invested.max()) if len(invested) > 0 else 0.0
     pos_count = int(len(active_df))
@@ -281,7 +281,7 @@ def print_human_summary(report, strategy_df):
     dd = report["decision_desk"]
     print(
         f"決策桌: {dd['health']} | rows={dd['rows']} | "
-        f"avgAI={dd['avg_ai_proba']:.2%} | avgEV={dd['avg_realized_ev']:.3f} | {dd['message']}"
+        f"avgAI={dd['avg_ai_proba']:.2%} | avgEV={dd['avg_expected_return']:.3f} | {dd['message']}"
     )
 
     pf = report["portfolio"]

@@ -207,7 +207,7 @@ class DecisionCompatibilityLayer:
         out["AI_Proba"] = pick("AI_Proba", "ai_proba", "AI_Confidence", "confidence")
         out["Score"] = pick("Score", "Final_Score", "score", "final_score")
         out["Kelly_Pos"] = pick("Kelly_Pos", "Kelly_Fraction", "kelly_fraction")
-        out["Heuristic_EV"] = pick("Heuristic_EV", "expected_return", "Expected_Return", "Realized_EV")
+        out["Heuristic_EV"] = pick("Expected_Return", "Heuristic_EV", "Live_EV", "expected_return", "Expected_Return", "Realized_EV")
         out["Reference_Price"] = pick("Reference_Price", "Close", "close", "收盤價", "價格")
         out["Target_Qty"] = pick("Target_Qty", "Qty", "qty", "建議股數", "建議張數")
         out["FallbackBuild"] = pick("FallbackBuild")

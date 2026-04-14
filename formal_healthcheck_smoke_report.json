@@ -1,0 +1,111 @@
+{
+  "generated_at": "2026-04-14T07:41:58",
+  "checks": {
+    "formal_paper_broker": {
+      "ok": true,
+      "value": true
+    },
+    "formal_real_broker": {
+      "ok": true,
+      "value": true
+    },
+    "formal_execution_engine": {
+      "ok": true,
+      "value": true
+    },
+    "formal_db_logger": {
+      "ok": true,
+      "value": true
+    },
+    "callback_mapping": {
+      "ok": true,
+      "value": {
+        "callback_id": "CB-O1",
+        "broker": "GENERIC",
+        "account_id": "",
+        "event_type": "FILL",
+        "status": "PARTIALLY_FILLED",
+        "broker_order_id": "O1",
+        "client_order_id": "",
+        "ticker_symbol": "2330.TW",
+        "side": "",
+        "filled_qty": 100,
+        "remaining_qty": 0,
+        "avg_fill_price": 600.0,
+        "fill_price": 600.0,
+        "fill_id": "",
+        "reject_code": "",
+        "reject_reason": "",
+        "event_time": "2026-04-14T07:41:58",
+        "strategy_name": "",
+        "signal_id": "",
+        "lot_id": "",
+        "position_key": "",
+        "raw_payload": {
+          "order_id": "O1",
+          "status": "partial",
+          "symbol": "2330.TW",
+          "fill_qty": 100,
+          "price": 600
+        }
+      }
+    },
+    "external_tax_rules": {
+      "ok": true,
+      "value": {
+        "rules": [
+          "FUTURES",
+          "FX",
+          "OTHER",
+          "TW_EQUITY",
+          "US_EQUITY"
+        ],
+        "tw": {
+          "jurisdiction": "TW",
+          "asset_class": "EQUITY",
+          "tax_regime": "TW_LISTED_STOCK",
+          "tax_treatment": "TW_SECURITIES_TRANSACTION_TAX",
+          "report_type": "TW_SECURITIES_GAIN_SUMMARY",
+          "currency": "TWD",
+          "capital_gain_taxable": false,
+          "ordinary_income": false,
+          "wash_sale_applicable": false,
+          "wash_sale_window_days": 30,
+          "section1256_6040": false,
+          "long_term_days": 365,
+          "sell_transaction_tax_rate": 0.003,
+          "open_transaction_tax_rate": 0.0,
+          "close_fee_deductible": true,
+          "note": "Taiwan listed stock engineering profile.",
+          "rule_key": "TW_EQUITY",
+          "ticker_symbol": "2330.TW"
+        },
+        "us": {
+          "jurisdiction": "US",
+          "asset_class": "EQUITY",
+          "tax_regime": "US_EQUITY_CAPITAL_GAIN",
+          "tax_treatment": "US_CAPITAL_GAIN_LOSS",
+          "report_type": "US_FORM_8949_LIKE",
+          "currency": "USD",
+          "capital_gain_taxable": true,
+          "ordinary_income": false,
+          "wash_sale_applicable": true,
+          "wash_sale_window_days": 30,
+          "section1256_6040": false,
+          "long_term_days": 365,
+          "sell_transaction_tax_rate": 0.0,
+          "open_transaction_tax_rate": 0.0,
+          "close_fee_deductible": true,
+          "note": "US equity engineering profile with wash sale support.",
+          "rule_key": "US_EQUITY",
+          "ticker_symbol": "AAPL"
+        }
+      }
+    },
+    "three_path_dashboard_contract": {
+      "ok": true,
+      "value": true
+    }
+  },
+  "ok": true
+}

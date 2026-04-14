@@ -200,7 +200,8 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         refresh_model_runtime()
 
     direction_scope = _normalize_scope(direction_scope)
-    realized_ev = _safe_float(latest_row.get('Realized_EV', 0.0), 0.0)
+    expected_return = _safe_float(latest_row.get('Expected_Return', latest_row.get('Heuristic_EV', latest_row.get('Live_EV', latest_row.get('Realized_EV', 0.0)))), 0.0)
+    ev_source = str(latest_row.get('EV_Source', 'unknown'))
     sample_size = int(_safe_float(latest_row.get('歷史訊號樣本數', latest_row.get('Sample_Size', 0)), 0.0))
     signal_conf = _safe_float(latest_row.get('訊號信心分數(%)', latest_row.get('AI_Proba', 0.5) * 100.0), 50.0) / 100.0
 
@@ -229,14 +230,16 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         effective_min_proba = max(0.45, float(min_proba) - float(PARAMS.get('PILOT_MIN_PROBA_BUFFER', 0.04)))
     if proba < effective_min_proba:
         veto_reasons.append(f'proba_below_threshold:{proba:.3f}<{effective_min_proba:.3f}')
-    if realized_ev <= 0:
-        veto_reasons.append(f'non_positive_ev:{realized_ev:.4f}')
+    live_min_ev = float(PARAMS.get('MODEL_LAYER_MIN_EXPECTED_RETURN', PARAMS.get('LIVE_MIN_EXPECTED_RETURN', -0.0015)))
+    ev_min_sample = int(PARAMS.get('LIVE_EV_MIN_SAMPLE_FOR_HARD_BLOCK', PARAMS.get('MIN_SIGNAL_SAMPLE_SIZE', 8)))
+    if expected_return < live_min_ev and sample_size >= ev_min_sample:
+        veto_reasons.append(f'expected_return_below_threshold:{expected_return:.4f}<{live_min_ev:.4f}')
 
     entry_readiness = _safe_float(latest_row.get('Entry_Readiness', 0.0), 0.0)
     breakout_risk = _safe_float(latest_row.get('Breakout_Risk_Next3', 0.0), 0.0)
     reversal_risk = _safe_float(latest_row.get('Reversal_Risk_Next3', 0.0), 0.0)
     exit_hazard = _safe_float(latest_row.get('Exit_Hazard_Score', 0.0), 0.0)
-    ev_boost = 1.15 if realized_ev > 1.5 else 1.05 if realized_ev > 0.5 else 1.0
+    ev_boost = 1.15 if expected_return > 0.015 else 1.05 if expected_return > 0.005 else 1.0
     sample_boost = 1.10 if sample_size >= 20 else 1.03 if sample_size >= 10 else 1.0
     readiness_boost = 1.08 if entry_readiness >= 0.60 else 1.02 if entry_readiness >= 0.35 else 1.0
     risk_penalty = 0.82 if max(breakout_risk, reversal_risk, exit_hazard) >= 0.80 else 0.92 if max(breakout_risk, reversal_risk, exit_hazard) >= 0.60 else 1.0
@@ -247,7 +250,7 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         regime=str(regime),
         model_source=model_source,
         proba=proba,
-        realized_ev=realized_ev,
+        realized_ev=expected_return,
         sample_size=sample_size,
         signal_confidence=signal_conf,
         min_proba=float(min_proba),
@@ -261,7 +264,7 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         feature_scope=direction_scope,
         direction_scope=direction_scope,
         heuristic_fallback_active=heuristic_fallback_active,
-        debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK), 'Regime_Label': latest_row.get('Regime_Label', regime), 'Transition_Label': latest_row.get('Transition_Label', ''), 'Entry_State': entry_state, 'PreEntry_Score': latest_row.get('PreEntry_Score'), 'Confirm_Entry_Score': latest_row.get('Confirm_Entry_Score'), 'Entry_Readiness': entry_readiness, 'Breakout_Risk_Next3': breakout_risk, 'Reversal_Risk_Next3': reversal_risk, 'Exit_Hazard_Score': exit_hazard, 'Next_Regime_Prob_Bull': latest_row.get('Next_Regime_Prob_Bull'), 'Next_Regime_Prob_Bear': latest_row.get('Next_Regime_Prob_Bear'), 'Next_Regime_Prob_Range': latest_row.get('Next_Regime_Prob_Range')},
+        debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK), 'Regime_Label': latest_row.get('Regime_Label', regime), 'Transition_Label': latest_row.get('Transition_Label', ''), 'Entry_State': entry_state, 'PreEntry_Score': latest_row.get('PreEntry_Score'), 'Confirm_Entry_Score': latest_row.get('Confirm_Entry_Score'), 'Entry_Readiness': entry_readiness, 'Breakout_Risk_Next3': breakout_risk, 'Reversal_Risk_Next3': reversal_risk, 'Exit_Hazard_Score': exit_hazard, 'Expected_Return': expected_return, 'EV_Source': ev_source, 'Next_Regime_Prob_Bull': latest_row.get('Next_Regime_Prob_Bull'), 'Next_Regime_Prob_Bear': latest_row.get('Next_Regime_Prob_Bear'), 'Next_Regime_Prob_Range': latest_row.get('Next_Regime_Prob_Range')},
     )
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(decision.as_dict(), ensure_ascii=False, indent=2), encoding='utf-8')

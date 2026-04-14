@@ -591,8 +591,8 @@ class FeatureService:
         if out.empty or 'Close' not in out.columns:
             return out
         close = pd.to_numeric(out['Close'], errors='coerce').ffill().fillna(0.0)
-        open_ = pd.to_numeric(out.get('Open', close), errors='coerce').fillna(close)
-        volume = pd.to_numeric(out.get('Volume', 0), errors='coerce').fillna(0.0)
+        open_ = pd.to_numeric(out['Open'], errors='coerce').fillna(close) if 'Open' in out.columns else close.copy()
+        volume = pd.to_numeric(out['Volume'], errors='coerce').fillna(0.0) if 'Volume' in out.columns else pd.Series([0.0] * len(out), index=out.index, dtype=float)
 
         atr14 = self._compute_atr(out, 14)
         out['ATR14'] = atr14
@@ -867,9 +867,9 @@ def _patched_sync_enrich_from_history(self, df: pd.DataFrame) -> pd.DataFrame:
     out['Volume_Z20_Delta'] = _patch_hist_delta(out, 'Volume_Z20', 3)
     out['Foreign_Ratio_Delta_3d'] = _patch_hist_delta(out, 'Foreign_Ratio', 3)
     out['Total_Ratio_Delta_3d'] = _patch_hist_delta(out, 'Total_Ratio', 3)
-    rsi = pd.to_numeric(out.get('RSI', 50.0), errors='coerce').fillna(50.0)
-    bb_width = pd.to_numeric(out.get('BB_Width', 0.0), errors='coerce').fillna(0.0)
-    atr_pct = pd.to_numeric(out.get('ATR_Pct', 0.0), errors='coerce').fillna(0.0)
+    rsi = pd.to_numeric(out['RSI'], errors='coerce').fillna(50.0) if 'RSI' in out.columns else pd.Series([50.0] * len(out), index=out.index, dtype=float)
+    bb_width = pd.to_numeric(out['BB_Width'], errors='coerce').fillna(0.0) if 'BB_Width' in out.columns else pd.Series([0.0] * len(out), index=out.index, dtype=float)
+    atr_pct = pd.to_numeric(out['ATR_Pct'], errors='coerce').fillna(0.0) if 'ATR_Pct' in out.columns else pd.Series([0.0] * len(out), index=out.index, dtype=float)
     out['RSI_Reclaim_Speed'] = ((rsi - rsi.shift(3).fillna(rsi)) / 20.0).clip(-1.0,1.0).fillna(0.0)
     out['BB_Squeeze_Release'] = _patch_clip01((bb_width.rolling(3, min_periods=1).mean() - bb_width.rolling(10, min_periods=3).mean()).fillna(0.0) * 8.0)
     out['ATR_Expansion_Start'] = _patch_clip01((atr_pct - atr_pct.rolling(10, min_periods=3).mean()).fillna(0.0) * 20.0)
@@ -887,7 +887,7 @@ def _patched_sync_extract_ai_features(self, row: _PatchMapping[str, Any], histor
     if not h.empty:
         h = self.enrich_from_history(h)
         if 'AI_Proba' not in h.columns:
-            h['AI_Proba'] = pd.to_numeric(h.get('AI_Proba', 0.5), errors='coerce').fillna(0.5)
+            h['AI_Proba'] = pd.Series([0.5] * len(h), index=h.index, dtype=float)
     def _last(name, default=0.0):
         if name in row:
             return safe_float(row.get(name, default), default)

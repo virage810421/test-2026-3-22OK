@@ -9,6 +9,7 @@ except Exception:  # pragma: no cover - diagnostics must not block logger import
     def record_issue(*args, **kwargs):
         return {}
 from typing import Any, Optional
+from fts_broker_callback_mapping import normalize_broker_callback
 try:
     import pyodbc
 except Exception as exc:  # allow non-SQL smoke tests without ODBC installed; runtime diagnostics
@@ -536,3 +537,130 @@ try:
     SQLServerExecutionLogger.ingest_broker_callback = _dbl_ingest_broker_callback_v2
 except Exception as exc:
     record_issue('db_logger', 'institutional_lot_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')
+
+# =============================================================================
+# vNext tax-lot accounting SQL writer extension
+# - db_setup / fts_db_schema own schema.
+# - db_logger only validates/writes tax-lot accounting rows and report exports.
+# =============================================================================
+try:
+    import json as _tax_json
+    import uuid as _tax_uuid
+    from datetime import datetime as _tax_dt
+    from fts_tax_lot_accounting import summarize_tax_lots as _tax_summarize_lots
+
+    def _tax_logger_json(row):
+        try:
+            return _tax_json.dumps(row, ensure_ascii=False, default=str)
+        except Exception as exc:
+            record_issue('db_logger', 'tax_lot_json_serialize_failed', exc, severity='WARNING', fail_mode='fail_open')
+            return '{}'
+
+    def _tax_dt2(value):
+        return _dt(value)
+
+    def _tax_merge(self, table: str, key_col: str, row: dict, columns: list[str]) -> None:
+        if not self.enabled or not self.cursor:
+            return
+        key_val = row.get(key_col)
+        if key_val in (None, ''):
+            return
+        cols = [c for c in columns if c in row or c == key_col]
+        if key_col not in cols:
+            cols = [key_col] + cols
+        update_cols = [c for c in cols if c != key_col]
+        src_select = ', '.join([f'? AS [{c}]' for c in cols])
+        set_sql = ', '.join([f'tgt.[{c}] = src.[{c}]' for c in update_cols]) or f'tgt.[{key_col}] = src.[{key_col}]'
+        insert_cols = ', '.join([f'[{c}]' for c in cols])
+        insert_vals = ', '.join([f'src.[{c}]' for c in cols])
+        sql = f"""
+        MERGE dbo.[{table}] AS tgt
+        USING (SELECT {src_select}) AS src
+        ON tgt.[{key_col}] = src.[{key_col}]
+        WHEN MATCHED THEN UPDATE SET {set_sql}
+        WHEN NOT MATCHED THEN INSERT ({insert_cols}) VALUES ({insert_vals});
+        """
+        vals = [row.get(c) for c in cols]
+        self.cursor.execute(sql, vals)
+        self.conn.commit()
+
+    def _upsert_tax_lot_closure(self, event: dict) -> None:
+        if not self.enabled or not self.cursor or not isinstance(event, dict):
+            return
+        row = dict(event)
+        row.setdefault('tax_event_id', f"TE-{_tax_uuid.uuid4().hex}")
+        for k in ('acquisition_date', 'disposal_date'):
+            if row.get(k) not in (None, ''):
+                row[k] = _tax_dt2(row.get(k))
+        for k in ('wash_sale_window_start', 'wash_sale_window_end'):
+            # SQL DATE accepts Python date/datetime/string; keep string if parse fails.
+            pass
+        row['raw_json'] = row.get('raw_json') or _tax_logger_json(event)
+        columns = ['tax_event_id','tax_lot_id','lot_id','ticker_symbol','asset_class','jurisdiction','tax_regime','tax_treatment','report_type','direction_bucket','position_key','strategy_name','signal_id','exit_order_id','exit_fill_id','closed_qty','acquisition_date','disposal_date','entry_price','cost_basis_price','close_price','gross_proceeds','allocated_cost_basis','close_commission','close_tax','net_proceeds','realized_gross_pnl','realized_net_pnl','taxable_gain_loss','ordinary_income_amount','section1256_60pct_amount','section1256_40pct_amount','holding_period_days','holding_period_bucket','tax_year','cost_basis_method','currency','wash_sale_applicable','wash_sale_applied','wash_sale_adjustment','wash_sale_disallowed_loss','wash_sale_replacement_lot_ids','wash_sale_window_start','wash_sale_window_end','specific_id_tag','note','raw_json']
+        _tax_merge(self, 'execution_tax_lot_closures', 'tax_event_id', row, columns)
+
+    def _upsert_tax_lot_summary(self, summary: dict) -> None:
+        if not self.enabled or not self.cursor or not isinstance(summary, dict):
+            return
+        row = dict(summary)
+        row.setdefault('summary_id', f"TS-{_tax_uuid.uuid4().hex}")
+        row['updated_at'] = _tax_dt.now()
+        row['raw_json'] = _tax_logger_json(summary)
+        columns = ['summary_id','tax_year','jurisdiction','asset_class','report_type','holding_period_bucket','currency','closed_qty','gross_proceeds','allocated_cost_basis','close_commission','close_tax','realized_gross_pnl','realized_net_pnl','taxable_gain_loss','ordinary_income_amount','section1256_60pct_amount','section1256_40pct_amount','wash_sale_adjustment','open_lot_count','unrealized_net_pnl','updated_at','raw_json']
+        _tax_merge(self, 'execution_tax_lot_summary', 'summary_id', row, columns)
+
+    def _upsert_tax_report_export(self, row0: dict) -> None:
+        if not self.enabled or not self.cursor or not isinstance(row0, dict):
+            return
+        row = dict(row0)
+        row.setdefault('export_id', f"TR-{row.get('tax_year','YEAR')}-{row.get('report_type','REPORT')}-{_tax_uuid.uuid4().hex[:8]}")
+        row.setdefault('generated_at', _tax_dt.now())
+        row['raw_json'] = _tax_logger_json(row0)
+        columns = ['export_id','tax_year','report_type','jurisdiction','asset_class','file_path','generated_at','row_count','status','note','raw_json']
+        _tax_merge(self, 'execution_tax_report_exports', 'export_id', row, columns)
+
+    _TAX_ORIG_SYNC_RUNTIME = SQLServerExecutionLogger.sync_runtime_snapshot
+
+    def _tax_patched_sync_runtime_snapshot(self, account_row: dict, position_rows: list[dict], snapshot_time: Optional[str] = None, note: str = '') -> None:
+        _TAX_ORIG_SYNC_RUNTIME(self, account_row, position_rows, snapshot_time=snapshot_time, note=note)
+        if not isinstance(account_row, dict):
+            return
+        closures = account_row.get('tax_lot_closures') or account_row.get('tax_closures') or []
+        open_lots = account_row.get('position_lots') or account_row.get('lots') or []
+        summaries = account_row.get('tax_lot_summary') or account_row.get('tax_summary') or []
+        if not summaries and (closures or open_lots):
+            try:
+                summaries = _tax_summarize_lots(closures, open_lots)
+            except Exception as exc:
+                record_issue('db_logger', 'tax_lot_summary_runtime_failed', exc, severity='WARNING', fail_mode='fail_open')
+                summaries = []
+        for ev in closures or []:
+            self.upsert_tax_lot_closure(ev)
+        for sm in summaries or []:
+            self.upsert_tax_lot_summary(sm)
+        exports = account_row.get('tax_report_exports') or {}
+        if isinstance(exports, dict):
+            for report_name, path in exports.items():
+                self.upsert_tax_report_export({'tax_year': _tax_dt.now().year, 'report_type': str(report_name), 'file_path': str(path), 'status': 'GENERATED', 'row_count': None, 'note': 'runtime_snapshot_export'})
+
+    SQLServerExecutionLogger.upsert_tax_lot_closure = _upsert_tax_lot_closure
+    SQLServerExecutionLogger.upsert_tax_lot_summary = _upsert_tax_lot_summary
+    SQLServerExecutionLogger.upsert_tax_report_export = _upsert_tax_report_export
+    SQLServerExecutionLogger.sync_runtime_snapshot = _tax_patched_sync_runtime_snapshot
+except Exception as exc:
+    record_issue('db_logger', 'tax_lot_sql_writer_patch_failed', exc, severity='CRITICAL', fail_mode='fail_closed')
+
+
+# =============================================================================
+# Formal class facade
+# =============================================================================
+_PatchedSQLServerExecutionLoggerBase = SQLServerExecutionLogger
+class FormalSQLServerExecutionLogger(_PatchedSQLServerExecutionLoggerBase):
+    FORMAL_CLASS_LAYER = True
+    CALLBACK_MAPPING_LAYER = "fts_broker_callback_mapping.BrokerCallbackMapper"
+
+    def ingest_broker_callback(self, row: dict) -> None:
+        normalized = normalize_broker_callback(dict(row or {}))
+        return super().ingest_broker_callback(normalized)
+
+SQLServerExecutionLogger = FormalSQLServerExecutionLogger

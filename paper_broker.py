@@ -916,3 +916,141 @@ try:
     PaperBroker.export_runtime_snapshot = _pb_export_v2
 except Exception:
     pass
+
+# =============================================================================
+# vNext tax-lot jurisdiction / wash-sale / report overlay
+# =============================================================================
+try:
+    from fts_tax_lot_accounting import (
+        decorate_open_lot as _tax_decorate_open_lot,
+        enrich_open_lot as _tax_enrich_open_lot,
+        closure_event as _tax_closure_event,
+        update_lot_after_close as _tax_update_lot_after_close,
+        apply_wash_sale_adjustments as _tax_apply_wash_sale,
+        summarize_tax_lots as _tax_summarize_lots,
+        export_tax_reports as _tax_export_reports,
+        money as _tax_money,
+        qty_int as _tax_qty,
+    )
+    _PB_TAX_ORIG_APPEND_FILL = PaperBroker._append_fill
+    _PB_TAX_ORIG_PROCESS_STOPS = PaperBroker.process_protective_stops
+    _PB_TAX_ORIG_GET_LOTS = PaperBroker.get_position_lots
+    _PB_TAX_ORIG_EXPORT = PaperBroker.export_runtime_snapshot
+
+    def _pb_tax_init(self):
+        if not hasattr(self, 'tax_lot_closures') or not isinstance(getattr(self, 'tax_lot_closures', None), list):
+            self.tax_lot_closures = []
+        if not hasattr(self, 'tax_report_exports') or not isinstance(getattr(self, 'tax_report_exports', None), dict):
+            self.tax_report_exports = {}
+
+    def _pb_tax_decorate_all_lots(self):
+        _pb_tax_init(self)
+        lots = []
+        for lot in list(getattr(self, 'position_lots', []) or []):
+            try:
+                lots.append(_tax_decorate_open_lot(lot))
+            except Exception as exc:
+                if not hasattr(self, 'tax_lot_errors'): self.tax_lot_errors=[]
+                self.tax_lot_errors.append({'phase':'decorate_lot','error':repr(exc)})
+                lots.append(lot)
+        self.position_lots = lots
+
+    def _pb_tax_sync_new_closures(self, before_count: int, order=None, qty: int = 0, px: float = 0.0, commission: float = 0.0, tax: float = 0.0, note: str = ''):
+        _pb_tax_init(self)
+        _pb_tax_decorate_all_lots(self)
+        new_events = list((getattr(self, 'lot_close_history', []) or [])[before_count:])
+        total_closed = sum(_tax_qty(ev.get('closed_qty') or ev.get('qty')) for ev in new_events) or _tax_qty(qty) or 1
+        for ev in new_events:
+            try:
+                lot = None
+                for row in getattr(self, 'position_lots', []) or []:
+                    if str(row.get('lot_id')) == str(ev.get('lot_id')):
+                        lot = row; break
+                if lot is None:
+                    lot = {'lot_id': ev.get('lot_id'), 'ticker_symbol': ev.get('ticker') or ev.get('symbol'), 'side': ev.get('side'), 'entry_price': ev.get('entry_price'), 'remaining_qty': ev.get('closed_qty') or ev.get('qty'), 'open_qty': ev.get('closed_qty') or ev.get('qty')}
+                closed_qty = _tax_qty(ev.get('closed_qty') or ev.get('qty'))
+                ratio = closed_qty / total_closed if total_closed else 1.0
+                fill_id = getattr(order, 'fill_id', '') if order is not None else ''
+                exit_order_id = getattr(order, 'order_id', '') if order is not None else str(ev.get('exit_order_id') or ev.get('order_id') or '')
+                event = _tax_closure_event(lot=lot, qty=closed_qty, close_price=float(ev.get('close_price') or px or 0.0), exit_order_id=exit_order_id, fill_id=fill_id or str(ev.get('fill_id','')), commission=_tax_money(float(commission or 0.0)*ratio), tax=_tax_money(float(tax or 0.0)*ratio), note=note or ev.get('note',''))
+                self.tax_lot_closures.append(event)
+            except Exception as exc:
+                if not hasattr(self, 'tax_lot_errors'): self.tax_lot_errors=[]
+                self.tax_lot_errors.append({'phase':'closure_event','error':repr(exc),'event':ev})
+        try:
+            adjusted, adjusted_lots = _tax_apply_wash_sale(list(getattr(self, 'tax_lot_closures', []) or []), list(getattr(self, 'position_lots', []) or []))
+            self.tax_lot_closures = adjusted
+            self.position_lots = adjusted_lots
+        except Exception as exc:
+            if not hasattr(self, 'tax_lot_errors'): self.tax_lot_errors=[]
+            self.tax_lot_errors.append({'phase':'wash_sale','error':repr(exc)})
+
+    def _pb_tax_append_fill(self, order, qty: int, px: float, commission: float, tax: float) -> None:
+        _pb_tax_init(self)
+        before = len(getattr(self, 'lot_close_history', []) or [])
+        _PB_TAX_ORIG_APPEND_FILL(self, order, qty, px, commission, tax)
+        _pb_tax_decorate_all_lots(self)
+        _pb_tax_sync_new_closures(self, before, order=order, qty=qty, px=px, commission=commission, tax=tax, note='paper_fill_tax_lot')
+
+    def _pb_tax_process_stops(self, price_map=None):
+        _pb_tax_init(self)
+        before = len(getattr(self, 'lot_close_history', []) or [])
+        events = _PB_TAX_ORIG_PROCESS_STOPS(self, price_map)
+        _pb_tax_sync_new_closures(self, before, order=None, qty=0, px=0.0, commission=0.0, tax=0.0, note='protective_stop_tax_lot')
+        return events
+
+    def _pb_tax_get_lots(self, include_closed: bool = False):
+        _pb_tax_decorate_all_lots(self)
+        rows = _PB_TAX_ORIG_GET_LOTS(self, include_closed=include_closed)
+        out=[]
+        for row in rows:
+            try:
+                px = getattr(self, 'last_prices', {}).get(row.get('ticker') or row.get('symbol') or row.get('ticker_symbol'))
+                out.append(_tax_enrich_open_lot(row, market_price=px))
+            except Exception:
+                out.append(row)
+        return out
+
+    def _pb_tax_export(self):
+        snap = _PB_TAX_ORIG_EXPORT(self)
+        _pb_tax_decorate_all_lots(self)
+        closures = list(getattr(self, 'tax_lot_closures', []) or [])
+        lots = _pb_tax_get_lots(self, include_closed=True)
+        try:
+            adjusted, adjusted_lots = _tax_apply_wash_sale(closures, lots)
+            closures, lots = adjusted, adjusted_lots
+            self.tax_lot_closures = closures
+            self.position_lots = lots
+        except Exception:
+            pass
+        snap['tax_lot_closures'] = closures
+        snap['tax_lot_summary'] = _tax_summarize_lots(closures, lots)
+        snap['tax_lot_accounting'] = {'engine': 'fts_tax_lot_accounting', 'wash_sale_enabled': True, 'report_export_enabled': True}
+        try:
+            self.tax_report_exports = _tax_export_reports(closures, lots)
+            snap['tax_report_exports'] = self.tax_report_exports
+        except Exception as exc:
+            snap['tax_report_export_error'] = repr(exc)
+        return snap
+
+    PaperBroker._append_fill = _pb_tax_append_fill
+    PaperBroker.process_protective_stops = _pb_tax_process_stops
+    PaperBroker.get_position_lots = _pb_tax_get_lots
+    PaperBroker.export_runtime_snapshot = _pb_tax_export
+except Exception:
+    pass
+
+
+# =============================================================================
+# Formal class facade
+# =============================================================================
+# Historical update packs extended PaperBroker through patch blocks.  The public
+# symbol below is now a formal subclass layer so factories/importers can depend
+# on a stable class boundary.
+_PatchedPaperBrokerBase = PaperBroker
+class FormalPaperBroker(_PatchedPaperBrokerBase):
+    FORMAL_CLASS_LAYER = True
+    LOT_LIFECYCLE_LAYER = "formalized"
+    TAX_LOT_LAYER = "formalized"
+
+PaperBroker = FormalPaperBroker

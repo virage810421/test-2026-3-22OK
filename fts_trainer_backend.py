@@ -107,7 +107,7 @@ def _train_exit_models(train_df: pd.DataFrame, all_features: list[str], selected
     X = train_df[exit_selected].replace([np.inf, -np.inf], np.nan).fillna(0.0)
     saved = 0
     for label in label_cols:
-        y = pd.to_numeric(train_df.get(label, 0), errors='coerce').fillna(0).astype(int)
+        y = pd.to_numeric(train_df[label], errors='coerce').fillna(0).astype(int) if label in train_df.columns else pd.Series([0] * len(train_df), index=train_df.index, dtype=int)
         ratio = float(y.mean()) if len(y) else 0.0
         info = {'positive_ratio': ratio, 'rows': int(len(y)), 'path': str(_exit_model_pkl(label))}
         if label not in present:
@@ -389,7 +389,8 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     if 'Date' in df.columns:
         df = df.sort_values('Date').reset_index(drop=True)
     if 'Target_Return' not in df.columns:
-        df['Target_Return'] = np.where(pd.to_numeric(df.get('Label_Y', 0), errors='coerce').fillna(0).astype(int) == 1, 0.05, -0.05)
+        _label_y_series = pd.to_numeric(df['Label_Y'], errors='coerce').fillna(0).astype(int) if 'Label_Y' in df.columns else pd.Series([0] * len(df), index=df.index, dtype=int)
+        df['Target_Return'] = np.where(_label_y_series == 1, 0.05, -0.05)
     else:
         df['Target_Return'] = pd.to_numeric(df['Target_Return'], errors='coerce').fillna(0.0)
     df['Label_Y'] = pd.to_numeric(df['Label_Y'], errors='coerce').fillna(0).astype(int)

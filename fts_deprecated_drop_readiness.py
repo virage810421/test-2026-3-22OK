@@ -61,6 +61,36 @@ CORE_RUNTIME_FILES = {
     'system_guard.py',
 }
 
+
+ARCHIVED_REFERENCE_DIRS = {
+    'absorbed_references',
+    'absorbed_reference',
+    '_patch_manifest_',
+    '_patch_manifest',
+    'old_doors_retired',
+    'retired',
+    'archive',
+    'archives',
+}
+
+ARCHIVED_REFERENCE_PREFIXES = (
+    '_backup',
+    'backup_',
+    'old_',
+    'retired_',
+)
+
+
+def _is_archived_reference_parts(parts: Iterable[str]) -> bool:
+    for part in parts:
+        lower = str(part).lower()
+        if lower in ARCHIVED_REFERENCE_DIRS:
+            return True
+        if any(lower.startswith(prefix) for prefix in ARCHIVED_REFERENCE_PREFIXES):
+            return True
+    return False
+
+
 FAIL_OPEN_PREFIXES = (
     'fts_etl_', 'daily_chip_', 'monthly_', 'yahoo_', 'insert_', 'advanced_',
     'screening', 'strategy', 'strategies', 'research', 'event_backtester',
@@ -110,18 +140,38 @@ def _read(path: Path) -> str:
         return ''
 
 
-def _iter_py(project_root: Path) -> list[Path]:
+def _iter_py(project_root: Path, include_archived: bool = False) -> list[Path]:
     skip_dirs = {'__pycache__', '.git', '.venv', 'venv', 'env', 'runtime', 'data', 'models'}
     out: list[Path] = []
     for p in project_root.rglob('*.py'):
-        if any(part in skip_dirs for part in p.relative_to(project_root).parts[:-1]):
+        rel_parts = p.relative_to(project_root).parts
+        parent_parts = rel_parts[:-1]
+        if any(part in skip_dirs for part in parent_parts):
+            continue
+        if not include_archived and _is_archived_reference_parts(parent_parts):
             continue
         out.append(p)
     return sorted(out)
 
 
+def _count_archived_py(project_root: Path) -> int:
+    skip_dirs = {'__pycache__', '.git', '.venv', 'venv', 'env', 'runtime', 'data', 'models'}
+    count = 0
+    for p in project_root.rglob('*.py'):
+        rel_parts = p.relative_to(project_root).parts
+        parent_parts = rel_parts[:-1]
+        if any(part in skip_dirs for part in parent_parts):
+            continue
+        if _is_archived_reference_parts(parent_parts):
+            count += 1
+    return count
+
+
 def _classify_file(rel: str) -> str:
+    rel_parts = Path(rel).parts
     name = Path(rel).name
+    if _is_archived_reference_parts(rel_parts[:-1]):
+        return 'archived_reference'
     if name in CORE_RUNTIME_FILES:
         return 'core_runtime'
     if name.startswith(FAIL_OPEN_PREFIXES):
@@ -180,10 +230,11 @@ def _scan_import_references(files: list[Path], project_root: Path, module_name: 
     return refs
 
 
-def _scan_static(project_root: Path) -> dict[str, Any]:
-    files = _iter_py(project_root)
+def _scan_static(project_root: Path, include_archived: bool = False) -> dict[str, Any]:
+    files = _iter_py(project_root, include_archived=include_archived)
     findings: list[Finding] = []
     counters: Counter[str] = Counter()
+    counters['archived_py_files_skipped'] = 0 if include_archived else _count_archived_py(project_root)
     by_file: dict[str, dict[str, Any]] = {}
     ticker_refs_by_file: dict[str, int] = {}
     execution_legacy_symbol_refs: list[dict[str, Any]] = []
@@ -482,9 +533,9 @@ def _candidate_report(project_root: Path, static: dict[str, Any], db: dict[str, 
     return candidates
 
 
-def build_report(project_root: Path, check_db: bool = False) -> dict[str, Any]:
+def build_report(project_root: Path, check_db: bool = False, include_archived: bool = False) -> dict[str, Any]:
     project_root = project_root.resolve()
-    static = _scan_static(project_root)
+    static = _scan_static(project_root, include_archived=include_archived)
     db = _optional_db_probe() if check_db else {
         'available': False,
         'status': 'not_checked_static_only',
@@ -503,11 +554,13 @@ def build_report(project_root: Path, check_db: bool = False) -> dict[str, Any]:
     report = {
         'generated_at': _now(),
         'tool': 'fts_deprecated_drop_readiness.py',
-        'tool_version': 'v20260414_deprecated_drop_readiness_audit',
+        'tool_version': 'v20260414_deprecated_drop_readiness_audit_archive_aware',
         'project_root': str(project_root),
         'status': status,
         'summary': {
             'py_files': static['counters'].get('py_files', 0),
+            'archived_py_files_skipped': static['counters'].get('archived_py_files_skipped', 0),
+            'include_archived': bool(include_archived),
             'findings_total': len(static['findings']),
             'severity_counts': dict(severity_counts),
             'drop_readiness_counts': dict(readiness_counts),
@@ -530,6 +583,7 @@ def build_report(project_root: Path, check_db: bool = False) -> dict[str, Any]:
             'core_runtime_policy': 'fail-closed + runtime diagnostics',
             'etl_research_policy': 'fail-open + runtime diagnostics',
             'destructive_actions': 'report_only; this tool never deletes files or drops columns',
+            'archived_reference_policy': 'absorbed_references/_backup* are excluded by default; use --include-archived to audit old reference snapshots',
         },
     }
     return report
@@ -546,6 +600,8 @@ def write_markdown(report: dict[str, Any], out_path: Path) -> None:
     lines.append('## 摘要')
     lines.append('')
     lines.append(f"- Python 檔案數：{s['py_files']}")
+    lines.append(f"- archived/reference .py skipped：{s.get('archived_py_files_skipped', 0)}")
+    lines.append(f"- include_archived：{s.get('include_archived', False)}")
     lines.append(f"- Findings：{s['findings_total']}，severity={s['severity_counts']}")
     lines.append(f"- Drop readiness：{s['drop_readiness_counts']}")
     lines.append(f"- Ticker SYMBOL refs：{s['legacy_Ticker_SYMBOL_refs']}")
@@ -585,6 +641,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument('--md-out', default=None, help='Output markdown path. Default: runtime/deprecated_drop_readiness_report.md')
     p.add_argument('--fail-on-high', action='store_true', help='Return non-zero when high severity findings exist.')
     p.add_argument('--check-db', action='store_true', help='Also inspect SQL Server table/column status. Default is static-only to avoid blocking bootstrap.')
+    p.add_argument('--include-archived', action='store_true', help='Also scan archived/reference folders such as absorbed_references and _backup*. Default excludes them from drop readiness blockers.')
     return p.parse_args(argv)
 
 
@@ -599,7 +656,7 @@ def main(argv: list[str] | None = None) -> int:
     json_out.parent.mkdir(parents=True, exist_ok=True)
     md_out.parent.mkdir(parents=True, exist_ok=True)
 
-    report = build_report(project_root, check_db=bool(args.check_db))
+    report = build_report(project_root, check_db=bool(args.check_db), include_archived=bool(args.include_archived))
     json_out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     write_markdown(report, md_out)
 

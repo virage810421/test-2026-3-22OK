@@ -10,6 +10,7 @@ from fts_config import CONFIG
 from fts_models import AccountSnapshot, Fill, Order, OrderSide, OrderStatus, Position
 from fts_utils import now_str, round_price
 from fts_exception_policy import record_diagnostic
+from fts_broker_callback_mapping import normalize_broker_callback
 
 try:
     from fts_execution_models import CallbackEventStore  # type: ignore
@@ -633,10 +634,11 @@ class RealBrokerStub(BrokerBase):
         return None
 
     def _record_callback(self, event: dict[str, Any]) -> None:
-        self._callbacks.append(dict(event))
+        normalized = normalize_broker_callback(event, broker="REAL_STUB", account_id=str(self.credentials.get("account_id", "")))
+        self._callbacks.append(dict(normalized))
         if self._event_store is not None:
             try:
-                self._event_store.record(event)
+                self._event_store.record(normalized)
             except Exception as exc:
                 record_diagnostic('broker_adapter', 'callback_event_store_record', exc, severity='warning', fail_closed=False)
 
@@ -996,3 +998,132 @@ try:
     RealBrokerStub.export_runtime_snapshot = _rbs_export_v2
 except Exception as exc:
     record_diagnostic('broker_adapter', 'broker_stub_extension_patch_failed', exc, severity='error', fail_closed=True)
+
+# =============================================================================
+# vNext tax-lot jurisdiction / wash-sale / report overlay for mock real broker
+# =============================================================================
+try:
+    from fts_tax_lot_accounting import (
+        decorate_open_lot as _rbstax_decorate_open_lot,
+        enrich_open_lot as _rbstax_enrich_open_lot,
+        closure_event as _rbstax_closure_event,
+        apply_wash_sale_adjustments as _rbstax_apply_wash_sale,
+        summarize_tax_lots as _rbstax_summarize_lots,
+        export_tax_reports as _rbstax_export_reports,
+        money as _rbstax_money,
+        qty_int as _rbstax_qty,
+    )
+    _RBS_TAX_ORIG_APPLY_FILL = RealBrokerStub._apply_fill
+    _RBS_TAX_ORIG_PROCESS_STOPS = RealBrokerStub.process_protective_stops
+    _RBS_TAX_ORIG_GET_LOTS = RealBrokerStub.get_position_lots
+    _RBS_TAX_ORIG_EXPORT = RealBrokerStub.export_runtime_snapshot
+
+    def _rbs_tax_init(self):
+        if not hasattr(self, '_tax_lot_closures') or not isinstance(getattr(self, '_tax_lot_closures', None), list):
+            self._tax_lot_closures = []
+        if not hasattr(self, '_tax_report_exports') or not isinstance(getattr(self, '_tax_report_exports', None), dict):
+            self._tax_report_exports = {}
+
+    def _rbs_tax_decorate_all(self):
+        _rbs_tax_init(self)
+        rows=[]
+        for lot in list(getattr(self, '_position_lots', []) or []):
+            try:
+                rows.append(_rbstax_decorate_open_lot(lot))
+            except Exception:
+                rows.append(lot)
+        self._position_lots = rows
+
+    def _rbs_tax_sync_new_closures(self, before_count: int, order_row=None, fill_qty: int = 0, fill_price: float = 0.0, note: str = ''):
+        _rbs_tax_init(self); _rbs_tax_decorate_all(self)
+        new_events = list((getattr(self, '_lot_close_history', []) or [])[before_count:])
+        total_closed = sum(_rbstax_qty(ev.get('closed_qty') or ev.get('qty')) for ev in new_events) or _rbstax_qty(fill_qty) or 1
+        for ev in new_events:
+            try:
+                lot = None
+                for row in getattr(self, '_position_lots', []) or []:
+                    if str(row.get('lot_id')) == str(ev.get('lot_id')):
+                        lot = row; break
+                if lot is None:
+                    lot = {'lot_id': ev.get('lot_id'), 'ticker_symbol': ev.get('ticker') or ev.get('symbol'), 'side': ev.get('side'), 'entry_price': ev.get('entry_price'), 'remaining_qty': ev.get('closed_qty') or ev.get('qty'), 'open_qty': ev.get('closed_qty') or ev.get('qty')}
+                q = _rbstax_qty(ev.get('closed_qty') or ev.get('qty'))
+                ratio = q / total_closed if total_closed else 1.0
+                commission = float((order_row or {}).get('commission', 0) or 0) * ratio if isinstance(order_row, dict) else 0.0
+                tax = float((order_row or {}).get('tax', 0) or 0) * ratio if isinstance(order_row, dict) else 0.0
+                event = _rbstax_closure_event(lot=lot, qty=q, close_price=float(ev.get('close_price') or fill_price or 0.0), exit_order_id=str((order_row or {}).get('broker_order_id') or (order_row or {}).get('client_order_id') or ev.get('exit_order_id') or ''), fill_id=str(ev.get('fill_id','')), commission=commission, tax=tax, note=note or ev.get('note',''))
+                self._tax_lot_closures.append(event)
+            except Exception as exc:
+                record_diagnostic('broker_adapter', 'rbs_tax_closure_failed', exc, severity='warning', fail_closed=False)
+        try:
+            adjusted, lots = _rbstax_apply_wash_sale(list(self._tax_lot_closures), list(getattr(self, '_position_lots', []) or []))
+            self._tax_lot_closures = adjusted
+            self._position_lots = lots
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'rbs_tax_wash_sale_failed', exc, severity='warning', fail_closed=False)
+
+    def _rbs_tax_apply_fill(self, order_row, fill_qty, fill_price):
+        _rbs_tax_init(self)
+        before = len(getattr(self, '_lot_close_history', []) or [])
+        _RBS_TAX_ORIG_APPLY_FILL(self, order_row, fill_qty, fill_price)
+        _rbs_tax_decorate_all(self)
+        _rbs_tax_sync_new_closures(self, before, order_row=order_row, fill_qty=fill_qty, fill_price=fill_price, note='real_stub_fill_tax_lot')
+
+    def _rbs_tax_process_stops(self, price_map=None):
+        _rbs_tax_init(self)
+        before = len(getattr(self, '_lot_close_history', []) or [])
+        events = _RBS_TAX_ORIG_PROCESS_STOPS(self, price_map)
+        _rbs_tax_sync_new_closures(self, before, order_row=None, fill_qty=0, fill_price=0.0, note='real_stub_stop_tax_lot')
+        return events
+
+    def _rbs_tax_get_lots(self, include_closed: bool = False):
+        _rbs_tax_decorate_all(self)
+        rows = _RBS_TAX_ORIG_GET_LOTS(self, include_closed=include_closed)
+        out=[]
+        for row in rows:
+            try:
+                px = getattr(self, '_last_prices', {}).get(row.get('ticker') or row.get('symbol') or row.get('ticker_symbol'))
+                out.append(_rbstax_enrich_open_lot(row, market_price=px))
+            except Exception:
+                out.append(row)
+        return out
+
+    def _rbs_tax_export(self):
+        snap = _RBS_TAX_ORIG_EXPORT(self)
+        lots = _rbs_tax_get_lots(self, include_closed=True)
+        closures = list(getattr(self, '_tax_lot_closures', []) or [])
+        try:
+            closures, lots = _rbstax_apply_wash_sale(closures, lots)
+            self._tax_lot_closures = closures
+            self._position_lots = lots
+        except Exception:
+            pass
+        snap['tax_lot_closures'] = closures
+        snap['tax_lot_summary'] = _rbstax_summarize_lots(closures, lots)
+        snap['tax_lot_accounting'] = {'engine': 'fts_tax_lot_accounting', 'broker': 'real_stub'}
+        try:
+            self._tax_report_exports = _rbstax_export_reports(closures, lots)
+            snap['tax_report_exports'] = self._tax_report_exports
+        except Exception as exc:
+            snap['tax_report_export_error'] = repr(exc)
+        return snap
+
+    RealBrokerStub._apply_fill = _rbs_tax_apply_fill
+    RealBrokerStub.process_protective_stops = _rbs_tax_process_stops
+    RealBrokerStub.get_position_lots = _rbs_tax_get_lots
+    RealBrokerStub.export_runtime_snapshot = _rbs_tax_export
+except Exception as exc:
+    record_diagnostic('broker_adapter', 'broker_stub_tax_lot_patch_failed', exc, severity='warning', fail_closed=False)
+
+
+# =============================================================================
+# Formal class facade
+# =============================================================================
+# Patch blocks above are retained for backward compatibility with historical update
+# packs.  New code should import RealBrokerStub after this point; the public class
+# is now a formal subclass rather than a monkey-patched base symbol.
+_PatchedRealBrokerStubBase = RealBrokerStub
+class FormalRealBrokerStub(_PatchedRealBrokerStubBase):
+    FORMAL_CLASS_LAYER = True
+    CALLBACK_MAPPING_LAYER = "fts_broker_callback_mapping.BrokerCallbackMapper"
+
+RealBrokerStub = FormalRealBrokerStub

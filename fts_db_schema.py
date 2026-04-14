@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable
 
-SCHEMA_VERSION = '20260414_schema_single_source_execution_ticker_symbol_v2_legacy_alias'
+SCHEMA_VERSION = '20260414_schema_single_source_execution_ticker_symbol_v3_tax_lot_washsale'
 
 
 @dataclass(frozen=True)
@@ -84,17 +84,23 @@ CORE_TABLES: tuple[TableSpec, ...] = (
         _c('industry', 'NVARCHAR(64)'), _c('note', 'NVARCHAR(MAX)'),
     )),
     TableSpec('execution_position_lots', (
-        _c('lot_id', 'NVARCHAR(80)', nullable=False, primary_key=True), _c('snapshot_time', 'DATETIME2'), _c('ticker_symbol', 'NVARCHAR(32)'),
+        _c('lot_id', 'NVARCHAR(120)', nullable=False, primary_key=True), _c('tax_lot_id', 'NVARCHAR(120)'), _c('snapshot_time', 'DATETIME2'), _c('ticker_symbol', 'NVARCHAR(32)'),
         _c('direction_bucket', 'NVARCHAR(20)'), _c('status', 'NVARCHAR(30)'), _c('open_qty', 'INT'), _c('remaining_qty', 'INT'),
         _c('avg_cost', 'FLOAT'), _c('entry_price', 'FLOAT'), _c('market_price', 'FLOAT'), _c('market_value', 'FLOAT'),
         _c('unrealized_pnl', 'FLOAT'), _c('realized_pnl', 'FLOAT'), _c('entry_time', 'DATETIME2'), _c('close_time', 'DATETIME2'),
-        _c('entry_order_id', 'NVARCHAR(120)'), _c('exit_order_id', 'NVARCHAR(120)'), _c('strategy_name', 'NVARCHAR(120)'),
-        _c('updated_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'), _c('raw_json', 'NVARCHAR(MAX)'),
+        _c('entry_order_id', 'NVARCHAR(120)'), _c('exit_order_id', 'NVARCHAR(120)'), _c('strategy_name', 'NVARCHAR(120)'), _c('signal_id', 'NVARCHAR(120)'),
+        _c('client_order_id', 'NVARCHAR(120)'), _c('position_key', 'NVARCHAR(180)'), _c('strategy_bucket', 'NVARCHAR(120)'), _c('cost_basis_method', 'NVARCHAR(32)'),
+        _c('entry_fill_qty', 'INT'), _c('close_fill_qty', 'INT'), _c('entry_fill_count', 'INT'), _c('close_fill_count', 'INT'),
+        _c('entry_fill_ids_json', 'NVARCHAR(MAX)'), _c('exit_fill_ids_json', 'NVARCHAR(MAX)'),
+        _c('open_commission', 'FLOAT'), _c('open_tax', 'FLOAT'), _c('close_commission', 'FLOAT'), _c('close_tax', 'FLOAT'),
+        _c('stop_order_id', 'NVARCHAR(120)'), _c('stop_price', 'FLOAT'), _c('stop_status', 'NVARCHAR(40)'), _c('linked_stop_qty', 'INT'),
+        _c('last_fill_time', 'DATETIME2'), _c('updated_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'), _c('raw_json', 'NVARCHAR(MAX)'),
     )),
     TableSpec('execution_broker_callbacks', (
         _c('callback_id', 'NVARCHAR(120)', nullable=False, primary_key=True), _c('broker_order_id', 'NVARCHAR(120)'), _c('client_order_id', 'NVARCHAR(120)'),
         _c('event_type', 'NVARCHAR(60)'), _c('status', 'NVARCHAR(60)'), _c('ticker_symbol', 'NVARCHAR(32)'), _c('filled_qty', 'INT'),
-        _c('remaining_qty', 'INT'), _c('avg_fill_price', 'FLOAT'), _c('callback_time', 'DATETIME2'),
+        _c('remaining_qty', 'INT'), _c('avg_fill_price', 'FLOAT'), _c('lot_id', 'NVARCHAR(120)'), _c('position_key', 'NVARCHAR(180)'),
+        _c('strategy_name', 'NVARCHAR(120)'), _c('signal_id', 'NVARCHAR(120)'), _c('fill_notional', 'FLOAT'), _c('callback_time', 'DATETIME2'),
         _c('ingested_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'), _c('raw_json', 'NVARCHAR(MAX)'),
     )),
     TableSpec('execution_reconciliation_report', (
@@ -102,6 +108,31 @@ CORE_TABLES: tuple[TableSpec, ...] = (
         _c('order_mismatch_count', 'INT'), _c('fill_mismatch_count', 'INT'), _c('position_mismatch_count', 'INT'),
         _c('lot_mismatch_count', 'INT'), _c('cash_diff', 'FLOAT'), _c('summary_json', 'NVARCHAR(MAX)'),
         _c('created_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'),
+    )),
+    TableSpec('execution_tax_lot_closures', (
+        _c('tax_event_id', 'NVARCHAR(140)', nullable=False, primary_key=True), _c('tax_lot_id', 'NVARCHAR(140)'), _c('lot_id', 'NVARCHAR(120)'),
+        _c('ticker_symbol', 'NVARCHAR(32)'), _c('asset_class', 'NVARCHAR(32)'), _c('jurisdiction', 'NVARCHAR(32)'), _c('tax_regime', 'NVARCHAR(80)'),
+        _c('tax_treatment', 'NVARCHAR(80)'), _c('report_type', 'NVARCHAR(80)'), _c('direction_bucket', 'NVARCHAR(20)'), _c('position_key', 'NVARCHAR(180)'),
+        _c('strategy_name', 'NVARCHAR(120)'), _c('signal_id', 'NVARCHAR(120)'), _c('exit_order_id', 'NVARCHAR(120)'), _c('exit_fill_id', 'NVARCHAR(120)'),
+        _c('closed_qty', 'INT'), _c('acquisition_date', 'DATETIME2'), _c('disposal_date', 'DATETIME2'), _c('entry_price', 'FLOAT'),
+        _c('cost_basis_price', 'FLOAT'), _c('close_price', 'FLOAT'), _c('gross_proceeds', 'FLOAT'), _c('allocated_cost_basis', 'FLOAT'),
+        _c('close_commission', 'FLOAT'), _c('close_tax', 'FLOAT'), _c('net_proceeds', 'FLOAT'), _c('realized_gross_pnl', 'FLOAT'),
+        _c('realized_net_pnl', 'FLOAT'), _c('taxable_gain_loss', 'FLOAT'), _c('ordinary_income_amount', 'FLOAT'),
+        _c('section1256_60pct_amount', 'FLOAT'), _c('section1256_40pct_amount', 'FLOAT'), _c('holding_period_days', 'INT'),
+        _c('holding_period_bucket', 'NVARCHAR(32)'), _c('tax_year', 'INT'), _c('cost_basis_method', 'NVARCHAR(32)'), _c('currency', 'NVARCHAR(20)'),
+        _c('wash_sale_applicable', 'BIT'), _c('wash_sale_applied', 'BIT'), _c('wash_sale_adjustment', 'FLOAT'), _c('wash_sale_disallowed_loss', 'FLOAT'),
+        _c('wash_sale_replacement_lot_ids', 'NVARCHAR(MAX)'), _c('wash_sale_window_start', 'DATE'), _c('wash_sale_window_end', 'DATE'),
+        _c('specific_id_tag', 'NVARCHAR(120)'), _c('note', 'NVARCHAR(MAX)'), _c('raw_json', 'NVARCHAR(MAX)'),
+        _c('created_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'),
+    )),
+    TableSpec('execution_tax_lot_summary', (
+        _c('summary_id', 'NVARCHAR(140)', nullable=False, primary_key=True), _c('tax_year', 'INT'), _c('jurisdiction', 'NVARCHAR(32)'),
+        _c('asset_class', 'NVARCHAR(32)'), _c('report_type', 'NVARCHAR(80)'), _c('holding_period_bucket', 'NVARCHAR(32)'), _c('currency', 'NVARCHAR(20)'),
+        _c('closed_qty', 'INT'), _c('gross_proceeds', 'FLOAT'), _c('allocated_cost_basis', 'FLOAT'), _c('close_commission', 'FLOAT'),
+        _c('close_tax', 'FLOAT'), _c('realized_gross_pnl', 'FLOAT'), _c('realized_net_pnl', 'FLOAT'), _c('taxable_gain_loss', 'FLOAT'),
+        _c('ordinary_income_amount', 'FLOAT'), _c('section1256_60pct_amount', 'FLOAT'), _c('section1256_40pct_amount', 'FLOAT'),
+        _c('wash_sale_adjustment', 'FLOAT'), _c('open_lot_count', 'INT'), _c('unrealized_net_pnl', 'FLOAT'),
+        _c('updated_at', 'DATETIME2'), _c('raw_json', 'NVARCHAR(MAX)'),
     )),
     TableSpec('fundamentals_clean', (
         _c('Ticker SYMBOL', 'VARCHAR(20)', nullable=False, default_sql="''"), _c('資料年月日', 'DATE'), _c('毛利率(%)', 'DECIMAL(10,3)'),

@@ -13,6 +13,36 @@ pio.renderers.default = "browser"
 from plotly.subplots import make_subplots
 from config import PARAMS
 
+
+def _safe_last(df: pd.DataFrame, col: str, default="N/A"):
+    try:
+        if col in df.columns and len(df[col]) > 0:
+            val = df[col].iloc[-1]
+            if pd.isna(val):
+                return default
+            return val
+    except Exception:
+        pass
+    return default
+
+def _fmt_pctish(value):
+    try:
+        v = float(value)
+        if 0 <= v <= 1:
+            return f"{v:.2%}"
+        return f"{v:.3f}"
+    except Exception:
+        return str(value)
+
+def _state_marker_series(df: pd.DataFrame, state_col: str, states: set[str], price_col: str, multiplier: float):
+    try:
+        if state_col not in df.columns or price_col not in df.columns:
+            return np.full(len(df), np.nan)
+        mask = df[state_col].astype(str).str.upper().isin({s.upper() for s in states})
+        return np.where(mask, df[price_col].astype(float) * multiplier, np.nan)
+    except Exception:
+        return np.full(len(df), np.nan)
+
 # ==========================================
 # ⚙️ 精密儀表板模組（升級版）
 # ==========================================
@@ -95,6 +125,25 @@ def draw_chart(
         x=df.index, y=df["Sell_Signal"], mode="markers",
         marker=dict(symbol="triangle-down", size=12, color=color_down, line=dict(width=1, color="white")),
         name="賣出訊號", hoverinfo="x+y"
+    ), row=1, col=1)
+
+
+
+    # 三路徑狀態機可觀測：提前布局 / 確認進場 / 提早出場
+    fig.add_trace(go.Scatter(
+        x=df.index, y=_state_marker_series(df, "Entry_State", {"PREPARE", "PILOT_ENTRY"}, "Low", 0.965),
+        mode="markers", marker=dict(symbol="circle", size=10, color="#FFD54F", line=dict(width=1, color="white")),
+        name="PILOT / PREPARE", hovertemplate="%{x}<br>提前布局狀態<extra></extra>"
+    ), row=1, col=1)
+    fig.add_trace(go.Scatter(
+        x=df.index, y=_state_marker_series(df, "Entry_State", {"FULL_ENTRY"}, "Low", 0.945),
+        mode="markers", marker=dict(symbol="star", size=13, color="#00BFFF", line=dict(width=1, color="white")),
+        name="FULL_ENTRY", hovertemplate="%{x}<br>確認後進場<extra></extra>"
+    ), row=1, col=1)
+    fig.add_trace(go.Scatter(
+        x=df.index, y=_state_marker_series(df, "Exit_State", {"DEFEND", "REDUCE", "EXIT"}, "High", 1.035),
+        mode="markers", marker=dict(symbol="x", size=12, color="#FF7043", line=dict(width=1, color="white")),
+        name="DEFEND / REDUCE / EXIT", hovertemplate="%{x}<br>提早出場路徑<extra></extra>"
     ), row=1, col=1)
 
     fig.add_trace(go.Bar(x=df.index, y=df["Volume"], marker_color=vol_colors, name="成交量", opacity=0.6), row=2, col=1)

@@ -25,6 +25,7 @@ from db_logger import SQLServerExecutionLogger
 from fts_level_runtime import build_level3_services
 from fts_data_quality_guard import validate_order_contract_dict, append_order_quality_report
 from fts_symbol_contract import get_ticker_symbol, ensure_execution_symbol, ensure_dataframe_symbol_contract
+from fts_broker_callback_mapping import normalize_broker_callback
 
 LOG_DIR = "execution_logs"
 ORDER_BLOTTER_PATH = os.path.join(LOG_DIR, "order_blotter.csv")
@@ -712,7 +713,7 @@ try:
         callbacks = callbacks if callbacks is not None else self._broker_callbacks_for_runtime(clear=True)
         rows: list[dict[str, Any]] = []
         for event in callbacks or []:
-            row = dict(event)
+            row = normalize_broker_callback(dict(event), broker=str(getattr(self.broker, "broker_name", self.broker.__class__.__name__)))
             row.setdefault('ingested_at', datetime.now().isoformat(timespec='seconds'))
             rows.append(row)
             try:
@@ -840,3 +841,14 @@ try:
 
 except Exception as exc:  # runtime diagnostics / fail_closed policy
     record_issue('execution_engine', 'lot_callback_reconcile_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')
+
+
+# =============================================================================
+# Formal class facade
+# =============================================================================
+_PatchedExecutionEngineBase = ExecutionEngine
+class FormalExecutionEngine(_PatchedExecutionEngineBase):
+    FORMAL_CLASS_LAYER = True
+    CALLBACK_MAPPING_LAYER = "fts_broker_callback_mapping.BrokerCallbackMapper"
+
+ExecutionEngine = FormalExecutionEngine

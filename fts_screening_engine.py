@@ -37,7 +37,7 @@ from fts_screening_legacy_compat import (
 
 
 class ScreeningEngine:
-    MODULE_VERSION = 'v87_screening_engine_dual_path_state_machine'
+    MODULE_VERSION = 'v88_live_safe_ev_state_machine'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'screening_engine.json'
@@ -88,6 +88,46 @@ class ScreeningEngine:
             return float(max(0.0, min(1.0, float(series))))
         except Exception:
             return 0.0
+
+
+    def _build_live_expected_return(self, out: pd.DataFrame, params: dict[str, Any]) -> pd.Series:
+        """Build a live-safe expected-return proxy without future-price leakage.
+
+        Forward_Label_Return is kept only for training/backtests.  Realized_EV is
+        now deliberately mapped to this live-safe estimate for backward
+        compatibility with old gates that still read Realized_EV.
+        """
+        if out.empty:
+            return pd.Series(dtype=float, index=out.index)
+
+        def _num(name: str, default: float = 0.0) -> pd.Series:
+            if name in out.columns:
+                return pd.to_numeric(out[name], errors='coerce').fillna(default).astype(float)
+            return pd.Series([default] * len(out), index=out.index, dtype=float)
+
+        trigger = max(1.0, float(params.get('TRIGGER_SCORE', 2.0)))
+        min_samples = max(1, int(params.get('MIN_SIGNAL_SAMPLE_SIZE', 8)))
+        score_gap = _num('Score_Gap', 0.0).clip(-trigger * 2.0, trigger * 2.0)
+        ai_proba = _num('AI_Proba', 0.5).clip(0.01, 0.99)
+        sample_size = _num('歷史訊號樣本數', 0.0).clip(lower=0.0)
+        historical_ev_pct = _num('期望值', 0.0)  # compatibility helper reports percent units
+        entry_readiness = _num('Entry_Readiness', 0.0).clip(0.0, 1.0)
+        preentry_score = _num('PreEntry_Score', 0.0).clip(0.0, 1.0)
+        confirm_score = _num('Confirm_Entry_Score', 0.0).clip(0.0, 1.0)
+        exit_hazard = _num('Exit_Hazard_Score', 0.0).clip(0.0, 1.0)
+        reversal_risk = _num('Reversal_Risk_Next3', 0.0).clip(0.0, 1.0)
+        breakout_risk = _num('Breakout_Risk_Next3', 0.0).clip(0.0, 1.0)
+
+        sample_weight = (sample_size / float(min_samples)).clip(0.0, 1.0)
+        historical_component = (historical_ev_pct / 100.0) * sample_weight
+        score_component = np.tanh(score_gap / trigger) * float(params.get('LIVE_EV_SCORE_EDGE_SCALE', 0.012))
+        proba_component = (ai_proba - 0.50) * float(params.get('LIVE_EV_PROBA_EDGE_SCALE', 0.050))
+        readiness_component = ((entry_readiness * 0.45 + preentry_score * 0.25 + confirm_score * 0.30) - 0.50) * float(params.get('LIVE_EV_READINESS_SCALE', 0.012))
+        risk_penalty = (exit_hazard * 0.50 + reversal_risk * 0.30 + breakout_risk * 0.20) * float(params.get('LIVE_EV_RISK_PENALTY_SCALE', 0.010))
+
+        live_ev = historical_component + score_component + proba_component + readiness_component - risk_penalty
+        cap = abs(float(params.get('LIVE_EV_ABS_CAP', 0.20)))
+        return pd.to_numeric(live_ev, errors='coerce').fillna(0.0).clip(-cap, cap)
 
     def _apply_dual_path_state_machine(self, df: pd.DataFrame, params: dict[str, Any]) -> pd.DataFrame:
         out = df.copy()
@@ -343,6 +383,14 @@ class ScreeningEngine:
             + out['Close'].rolling(24, min_periods=1).mean()
         ) / 4.0
         vol_ma20 = out['Vol_MA20'].replace(0, pd.NA)
+
+        def _feature_col(name: str, default: float = 0.0) -> pd.Series:
+            if name in out.columns:
+                return pd.to_numeric(out[name], errors='coerce').fillna(default).astype(float)
+            return pd.Series([default] * len(out), index=out.index, dtype=float)
+
+        foreign_ratio = _feature_col('Foreign_Ratio', 0.0)
+        total_ratio = _feature_col('Total_Ratio', 0.0)
         out['buy_c2'] = (out['RSI'] > 50).astype(int)
         out['sell_c2'] = (out['RSI'] < 50).astype(int)
         out['buy_c3'] = (out['Volume'] >= vol_ma20 * float(params.get('VOL_BREAKOUT_MULTIPLIER', 1.1))).fillna(False).astype(int)
@@ -353,12 +401,12 @@ class ScreeningEngine:
         out['sell_c5'] = ((out['Close'] >= out['BB_Upper']) & (out['RSI'] > 60)).fillna(False).astype(int)
         out['buy_c6'] = (out['Close'] > out['BBI']).astype(int)
         out['sell_c6'] = (out['Close'] < out['BBI']).astype(int)
-        out['buy_c7'] = (pd.to_numeric(out.get('Foreign_Ratio', 0), errors='coerce').fillna(0) > 0).astype(int)
-        out['sell_c7'] = (pd.to_numeric(out.get('Foreign_Ratio', 0), errors='coerce').fillna(0) < 0).astype(int)
+        out['buy_c7'] = (foreign_ratio > 0).astype(int)
+        out['sell_c7'] = (foreign_ratio < 0).astype(int)
         out['buy_c8'] = ((out['ADX14'] >= float(params.get('ADX_TREND_THRESHOLD', 20))) & (out['Close'] > out['MA20'])).astype(int)
         out['sell_c8'] = ((out['ADX14'] >= float(params.get('ADX_TREND_THRESHOLD', 20))) & (out['Close'] < out['MA20'])).astype(int)
-        out['buy_c9'] = (pd.to_numeric(out.get('Total_Ratio', 0), errors='coerce').fillna(0) > 0).astype(int)
-        out['sell_c9'] = (pd.to_numeric(out.get('Total_Ratio', 0), errors='coerce').fillna(0) < 0).astype(int)
+        out['buy_c9'] = (total_ratio > 0).astype(int)
+        out['sell_c9'] = (total_ratio < 0).astype(int)
 
         out['Buy_Score'] = out[[f'buy_c{i}' for i in range(2, 10)]].sum(axis=1)
         out['Sell_Score'] = out[[f'sell_c{i}' for i in range(2, 10)]].sum(axis=1)
@@ -369,14 +417,18 @@ class ScreeningEngine:
         out['Vol_Squeeze'] = (out['BB_Width'] < out['BB_Width'].rolling(20, min_periods=5).mean()).fillna(False).astype(int)
         out['Fake_Breakout'] = ((out['Close'] < out['MA20']) & (out['RSI'] > 55)).fillna(False)
         out['Bear_Trap'] = ((out['Close'] > out['MA20']) & (out['RSI'] < 45)).fillna(False)
-        out['Absorption'] = ((out['Close'].pct_change().fillna(0) < 0) & (pd.to_numeric(out.get('Total_Ratio', 0), errors='coerce').fillna(0) > 0)).astype(int)
+        out['Absorption'] = ((out['Close'].pct_change().fillna(0) < 0) & (total_ratio > 0)).astype(int)
         out['MR_Long_Spring'] = ((out['Low'] < out['BB_Lower']) & (out['RSI'] < 35)).fillna(False).astype(int)
         out['MR_Short_Trap'] = ((out['High'] > out['BB_Upper']) & (out['RSI'] > 65)).fillna(False).astype(int)
-        out['MR_Long_Accumulation'] = ((out['Close'] > out['MA20']) & (pd.to_numeric(out.get('Total_Ratio', 0), errors='coerce').fillna(0) > 0)).astype(int)
-        out['MR_Short_Distribution'] = ((out['Close'] < out['MA20']) & (pd.to_numeric(out.get('Total_Ratio', 0), errors='coerce').fillna(0) < 0)).astype(int)
+        out['MR_Long_Accumulation'] = ((out['Close'] > out['MA20']) & (total_ratio > 0)).astype(int)
+        out['MR_Short_Distribution'] = ((out['Close'] < out['MA20']) & (total_ratio < 0)).astype(int)
         out = self._infer_regime(out, params)
         out['AI_Proba'] = (0.5 + out['Score_Gap'].clip(-2, 2) * 0.1).clip(0.01, 0.99)
-        out['Realized_EV'] = (out['Close'].shift(-int(params.get('ML_LABEL_HOLD_DAYS', 5))) / out['Close'] - 1).fillna(0.0)
+        hold_days = int(params.get('ML_LABEL_HOLD_DAYS', 5))
+        # Training/backtest-only forward label.  Do not use this column in live gates.
+        out['Forward_Label_Return'] = (out['Close'].shift(-hold_days) / out['Close'] - 1).fillna(0.0)
+        out['Forward_Label_Hold_Days'] = hold_days
+        out['Forward_Label_Source'] = 'future_close_shift_training_only'
         out['Regime_Raw'] = out.get('Regime', '區間盤整')
         try:
             out = self.regime_service.enrich_dataframe(out)
@@ -400,6 +452,13 @@ class ScreeningEngine:
                 continue
             out[k] = v
         out = self._apply_dual_path_state_machine(out, params)
+        live_ev = self._build_live_expected_return(out, params)
+        out['Expected_Return'] = live_ev
+        out['Heuristic_EV'] = live_ev
+        out['Live_EV'] = live_ev
+        # Backward-compatible name: now live-safe, not future-shift leakage.
+        out['Realized_EV'] = live_ev
+        out['EV_Source'] = 'live_safe_expected_return_v1'
         out['訊號信心分數(%)'] = (out['AI_Proba'] * 100.0).round(2)
         return out
 

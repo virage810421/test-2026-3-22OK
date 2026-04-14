@@ -1,0 +1,274 @@
+{
+  "generated_at": "2026-04-14T07:00:38",
+  "tool": "fts_deprecated_drop_readiness.py",
+  "tool_version": "v20260414_deprecated_drop_readiness_audit_archive_aware",
+  "project_root": "/mnt/data/test_overlay",
+  "status": "ready_with_manual_db_review",
+  "summary": {
+    "py_files": 155,
+    "archived_py_files_skipped": 0,
+    "include_archived": false,
+    "findings_total": 0,
+    "severity_counts": {},
+    "drop_readiness_counts": {
+      "READY_TO_RETIRE": 1,
+      "READY_CLEAN": 2,
+      "CONDITIONAL_READY": 1,
+      "UNKNOWN_DB_NOT_CHECKED": 5,
+      "KEEP_COMPAT_DB_NOT_CHECKED": 2,
+      "CORE_READY_KEEP_ETL_FAIL_OPEN": 1
+    },
+    "legacy_Ticker_SYMBOL_refs": 218,
+    "canonical_ticker_symbol_refs": 170,
+    "except_exception_count": 471,
+    "pass_count": 49,
+    "fallback_count": 235,
+    "db_probe_status": "not_checked_static_only"
+  },
+  "drop_candidates": [
+    {
+      "target": "file:system_guard.py",
+      "current_status": "wrapper_only",
+      "drop_readiness": "READY_TO_RETIRE",
+      "evidence": [
+        "delegates_to_fts_system_guard_service=True",
+        "risky_legacy_patterns=none",
+        "import_refs=0"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "duplicate_defs:fts_model_layer.py",
+      "current_status": "clean",
+      "drop_readiness": "READY_CLEAN",
+      "evidence": [
+        "duplicate_defs=none"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "config:exit_model_hazard_fallback",
+      "current_status": "fallback_disabled",
+      "drop_readiness": "READY_CLEAN",
+      "evidence": [
+        "fallback_enabled=False",
+        "hard_block_seen=True"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "code:execution_Ticker_SYMBOL_references",
+      "current_status": "58 refs, 0 unapproved",
+      "drop_readiness": "CONDITIONAL_READY",
+      "evidence": [
+        "total_execution_context_refs=58",
+        "unapproved_refs=0"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": [
+        "跑 fts_db_migrations.py upgrade 回填 DB",
+        "確認所有 execution runtime/output 都有 ticker_symbol",
+        "觀察 3~5 輪 daily/paper 無舊欄位讀取告警"
+      ]
+    },
+    {
+      "target": "db:execution_orders.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_fills.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_positions_snapshot.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_position_lots.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_broker_callbacks.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:active_positions.[Ticker SYMBOL]",
+      "current_status": "legacy_table_compat_layer",
+      "drop_readiness": "KEEP_COMPAT_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查；舊表建議保留相容欄位。"
+      ],
+      "blockers": [
+        "active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。"
+      ],
+      "required_steps_before_drop": [
+        "若未來要 drop：先改所有報表/SQL/CSV/training 讀 ticker_symbol，再連跑多輪確認。"
+      ]
+    },
+    {
+      "target": "db:trade_history.[Ticker SYMBOL]",
+      "current_status": "legacy_table_compat_layer",
+      "drop_readiness": "KEEP_COMPAT_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查；舊表建議保留相容欄位。"
+      ],
+      "blockers": [
+        "active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。"
+      ],
+      "required_steps_before_drop": [
+        "若未來要 drop：先改所有報表/SQL/CSV/training 讀 ticker_symbol，再連跑多輪確認。"
+      ]
+    },
+    {
+      "target": "policy:global_exception_fail_closed",
+      "current_status": "except_exception=471, pass=49, fallback=235, high_findings=0",
+      "drop_readiness": "CORE_READY_KEEP_ETL_FAIL_OPEN",
+      "evidence": [
+        "py_files=155",
+        "core_runtime_files=24"
+      ],
+      "blockers": [
+        "ETL/research/legacy wrapper 不應全改 fail-closed；只需 diagnostics。"
+      ],
+      "required_steps_before_drop": [
+        "核心交易路徑 fail-closed",
+        "ETL/research fail-open + diagnostics",
+        "不要全域硬刪 except Exception"
+      ]
+    }
+  ],
+  "top_findings": [],
+  "static_counters": {
+    "archived_py_files_skipped": 0,
+    "py_files": 155,
+    "file_class.general": 107,
+    "except_exception": 471,
+    "bare_except": 2,
+    "pass": 49,
+    "fallback": 235,
+    "legacy_Ticker_SYMBOL": 218,
+    "canonical_ticker_symbol": 170,
+    "todo": 72,
+    "file_class.etl_research_or_legacy": 24,
+    "file_class.core_runtime": 24
+  },
+  "ticker_refs_by_file_top": {
+    "fts_etl_daily_chip_service.py": 22,
+    "fts_fundamentals_etl_mainline.py": 16,
+    "fundamental_screener.py": 15,
+    "live_paper_trading.py": 13,
+    "fts_deprecated_drop_readiness.py": 12,
+    "fts_training_universe_service.py": 12,
+    "db_setup_research_plus.py": 11,
+    "fts_db_migrations.py": 11,
+    "db_logger.py": 9,
+    "fts_stock_master_service.py": 9,
+    "fts_company_quality_snapshot_service.py": 8,
+    "fts_cross_sectional_percentile_service.py": 7,
+    "fts_revenue_momentum_snapshot_service.py": 7,
+    "fts_db_schema.py": 6,
+    "fts_chip_factor_snapshot_service.py": 5,
+    "fts_price_liquidity_snapshot_service.py": 5,
+    "execution_engine.py": 4,
+    "fts_chip_enrichment_service.py": 4,
+    "fts_sector_service.py": 4,
+    "fts_event_calendar_service.py": 3,
+    "fts_symbol_contract.py": 3,
+    "fts_data_quality_guard.py": 2,
+    "fts_decision_desk_builder.py": 2,
+    "fts_etl_monthly_revenue_service.py": 2,
+    "fts_feature_service.py": 2,
+    "fts_fundamentals_true_backfill.py": 2,
+    "fts_research_suite.py": 2,
+    "fts_training_data_builder.py": 2,
+    "fts_training_ticker_scoreboard.py": 2,
+    "sector_classifier.py": 2,
+    "config.py": 1,
+    "fts_admin_suite.py": 1,
+    "fts_compat.py": 1,
+    "fts_legacy_master_pipeline_impl.py": 1,
+    "fts_local_history_bootstrap.py": 1,
+    "fts_risk_gateway.py": 1,
+    "fts_sql_feature_snapshot_sync.py": 1,
+    "fts_trainer_backend.py": 1,
+    "fts_training_orchestrator.py": 1,
+    "fts_training_universe_common.py": 1,
+    "fts_watchlist_service.py": 1,
+    "monitor_center.py": 1,
+    "risk_gateway.py": 1,
+    "update_training_universe_daily_columns_to_zh.py": 1
+  },
+  "duplicate_defs": {},
+  "db_probe": {
+    "available": false,
+    "status": "not_checked_static_only",
+    "tables": {},
+    "error": "Use --check-db on the target machine to inspect SQL Server columns."
+  },
+  "policy": {
+    "execution_contract": "ticker_symbol",
+    "legacy_symbol_contract": "Ticker SYMBOL allowed only in ETL/research/legacy alias/backfill",
+    "core_runtime_policy": "fail-closed + runtime diagnostics",
+    "etl_research_policy": "fail-open + runtime diagnostics",
+    "destructive_actions": "report_only; this tool never deletes files or drops columns",
+    "archived_reference_policy": "absorbed_references/_backup* are excluded by default; use --include-archived to audit old reference snapshots"
+  }
+}

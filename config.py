@@ -333,6 +333,17 @@ PARAMS.setdefault("REGIME_HYSTERESIS_TAIL_BARS", 15)
 PARAMS.setdefault("EXECUTION_SQL_SYNC_ENABLED", True)
 PARAMS.setdefault("EXECUTION_SQL_SYNC_SNAPSHOTS", True)
 PARAMS.setdefault("EXECUTION_SQL_SYNC_STOP_ORDERS", True)
+
+# === v88 live-safe EV / no-lookahead gate defaults ===
+PARAMS.setdefault("LIVE_MIN_EXPECTED_RETURN", -0.0015)
+PARAMS.setdefault("MODEL_LAYER_MIN_EXPECTED_RETURN", PARAMS.get("LIVE_MIN_EXPECTED_RETURN", -0.0015))
+PARAMS.setdefault("LIVE_EV_MIN_SAMPLE_FOR_HARD_BLOCK", PARAMS.get("MIN_SIGNAL_SAMPLE_SIZE", 8))
+PARAMS.setdefault("LIVE_EV_SCORE_EDGE_SCALE", 0.012)
+PARAMS.setdefault("LIVE_EV_PROBA_EDGE_SCALE", 0.050)
+PARAMS.setdefault("LIVE_EV_READINESS_SCALE", 0.012)
+PARAMS.setdefault("LIVE_EV_RISK_PENALTY_SCALE", 0.010)
+PARAMS.setdefault("LIVE_EV_ABS_CAP", 0.20)
+
 # vNext lot-level / callback / reconciliation workflow switches
 LOT_LEVEL_POSITION_MODEL_ENABLED = True
 LOT_LEVEL_FIFO_CLOSE = True
@@ -363,3 +374,34 @@ PARAMS["EXIT_MODEL_FALLBACK_TO_HAZARD"] = bool(PARAMS.get("EXIT_MODEL_FALLBACK_T
 # v83+ exit AI hard-block policy: no hidden fallback to hazard unless explicitly re-enabled.
 PARAMS.setdefault('EXIT_MODEL_HARD_BLOCK_WHEN_UNAVAILABLE', True)
 PARAMS['EXIT_MODEL_FALLBACK_TO_HAZARD'] = False
+
+# === vNext tax-lot jurisdiction / report / wash-sale rules ===
+TAX_LOT_METHOD = "FIFO"  # FIFO | LIFO | AVERAGE | SPECIFIC_ID
+TAX_LOT_CURRENCY = "TWD"
+TAX_LOT_LONG_TERM_DAYS = 365
+TAX_LOT_WASH_SALE_RULE_ENABLED = True
+TAX_LOT_WASH_SALE_WINDOW_DAYS = 30
+TAX_LOT_SPECIFIC_ID_ENABLED = True
+TAX_REPORT_OUTPUT_DIR = "runtime/tax_reports"
+TAX_REPORT_EXPORT_ENABLED = True
+TAX_AUTO_CLASSIFY_INSTRUMENT = True
+TAX_RULE_TW_EQUITY_CURRENCY = "TWD"
+TAX_RULE_US_EQUITY_CURRENCY = "USD"
+TAX_RULE_FX_CURRENCY = "USD"
+TAX_RULE_FUTURES_CURRENCY = "USD"
+PARAMS.setdefault("TAX_LOT_METHOD", TAX_LOT_METHOD)
+PARAMS.setdefault("TAX_LOT_WASH_SALE_RULE_ENABLED", TAX_LOT_WASH_SALE_RULE_ENABLED)
+PARAMS.setdefault("TAX_LOT_WASH_SALE_WINDOW_DAYS", TAX_LOT_WASH_SALE_WINDOW_DAYS)
+PARAMS.setdefault("TAX_REPORT_EXPORT_ENABLED", TAX_REPORT_EXPORT_ENABLED)
+PARAMS.setdefault("TAX_AUTO_CLASSIFY_INSTRUMENT", TAX_AUTO_CLASSIFY_INSTRUMENT)
+
+# -----------------------------------------------------------------------------
+# Formal architecture cleanup / observability / tax-rule config
+# -----------------------------------------------------------------------------
+FORMAL_CLASS_LAYER_ENABLED = True
+THREE_PATH_DASHBOARD_ENABLED = True
+BROKER_CALLBACK_MAPPING_ENABLED = True
+BROKER_CALLBACK_MAPPING_PROFILE = "GENERIC_V1"
+TAX_RULES_EXTERNAL_JSON_ENABLED = True
+TAX_RULES_JSON_PATH = "config/tax_rules.json"
+SMOKE_TEST_OUTPUT_PATH = "runtime/formal_healthcheck_smoke_report.json"

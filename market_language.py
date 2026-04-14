@@ -42,7 +42,7 @@ def is_vol_breakout(df: pd.DataFrame, multiplier: float = 1.5):
 
 
 def is_price_breakout(df: pd.DataFrame):
-    close = pd.to_numeric(df.get('Close', 0), errors='coerce').fillna(0.0)
+    close = _series(df, 'Close', 0.0).fillna(0.0)
     bbi = _ensure_bbi(df)
     return ((close > bbi) & (close.shift(1) <= bbi.shift(1))).fillna(False)
 

@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "file": "fts_feature_service.py",
+      "patch_assignments": 3
+    }
+  ],
+  "count": 1,
+  "note": "Public broker/logger/engine symbols now expose formal facade classes; residual patch assignments are legacy compatibility debt."
+}

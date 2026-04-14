@@ -72,3 +72,15 @@ class HealthDashboardBuilder:
             json.dump(dashboard, f, ensure_ascii=False, indent=2)
         log(f"📊 已輸出 health dashboard：{self.path}")
         return self.path, dashboard
+
+
+# vNext formal dashboard field contract: three-path observability
+THREE_PATH_DASHBOARD_FIELDS = [
+    "Entry_State", "Entry_Path", "PreEntry_Score", "Confirm_Entry_Score",
+    "Exit_State", "Exit_Action", "Exit_Hazard_Score", "Exit_Model_Source",
+    "Hysteresis_Regime_Label", "Transition_Label", "Legacy_Golden_Type",
+]
+
+def summarize_three_path_row(row):
+    getter = row.get if hasattr(row, "get") else lambda k, d=None: d
+    return {k: getter(k, "") for k in THREE_PATH_DASHBOARD_FIELDS}

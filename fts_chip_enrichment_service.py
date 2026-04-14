@@ -129,9 +129,10 @@ class ChipEnrichmentService:
             for src, dst in [('Foreign_Net', 'Foreign_Net'), ('Trust_Net', 'Trust_Net'), ('Dealers_Net', 'Dealers_Net')]:
                 if src in chip_df.columns:
                     out = out.join(chip_df[src].rename(dst), how='left')
-            out['Foreign_Net'] = out.get('Foreign_Net', 0).ffill().fillna(0)
-            out['Trust_Net'] = out.get('Trust_Net', 0).ffill().fillna(0)
-            out['Dealers_Net'] = out.get('Dealers_Net', 0).ffill().fillna(0)
+            for _col in ['Foreign_Net', 'Trust_Net', 'Dealers_Net']:
+                if _col not in out.columns:
+                    out[_col] = 0.0
+                out[_col] = pd.to_numeric(out[_col], errors='coerce').ffill().fillna(0.0)
             close = out['Close'].abs().replace(0, pd.NA) if 'Close' in out.columns else pd.Series(index=out.index, dtype='float64')
             out['Foreign_Ratio'] = (out['Foreign_Net'] / close).fillna(0)
             out['Trust_Ratio'] = (out['Trust_Net'] / close).fillna(0)

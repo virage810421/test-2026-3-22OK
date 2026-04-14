@@ -232,6 +232,20 @@ if not hasattr(CONFIG, 'enable_execution_sql_sync'): CONFIG.enable_execution_sql
 if not hasattr(CONFIG, 'execution_sql_sync_snapshots'): CONFIG.execution_sql_sync_snapshots = True
 if not hasattr(CONFIG, 'execution_sql_sync_stop_orders'): CONFIG.execution_sql_sync_stop_orders = True
 
+
+# v88 live-safe EV / no-lookahead gate defaults
+try:
+    CONFIG.live_min_expected_return = getattr(CONFIG, 'live_min_expected_return', -0.0015)
+    CONFIG.model_layer_min_expected_return = getattr(CONFIG, 'model_layer_min_expected_return', CONFIG.live_min_expected_return)
+    CONFIG.live_ev_min_sample_for_hard_block = getattr(CONFIG, 'live_ev_min_sample_for_hard_block', 8)
+    CONFIG.live_ev_score_edge_scale = getattr(CONFIG, 'live_ev_score_edge_scale', 0.012)
+    CONFIG.live_ev_proba_edge_scale = getattr(CONFIG, 'live_ev_proba_edge_scale', 0.050)
+    CONFIG.live_ev_readiness_scale = getattr(CONFIG, 'live_ev_readiness_scale', 0.012)
+    CONFIG.live_ev_risk_penalty_scale = getattr(CONFIG, 'live_ev_risk_penalty_scale', 0.010)
+    CONFIG.live_ev_abs_cap = getattr(CONFIG, 'live_ev_abs_cap', 0.20)
+except Exception:
+    pass
+
 # vNext lot-level / true-broker callback / execution reconciliation settings
 try:
     CONFIG.lot_level_position_model_enabled = True
@@ -256,3 +270,32 @@ if not hasattr(CONFIG, "lot_stop_linkage_match_strategy"): CONFIG.lot_stop_linka
 if not hasattr(CONFIG, "lot_stop_linkage_match_signal"): CONFIG.lot_stop_linkage_match_signal = False
 if not hasattr(CONFIG, "lot_track_partial_fill_lifecycle"): CONFIG.lot_track_partial_fill_lifecycle = True
 if not hasattr(CONFIG, "lot_close_match_tolerance_qty"): CONFIG.lot_close_match_tolerance_qty = 0
+
+# === vNext tax-lot jurisdiction / report / wash-sale rules ===
+try:
+    CONFIG.tax_lot_method = getattr(CONFIG, 'tax_lot_method', 'FIFO')
+    CONFIG.tax_lot_currency = getattr(CONFIG, 'tax_lot_currency', 'TWD')
+    CONFIG.tax_lot_long_term_days = getattr(CONFIG, 'tax_lot_long_term_days', 365)
+    CONFIG.tax_lot_wash_sale_rule_enabled = getattr(CONFIG, 'tax_lot_wash_sale_rule_enabled', True)
+    CONFIG.tax_lot_wash_sale_window_days = getattr(CONFIG, 'tax_lot_wash_sale_window_days', 30)
+    CONFIG.tax_lot_specific_id_enabled = getattr(CONFIG, 'tax_lot_specific_id_enabled', True)
+    CONFIG.tax_report_output_dir = getattr(CONFIG, 'tax_report_output_dir', 'runtime/tax_reports')
+    CONFIG.tax_report_export_enabled = getattr(CONFIG, 'tax_report_export_enabled', True)
+    CONFIG.tax_auto_classify_instrument = getattr(CONFIG, 'tax_auto_classify_instrument', True)
+    CONFIG.tax_rule_tw_equity_currency = getattr(CONFIG, 'tax_rule_tw_equity_currency', 'TWD')
+    CONFIG.tax_rule_us_equity_currency = getattr(CONFIG, 'tax_rule_us_equity_currency', 'USD')
+    CONFIG.tax_rule_fx_currency = getattr(CONFIG, 'tax_rule_fx_currency', 'USD')
+    CONFIG.tax_rule_futures_currency = getattr(CONFIG, 'tax_rule_futures_currency', 'USD')
+except Exception:
+    pass
+
+# -----------------------------------------------------------------------------
+# Formal architecture cleanup / observability / tax-rule config
+# -----------------------------------------------------------------------------
+FORMAL_CLASS_LAYER_ENABLED = True
+THREE_PATH_DASHBOARD_ENABLED = True
+BROKER_CALLBACK_MAPPING_ENABLED = True
+BROKER_CALLBACK_MAPPING_PROFILE = "GENERIC_V1"
+TAX_RULES_EXTERNAL_JSON_ENABLED = True
+TAX_RULES_JSON_PATH = "config/tax_rules.json"
+SMOKE_TEST_OUTPUT_PATH = "runtime/formal_healthcheck_smoke_report.json"

@@ -64,7 +64,7 @@ class MigrationRunner:
     3. db_setup.py 只保留為相容 wrapper，不再維護第二套 CREATE TABLE。
     """
 
-    MODULE_VERSION = 'v20260414_single_schema_migration_mainline_v2_legacy_symbol_alias'
+    MODULE_VERSION = 'v20260414_single_schema_migration_mainline_v3_tax_lot_washsale'
 
     def __init__(self, config: DBConfig | None = None):
         self.config = config or DBConfig()
@@ -129,7 +129,7 @@ class MigrationRunner:
         ON tgt.[version] = src.[version]
         WHEN MATCHED THEN UPDATE SET [applied_at]=GETDATE(), [note]=?
         WHEN NOT MATCHED THEN INSERT ([version],[applied_at],[note]) VALUES (?,GETDATE(),?);
-        """, [SCHEMA_VERSION, 'single_schema_execution_ticker_symbol', SCHEMA_VERSION, 'single_schema_execution_ticker_symbol'])
+        """, [SCHEMA_VERSION, 'single_schema_execution_ticker_symbol_tax_lot_washsale', SCHEMA_VERSION, 'single_schema_execution_ticker_symbol_tax_lot_washsale'])
 
     def _normalize_execution_ticker_columns(self, db: DatabaseSession) -> list[str]:
         """

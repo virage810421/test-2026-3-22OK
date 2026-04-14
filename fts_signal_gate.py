@@ -26,7 +26,9 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
     weighted_sell = safe_float(row.get('Weighted_Sell_Score', 0.0), 0.0)
     score_gap = safe_float(row.get('Score_Gap', 0.0), 0.0)
     ai_proba = safe_float(row.get('AI_Proba', 0.0), 0.0)
-    realized_ev = safe_float(row.get('Realized_EV', 0.0), 0.0)
+    expected_return = safe_float(row.get('Expected_Return', row.get('Heuristic_EV', row.get('Live_EV', row.get('Realized_EV', 0.0)))), 0.0)
+    ev_source = str(row.get('EV_Source', 'unknown'))
+    ev_sample_size = int(safe_float(row.get('歷史訊號樣本數', row.get('Sample_Size', 0)), 0.0))
     health = str(row.get('Health', 'KEEP')).upper()
     direction = _infer_direction(row)
     fallback_build = bool(row.get('FallbackBuild', False))
@@ -65,8 +67,12 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         blockers.append('decision_desk_unusable')
     if not execution_eligible:
         blockers.append('execution_not_eligible')
-    if realized_ev <= 0:
-        blockers.append('non_positive_ev')
+    live_min_ev = float(PARAMS.get('LIVE_MIN_EXPECTED_RETURN', -0.0015))
+    ev_min_sample = int(PARAMS.get('LIVE_EV_MIN_SAMPLE_FOR_HARD_BLOCK', PARAMS.get('MIN_SIGNAL_SAMPLE_SIZE', 8)))
+    if expected_return < live_min_ev and ev_sample_size >= ev_min_sample:
+        blockers.append(f'expected_return_below_threshold:{expected_return:.4f}<{live_min_ev:.4f}')
+    elif expected_return < live_min_ev:
+        warnings.append(f'expected_return_soft_negative:{expected_return:.4f}')
     pilot_proba_floor = max(0.45, float(PARAMS.get('LONG_MIN_PROBA', 0.52)) - float(PARAMS.get('PILOT_MIN_PROBA_BUFFER', 0.04)))
     if entry_state == 'NO_ENTRY':
         blockers.append('state_machine_no_entry')
@@ -100,6 +106,9 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         f'entry_path={entry_path}',
         f'preentry_score={preentry_score:.3f}',
         f'confirm_score={confirm_score:.3f}',
+        f'expected_return={expected_return:.4f}',
+        f'ev_source={ev_source}',
+        f'ev_sample_size={ev_sample_size}',
         f'score_gap={score_gap:.3f}',
     ])
     if direction == 'LONG':

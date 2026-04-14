@@ -17,7 +17,7 @@ Original public classes/functions are preserved in this module.
 # ==============================================================================
 # Merged from: fts_broker_core.py
 # ==============================================================================
-from paper_broker import PaperBroker
+from paper_broker import PaperBroker  # public formal facade
 
 
 # ==============================================================================
@@ -261,7 +261,7 @@ class RejectReasonClassifier:
 # ==============================================================================
 from fts_config import CONFIG
 # merged-local import removed: from fts_broker_core import PaperBroker
-from fts_broker_real_stub import RealBrokerStub
+from fts_broker_real_stub import RealBrokerStub  # public formal facade
 from fts_broker_api_adapter import ConfigurableBrokerAdapter
 
 

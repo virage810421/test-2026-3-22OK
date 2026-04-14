@@ -29,7 +29,7 @@ class MarketClimateService:
             return {'regime': '未知', 'risk_mode': 'neutral', 'avg_ai_proba': 0.5, 'avg_score_gap': 0.0, 'avg_ev': 0.0}
         avg_ai = safe_float(pd.to_numeric(df.get('AI_Proba', pd.Series([0.5]*len(df))), errors='coerce').mean(), 0.5)
         avg_gap = safe_float(pd.to_numeric(df.get('Score_Gap', pd.Series([0.0]*len(df))), errors='coerce').mean(), 0.0)
-        avg_ev = safe_float(pd.to_numeric(df.get('Realized_EV', pd.Series([0.0]*len(df))), errors='coerce').mean(), 0.0)
+        avg_ev = safe_float(pd.to_numeric(df.get('Expected_Return', df.get('Heuristic_EV', df.get('Live_EV', df.get('Realized_EV', pd.Series([0.0]*len(df)))))), errors='coerce').mean(), 0.0)
         if avg_ai >= 0.57 and avg_gap > 0 and avg_ev > 0:
             regime = '趨勢多頭'
             risk_mode = 'risk_on'
@@ -39,7 +39,7 @@ class MarketClimateService:
         else:
             regime = '區間盤整'
             risk_mode = 'balanced'
-        return {'regime': regime, 'risk_mode': risk_mode, 'avg_ai_proba': round(avg_ai, 4), 'avg_score_gap': round(avg_gap, 4), 'avg_ev': round(avg_ev, 4)}
+        return {'regime': regime, 'risk_mode': risk_mode, 'avg_ai_proba': round(avg_ai, 4), 'avg_score_gap': round(avg_gap, 4), 'avg_expected_return': round(avg_ev, 4)}
 
     def should_retrain(self) -> dict[str, Any]:
         metrics = self.analyze_market_climate()

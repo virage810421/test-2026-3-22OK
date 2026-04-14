@@ -1,25 +1,31 @@
 # Deprecated Scan + Drop Readiness Report
 
-生成時間：2026-04-14T06:21:15
-狀態：`ready_with_manual_db_review`
+生成時間：2026-04-14T14:50:27
+狀態：`not_ready_core_findings`
 
 ## 摘要
 
-- Python 檔案數：155
-- Findings：0，severity={}
-- Drop readiness：{'READY_TO_RETIRE': 1, 'READY_CLEAN': 2, 'CONDITIONAL_READY': 1, 'UNKNOWN_DB_NOT_CHECKED': 5, 'KEEP_COMPAT_DB_NOT_CHECKED': 2, 'CORE_READY_KEEP_ETL_FAIL_OPEN': 1}
-- Ticker SYMBOL refs：218
-- ticker_symbol refs：170
-- except Exception：471
-- pass：49
-- fallback：235
-- DB 檢查：not_checked_static_only
+- Python 檔案數：220
+- Findings：82，severity={'low': 16, 'medium': 32, 'high': 34}
+- Drop readiness：{'NOT_READY': 2, 'READY_CLEAN': 2, 'NO_OLD_COLUMN': 5, 'KEEP_COMPAT_NOT_DROP': 2, 'NOT_READY_FOR_GLOBAL_FAIL_CLOSED': 1}
+- Ticker SYMBOL refs：416
+- ticker_symbol refs：236
+- except Exception：670
+- pass：62
+- fallback：254
+- DB 檢查：checked
 
 ## Drop / Retire Candidates
 
 ### file:system_guard.py
 - current_status：`wrapper_only`
-- drop_readiness：`READY_TO_RETIRE`
+- drop_readiness：`NOT_READY`
+- blockers：
+  - 仍有其他檔案 import system_guard；刪檔前需改 import 到 fts_system_guard_service。
+- required_steps_before_drop：
+  - 改掉 import refs
+  - 確認 fts_system_guard_service.py 已是唯一主線
+  - 跑 healthcheck/bootstrap/daily
 
 ### duplicate_defs:fts_model_layer.py
 - current_status：`clean`
@@ -30,61 +36,38 @@
 - drop_readiness：`READY_CLEAN`
 
 ### code:execution_Ticker_SYMBOL_references
-- current_status：`58 refs, 0 unapproved`
-- drop_readiness：`CONDITIONAL_READY`
+- current_status：`106 refs, 48 unapproved`
+- drop_readiness：`NOT_READY`
+- blockers：
+  - 核心/execution 檔案仍有未標示 alias/backfill/compat 的 Ticker SYMBOL 使用。
 - required_steps_before_drop：
   - 跑 fts_db_migrations.py upgrade 回填 DB
   - 確認所有 execution runtime/output 都有 ticker_symbol
   - 觀察 3~5 輪 daily/paper 無舊欄位讀取告警
 
 ### db:execution_orders.[Ticker SYMBOL]
-- current_status：`db_not_checked`
-- drop_readiness：`UNKNOWN_DB_NOT_CHECKED`
-- blockers：
-  - 需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。
-- required_steps_before_drop：
-  - python fts_db_migrations.py upgrade
-  - python fts_admin_cli.py drop-readiness
+- current_status：`exists=True old=False new=True null_new=None`
+- drop_readiness：`NO_OLD_COLUMN`
 
 ### db:execution_fills.[Ticker SYMBOL]
-- current_status：`db_not_checked`
-- drop_readiness：`UNKNOWN_DB_NOT_CHECKED`
-- blockers：
-  - 需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。
-- required_steps_before_drop：
-  - python fts_db_migrations.py upgrade
-  - python fts_admin_cli.py drop-readiness
+- current_status：`exists=True old=False new=True null_new=None`
+- drop_readiness：`NO_OLD_COLUMN`
 
 ### db:execution_positions_snapshot.[Ticker SYMBOL]
-- current_status：`db_not_checked`
-- drop_readiness：`UNKNOWN_DB_NOT_CHECKED`
-- blockers：
-  - 需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。
-- required_steps_before_drop：
-  - python fts_db_migrations.py upgrade
-  - python fts_admin_cli.py drop-readiness
+- current_status：`exists=True old=False new=True null_new=None`
+- drop_readiness：`NO_OLD_COLUMN`
 
 ### db:execution_position_lots.[Ticker SYMBOL]
-- current_status：`db_not_checked`
-- drop_readiness：`UNKNOWN_DB_NOT_CHECKED`
-- blockers：
-  - 需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。
-- required_steps_before_drop：
-  - python fts_db_migrations.py upgrade
-  - python fts_admin_cli.py drop-readiness
+- current_status：`exists=False old=False new=False null_new=None`
+- drop_readiness：`NO_OLD_COLUMN`
 
 ### db:execution_broker_callbacks.[Ticker SYMBOL]
-- current_status：`db_not_checked`
-- drop_readiness：`UNKNOWN_DB_NOT_CHECKED`
-- blockers：
-  - 需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。
-- required_steps_before_drop：
-  - python fts_db_migrations.py upgrade
-  - python fts_admin_cli.py drop-readiness
+- current_status：`exists=False old=False new=False null_new=None`
+- drop_readiness：`NO_OLD_COLUMN`
 
 ### db:active_positions.[Ticker SYMBOL]
 - current_status：`legacy_table_compat_layer`
-- drop_readiness：`KEEP_COMPAT_DB_NOT_CHECKED`
+- drop_readiness：`KEEP_COMPAT_NOT_DROP`
 - blockers：
   - active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。
 - required_steps_before_drop：
@@ -92,17 +75,18 @@
 
 ### db:trade_history.[Ticker SYMBOL]
 - current_status：`legacy_table_compat_layer`
-- drop_readiness：`KEEP_COMPAT_DB_NOT_CHECKED`
+- drop_readiness：`KEEP_COMPAT_NOT_DROP`
 - blockers：
   - active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。
 - required_steps_before_drop：
   - 若未來要 drop：先改所有報表/SQL/CSV/training 讀 ticker_symbol，再連跑多輪確認。
 
 ### policy:global_exception_fail_closed
-- current_status：`except_exception=471, pass=49, fallback=235, high_findings=0`
-- drop_readiness：`CORE_READY_KEEP_ETL_FAIL_OPEN`
+- current_status：`except_exception=670, pass=62, fallback=254, high_findings=34`
+- drop_readiness：`NOT_READY_FOR_GLOBAL_FAIL_CLOSED`
 - blockers：
   - ETL/research/legacy wrapper 不應全改 fail-closed；只需 diagnostics。
+  - core_high_findings=34
 - required_steps_before_drop：
   - 核心交易路徑 fail-closed
   - ETL/research fail-open + diagnostics
@@ -110,3 +94,43 @@
 
 ## Top Findings
 
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:90 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:111 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:136 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:154 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:178 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:185 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:191 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:211 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:226 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:246 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:250 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:258 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:274 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:295 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:306 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `low` `legacy_symbol_in_execution_context` _backup_monthly_fix\db_setup.py:322 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:52 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:115 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:122 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:260 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:270 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:280 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:290 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\execution_engine.py:300 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\execution_engine.py:193 - absorbed_references\advanced_chart1_original\execution_engine.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\execution_engine.py:253 - absorbed_references\advanced_chart1_original\execution_engine.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:134 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:294 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:363 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:389 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:398 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:408 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:466 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `medium` `legacy_symbol_in_execution_context` absorbed_references\advanced_chart1_original\live_paper_trading.py:507 - core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\live_paper_trading.py:61 - absorbed_references\advanced_chart1_original\live_paper_trading.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\live_paper_trading.py:71 - absorbed_references\advanced_chart1_original\live_paper_trading.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\live_paper_trading.py:83 - absorbed_references\advanced_chart1_original\live_paper_trading.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\live_paper_trading.py:94 - absorbed_references\advanced_chart1_original\live_paper_trading.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\live_paper_trading.py:103 - absorbed_references\advanced_chart1_original\live_paper_trading.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
+- `high` `core_except_exception` absorbed_references\advanced_chart1_original\live_paper_trading.py:115 - absorbed_references\advanced_chart1_original\live_paper_trading.py 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。
