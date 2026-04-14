@@ -222,77 +222,34 @@ try:
 
     def _dbl_patched_init(self, *args, **kwargs):
         _DBL_ORIG_INIT(self, *args, **kwargs)
-        if getattr(self, 'enabled', False) and getattr(self, 'cursor', None):
-            try:
-                self.ensure_lot_callback_tables()
-            except Exception:
-                pass
+        # Schema is now owned by db_setup.py / fts_db_migrations.py.
+        # db_logger is write-only and must not create runtime tables.
 
     def _dbl_ensure_lot_callback_tables(self) -> None:
+        """Validate execution extension schema without creating tables.
+
+        Formal schema ownership belongs to db_setup.py / fts_db_migrations.py.
+        This logger is write-only; if schema is missing, tell the operator to run
+        the database upgrade instead of silently creating runtime tables here.
+        """
         if not self.enabled or not self.cursor:
             return
-        ddl = [
-            """
-            IF OBJECT_ID(N'dbo.execution_position_lots', N'U') IS NULL
-            CREATE TABLE dbo.execution_position_lots (
-                lot_id NVARCHAR(80) NOT NULL PRIMARY KEY,
-                snapshot_time DATETIME2 NULL,
-                [Ticker SYMBOL] NVARCHAR(30) NULL,
-                direction_bucket NVARCHAR(20) NULL,
-                status NVARCHAR(30) NULL,
-                open_qty INT NULL,
-                remaining_qty INT NULL,
-                avg_cost FLOAT NULL,
-                entry_price FLOAT NULL,
-                market_price FLOAT NULL,
-                market_value FLOAT NULL,
-                unrealized_pnl FLOAT NULL,
-                realized_pnl FLOAT NULL,
-                entry_time DATETIME2 NULL,
-                close_time DATETIME2 NULL,
-                entry_order_id NVARCHAR(120) NULL,
-                exit_order_id NVARCHAR(120) NULL,
-                strategy_name NVARCHAR(120) NULL,
-                updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-                raw_json NVARCHAR(MAX) NULL
-            );
-            """,
-            """
-            IF OBJECT_ID(N'dbo.execution_broker_callbacks', N'U') IS NULL
-            CREATE TABLE dbo.execution_broker_callbacks (
-                callback_id NVARCHAR(120) NOT NULL PRIMARY KEY,
-                broker_order_id NVARCHAR(120) NULL,
-                client_order_id NVARCHAR(120) NULL,
-                event_type NVARCHAR(60) NULL,
-                status NVARCHAR(60) NULL,
-                [Ticker SYMBOL] NVARCHAR(30) NULL,
-                filled_qty INT NULL,
-                remaining_qty INT NULL,
-                avg_fill_price FLOAT NULL,
-                callback_time DATETIME2 NULL,
-                ingested_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-                raw_json NVARCHAR(MAX) NULL
-            );
-            """,
-            """
-            IF OBJECT_ID(N'dbo.execution_reconciliation_report', N'U') IS NULL
-            CREATE TABLE dbo.execution_reconciliation_report (
-                reconcile_id NVARCHAR(120) NOT NULL PRIMARY KEY,
-                reconcile_time DATETIME2 NOT NULL,
-                status NVARCHAR(60) NULL,
-                order_mismatch_count INT NULL,
-                fill_mismatch_count INT NULL,
-                position_mismatch_count INT NULL,
-                lot_mismatch_count INT NULL,
-                cash_diff FLOAT NULL,
-                summary_json NVARCHAR(MAX) NULL,
-                created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
-            );
-            """,
-        ]
-        for sql in ddl:
-            self.cursor.execute(sql)
-        self.conn.commit()
+        required = (
+            'execution_position_lots',
+            'execution_broker_callbacks',
+            'execution_reconciliation_report',
+        )
+        missing = []
+        for table in required:
+            self.cursor.execute("SELECT CASE WHEN OBJECT_ID(N'dbo." + table + "', N'U') IS NULL THEN 0 ELSE 1 END")
+            row = self.cursor.fetchone()
+            if not row or int(row[0]) != 1:
+                missing.append(table)
+        if missing:
+            raise RuntimeError(
+                'Missing execution schema tables: ' + ', '.join(missing) +
+                '. Run: python db_setup.py --mode upgrade, or run fts_db_migrations.py before execution logging.'
+            )
 
     def _dbl_upsert_position_lot(self, row: dict, snapshot_time: Optional[str] = None) -> None:
         if not self.enabled or not self.cursor:
@@ -446,10 +403,19 @@ try:
             self.ensure_lot_callback_tables()
             rid = f"REC-{datetime.now().strftime('%Y%m%d%H%M%S')}-{_uuid.uuid4().hex[:6].upper()}"
             sql = """
-            INSERT INTO dbo.execution_reconciliation_report (reconcile_id, reconcile_time, status, order_mismatch_count, fill_mismatch_count, position_mismatch_count, lot_mismatch_count, cash_diff, summary_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            MERGE dbo.execution_reconciliation_report AS tgt
+            USING (SELECT ? AS reconcile_id) AS src
+            ON tgt.reconcile_id = src.reconcile_id
+            WHEN MATCHED THEN UPDATE SET
+                reconcile_time=?, status=?, order_mismatch_count=?, fill_mismatch_count=?,
+                position_mismatch_count=?, lot_mismatch_count=?, cash_diff=?, summary_json=?
+            WHEN NOT MATCHED THEN INSERT (
+                reconcile_id, reconcile_time, status, order_mismatch_count, fill_mismatch_count,
+                position_mismatch_count, lot_mismatch_count, cash_diff, summary_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
             """
-            self.cursor.execute(sql, rid, datetime.now(), status, len(order_diff), len(fill_diff), len(pos_diff), len(lot_diff), cash_diff, _dblogger_json(summary))
+            vals = [rid, datetime.now(), status, len(order_diff), len(fill_diff), len(pos_diff), len(lot_diff), cash_diff, _dblogger_json(summary)]
+            self.cursor.execute(sql, vals + vals)
             self.conn.commit()
             summary['reconcile_id'] = rid
         return summary

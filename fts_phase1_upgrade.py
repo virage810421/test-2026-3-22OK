@@ -9,7 +9,7 @@ import pandas as pd
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
 from fts_training_orchestrator import TrainingOrchestrator
-from fts_training_prod_readiness import TrainingProdReadinessBuilder
+from fts_training_quality_suite import TrainingProdReadinessBuilder
 from fts_trainer_promotion_policy import TrainerPromotionPolicyBuilder
 from fts_decision_execution_bridge import DecisionExecutionBridge
 from fts_live_safety import LiveSafetyGate

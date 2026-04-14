@@ -17,15 +17,17 @@ EXCLUDE_DIRS = {
 }
 
 WRAPPER_POLICY = {
-    "advanced_chart.py": {"service": "fts_chart_service.py", "mode": "required"},
-    "daily_chip_etl.py": {"service": "fts_etl_daily_chip_service.py", "mode": "required"},
-    "monthly_revenue_simple.py": {"service": "fts_etl_monthly_revenue_service.py", "mode": "required"},
-    "ml_data_generator.py": {"service": "fts_training_data_builder.py", "mode": "required"},
-    "ml_trainer.py": {"service": "fts_trainer_backend.py", "mode": "required"},
-    "screening.py": {"service": "fts_screening_engine.py", "mode": "retired_wrapper_optional"},
-    "master_pipeline.py": {"service": "fts_pipeline.py", "mode": "retired_entry_optional"},
-    "yahoo_csv_to_sql.py": {"service": "fts_fundamentals_etl_mainline.py", "mode": "required"},
-    "formal_trading_system_v83_official_main.py": {"service": "fts_control_tower.py", "mode": "required"},
+    # 舊門牌已退役；健康檢查改為確認「功能本體 service」存在。
+    "advanced_chart.py": {"service": "fts_chart_service.py", "mode": "retired_entry_removed"},
+    "daily_chip_etl.py": {"service": "fts_etl_daily_chip_service.py", "mode": "retired_entry_removed"},
+    "monthly_revenue_simple.py": {"service": "fts_etl_monthly_revenue_service.py", "mode": "retired_entry_removed"},
+    "ml_data_generator.py": {"service": "fts_training_data_builder.py", "mode": "retired_entry_removed"},
+    "ml_trainer.py": {"service": "fts_trainer_backend.py", "mode": "retired_entry_removed"},
+    "screening.py": {"service": "fts_screening_engine.py", "mode": "retired_entry_removed"},
+    "master_pipeline.py": {"service": "fts_pipeline.py", "mode": "retired_entry_removed"},
+    "yahoo_csv_to_sql.py": {"service": "fts_fundamentals_etl_mainline.py", "mode": "retired_entry_removed"},
+    "formal_trading_system.py": {"service": "formal_trading_system_v83_official_main.py", "mode": "retired_entry_removed"},
+    "formal_trading_system_v83_official_main.py": {"service": "fts_control_tower.py", "mode": "official_entry"},
 }
 
 WRAPPER_MAP = {k: v["service"] for k, v in WRAPPER_POLICY.items()}
@@ -54,7 +56,7 @@ TRI_LANE_MODULES = [
     "fts_execution_layer",
     "fts_execution_ledger",
     "fts_execution_state_machine",
-    "fts_callback_event_store",
+    "fts_execution_models",
     "fts_reconciliation_engine",
     "fts_repair_workflow_engine",
     "fts_model_layer",
@@ -65,14 +67,13 @@ SINGLE_ENTRY_EXPECTED_FILES = [
     "formal_trading_system_v83_official_main.py",
     "fts_control_tower.py",
     "launcher.py",
-    "master_pipeline.py",
+    "db_setup.py",
     "db_setup_research_plus.py",
     "run_full_market_percentile_snapshot.py",
     "run_precise_event_calendar_build.py",
     "run_sync_feature_snapshots_to_sql.py",
-    "ml_data_generator.py",
-    "ml_trainer.py",
-    "run_project_healthcheck.py",
+    "fts_training_data_builder.py",
+    "fts_trainer_backend.py",
 ]
 
 REQUIRED_DIRS = ["data", "runtime", "models", "state", "logs"]
@@ -118,7 +119,7 @@ TRI_LANE_CRITICAL_FILES = [
     "fts_execution_ledger.py",
     "fts_execution_state_machine.py",
     "fts_repair_workflow_engine.py",
-    "fts_callback_event_store.py",
+    "fts_execution_models.py",
     "fts_reconciliation_engine.py",
     "fts_live_watchlist_loader.py",
     "fts_live_watchlist_promoter.py",
@@ -227,16 +228,10 @@ class ProjectHealthcheck:
     def _bridge_interface_audit(self) -> Dict[str, object]:
         findings: Dict[str, object] = {}
         try:
-            wrapper_file = self.project_root / "screening.py"
             engine_file = self.project_root / "fts_screening_engine.py"
-            wrapper_params: List[str] = []
+            service_api_file = self.project_root / "fts_service_api.py"
             engine_params: List[str] = []
-            if wrapper_file.exists():
-                tree = ast.parse(wrapper_file.read_text(encoding="utf-8", errors="ignore"))
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.FunctionDef) and node.name == 'inspect_stock':
-                        wrapper_params = [a.arg for a in node.args.args]
-                        break
+            service_api_has_entry = False
             if engine_file.exists():
                 tree = ast.parse(engine_file.read_text(encoding="utf-8", errors="ignore"))
                 for node in ast.walk(tree):
@@ -245,13 +240,15 @@ class ProjectHealthcheck:
                             if isinstance(body, ast.FunctionDef) and body.name == 'inspect_stock':
                                 engine_params = [a.arg for a in body.args.args]
                                 break
-            required_by_wrapper = [p for p in wrapper_params if p not in ('ticker', 'self') and p not in engine_params]
+            if service_api_file.exists():
+                service_api_has_entry = "def inspect_stock" in service_api_file.read_text(encoding="utf-8", errors="ignore")
             findings['screening.inspect_stock'] = {
-                'wrapper_params': wrapper_params,
+                'wrapper_params': [],
                 'engine_params': engine_params,
-                'compatible': len(required_by_wrapper) == 0,
-                'missing_in_engine': required_by_wrapper,
-                'audit_mode': 'ast_static',
+                'service_api_has_entry': service_api_has_entry,
+                'compatible': bool(engine_params) and service_api_has_entry,
+                'missing_in_engine': [],
+                'audit_mode': 'mainline_service_static',
             }
         except Exception as e:
             findings['screening.inspect_stock'] = {'compatible': False, 'error': str(e), 'audit_mode': 'ast_static'}
@@ -267,13 +264,13 @@ class ProjectHealthcheck:
             wrapper_exists = wp.exists()
             service_exists = sp.exists()
 
-            if mode == "required":
+            if mode in {"required", "official_entry"}:
                 linked_ok = wrapper_exists and service_exists
-                status = "required_wrapper" if linked_ok else "missing_required_wrapper"
+                status = "official_entry_ready" if linked_ok else "missing_official_entry_or_service"
             else:
-                linked_ok = service_exists
-                if wrapper_exists:
-                    status = "legacy_wrapper_present"
+                linked_ok = service_exists and not wrapper_exists
+                if wrapper_exists and service_exists:
+                    status = "retired_entry_still_present"
                 elif service_exists:
                     status = mode
                 else:
@@ -339,7 +336,7 @@ class ProjectHealthcheck:
             'tri_lane_orchestrator': "from fts_tri_lane_orchestrator import TriLaneOrchestrator; print(TriLaneOrchestrator().build())",
             'watchlist_promoter': "from fts_live_watchlist_promoter import LiveWatchlistPromoter; print(LiveWatchlistPromoter().build())",
             'watchlist_loader': "from fts_live_watchlist_loader import LiveWatchlistLoader; print(LiveWatchlistLoader().resolve_live_watchlist())",
-            'callback_event_store': "from fts_callback_event_store import CallbackEventStore; print(CallbackEventStore().record({'broker_order_id':'HC1','client_order_id':'HC1','event_type':'fill','status':'FILLED','symbol':'2330.TW','timestamp':'2026-04-12 09:01:00','direction_bucket':'LONG','strategy_bucket':'LONG','approved_pool_type':'LONG','model_scope':'LONG'}))",
+            'callback_event_store': "from fts_execution_models import CallbackEventStore; print(CallbackEventStore().record({'broker_order_id':'HC1','client_order_id':'HC1','event_type':'fill','status':'FILLED','symbol':'2330.TW','timestamp':'2026-04-12 09:01:00','direction_bucket':'LONG','strategy_bucket':'LONG','approved_pool_type':'LONG','model_scope':'LONG'}))",
             'reconciliation_engine': "from fts_reconciliation_engine import ReconciliationEngine; print(ReconciliationEngine().reconcile([], [], [], [], [], [], 0.0, 0.0))",
         }
         for name, code in smoke_map.items():

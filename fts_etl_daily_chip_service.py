@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""v83 主線收編服務：daily_chip_etl.py 的核心 ETL/排程能力。
+"""v83 主線服務：法人籌碼 ETL / 排程能力。
 
-這支檔保留 legacy 引擎邏輯，但主線之後應優先直接 import 本 service。
-原本的 daily_chip_etl.py 現在只保留相容入口(wrapper)。
+daily_chip_etl.py 舊門牌已退役；本檔保留並承接功能本體。
 """
 
 import os

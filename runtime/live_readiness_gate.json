@@ -1,5 +1,5 @@
 {
-  "module_version": "v86_split_readiness",
+  "module_version": "v87_split_readiness_integrity_lane",
   "checks": {
     "mode_is_live": false,
     "broker_is_real": false,
@@ -9,31 +9,89 @@
     "credentials_file_present": false,
     "price_snapshot_present": false,
     "training_artifacts_present": true,
+    "directional_selected_features_present": true,
+    "directional_lane_models_present": true,
     "feature_observability_present": true,
-    "shared_only_live_mode": true,
-    "directional_research_not_live": false
+    "shared_only_live_mode": false,
+    "directional_research_not_live": false,
+    "directional_live_partially_blocked": true,
+    "decision_desk_present": true,
+    "decision_desk_has_fallback_rows": false,
+    "decision_desk_usable_rows_present": true,
+    "decision_desk_execution_eligible_rows_present": true,
+    "decision_desk_incomplete_rows_present": false,
+    "decision_desk_blocked_rows_present": false
   },
-  "payload_check_total": 0,
+  "decision_desk_integrity": {
+    "row_count": 3,
+    "usable_rows": 3,
+    "execution_eligible_rows": 3,
+    "blocked_rows": 0,
+    "incomplete_rows": 0,
+    "integrity_counts": {
+      "ready_for_bridge_sizing": 3
+    },
+    "status": "integrity_applied"
+  },
+  "payload_check_total": 3,
   "payload_check_passed": 0,
-  "payload_checks": [],
-  "hard_blocks": [],
-  "warnings": [],
-  "prelive_ready": true,
+  "payload_checks": [
+    {
+      "ticker": "2330.TW",
+      "passed": false,
+      "ref_price": 1950.0,
+      "qty": 0,
+      "reason": "missing_or_invalid_qty",
+      "tick_size": 5.0,
+      "limit_up": 2145.0,
+      "limit_down": 1755.0,
+      "lot_mode": "board"
+    },
+    {
+      "ticker": "2471.TW",
+      "passed": false,
+      "ref_price": 52.0,
+      "qty": 0,
+      "reason": "missing_or_invalid_qty",
+      "tick_size": 0.1,
+      "limit_up": 57.2,
+      "limit_down": 46.8,
+      "lot_mode": "board"
+    },
+    {
+      "ticker": "2467.TW",
+      "passed": false,
+      "ref_price": 449.0,
+      "qty": 0,
+      "reason": "missing_or_invalid_qty",
+      "tick_size": 0.5,
+      "limit_up": 493.9,
+      "limit_down": 404.1,
+      "lot_mode": "board"
+    }
+  ],
+  "hard_blocks": [
+    "some_order_payloads_fail_tw_market_rules"
+  ],
+  "warnings": [
+    "some_directional_features_not_live_approved"
+  ],
+  "prelive_ready": false,
   "broker_production_ready": false,
   "live_ready": false,
   "score_split": {
-    "research_paper_prelive_score": 4,
+    "research_paper_prelive_score": 5,
     "true_broker_score": 1,
     "executable_score": 4
   },
   "feature_observability": {
     "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
     "payload": {
-      "generated_at": "2026-04-13 15:08:11",
-      "module_version": "v86_feature_observability",
+      "generated_at": "2026-04-14 11:09:25",
+      "module_version": "v87_feature_observability_vetted_live",
       "strict_feature_parity": true,
-      "force_shared_feature_universe": true,
-      "directional_live_enabled": false,
+      "force_shared_feature_universe": false,
+      "directional_live_enabled": true,
       "selected_feature_count": 4,
       "shared_selected_count": 4,
       "directional_selected_counts": {
@@ -47,10 +105,21 @@
         "Score_Gap",
         "Volume_Z20"
       ],
+      "approved_live_directional_features": [],
       "mounted_directional_live_features": [],
-      "blocked_directional_live_features": [],
-      "research_only_features": [],
-      "live_feature_policy": "shared_only",
+      "blocked_directional_live_features": [
+        "MACD_Hist",
+        "Regime_TrendStrength_X_ScoreGap",
+        "Score_Gap",
+        "Volume_Z20"
+      ],
+      "research_only_features": [
+        "MACD_Hist",
+        "Regime_TrendStrength_X_ScoreGap",
+        "Score_Gap",
+        "Volume_Z20"
+      ],
+      "live_feature_policy": "shared_plus_vetted_directional",
       "artifacts": {
         "selected_features.pkl": true,
         "selected_features_long.pkl": true,
@@ -62,5 +131,5 @@
       "status": "observable"
     }
   },
-  "status": "ready"
+  "status": "blocked"
 }

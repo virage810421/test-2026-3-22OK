@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""v83 主線能力模組：advanced_chart.py 的圖表渲染服務。
+"""v83 主線能力模組：正式圖表渲染服務。
 
-原本的 advanced_chart.py 現在只保留相容入口(wrapper)。
+advanced_chart.py 舊門牌已退役；圖表能力保留在本 service。
 """
 
 import yfinance as yf

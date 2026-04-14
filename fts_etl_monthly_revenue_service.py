@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""v83 主線收編服務：monthly_revenue_simple.py 的核心抓取/清洗/寫入能力。
+"""v83 主線服務：月營收抓取 / 清洗 / 寫入能力。
 
-原本的 monthly_revenue_simple.py 現在只保留相容入口(wrapper)。
+monthly_revenue_simple.py 舊門牌已退役；本檔保留並承接功能本體。
 """
 
 import os

@@ -9,7 +9,14 @@ import numpy as np
 
 from config import PARAMS as BASE_PARAMS, TRAINING_POOL
 from fts_service_api import inspect_stock
-from kline_cache import get_smart_klines
+from fts_market_data_service import MarketDataService
+
+_MARKET_DATA_SERVICE = MarketDataService()
+
+
+def get_smart_klines(ticker_list, period: str = '2y'):
+    """主線 K 線入口：舊 kline_cache.py 已退役，直接走 MarketDataService。"""
+    return _MARKET_DATA_SERVICE.get_smart_klines(ticker_list, period=period)
 from param_storage import save_candidate_params
 from fts_research_lab import ResearchLab
 from fts_utils import now_str

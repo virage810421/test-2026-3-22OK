@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 from fts_config import PATHS, CONFIG
 from fts_utils import log
-from fts_task_logs import TaskLogArchiver
+from fts_operations_suite import TaskLogArchiver
 
 class UpstreamOrchestrator:
     def __init__(self):

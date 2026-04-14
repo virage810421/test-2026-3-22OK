@@ -1,11 +1,16 @@
 {
-  "generated_at": "2026-04-13 15:08:13",
+  "generated_at": "2026-04-14 11:09:26",
   "system_name": "正式交易主控版_v83_official_main",
   "mode": "PAPER",
   "broker_type": "paper",
-  "paper_live_safe": true,
-  "status": "live_safety_green",
-  "failures": [],
+  "paper_live_safe": false,
+  "status": "live_safety_blocked",
+  "failures": [
+    {
+      "type": "launch_gate_blocked",
+      "message": "發車前驗證閘門未通過"
+    }
+  ],
   "warnings": [],
   "blocked_orders": [],
   "limits": {

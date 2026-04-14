@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-13 15:08:13",
+  "generated_at": "2026-04-14 11:09:26",
   "mode": "bootstrap",
   "module_version": "v86_level3_control_tower_split_ready",
   "steps": [
@@ -27,7 +27,7 @@
       "script": "run_full_market_percentile_snapshot.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "[15:07:18] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
+      "stdout_tail": "[11:08:25] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json\ncross_sectional_snapshot_ready\nticker_count = 1071",
       "stderr_tail": ""
     },
     {
@@ -35,7 +35,7 @@
       "script": "run_precise_event_calendar_build.py",
       "returncode": 0,
       "args": [],
-      "stdout_tail": "[15:07:19] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
+      "stdout_tail": "[11:08:26] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\n完成： C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json\nevent_calendar_ready\nevent_rows = 3207",
       "stderr_tail": "C:\\test\\test-2026-3-22OK\\fts_event_calendar_service.py:142: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.\n  df = pd.concat([self._revenue_events(), self._earnings_events(), self._dividend_events()], ignore_index=True)"
     },
     {
@@ -49,7 +49,7 @@
   ],
   "daily_status": "control_tower_ready",
   "daily_readiness_split": {
-    "research_paper_prelive_score": 4,
+    "research_paper_prelive_score": 5,
     "true_broker_score": 1,
     "executable_score": 4
   },

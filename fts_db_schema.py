@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable
 
-SCHEMA_VERSION = '20260413_architecture_finish_v2'
+SCHEMA_VERSION = '20260413_architecture_finish_v3_execution_schema_managed'
 
 
 @dataclass(frozen=True)
@@ -81,6 +81,26 @@ CORE_TABLES: tuple[TableSpec, ...] = (
         _c('direction_bucket', 'NVARCHAR(16)'), _c('qty', 'INT'), _c('available_qty', 'INT'), _c('avg_cost', 'DECIMAL(18,4)'), _c('market_price', 'DECIMAL(18,4)'),
         _c('market_value', 'DECIMAL(18,4)'), _c('unrealized_pnl', 'DECIMAL(18,4)'), _c('realized_pnl', 'DECIMAL(18,4)'), _c('strategy_name', 'NVARCHAR(128)'),
         _c('industry', 'NVARCHAR(64)'), _c('note', 'NVARCHAR(MAX)'),
+    )),
+    TableSpec('execution_position_lots', (
+        _c('lot_id', 'NVARCHAR(80)', nullable=False, primary_key=True), _c('snapshot_time', 'DATETIME2'), _c('Ticker SYMBOL', 'NVARCHAR(30)'),
+        _c('direction_bucket', 'NVARCHAR(20)'), _c('status', 'NVARCHAR(30)'), _c('open_qty', 'INT'), _c('remaining_qty', 'INT'),
+        _c('avg_cost', 'FLOAT'), _c('entry_price', 'FLOAT'), _c('market_price', 'FLOAT'), _c('market_value', 'FLOAT'),
+        _c('unrealized_pnl', 'FLOAT'), _c('realized_pnl', 'FLOAT'), _c('entry_time', 'DATETIME2'), _c('close_time', 'DATETIME2'),
+        _c('entry_order_id', 'NVARCHAR(120)'), _c('exit_order_id', 'NVARCHAR(120)'), _c('strategy_name', 'NVARCHAR(120)'),
+        _c('updated_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'), _c('raw_json', 'NVARCHAR(MAX)'),
+    )),
+    TableSpec('execution_broker_callbacks', (
+        _c('callback_id', 'NVARCHAR(120)', nullable=False, primary_key=True), _c('broker_order_id', 'NVARCHAR(120)'), _c('client_order_id', 'NVARCHAR(120)'),
+        _c('event_type', 'NVARCHAR(60)'), _c('status', 'NVARCHAR(60)'), _c('Ticker SYMBOL', 'NVARCHAR(30)'), _c('filled_qty', 'INT'),
+        _c('remaining_qty', 'INT'), _c('avg_fill_price', 'FLOAT'), _c('callback_time', 'DATETIME2'),
+        _c('ingested_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'), _c('raw_json', 'NVARCHAR(MAX)'),
+    )),
+    TableSpec('execution_reconciliation_report', (
+        _c('reconcile_id', 'NVARCHAR(120)', nullable=False, primary_key=True), _c('reconcile_time', 'DATETIME2', nullable=False), _c('status', 'NVARCHAR(60)'),
+        _c('order_mismatch_count', 'INT'), _c('fill_mismatch_count', 'INT'), _c('position_mismatch_count', 'INT'),
+        _c('lot_mismatch_count', 'INT'), _c('cash_diff', 'FLOAT'), _c('summary_json', 'NVARCHAR(MAX)'),
+        _c('created_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'),
     )),
     TableSpec('fundamentals_clean', (
         _c('Ticker SYMBOL', 'VARCHAR(20)', nullable=False, default_sql="''"), _c('資料年月日', 'DATE'), _c('毛利率(%)', 'DECIMAL(10,3)'),

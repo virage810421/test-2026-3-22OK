@@ -17,7 +17,7 @@ from fts_risk_gateway import RiskGateway
 from fts_watchlist_service import WatchlistService
 from fts_market_climate_service import MarketClimateService
 from fts_decision_desk_builder import DecisionDeskBuilder
-from fts_ab_diff_audit import ABDiffAudit
+from fts_admin_suite import ABDiffAudit
 
 
 class ABWaveUpgrade:

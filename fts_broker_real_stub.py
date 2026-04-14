@@ -11,7 +11,7 @@ from fts_models import AccountSnapshot, Fill, Order, OrderSide, OrderStatus, Pos
 from fts_utils import now_str, round_price
 
 try:
-    from fts_callback_event_store import CallbackEventStore  # type: ignore
+    from fts_execution_models import CallbackEventStore  # type: ignore
 except Exception:  # pragma: no cover
     CallbackEventStore = None  # type: ignore
 

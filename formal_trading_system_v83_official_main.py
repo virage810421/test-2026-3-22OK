@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-"""Level-3 full control wrapper.
+"""正式交易主控版 v83 單一入口。
 
-唯一正式入口改由 fts_control_tower.main 接管，
-保留 formal_trading_system_v83_official_main.py 舊門牌，避免外部啟動命令中斷。
+此檔保留為目前正式啟動入口；功能主體由 fts_control_tower.main 接管。
+舊門牌 wrapper 已在「清掉舊門牌 + 保留功能本體」版本中移除。
 """
 
 from fts_control_tower import main

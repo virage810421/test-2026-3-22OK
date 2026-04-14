@@ -23,7 +23,7 @@ except Exception:
     SQLServerExecutionLogger = None
 from fts_live_watchlist_loader import LiveWatchlistLoader
 try:
-    from fts_level3_runtime_loader import build_level3_services
+    from fts_level_runtime import build_level3_services
     _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()
 except Exception:
     _LEVEL3_SERVICES, _LEVEL3_META = ({}, {'status': 'level3_unavailable'})

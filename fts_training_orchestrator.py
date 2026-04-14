@@ -8,6 +8,8 @@ import pandas as pd
 
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
+from fts_training_data_builder import get_dynamic_watchlist, generate_ml_dataset
+from fts_trainer_backend import train_models
 
 
 class TrainingOrchestrator:
@@ -159,27 +161,30 @@ class TrainingOrchestrator:
             "readiness_score": min(score, 90),
         }
 
-    def _run_script(self, script_name: str) -> Dict[str, Any]:
-        target = PATHS.base_dir / script_name
-        if not target.exists():
-            return {"script": script_name, "ok": False, "reason": "missing_script"}
+    def _run_training_component(self, component: str) -> Dict[str, Any]:
+        """直接呼叫主線訓練元件；舊 ml_data_generator.py / ml_trainer.py 門牌已退役。"""
         try:
-            proc = subprocess.run(
-                ["python", str(target)],
-                cwd=str(PATHS.base_dir),
-                capture_output=True,
-                text=True,
-                timeout=int(getattr(CONFIG, "upstream_timeout_seconds", 3600)),
-            )
-            return {
-                "script": script_name,
-                "ok": proc.returncode == 0,
-                "returncode": int(proc.returncode),
-                "stdout_tail": (proc.stdout or "")[-3000:],
-                "stderr_tail": (proc.stderr or "")[-3000:],
-            }
+            if component == "training_data_builder":
+                tickers = get_dynamic_watchlist()
+                df = generate_ml_dataset(tickers)
+                return {
+                    "component": component,
+                    "ok": True,
+                    "entrypoint": "fts_training_data_builder.generate_ml_dataset",
+                    "rows": int(len(df)) if hasattr(df, "__len__") else None,
+                }
+            if component == "trainer_backend":
+                path, payload = train_models()
+                return {
+                    "component": component,
+                    "ok": True,
+                    "entrypoint": "fts_trainer_backend.train_models",
+                    "path": str(path),
+                    "payload_status": payload.get("status") if isinstance(payload, dict) else None,
+                }
+            return {"component": component, "ok": False, "reason": "unknown_component"}
         except Exception as e:
-            return {"script": script_name, "ok": False, "reason": str(e)}
+            return {"component": component, "ok": False, "reason": repr(e)}
 
     def maybe_execute(self) -> Dict[str, Any]:
         actions: List[Dict[str, Any]] = []
@@ -196,11 +201,11 @@ class TrainingOrchestrator:
         else:
             if not dataset["exists"]:
                 log("🧠 TrainingOrchestrator：缺訓練資料，先嘗試生成 ml_training_data.csv")
-                actions.append(self._run_script("ml_data_generator.py"))
+                actions.append(self._run_training_component("training_data_builder"))
                 dataset = self._dataset_summary()
             if dataset["status"] == "ready_for_training":
                 log("🧠 TrainingOrchestrator：訓練資料達標，開始訓練")
-                actions.append(self._run_script("ml_trainer.py"))
+                actions.append(self._run_training_component("trainer_backend"))
                 models = self._model_summary()
             else:
                 actions.append({"stage": "training", "action": "skip", "reason": dataset["status"]})

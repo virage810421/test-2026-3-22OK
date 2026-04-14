@@ -256,6 +256,125 @@ def ensure_core_tables(cursor):
             CONSTRAINT PK_execution_positions_snapshot PRIMARY KEY ([snapshot_time], [Ticker SYMBOL])
         )
     """)
+
+    # -----------------------------------------------------
+    # execution lot/callback/reconciliation schema
+    # 正式收回 db_setup 管理，db_logger 只負責寫入，不再動態建表。
+    # -----------------------------------------------------
+    ensure_table(cursor, "execution_position_lots", """
+        CREATE TABLE dbo.execution_position_lots (
+            [lot_id] NVARCHAR(80) NOT NULL,
+            [snapshot_time] DATETIME2 NULL,
+            [Ticker SYMBOL] NVARCHAR(30) NULL,
+            [direction_bucket] NVARCHAR(20) NULL,
+            [status] NVARCHAR(30) NULL,
+            [open_qty] INT NULL,
+            [remaining_qty] INT NULL,
+            [avg_cost] FLOAT NULL,
+            [entry_price] FLOAT NULL,
+            [market_price] FLOAT NULL,
+            [market_value] FLOAT NULL,
+            [unrealized_pnl] FLOAT NULL,
+            [realized_pnl] FLOAT NULL,
+            [entry_time] DATETIME2 NULL,
+            [close_time] DATETIME2 NULL,
+            [entry_order_id] NVARCHAR(120) NULL,
+            [exit_order_id] NVARCHAR(120) NULL,
+            [strategy_name] NVARCHAR(120) NULL,
+            [updated_at] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+            [raw_json] NVARCHAR(MAX) NULL,
+            CONSTRAINT PK_execution_position_lots PRIMARY KEY ([lot_id])
+        )
+    """)
+    lot_columns = {
+        "lot_id": "NVARCHAR(80) NOT NULL DEFAULT ''",
+        "snapshot_time": "DATETIME2 NULL",
+        "Ticker SYMBOL": "NVARCHAR(30) NULL",
+        "direction_bucket": "NVARCHAR(20) NULL",
+        "status": "NVARCHAR(30) NULL",
+        "open_qty": "INT NULL",
+        "remaining_qty": "INT NULL",
+        "avg_cost": "FLOAT NULL",
+        "entry_price": "FLOAT NULL",
+        "market_price": "FLOAT NULL",
+        "market_value": "FLOAT NULL",
+        "unrealized_pnl": "FLOAT NULL",
+        "realized_pnl": "FLOAT NULL",
+        "entry_time": "DATETIME2 NULL",
+        "close_time": "DATETIME2 NULL",
+        "entry_order_id": "NVARCHAR(120) NULL",
+        "exit_order_id": "NVARCHAR(120) NULL",
+        "strategy_name": "NVARCHAR(120) NULL",
+        "updated_at": "DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()",
+        "raw_json": "NVARCHAR(MAX) NULL",
+    }
+    for col, typ in lot_columns.items():
+        ensure_column(cursor, "execution_position_lots", col, typ)
+
+    ensure_table(cursor, "execution_broker_callbacks", """
+        CREATE TABLE dbo.execution_broker_callbacks (
+            [callback_id] NVARCHAR(120) NOT NULL,
+            [broker_order_id] NVARCHAR(120) NULL,
+            [client_order_id] NVARCHAR(120) NULL,
+            [event_type] NVARCHAR(60) NULL,
+            [status] NVARCHAR(60) NULL,
+            [Ticker SYMBOL] NVARCHAR(30) NULL,
+            [filled_qty] INT NULL,
+            [remaining_qty] INT NULL,
+            [avg_fill_price] FLOAT NULL,
+            [callback_time] DATETIME2 NULL,
+            [ingested_at] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+            [raw_json] NVARCHAR(MAX) NULL,
+            CONSTRAINT PK_execution_broker_callbacks PRIMARY KEY ([callback_id])
+        )
+    """)
+    callback_columns = {
+        "callback_id": "NVARCHAR(120) NOT NULL DEFAULT ''",
+        "broker_order_id": "NVARCHAR(120) NULL",
+        "client_order_id": "NVARCHAR(120) NULL",
+        "event_type": "NVARCHAR(60) NULL",
+        "status": "NVARCHAR(60) NULL",
+        "Ticker SYMBOL": "NVARCHAR(30) NULL",
+        "filled_qty": "INT NULL",
+        "remaining_qty": "INT NULL",
+        "avg_fill_price": "FLOAT NULL",
+        "callback_time": "DATETIME2 NULL",
+        "ingested_at": "DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()",
+        "raw_json": "NVARCHAR(MAX) NULL",
+    }
+    for col, typ in callback_columns.items():
+        ensure_column(cursor, "execution_broker_callbacks", col, typ)
+
+    ensure_table(cursor, "execution_reconciliation_report", """
+        CREATE TABLE dbo.execution_reconciliation_report (
+            [reconcile_id] NVARCHAR(120) NOT NULL,
+            [reconcile_time] DATETIME2 NOT NULL,
+            [status] NVARCHAR(60) NULL,
+            [order_mismatch_count] INT NULL,
+            [fill_mismatch_count] INT NULL,
+            [position_mismatch_count] INT NULL,
+            [lot_mismatch_count] INT NULL,
+            [cash_diff] FLOAT NULL,
+            [summary_json] NVARCHAR(MAX) NULL,
+            [created_at] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+            CONSTRAINT PK_execution_reconciliation_report PRIMARY KEY ([reconcile_id])
+        )
+    """)
+    reconcile_columns = {
+        "reconcile_id": "NVARCHAR(120) NOT NULL DEFAULT ''",
+        "reconcile_time": "DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()",
+        "status": "NVARCHAR(60) NULL",
+        "order_mismatch_count": "INT NULL",
+        "fill_mismatch_count": "INT NULL",
+        "position_mismatch_count": "INT NULL",
+        "lot_mismatch_count": "INT NULL",
+        "cash_diff": "FLOAT NULL",
+        "summary_json": "NVARCHAR(MAX) NULL",
+        "created_at": "DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()",
+    }
+    for col, typ in reconcile_columns.items():
+        ensure_column(cursor, "execution_reconciliation_report", col, typ)
+
     # -----------------------------------------------------
     # fundamentals_clean
     # -----------------------------------------------------
@@ -366,6 +485,13 @@ def ensure_database_exists():
 
 def drop_known_tables(cursor):
     tables_to_drop = [
+        "execution_reconciliation_report",
+        "execution_broker_callbacks",
+        "execution_position_lots",
+        "execution_positions_snapshot",
+        "execution_account_snapshot",
+        "execution_fills",
+        "execution_orders",
         "trade_history",
         "active_positions",
         "strategy_performance",

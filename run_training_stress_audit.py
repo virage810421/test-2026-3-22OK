@@ -1,4 +1,4 @@
-from fts_training_stress_audit import TrainingStressAudit
+from fts_training_quality_suite import TrainingStressAudit
 
 if __name__ == '__main__':
     path, payload = TrainingStressAudit().build()

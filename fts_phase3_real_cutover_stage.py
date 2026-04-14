@@ -4,11 +4,11 @@ from __future__ import annotations
 import json
 
 from fts_broker_api_adapter import ConfigurableBrokerAdapter
-from fts_broker_requirements_contract import BrokerRequirementsContract
+from fts_broker_core import BrokerRequirementsContract
 from fts_config import PATHS
-from fts_live_cutover_plan import LiveCutoverPlanBuilder
-from fts_live_release_gate import LiveReleaseGate
-from fts_operator_approval import OperatorApprovalRegistry
+from fts_live_suite import LiveCutoverPlanBuilder
+from fts_live_suite import LiveReleaseGate
+from fts_operations_suite import OperatorApprovalRegistry
 from fts_real_broker_adapter_blueprint import required_real_broker_fields
 from fts_utils import now_str, log
 

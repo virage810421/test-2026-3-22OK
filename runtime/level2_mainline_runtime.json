@@ -1,28 +1,36 @@
 {
-  "generated_at": "2026-04-13 15:08:11",
-  "module_version": "v86_level2_service_first_hardened",
+  "generated_at": "2026-04-14 11:09:25",
+  "module_version": "v87_level2_service_detached",
   "status": "mainline_ready",
-  "legacy_mode": "service_first",
+  "legacy_mode": "detached_from_level2",
   "legacy_pipeline_enabled": false,
+  "legacy_pipeline": {
+    "stage": "python",
+    "target": "fts_legacy_master_pipeline_impl.main",
+    "ok": true,
+    "mode": "detached",
+    "skipped": true,
+    "note": "legacy decision engine 已自 Level-2 主線拆離；如需單獨研究請手動執行 legacy facade。"
+  },
   "etl": [
     {
-      "stage": "script",
-      "target": "daily_chip_etl.py",
+      "stage": "etl",
+      "target": "fts_etl_daily_chip_service.main_scheduler",
       "ok": true,
-      "mode": "subprocess",
-      "returncode": 0,
+      "mode": "inprocess",
+      "returncode": null,
       "error": "",
-      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 15:08。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 11:09。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
     },
     {
-      "stage": "script",
-      "target": "monthly_revenue_simple.py",
+      "stage": "etl",
+      "target": "fts_etl_monthly_revenue_service.main",
       "ok": true,
-      "mode": "subprocess",
-      "returncode": 0,
+      "mode": "inprocess",
+      "returncode": null,
       "error": "",
       "stdout_tail": "==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-03\n✅ 月營收筆數：1052\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1052 筆\n⏳ 已寫入 200 筆...\n⏳ 已寫入 400 筆...\n⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n✅ 全部完成",
       "stderr_tail": "",
@@ -30,30 +38,23 @@
       "skipped": false
     },
     {
-      "stage": "script",
-      "target": "yahoo_csv_to_sql.py",
+      "stage": "etl",
+      "target": "fts_fundamentals_etl_mainline.main",
       "ok": true,
-      "mode": "subprocess",
-      "returncode": 0,
+      "mode": "inprocess",
+      "returncode": null,
       "error": "",
-      "stdout_tail": "[15:08:11] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json\n[15:08:11] ✅ yahoo_csv_to_sql 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
-      "stderr_tail": "C:\\test\\test-2026-3-22OK\\yahoo_csv_to_sql.py:41: DeprecationWarning: yahoo_csv_to_sql.py 已退役為 legacy facade；新主線請改用 fts_fundamentals_etl_mainline。\n  raise SystemExit(main())",
+      "stdout_tail": "[11:09:25] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
     }
   ],
-  "legacy_pipeline": {
-    "stage": "python",
-    "target": "fts_legacy_master_pipeline_impl.main",
-    "ok": true,
-    "mode": "inprocess",
-    "returncode": null,
-    "error": "",
-    "stdout_tail": "",
-    "stderr_tail": "",
-    "seconds": 0.0,
-    "skipped": true
-  },
+  "service_modules": [
+    "fts_etl_daily_chip_service.main_scheduler",
+    "fts_etl_monthly_revenue_service.main",
+    "fts_fundamentals_etl_mainline.main"
+  ],
   "decision_csv": "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
   "model_dir": "C:\\test\\test-2026-3-22OK\\models",
   "boundary_status": {

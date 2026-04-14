@@ -20,17 +20,19 @@ from fts_pipeline import run_level2_mainline
 from fts_live_readiness_gate import LiveReadinessGate
 from fts_live_safety import LiveSafetyGate
 from fts_broker_approval import BrokerApprovalGate
-from fts_submission_gate import SubmissionContractGate
-from fts_validation_suite import ValidationSuiteBuilder
+from fts_admin_suite import SubmissionContractGate
+from fts_project_quality_suite import ValidationSuiteBuilder
 from fts_model_gate import ModelVersionRegistry, ModelSelectionGate
 from fts_gatekeeper import LaunchGatekeeper
-from fts_live_release_gate import LiveReleaseGate
-from fts_operator_approval import OperatorApprovalRegistry
+from fts_live_suite import LiveReleaseGate
+from fts_operations_suite import OperatorApprovalRegistry
 from fts_recovery_engine import RecoveryEngine
-from fts_recovery_validation import RecoveryValidationBuilder
+from fts_project_quality_suite import RecoveryValidationBuilder
 from fts_reconciliation_engine import ReconciliationEngine
 from fts_tri_lane_orchestrator import TriLaneOrchestrator
 from fts_prelive_runtime import write_json
+from fts_training_data_builder import get_dynamic_watchlist, generate_ml_dataset
+from fts_trainer_backend import train_models
 
 RUNTIME_DIR = PATHS.runtime_dir
 
@@ -267,11 +269,61 @@ def run_train() -> dict[str, Any]:
     log('🚀 啟動 正式交易主控版_v83_official_main')
     log('🧭 模式：TRAIN')
     log('=' * 72)
-    steps = [_call_script('ml_data_generator.py', allow_missing=True), _call_script('ml_trainer.py', allow_missing=True)]
+
+    steps: list[dict[str, Any]] = []
+    try:
+        tickers = get_dynamic_watchlist()
+        df = generate_ml_dataset(tickers)
+        steps.append({
+            'stage': 'training_data_builder',
+            'status': 'ok',
+            'rows': int(len(df)) if hasattr(df, '__len__') else None,
+            'entrypoint': 'fts_training_data_builder.generate_ml_dataset',
+        })
+    except Exception as exc:
+        steps.append({
+            'stage': 'training_data_builder',
+            'status': 'error',
+            'error': repr(exc),
+            'entrypoint': 'fts_training_data_builder.generate_ml_dataset',
+        })
+
+    try:
+        trainer_path, trainer_payload = train_models()
+        steps.append({
+            'stage': 'trainer_backend',
+            'status': 'ok',
+            'path': str(trainer_path),
+            'payload_status': trainer_payload.get('status') if isinstance(trainer_payload, dict) else None,
+            'entrypoint': 'fts_trainer_backend.train_models',
+        })
+    except Exception as exc:
+        steps.append({
+            'stage': 'trainer_backend',
+            'status': 'error',
+            'error': repr(exc),
+            'entrypoint': 'fts_trainer_backend.train_models',
+        })
+
     tri_lane_path, tri_lane_payload = _call_builder_result(TriLaneOrchestrator(), 'build', fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json')
-    payload = {'generated_at': now_str(), 'mode': 'train', 'module_version': 'v83_level3_control_tower_integrated', 'outputs': {'steps': steps, 'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload}}, 'status': 'train_ready'}
+    hard_failed = [s for s in steps if s.get('status') == 'error']
+    payload = {
+        'generated_at': now_str(),
+        'mode': 'train',
+        'module_version': 'v87_clean_old_doors_mainline_train',
+        'outputs': {
+            'steps': steps,
+            'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload},
+        },
+        'status': 'train_ready' if not hard_failed else 'train_partial',
+    }
     _write_json('formal_trading_system_v83_train.json', payload)
-    _write_json('training_orchestrator.json', {'generated_at': now_str(), 'status': 'train_invoked_via_control_tower'})
+    _write_json('training_orchestrator.json', {
+        'generated_at': now_str(),
+        'status': 'train_invoked_via_control_tower',
+        'entrypoints': ['fts_training_data_builder.generate_ml_dataset', 'fts_trainer_backend.train_models'],
+        'steps': steps,
+    })
     return payload
 
 

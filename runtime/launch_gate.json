@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-04-13 15:08:13",
+  "generated_at": "2026-04-14 11:09:26",
   "system_name": "正式交易主控版_v83_official_main",
-  "go_for_execution": true,
-  "failures": [],
-  "warnings": [
+  "go_for_execution": false,
+  "failures": [
     {
-      "type": "empty_decision_after_normalize",
+      "type": "decision_action_missing",
       "count": 1,
-      "items": [],
-      "message": "本輪沒有可執行訊號，視為安全 no-op，不阻擋主控完成"
-    },
+      "items": []
+    }
+  ],
+  "warnings": [
     {
       "type": "zero_signal",
       "count": 1,
@@ -17,8 +17,8 @@
     }
   ],
   "summary": {
-    "failure_count": 0,
-    "warning_count": 2,
+    "failure_count": 1,
+    "warning_count": 1,
     "signal_count": 0
   }
 }

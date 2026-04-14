@@ -685,3 +685,39 @@
 [15:08:13] 🧾 Broker Approval Gate | go_for_broker_submission=True | requires_explicit_approval=False | failures=0 | warnings=0
 [15:08:13] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
 [15:08:13] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[10:45:01] ========================================================================
+[10:45:01] 🚀 啟動 正式交易主控版_v83_official_main
+[10:45:01] 🧭 模式：DAILY
+[10:45:01] ========================================================================
+[10:45:43] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[10:45:45] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[10:45:49] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[10:45:49] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[10:45:50] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[10:45:50] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[10:45:50] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[10:45:50] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[10:45:50] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[10:45:53] ========================================================================
+[10:45:53] 🚀 啟動 正式交易主控版_v83_official_main
+[10:45:53] 🧭 模式：TRAIN
+[10:45:53] ========================================================================
+[10:54:06] ========================================================================
+[10:54:06] 🚀 啟動 正式交易主控版_v83_official_main
+[10:54:06] 🧭 模式：BOOTSTRAP
+[10:54:06] ========================================================================
+[11:08:25] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[11:08:26] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:08:31] ========================================================================
+[11:08:31] 🚀 啟動 正式交易主控版_v83_official_main
+[11:08:31] 🧭 模式：DAILY
+[11:08:31] ========================================================================
+[11:09:18] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[11:09:20] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[11:09:25] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[11:09:25] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[11:09:26] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[11:09:26] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[11:09:26] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[11:09:26] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[11:09:26] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1

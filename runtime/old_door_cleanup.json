@@ -1,0 +1,81 @@
+{
+  "apply": true,
+  "policy": "clean_old_doors_keep_function_body",
+  "retired_old_doors": [
+    "advanced_chart.py",
+    "daily_chip_etl.py",
+    "monthly_revenue_simple.py",
+    "yahoo_csv_to_sql.py",
+    "ml_data_generator.py",
+    "ml_trainer.py",
+    "formal_trading_system.py",
+    "kline_cache.py",
+    "screening.py",
+    "strategies.py",
+    "master_pipeline.py"
+  ],
+  "function_body_owners": {
+    "advanced_chart.py": "fts_chart_service.py",
+    "daily_chip_etl.py": "fts_etl_daily_chip_service.py",
+    "monthly_revenue_simple.py": "fts_etl_monthly_revenue_service.py",
+    "yahoo_csv_to_sql.py": "fts_fundamentals_etl_mainline.py",
+    "ml_data_generator.py": "fts_training_data_builder.py",
+    "ml_trainer.py": "fts_trainer_backend.py",
+    "formal_trading_system.py": "formal_trading_system_v83_official_main.py",
+    "kline_cache.py": "fts_market_data_service.py",
+    "screening.py": "fts_screening_engine.py / fts_service_api.py",
+    "strategies.py": "fts_signal_primitives.py / fts_screening_engine.py",
+    "master_pipeline.py": "fts_pipeline.py / fts_control_tower.py"
+  },
+  "planned": [],
+  "removed": [
+    {
+      "file": "advanced_chart.py",
+      "function_body_owner": "fts_chart_service.py"
+    },
+    {
+      "file": "daily_chip_etl.py",
+      "function_body_owner": "fts_etl_daily_chip_service.py"
+    },
+    {
+      "file": "monthly_revenue_simple.py",
+      "function_body_owner": "fts_etl_monthly_revenue_service.py"
+    },
+    {
+      "file": "yahoo_csv_to_sql.py",
+      "function_body_owner": "fts_fundamentals_etl_mainline.py"
+    },
+    {
+      "file": "ml_data_generator.py",
+      "function_body_owner": "fts_training_data_builder.py"
+    },
+    {
+      "file": "ml_trainer.py",
+      "function_body_owner": "fts_trainer_backend.py"
+    },
+    {
+      "file": "formal_trading_system.py",
+      "function_body_owner": "formal_trading_system_v83_official_main.py"
+    },
+    {
+      "file": "kline_cache.py",
+      "function_body_owner": "fts_market_data_service.py"
+    }
+  ],
+  "missing": [
+    {
+      "file": "screening.py",
+      "function_body_owner": "fts_screening_engine.py / fts_service_api.py"
+    },
+    {
+      "file": "strategies.py",
+      "function_body_owner": "fts_signal_primitives.py / fts_screening_engine.py"
+    },
+    {
+      "file": "master_pipeline.py",
+      "function_body_owner": "fts_pipeline.py / fts_control_tower.py"
+    }
+  ],
+  "blocked": [],
+  "status": "applied"
+}

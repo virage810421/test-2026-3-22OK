@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from fts_target95_push import Target95Push
+from fts_target95_suite import Target95Push
 from fts_config import PATHS
 
 class ProgressTracker:

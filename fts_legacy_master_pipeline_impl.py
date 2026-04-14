@@ -16,6 +16,9 @@ from fts_service_api import add_chip_data, extract_ai_features, inspect_stock, n
 from portfolio_risk import apply_portfolio_risk
 from system_guard import run_system_guard
 from fts_sql_table_name_map import sql_table
+from fts_etl_daily_chip_service import main_scheduler as run_daily_chip_mainline
+from fts_training_data_builder import get_dynamic_watchlist as get_training_universe, generate_ml_dataset
+from fts_trainer_backend import train_models
 try:
     from fts_model_layer import evaluate_exit_signal
 except Exception:
@@ -72,6 +75,38 @@ def run_script(script_name, retries=2, timeout=900):
                 log(e.stderr)
         time.sleep(2)
     return False
+
+
+def run_daily_chip_service() -> bool:
+    """舊 daily_chip_etl.py 門牌已退役；直接呼叫法人籌碼主線服務。"""
+    try:
+        result = run_daily_chip_mainline()
+        return result is not False
+    except Exception as exc:
+        log(f"❌ 法人籌碼主線服務失敗：{exc}")
+        return False
+
+
+def run_training_data_builder() -> bool:
+    """舊 ml_data_generator.py 門牌已退役；直接產生 ml_training_data.csv。"""
+    try:
+        tickers = get_training_universe()
+        df = generate_ml_dataset(tickers)
+        return df is not None
+    except Exception as exc:
+        log(f"❌ 訓練資料主線服務失敗：{exc}")
+        return False
+
+
+def run_trainer_backend() -> bool:
+    """舊 ml_trainer.py 門牌已退役；直接呼叫 trainer backend。"""
+    try:
+        path, payload = train_models()
+        log(f"🧠 trainer backend report: {path} | status={payload.get('status') if isinstance(payload, dict) else 'unknown'}")
+        return True
+    except Exception as exc:
+        log(f"❌ 模型訓練主線服務失敗：{exc}")
+        return False
 
 
 def validate_outputs():
@@ -448,16 +483,16 @@ def main():
         log("\n⏳ 階段：資料更新 (⚠️ 今日為週末休市，跳過 API 爬蟲)")
     else:
         log("\n⏳ 階段：資料更新")
-        if not run_script("daily_chip_etl.py"):
+        if not run_daily_chip_service():
             log("🛑 資料庫更新失敗，強制中斷！")
             generate_report(start_time, "FAILED")
             return
 
     if should_retrain():
         log("\n🧠 階段：重訓 AI 模型")
-        for script, desc in [("ml_data_generator.py", "特徵生成"), ("ml_trainer.py", "模型訓練")]:
+        for runner, desc in [(run_training_data_builder, "特徵生成"), (run_trainer_backend, "模型訓練")]:
             log(f"\n⏳ 階段：{desc}")
-            if not run_script(script):
+            if not runner():
                 log("🛑 AI 訓練異常，管線中斷！")
                 generate_report(start_time, "FAILED")
                 return

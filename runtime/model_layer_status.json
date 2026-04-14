@@ -2,6 +2,11 @@
   "selected_features_present": true,
   "selected_feature_count": 4,
   "selected_features_ready": false,
+  "effective_directional_feature_counts": {
+    "LONG": 4,
+    "SHORT": 4,
+    "RANGE": 4
+  },
   "selected_features_min_required": 6,
   "loaded_regimes": [
     "區間盤整",
@@ -21,5 +26,10 @@
     "RANGE": 4
   },
   "status": "model_layer_degraded",
-  "allow_heuristic_model_fallback": false
+  "allow_heuristic_model_fallback": false,
+  "exit_model_workflow_enabled": true,
+  "exit_model_primary": true,
+  "exit_selected_feature_count": 0,
+  "exit_selected_features_ready": false,
+  "exit_models_loaded": []
 }

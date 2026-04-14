@@ -7,8 +7,8 @@ from pathlib import Path
 from fts_cross_sectional_percentile_service import CrossSectionalPercentileService
 from fts_event_calendar_service import EventCalendarService
 from fts_feature_stack_audit import FeatureStackAudit
-from fts_project_completion_audit import ProjectCompletionAudit
-from fts_task_completion_registry import TaskCompletionRegistry
+from fts_project_quality_suite import ProjectCompletionAudit
+from fts_operations_suite import TaskCompletionRegistry
 
 try:
     from fts_config import PATHS  # type: ignore

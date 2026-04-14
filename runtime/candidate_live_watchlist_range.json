@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-13 15:08:13",
+  "generated_at": "2026-04-14 11:09:26",
   "lane": "RANGE",
   "items": [
     {
@@ -108,7 +108,7 @@
     }
   ],
   "count": 8,
-  "promotion_batch_id": "2026-04-13 15:08:13",
+  "promotion_batch_id": "2026-04-14 11:09:26",
   "provisional_count": 0,
   "approved_count": 8,
   "readiness_status": "approved_only"

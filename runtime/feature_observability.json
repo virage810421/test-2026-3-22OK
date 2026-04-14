@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-13 15:08:11",
-  "module_version": "v86_feature_observability",
+  "generated_at": "2026-04-14 11:09:25",
+  "module_version": "v87_feature_observability_vetted_live",
   "strict_feature_parity": true,
-  "force_shared_feature_universe": true,
-  "directional_live_enabled": false,
+  "force_shared_feature_universe": false,
+  "directional_live_enabled": true,
   "selected_feature_count": 4,
   "shared_selected_count": 4,
   "directional_selected_counts": {
@@ -17,10 +17,21 @@
     "Score_Gap",
     "Volume_Z20"
   ],
+  "approved_live_directional_features": [],
   "mounted_directional_live_features": [],
-  "blocked_directional_live_features": [],
-  "research_only_features": [],
-  "live_feature_policy": "shared_only",
+  "blocked_directional_live_features": [
+    "MACD_Hist",
+    "Regime_TrendStrength_X_ScoreGap",
+    "Score_Gap",
+    "Volume_Z20"
+  ],
+  "research_only_features": [
+    "MACD_Hist",
+    "Regime_TrendStrength_X_ScoreGap",
+    "Score_Gap",
+    "Volume_Z20"
+  ],
+  "live_feature_policy": "shared_plus_vetted_directional",
   "artifacts": {
     "selected_features.pkl": true,
     "selected_features_long.pkl": true,
