@@ -9,6 +9,11 @@ from typing import Any
 import joblib
 
 try:
+    from config import PARAMS
+except Exception:
+    PARAMS = {}
+
+try:
     from fts_prelive_runtime import PATHS, now_str, write_json
 except Exception:
     from pathlib import Path
@@ -32,6 +37,15 @@ REPORT = Path(getattr(PATHS, 'runtime_dir', Path('runtime'))) / 'directional_art
 def bootstrap_directional_artifacts(force: bool = False) -> tuple[str, dict[str, Any]]:
     model_dir = Path(getattr(PATHS, 'model_dir', Path('models')))
     model_dir.mkdir(parents=True, exist_ok=True)
+    if bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True)) and not bool(PARAMS.get('DIRECTIONAL_BOOTSTRAP_FORCE_SHARED', False)):
+        payload = {
+            'generated_at': now_str(),
+            'status': 'blocked_shared_bootstrap_forbidden',
+            'reason': 'v89 requires independently trained lane artifacts; shared model copy is disabled.',
+            'lanes': {},
+        }
+        write_json(REPORT, payload)
+        return str(REPORT), payload
     shared_feat = model_dir / 'selected_features.pkl'
     if not shared_feat.exists():
         payload = {'generated_at': now_str(), 'status': 'shared_selected_features_missing', 'lanes': {}}
@@ -41,7 +55,7 @@ def bootstrap_directional_artifacts(force: bool = False) -> tuple[str, dict[str,
         shared_features = [str(x) for x in joblib.load(shared_feat) if str(x).strip()]
     except Exception:
         shared_features = []
-    payload = {'generated_at': now_str(), 'status': 'directional_artifacts_bootstrapped', 'lanes': {}}
+    payload = {'generated_at': now_str(), 'status': 'directional_artifacts_bootstrapped_research_only', 'lanes': {}}
     for lane in LANES:
         lane_info = {'features': False, 'models': []}
         lane_feat = model_dir / f'selected_features_{lane.lower()}.pkl'

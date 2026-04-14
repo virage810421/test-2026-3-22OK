@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-14 23:27:59",
+  "generated_at": "2026-04-15 00:06:46",
   "lane": "SHORT",
   "items": [
     {
@@ -108,7 +108,7 @@
     }
   ],
   "count": 8,
-  "promotion_batch_id": "2026-04-14 23:27:59",
+  "promotion_batch_id": "2026-04-15 00:06:46",
   "provisional_count": 0,
   "approved_count": 8,
   "readiness_status": "approved_only"

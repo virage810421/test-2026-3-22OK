@@ -35,6 +35,10 @@ RETIRED_PY_FILES = [
     "_clean_old_doors_manifest.py",
     "_patch_manifest_¼[║cª¼º└.py",
     "_patch_manifest_│]¡pñú¿}¡╫º∩5.py",
+    # v89: patch manifests are no longer runtime code; keep history in ZIP archive,
+    # but remove from active project root when the cleanup guard says they are unreferenced.
+    "_patch_manifest_#U67b6#U69cb#U6536#U5c3e.py",
+    "_patch_manifest_#U8a2d#U8a08#U4e0d#U826f#U4fee#U65395.py",
     "alert_manager.py",
     "alpha_miner.py",
     "apply_clean_old_doors.py",

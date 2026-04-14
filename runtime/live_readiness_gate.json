@@ -91,7 +91,8 @@
     "some_order_payloads_fail_tw_market_rules"
   ],
   "warnings": [
-    "some_directional_features_not_live_approved"
+    "some_directional_features_not_live_approved",
+    "real_broker_five_red_lights_not_green_live_forbidden"
   ],
   "prelive_ready": false,
   "broker_production_ready": false,
@@ -105,7 +106,7 @@
   "feature_observability": {
     "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
     "payload": {
-      "generated_at": "2026-04-14 23:27:59",
+      "generated_at": "2026-04-15 00:06:45",
       "module_version": "v87_feature_observability_vetted_live",
       "strict_feature_parity": true,
       "force_shared_feature_universe": false,

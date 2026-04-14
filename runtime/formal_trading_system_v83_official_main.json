@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-14 23:27:59",
+  "generated_at": "2026-04-15 00:06:46",
   "mode": "daily",
   "module_version": "v20260414_prebroker95_closure_bootstrap_cli",
   "outputs": {
@@ -8,7 +8,7 @@
       "payload": {
         "project_root": "C:\\test\\test-2026-3-22OK",
         "summary": {
-          "python_files_total": 235,
+          "python_files_total": 236,
           "compile_failures": 0,
           "core_import_failures": 0,
           "tri_lane_import_failures": 0,
@@ -48,6 +48,11 @@
           },
           {
             "file": "_legacy_retired\\strategies.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "_patch_manifest_v89_formal_hardening.py",
             "ok": true,
             "error": ""
           },
@@ -1202,119 +1207,119 @@
             "module": "formal_trading_system_v83_official_main",
             "ok": true,
             "error": "",
-            "seconds": 2.101,
+            "seconds": 2.081,
             "severity": "hard"
           },
           {
             "module": "fts_fundamentals_etl_mainline",
             "ok": true,
             "error": "",
-            "seconds": 0.901,
+            "seconds": 0.773,
             "severity": "hard"
           },
           {
             "module": "fts_training_governance_mainline",
             "ok": true,
             "error": "",
-            "seconds": 1.916,
+            "seconds": 1.97,
             "severity": "hard"
           },
           {
             "module": "fts_feature_service",
             "ok": true,
             "error": "",
-            "seconds": 0.525,
+            "seconds": 0.408,
             "severity": "hard"
           },
           {
             "module": "fts_screening_engine",
             "ok": true,
             "error": "",
-            "seconds": 1.379,
+            "seconds": 1.099,
             "severity": "hard"
           },
           {
             "module": "fts_cross_sectional_percentile_service",
             "ok": true,
             "error": "",
-            "seconds": 1.395,
+            "seconds": 0.825,
             "severity": "hard"
           },
           {
             "module": "fts_event_calendar_service",
             "ok": true,
             "error": "",
-            "seconds": 0.625,
+            "seconds": 0.405,
             "severity": "hard"
           },
           {
             "module": "fts_decision_execution_bridge",
             "ok": true,
             "error": "",
-            "seconds": 0.562,
+            "seconds": 0.413,
             "severity": "hard"
           },
           {
             "module": "fts_broker_contract_audit",
             "ok": true,
             "error": "",
-            "seconds": 0.667,
+            "seconds": 0.407,
             "severity": "hard"
           },
           {
             "module": "fts_callback_ingestion_service",
             "ok": true,
             "error": "",
-            "seconds": 0.557,
+            "seconds": 0.41,
             "severity": "hard"
           },
           {
             "module": "fts_reconciliation_runtime",
             "ok": true,
             "error": "",
-            "seconds": 0.589,
+            "seconds": 0.435,
             "severity": "hard"
           },
           {
             "module": "fts_restart_recovery_service",
             "ok": true,
             "error": "",
-            "seconds": 0.607,
+            "seconds": 0.394,
             "severity": "hard"
           },
           {
             "module": "fts_exit_model_artifact_bootstrap",
             "ok": true,
             "error": "",
-            "seconds": 0.583,
+            "seconds": 0.46,
             "severity": "hard"
           },
           {
             "module": "fts_portfolio_backtester",
             "ok": true,
             "error": "",
-            "seconds": 0.561,
+            "seconds": 0.423,
             "severity": "hard"
           },
           {
             "module": "fts_prebroker_95_audit",
             "ok": true,
             "error": "",
-            "seconds": 0.587,
+            "seconds": 0.424,
             "severity": "hard"
           },
           {
             "module": "model_governance",
             "ok": true,
             "error": "",
-            "seconds": 0.115,
+            "seconds": 0.074,
             "severity": "hard"
           },
           {
             "module": "db_setup",
             "ok": true,
             "error": "",
-            "seconds": 0.641,
+            "seconds": 0.576,
             "severity": "hard"
           }
         ],
@@ -1323,84 +1328,84 @@
             "module": "fts_tri_lane_orchestrator",
             "ok": true,
             "error": "",
-            "seconds": 0.82,
+            "seconds": 0.574,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_promoter",
             "ok": true,
             "error": "",
-            "seconds": 0.603,
+            "seconds": 0.405,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_loader",
             "ok": true,
             "error": "",
-            "seconds": 0.608,
+            "seconds": 0.407,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_registry",
             "ok": true,
             "error": "",
-            "seconds": 0.594,
+            "seconds": 0.403,
             "severity": "hard"
           },
           {
             "module": "fts_execution_layer",
             "ok": true,
             "error": "",
-            "seconds": 0.608,
+            "seconds": 0.413,
             "severity": "hard"
           },
           {
             "module": "fts_execution_ledger",
             "ok": true,
             "error": "",
-            "seconds": 0.794,
+            "seconds": 0.558,
             "severity": "hard"
           },
           {
             "module": "fts_execution_state_machine",
             "ok": true,
             "error": "",
-            "seconds": 0.091,
+            "seconds": 0.068,
             "severity": "hard"
           },
           {
             "module": "fts_execution_models",
             "ok": true,
             "error": "",
-            "seconds": 0.82,
+            "seconds": 0.596,
             "severity": "hard"
           },
           {
             "module": "fts_reconciliation_engine",
             "ok": true,
             "error": "",
-            "seconds": 0.774,
+            "seconds": 0.563,
             "severity": "hard"
           },
           {
             "module": "fts_repair_workflow_engine",
             "ok": true,
             "error": "",
-            "seconds": 0.763,
+            "seconds": 0.546,
             "severity": "hard"
           },
           {
             "module": "fts_model_layer",
             "ok": true,
             "error": "",
-            "seconds": 1.925,
+            "seconds": 1.595,
             "severity": "hard"
           },
           {
             "module": "live_paper_trading",
             "ok": true,
             "error": "",
-            "seconds": 2.722,
+            "seconds": 2.16,
             "severity": "hard"
           }
         ],
@@ -1421,6 +1426,7 @@
             "fts_model_layer",
             "fts_strategy_policy_layer"
           ],
+          "_patch_manifest_v89_formal_hardening.py": [],
           "_patch_manifest_架構收尾.py": [],
           "_patch_manifest_設計不良修改5.py": [],
           "absorbed_references\\advanced_chart1_original\\advanced_chart.py": [
@@ -1814,6 +1820,7 @@
             "fts_db_engine"
           ],
           "fts_directional_artifact_bootstrap.py": [
+            "config",
             "fts_prelive_runtime"
           ],
           "fts_etl_daily_chip_service.py": [
@@ -2618,36 +2625,36 @@
         "tri_lane_smoke": {
           "tri_lane_orchestrator": {
             "ok": true,
-            "seconds": 0.878,
+            "seconds": 0.703,
             "stdout_tail": "2OK\\\\models\\\\selected_features_range.pkl', 'model_count': 3}, 'candidate_filter': {'status': 'ready', 'count': 3}, 'callback_pipeline': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json'}, 'state_machine': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\state\\\\directional_execution_state_machine.json', 'count': 0}, 'ledger': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\execution_ledger_summary.json', 'event_count': 0}, 'reconciliation': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', 'issue_count': 0}, 'repair_execution': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'action_count': 0}}}, 'tri_lane_execution_status': {'LONG': {'ready_stages': 9, 'fallback_stages': []}, 'SHORT': {'ready_stages': 9, 'fallback_stages': []}, 'RANGE': {'ready_stages': 9, 'fallback_stages': []}}, 'deep_full_split_complete': True})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "watchlist_promoter": {
             "ok": true,
-            "seconds": 0.614,
-            "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-14 23:27:32', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
+            "seconds": 0.477,
+            "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-15 00:06:19', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "watchlist_loader": {
             "ok": true,
-            "seconds": 0.68,
+            "seconds": 0.483,
             "stdout_tail": "approved', 'optimizer_penalty': 0.05, 'optimized_score': 1.1527848674857768}, {'ticker': '2002.TW', 'lane': 'RANGE', 'promotion_score': 1.2023287513734435, 'oot_ev': 0.0006741379310344, 'hit_rate': 0.0482758620689655, 'sector': '未知', 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'approval_reason': 'scoreboard_promotion', 'provisional': False, 'readiness_tier': 'approved', 'optimizer_penalty': 0.1, 'optimized_score': 1.1023287513734434}]}, 'lane_readiness': {'LONG': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'SHORT': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'RANGE': {'count': 3, 'approved_count': 3, 'provisional_count': 0, 'status': 'approved_only'}}, 'total_count': 7, 'provisional_item_count': 0, 'approved_item_count': 7, 'sector_counts': {'未知::LONG': 2, '未知::SHORT': 2, '未知::RANGE': 3}, 'net_exposure_proxy': {'LONG': 2, 'SHORT': 2, 'RANGE': 3}, 'min_counts': {'LONG': 2, 'SHORT': 2, 'RANGE': 2}})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "callback_event_store": {
             "ok": true,
-            "seconds": 0.913,
-            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-14 23:27:34', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
+            "seconds": 0.617,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-15 00:06:20', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "reconciliation_engine": {
             "ok": true,
-            "seconds": 0.903,
-            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-14 23:27:35', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-14 23:27:35', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
+            "seconds": 0.566,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-15 00:06:21', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-15 00:06:21', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
             "stderr_tail": "",
             "returncode": 0
           }
@@ -2687,10 +2694,10 @@
         },
         "exception_policy_audit": {
           "summary": {
-            "files_total": 178,
-            "except_exception_total": 560,
-            "pass_total": 169,
-            "fallback_token_total": 252,
+            "files_total": 179,
+            "except_exception_total": 564,
+            "pass_total": 171,
+            "fallback_token_total": 253,
             "core_unclassified_except": [],
             "core_policy_ready": true
           },
@@ -2963,7 +2970,7 @@
             },
             "fts_directional_artifact_bootstrap.py": {
               "core_file": false,
-              "except_exception": 3,
+              "except_exception": 4,
               "pass": 0,
               "fallback": 0,
               "unclassified_core_except_lines": []
@@ -3154,7 +3161,7 @@
               "core_file": true,
               "except_exception": 14,
               "pass": 0,
-              "fallback": 36,
+              "fallback": 38,
               "unclassified_core_except_lines": []
             },
             "fts_operations_suite.py": {
@@ -3348,7 +3355,7 @@
             },
             "fts_sql_chinese_column_views.py": {
               "core_file": false,
-              "except_exception": 2,
+              "except_exception": 6,
               "pass": 0,
               "fallback": 0,
               "unclassified_core_except_lines": []
@@ -3404,9 +3411,9 @@
             },
             "fts_trainer_backend.py": {
               "core_file": false,
-              "except_exception": 2,
+              "except_exception": 1,
               "pass": 0,
-              "fallback": 4,
+              "fallback": 2,
               "unclassified_core_except_lines": []
             },
             "fts_trainer_promotion_policy.py": {
@@ -3591,6 +3598,13 @@
               "fallback": 0,
               "unclassified_core_except_lines": []
             },
+            "_patch_manifest_v89_formal_hardening.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
             "_patch_manifest_設計不良修改5.py": {
               "core_file": false,
               "except_exception": 0,
@@ -3601,7 +3615,7 @@
             "圖形化介面.py": {
               "core_file": false,
               "except_exception": 2,
-              "pass": 1,
+              "pass": 3,
               "fallback": 1,
               "unclassified_core_except_lines": []
             },
@@ -3633,7 +3647,7 @@
     "level2_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\level2_mainline_runtime.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:45",
         "module_version": "v87_level2_service_detached",
         "status": "mainline_ready",
         "legacy_mode": "detached_from_level2",
@@ -3654,7 +3668,7 @@
             "mode": "inprocess",
             "returncode": null,
             "error": "",
-            "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：今天已成功執行過。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+            "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 00:06。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -3678,7 +3692,7 @@
             "mode": "inprocess",
             "returncode": null,
             "error": "",
-            "stdout_tail": "[23:27:59] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+            "stdout_tail": "[00:06:45] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -3701,7 +3715,7 @@
     "training_governance_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "module_version": "v20260414_training_governance_truthful_live_metrics",
         "system_name": "正式交易主控版_v83_official_main",
         "orchestrator_status": "training_governed_v83",
@@ -4066,7 +4080,7 @@
           }
         },
         "training_integrity": {
-          "generated_at": "2026-04-14 23:27:59",
+          "generated_at": "2026-04-15 00:06:46",
           "thresholds": {
             "min_oot_hit_rate": 0.5,
             "min_oot_profit_factor": 1.0,
@@ -4438,7 +4452,7 @@
           "status": "training_integrity_blocked"
         },
         "candidate_evaluation": {
-          "generated_at": "2026-04-14 23:27:59",
+          "generated_at": "2026-04-15 00:06:46",
           "system_name": "正式交易主控版_v83_official_main",
           "thresholds": {
             "min_win_rate": 0.5,
@@ -4506,7 +4520,7 @@
     "model_registry": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_registry_runtime.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "models_dir": "C:\\test\\test-2026-3-22OK\\models",
         "candidates": [
@@ -4536,7 +4550,7 @@
             "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
             "is_file": true,
             "is_dir": false,
-            "size_bytes": 46672
+            "size_bytes": 47345
           },
           {
             "name": "model_long_區間盤整.pkl",
@@ -7397,11 +7411,11 @@
     "model_selection_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_selection_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_model_linkage": true,
         "governance": {
-          "generated_at": "2026-04-14 23:27:59",
+          "generated_at": "2026-04-15 00:06:46",
           "module_version": "v20260414_training_governance_truthful_live_metrics",
           "system_name": "正式交易主控版_v83_official_main",
           "orchestrator_status": "training_governed_v83",
@@ -7766,7 +7780,7 @@
             }
           },
           "training_integrity": {
-            "generated_at": "2026-04-14 23:27:59",
+            "generated_at": "2026-04-15 00:06:46",
             "thresholds": {
               "min_oot_hit_rate": 0.5,
               "min_oot_profit_factor": 1.0,
@@ -8138,7 +8152,7 @@
             "status": "training_integrity_blocked"
           },
           "candidate_evaluation": {
-            "generated_at": "2026-04-14 23:27:59",
+            "generated_at": "2026-04-15 00:06:46",
             "system_name": "正式交易主控版_v83_official_main",
             "thresholds": {
               "min_win_rate": 0.5,
@@ -8311,7 +8325,8 @@
           "some_order_payloads_fail_tw_market_rules"
         ],
         "warnings": [
-          "some_directional_features_not_live_approved"
+          "some_directional_features_not_live_approved",
+          "real_broker_five_red_lights_not_green_live_forbidden"
         ],
         "prelive_ready": false,
         "broker_production_ready": false,
@@ -8325,7 +8340,7 @@
         "feature_observability": {
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
           "payload": {
-            "generated_at": "2026-04-14 23:27:59",
+            "generated_at": "2026-04-15 00:06:45",
             "module_version": "v87_feature_observability_vetted_live",
             "strict_feature_parity": true,
             "force_shared_feature_universe": false,
@@ -8381,7 +8396,7 @@
     "launch_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\launch_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_execution": false,
         "failures": [
@@ -8408,7 +8423,7 @@
     "live_safety_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_safety_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -8433,7 +8448,7 @@
     "broker_approval_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_approval_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -8455,7 +8470,7 @@
     "submission_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\submission_contract_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_submission_contract": true,
         "failures": [],
@@ -8475,7 +8490,7 @@
     "validation_suite": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\validation_suite_report.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": {
           "launch_gate": false,
@@ -8500,7 +8515,7 @@
     "reconciliation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "status": "reconciled",
         "order_issue_count": 0,
         "issues": [],
@@ -8511,7 +8526,7 @@
         "repair_workflow": {
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
           "payload": {
-            "generated_at": "2026-04-14 23:27:59",
+            "generated_at": "2026-04-15 00:06:46",
             "status": "repair_workflow_executed",
             "executed_actions": [],
             "count": 0
@@ -8523,7 +8538,7 @@
     "recovery": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_plan.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "snapshot_found": true,
         "broker_snapshot_found": false,
@@ -8543,7 +8558,7 @@
     "recovery_validation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_validation.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": [
           {
@@ -8585,7 +8600,7 @@
     "live_release_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_release_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "status": "live_release_blocked",
         "allow_pre_live_dryrun": false,
         "allow_live": false,
@@ -8602,7 +8617,7 @@
     "tri_lane_orchestration": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\tri_lane_orchestrator.json",
       "payload": {
-        "generated_at": "2026-04-14 23:27:59",
+        "generated_at": "2026-04-15 00:06:46",
         "status": "tri_lane_orchestration_ready",
         "lanes": {
           "LONG": {
@@ -8637,7 +8652,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 45
+              "event_count": 47
             },
             "reconciliation": {
               "status": "ready",
@@ -8774,7 +8789,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 45
+              "event_count": 47
             },
             "reconciliation": {
               "status": "ready",
@@ -8928,7 +8943,7 @@
         "ledger": {
           "status": "ready",
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-          "event_count": 45
+          "event_count": 47
         },
         "reconciliation": {
           "status": "ready",
@@ -9065,7 +9080,7 @@
         "ledger": {
           "status": "ready",
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-          "event_count": 45
+          "event_count": 47
         },
         "reconciliation": {
           "status": "ready",

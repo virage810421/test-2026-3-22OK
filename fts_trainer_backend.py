@@ -35,7 +35,11 @@ META_DROP_COLS = [
     'Favorable_Move_Pct', 'Adverse_Move_Pct', 'Max_Favorable_Excursion',
     'Max_Adverse_Excursion', 'Realized_Return_After_Cost', 'Mounted_Feature_Count',
     'Setup_Ready_Label', 'Trigger_Confirm_Label', 'Entry_State_At_Label', 'Early_Path_State_At_Label', 'Confirm_Path_State_At_Label',
-    'Exit_Defend_Label', 'Exit_Reduce_Label', 'Exit_Confirm_Label', 'Exit_State_At_Label', 'Target_Position_At_Label'
+    'Exit_Defend_Label', 'Exit_Reduce_Label', 'Exit_Confirm_Label', 'Exit_State_At_Label', 'Target_Position_At_Label',
+    'Sample_Type', 'Target_Return_Unit', 'Is_Position_Day', 'Position_Day', 'Position_Age_Days',
+    'Feature_Row_Index', 'Position_Date', 'Current_Close', 'Unrealized_Return', 'Unrealized_Return_Pct',
+    'Remaining_Return_To_Planned_Exit', 'Remaining_Return_To_Planned_Exit_Pct',
+    'Adverse_To_Date_Pct', 'Favorable_To_Date_Pct', 'Realized_Return_After_Cost_Pct'
 ]
 
 
@@ -62,21 +66,40 @@ def _build_lane_series(df: pd.DataFrame) -> pd.Series:
 
 
 def _validate_target_return_frame(df: pd.DataFrame) -> tuple[pd.DataFrame | None, dict[str, Any]]:
-    """Fail closed: formal training must use real Target_Return, never synthetic ±0.05 labels."""
+    """Fail closed and normalize Target_Return to decimal return.
+
+    Canonical unit: 0.032 means +3.2%.  Older generated files used 3.2 for
+    +3.2%; those are detected and converted once, with an explicit report flag.
+    """
     required = bool(PARAMS.get('MODEL_REQUIRE_TARGET_RETURN', True))
     min_valid_ratio = float(PARAMS.get('MODEL_TARGET_RETURN_MIN_VALID_RATIO', 0.80))
+    legacy_autofix = bool(PARAMS.get('TARGET_RETURN_LEGACY_PERCENT_AUTOFIX', True))
+    abs_max_decimal = float(PARAMS.get('TARGET_RETURN_ABS_MAX_DECIMAL', 0.80))
     if 'Target_Return' not in df.columns:
         report = {
             'status': 'blocked' if required else 'warning',
             'reason': 'target_return_missing',
             'message': '正式訓練禁止用 Label_Y 產生 ±0.05 假 Target_Return；請由未來報酬/成本/滑價標籤器產生 Target_Return。',
             'required': required,
+            'target_return_unit': 'decimal_return',
         }
         return (None if required else df), report
     s = pd.to_numeric(df['Target_Return'], errors='coerce')
     finite_mask = np.isfinite(s.astype(float))
     valid_ratio = float(finite_mask.mean()) if len(s) else 0.0
     nonzero_count = int((s[finite_mask].abs() > 1e-12).sum()) if finite_mask.any() else 0
+    converted_from_legacy_percent = False
+    raw_abs_p95 = float(s[finite_mask].abs().quantile(0.95)) if finite_mask.any() else 0.0
+    raw_abs_max = float(s[finite_mask].abs().max()) if finite_mask.any() else 0.0
+
+    # Legacy detector: normal daily/holding-period decimal returns rarely have
+    # p95 > 0.80.  Old builder wrote percent points, so 3.2 meant +3.2%.
+    if legacy_autofix and raw_abs_p95 > abs_max_decimal and raw_abs_max <= 100.0:
+        s = s / 100.0
+        converted_from_legacy_percent = True
+
+    norm_abs_p95 = float(s[finite_mask].abs().quantile(0.95)) if finite_mask.any() else 0.0
+    norm_abs_max = float(s[finite_mask].abs().max()) if finite_mask.any() else 0.0
     report = {
         'status': 'ok',
         'required': required,
@@ -84,6 +107,13 @@ def _validate_target_return_frame(df: pd.DataFrame) -> tuple[pd.DataFrame | None
         'valid_ratio': valid_ratio,
         'nonzero_count': nonzero_count,
         'min_valid_ratio': min_valid_ratio,
+        'target_return_unit': 'decimal_return',
+        'legacy_percent_autofix_enabled': legacy_autofix,
+        'converted_from_legacy_percent': converted_from_legacy_percent,
+        'raw_abs_p95': raw_abs_p95,
+        'raw_abs_max': raw_abs_max,
+        'normalized_abs_p95': norm_abs_p95,
+        'normalized_abs_max': norm_abs_max,
     }
     if valid_ratio < min_valid_ratio:
         report.update({'status': 'blocked', 'reason': 'target_return_valid_ratio_below_floor'})
@@ -91,8 +121,14 @@ def _validate_target_return_frame(df: pd.DataFrame) -> tuple[pd.DataFrame | None
     if nonzero_count <= 0:
         report.update({'status': 'blocked', 'reason': 'target_return_all_zero_or_missing'})
         return None, report
+    if bool(PARAMS.get('TARGET_RETURN_BLOCK_IF_IMPLAUSIBLE', True)) and norm_abs_p95 > abs_max_decimal:
+        report.update({'status': 'blocked', 'reason': 'target_return_implausible_after_unit_normalization'})
+        return None, report
     cleaned = df.loc[finite_mask].copy()
     cleaned['Target_Return'] = s.loc[finite_mask].astype(float)
+    cleaned['Target_Return_Unit'] = 'decimal_return'
+    if 'Future_Return_Pct' not in cleaned.columns:
+        cleaned['Future_Return_Pct'] = (cleaned['Target_Return'] * 100.0).round(4)
     report['rows_after'] = int(len(cleaned))
     return cleaned, report
 
@@ -133,6 +169,26 @@ def _train_exit_models(train_df: pd.DataFrame, all_features: list[str], selected
     if not report['enabled']:
         report['status'] = 'disabled'
         return report
+    if train_df is None or train_df.empty:
+        report.update({
+            'status': 'blocked_missing_position_day_samples' if bool(PARAMS.get('EXIT_MODEL_REQUIRE_POSITION_DAY_SAMPLES', True)) else 'missing_exit_training_rows',
+            'rows': 0,
+            'requires_position_day_samples': bool(PARAMS.get('EXIT_MODEL_REQUIRE_POSITION_DAY_SAMPLES', True)),
+        })
+        return report
+    if bool(PARAMS.get('EXIT_MODEL_REQUIRE_POSITION_DAY_SAMPLES', True)):
+        sample_type = train_df.get('Sample_Type', pd.Series([''] * len(train_df), index=train_df.index)).astype(str).str.upper()
+        is_position_day = sample_type.eq('POSITION_DAY') | pd.to_numeric(train_df.get('Is_Position_Day', 0), errors='coerce').fillna(0).astype(int).eq(1)
+        min_rows = int(PARAMS.get('EXIT_MODEL_MIN_POSITION_DAY_ROWS', 80))
+        if int(is_position_day.sum()) < min_rows:
+            report.update({
+                'status': 'blocked_position_day_rows_below_floor',
+                'position_day_rows': int(is_position_day.sum()),
+                'min_position_day_rows': min_rows,
+                'requires_position_day_samples': True,
+            })
+            return report
+        train_df = train_df.loc[is_position_day].copy()
     label_cols = ['Exit_Defend_Label', 'Exit_Reduce_Label', 'Exit_Confirm_Label']
     present = [c for c in label_cols if c in train_df.columns]
     if not present:
@@ -395,6 +451,30 @@ def _purged_walk_forward(X: pd.DataFrame, y: pd.Series, target_return: pd.Series
     return results, summary
 
 
+
+def _sample_type_series(df: pd.DataFrame) -> pd.Series:
+    if 'Sample_Type' not in df.columns:
+        return pd.Series(['ENTRY_SIGNAL'] * len(df), index=df.index, dtype=object)
+    return df['Sample_Type'].astype(str).str.upper().replace({'': 'ENTRY_SIGNAL'})
+
+
+def _split_entry_and_position_day_frames(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any]]:
+    st = _sample_type_series(df)
+    position_mask = st.eq('POSITION_DAY') | pd.to_numeric(df.get('Is_Position_Day', 0), errors='coerce').fillna(0).astype(int).eq(1)
+    entry_df = df.loc[~position_mask].copy()
+    position_df = df.loc[position_mask].copy()
+    if entry_df.empty and position_df.empty:
+        entry_df = df.copy()
+    if entry_df.empty:
+        entry_df = df.copy()
+    report = {
+        'entry_signal_rows': int(len(entry_df)),
+        'position_day_rows': int(len(position_df)),
+        'position_day_required_for_exit': bool(PARAMS.get('EXIT_MODEL_REQUIRE_POSITION_DAY_SAMPLES', True)),
+        'sample_type_counts': {str(k): int(v) for k, v in st.value_counts(dropna=False).to_dict().items()},
+    }
+    return entry_df, position_df, report
+
 def train_models() -> tuple[Path, dict[str, Any]]:
     dataset_path = Path('data/ml_training_data.csv')
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -467,6 +547,21 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason='target_return_clean_rows_below_floor')
         return RUNTIME_PATH, payload
     df['Label_Y'] = pd.to_numeric(df['Label_Y'], errors='coerce').fillna(0).astype(int)
+    raw_df_for_exit = df.copy()
+    entry_df, position_day_df, sample_type_report = _split_entry_and_position_day_frames(df)
+    df = entry_df.copy()
+    if len(df) < max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))):
+        payload = {
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'status': 'blocked_by_entry_signal_row_count',
+            'dataset_path': str(dataset_path),
+            'target_return_report': target_return_report,
+            'sample_type_report': sample_type_report,
+            'rows_after_entry_filter': int(len(df)),
+        }
+        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason='entry_signal_rows_below_floor')
+        return RUNTIME_PATH, payload
 
     all_features, _ = _build_feature_columns(df)
     df = _materialize_interactions(df, all_features)
@@ -533,6 +628,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         'feature_selection_preview': ranked_features[:20],
         'warnings': warnings,
         'target_return_report': target_return_report,
+        'sample_type_report': sample_type_report,
     }
 
     os.makedirs('models', exist_ok=True)
@@ -570,7 +666,8 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         lane_report: dict[str, Any] = {
             'rows': int(len(lane_df)),
             'selected_features_path': str(_directional_feature_pkl(lane)),
-            'selection_source': 'shared_fallback',
+            'selection_source': 'not_selected',
+            'independent_lane_required': bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True)),
             'selected_feature_count': 0,
             'selected_features_preview': [],
             'ranked_preview': [],
@@ -586,13 +683,14 @@ def train_models() -> tuple[Path, dict[str, Any]]:
                 lane_selected = lane_features
                 lane_report['selection_source'] = 'lane_train_only'
             else:
-                lane_report['selection_source'] = 'shared_fallback_low_feature_count'
+                lane_report['selection_source'] = 'blocked_low_feature_count'
         else:
-            lane_report['selection_source'] = 'shared_fallback_low_samples'
+            lane_report['selection_source'] = 'blocked_low_samples'
+        if lane_report.get('selection_source') != 'lane_train_only':
+            lane_selected = []
         lane_selected = list(dict.fromkeys([f for f in lane_selected if f in train_df.columns]))
-        if not lane_selected:
-            lane_selected = list(selected_features)
-        joblib.dump(lane_selected, _directional_feature_pkl(lane))
+        if lane_selected:
+            joblib.dump(lane_selected, _directional_feature_pkl(lane))
         lane_report['selected_feature_count'] = int(len(lane_selected))
         lane_report['selected_features_preview'] = lane_selected[:20]
         lane_report['ranked_preview'] = lane_ranked[:15]
@@ -611,21 +709,23 @@ def train_models() -> tuple[Path, dict[str, Any]]:
                     lane_report['models'][regime] = {'status': 'SAVE', 'rows': int(len(lane_reg_df)), 'feature_count': int(len(safe_features)), 'path': str(model_path)}
                     lane_save_count += 1
                     continue
-            shared_model_path = Path(f'models/model_{regime}.pkl')
-            if shared_model_path.exists():
-                try:
-                    shared_model = joblib.load(shared_model_path)
-                    joblib.dump(shared_model, model_path)
-                    lane_report['models'][regime] = {'status': 'BOOTSTRAPPED_FROM_SHARED', 'rows': int(len(lane_reg_df)), 'path': str(model_path)}
-                    lane_save_count += 1
-                except Exception as exc:
-                    lane_report['models'][regime] = {'status': 'SKIP', 'reason': f'bootstrap_failed:{exc}'}
-            else:
-                lane_report['models'][regime] = {'status': 'SKIP', 'reason': 'shared_regime_model_missing'}
+            lane_report['models'][regime] = {
+                'status': 'SKIP',
+                'reason': 'independent_lane_model_not_trained_shared_fallback_forbidden',
+                'rows': int(len(lane_reg_df)),
+                'path': str(model_path),
+            }
         lane_report['saved_model_count'] = lane_save_count
         lane_artifacts[lane] = lane_report
 
-    exit_model_artifacts = _train_exit_models(train_df, all_features, selected_features)
+    exit_training_df = position_day_df.copy() if not position_day_df.empty else pd.DataFrame()
+    if not exit_training_df.empty:
+        exit_training_df = _materialize_interactions(exit_training_df, selected_features)
+    exit_model_artifacts = _train_exit_models(exit_training_df, all_features, selected_features)
+
+    exit_model_artifacts['training_source'] = 'position_day_samples' if not position_day_df.empty else 'missing_position_day_samples'
+    exit_model_artifacts['position_day_rows_available'] = int(len(position_day_df))
+    exit_model_artifacts['entry_signal_rows_used_for_entry_models'] = int(len(train_df) + len(oot_df))
 
     overall_score = float(oot_metrics['avg_return'] * 100 + min(oot_metrics['profit_factor'], 5.0) + oot_metrics['hit_rate'] * 10)
     version_tag = create_version_tag('trained')
@@ -654,6 +754,13 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         promotion_failures.append('walk_forward_effective_splits_below_floor')
     if float(wf_summary.get('ret_mean', 0.0) or 0.0) < promotion_floors['min_wf_ret_mean']:
         promotion_failures.append('walk_forward_return_below_floor')
+    if bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True)):
+        missing_independent = []
+        for lane, lane_payload in lane_artifacts.items():
+            if lane_payload.get('saved_model_count', 0) <= 0 or lane_payload.get('selection_source') != 'lane_train_only':
+                missing_independent.append(lane)
+        if missing_independent:
+            promotion_failures.append('independent_directional_lane_models_missing:' + ','.join(missing_independent))
     promotion_ready = len(promotion_failures) == 0
     best_entry = get_best_version_entry()
     best_score = float(best_entry.get('metrics', {}).get('overall_score', -1e18)) if best_entry else -1e18

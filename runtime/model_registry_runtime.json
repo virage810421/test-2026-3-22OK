@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-14 23:27:59",
+  "generated_at": "2026-04-15 00:06:46",
   "system_name": "正式交易主控版_v83_official_main",
   "models_dir": "C:\\test\\test-2026-3-22OK\\models",
   "candidates": [
@@ -29,7 +29,7 @@
       "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 46672
+      "size_bytes": 47345
     },
     {
       "name": "model_long_區間盤整.pkl",

@@ -199,3 +199,5 @@
 {"time": "2026-04-14 23:27:59", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
 {"time": "2026-04-14 23:27:59", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}
 {"time": "2026-04-14 23:33:03", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-15 00:06:46", "event": "training_integrity_eval", "status": "training_integrity_blocked", "failures": ["overfit_gap_too_large"], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-15 00:06:46", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": ["shadow_drift_above_preferred_band"]}

@@ -172,9 +172,13 @@ class SystemConfig:
     enable_range_confidence_service: bool = True
     directional_backtest_safe_mode: bool = True
     live_feature_policy: str = 'shared_plus_vetted_directional'
-    live_allow_directional_shared_fallback: bool = True
+    live_allow_directional_shared_fallback: bool = False
     live_directional_min_feature_count: int = 4
     directional_live_require_approved_features: bool = True
+    directional_require_independent_lane_models: bool = True
+    signal_path_fail_closed: bool = True
+    target_return_unit: str = 'decimal_return'
+    exit_model_require_position_day_samples: bool = True
 
     # ---- legacy confirmation influence guard ----
     legacy_confirm_influence: float = 0.0

@@ -122,7 +122,9 @@ def sanitize_generated_training_df(df: pd.DataFrame) -> tuple[pd.DataFrame, dict
     if 'Label_Y' not in out.columns and 'Label' in out.columns:
         out['Label_Y'] = out['Label']
     if 'Target_Return' not in out.columns and 'Future_Return_Pct' in out.columns:
-        out['Target_Return'] = out['Future_Return_Pct']
+        # Canonical Target_Return is decimal return: 0.032 means +3.2%.
+        out['Target_Return'] = pd.to_numeric(out['Future_Return_Pct'], errors='coerce') / 100.0
+        out['Target_Return_Unit'] = 'decimal_return'
     if 'Date' in out.columns:
         out['Date'] = pd.to_datetime(out['Date'], errors='coerce').dt.strftime('%Y-%m-%d')
     numeric_candidates = []
@@ -134,6 +136,14 @@ def sanitize_generated_training_df(df: pd.DataFrame) -> tuple[pd.DataFrame, dict
             numeric_candidates.append(col)
     for col in numeric_candidates:
         out[col] = pd.to_numeric(out[col], errors='coerce').replace([np.inf, -np.inf], np.nan)
+    if 'Target_Return' in out.columns:
+        tr = pd.to_numeric(out['Target_Return'], errors='coerce')
+        finite = tr.replace([np.inf, -np.inf], np.nan).dropna()
+        if len(finite) and float(finite.abs().quantile(0.95)) > 0.80 and float(finite.abs().max()) <= 100.0:
+            out['Target_Return'] = tr / 100.0
+            out['Target_Return_Unit'] = 'decimal_return_autofixed_from_legacy_percent'
+        elif 'Target_Return_Unit' not in out.columns:
+            out['Target_Return_Unit'] = 'decimal_return'
     missing_flag_cols = [c for c in numeric_candidates if out[c].isna().any()]
     out = add_missing_flags(out, missing_flag_cols)
     out = out.dropna(subset=[c for c in ['Label_Y', 'Target_Return', 'Regime'] if c in out.columns]).reset_index(drop=True)

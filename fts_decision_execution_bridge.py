@@ -71,9 +71,9 @@ class DecisionExecutionBridge:
             return self.output_path, payload
         df['Ticker'] = df['Ticker'].astype(str).str.strip()
         pre_filter_rows = int(len(df))
-        executable_mask = df.get('DeskUsable', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool) & df.get('ExecutionEligible', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool)
-        integrity_invalid_rows = int((~df.get('DeskUsable', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool)).sum())
-        incomplete_rows = int((df.get('DeskUsable', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool) & ~df.get('ExecutionEligible', pd.Series([True] * len(df), index=df.index)).fillna(False).astype(bool)).sum())
+        executable_mask = df.get('DeskUsable', pd.Series([False] * len(df), index=df.index)).fillna(False).astype(bool) & df.get('ExecutionEligible', pd.Series([False] * len(df), index=df.index)).fillna(False).astype(bool)
+        integrity_invalid_rows = int((~df.get('DeskUsable', pd.Series([False] * len(df), index=df.index)).fillna(False).astype(bool)).sum())
+        incomplete_rows = int((df.get('DeskUsable', pd.Series([False] * len(df), index=df.index)).fillna(False).astype(bool) & ~df.get('ExecutionEligible', pd.Series([False] * len(df), index=df.index)).fillna(False).astype(bool)).sum())
         blocked_preview = df.loc[~executable_mask, 'Ticker'].astype(str).tolist()[:20] if len(df) else []
         df = df.loc[executable_mask].copy()
         filtered_out_rows = pre_filter_rows - int(len(df))

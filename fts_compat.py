@@ -140,7 +140,7 @@ def apply_decision_integrity_flags(df: pd.DataFrame) -> tuple[pd.DataFrame, dict
     out['DeskUsable'] = desk_usable
     out['ExecutionEligible'] = execution_eligible
     out['CanAutoSubmit'] = out.get('CanAutoSubmit', False)
-    out['CanAutoSubmit'] = _as_bool_series(out['CanAutoSubmit'], default=False) | out['ExecutionEligible']
+    out['CanAutoSubmit'] = _as_bool_series(out['CanAutoSubmit'], default=False) & out['ExecutionEligible']
 
     diag = {
         'row_count': int(len(out)),
@@ -155,7 +155,7 @@ def apply_decision_integrity_flags(df: pd.DataFrame) -> tuple[pd.DataFrame, dict
 
 
 class DecisionCompatibilityLayer:
-    MODULE_VERSION = "v19_integrity_guard"
+    MODULE_VERSION = "v89_signal_path_fail_closed_integrity_guard"
 
     def _price_lookup(self, ticker):
         import pandas as pd
@@ -175,7 +175,7 @@ class DecisionCompatibilityLayer:
                         if not row.empty:
                             return safe_float(row.iloc[-1][pcol], 0.0)
                 except Exception as exc:
-                    record_issue('compat', 'numeric_integrity_parse_failed', exc, severity='WARNING', fail_mode='fail_open')
+                    record_issue('compat', 'numeric_integrity_parse_failed', exc, severity='WARNING', fail_mode='fail_closed')
         try:
             import yfinance as yf
             hist = yf.Ticker(str(ticker)).history(period="5d", interval="1d", auto_adjust=False)

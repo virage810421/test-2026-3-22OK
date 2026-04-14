@@ -144,7 +144,8 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
     return {
         'Label': int(label_y),
         'Label_Y': int(label_y),
-        'Target_Return': round(float(realized_return * 100.0), 4),
+        'Target_Return': round(float(realized_return), 6),
+        'Target_Return_Unit': 'decimal_return',
         'Future_Return_Pct': round(float(realized_return * 100.0), 4),
         'Entry_Price': round(float(entry_price), 4),
         'Entry_Price_Basis': 'next_open' if bool(PARAMS.get('LABEL_USE_NEXT_OPEN', True)) else 'signal_close',
@@ -161,7 +162,8 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
         'Adverse_Move_Pct': round(float(adverse_move * 100.0), 4),
         'Max_Favorable_Excursion': round(float(max_favorable_excursion * 100.0), 4),
         'Max_Adverse_Excursion': round(float(max_adverse_excursion * 100.0), 4),
-        'Realized_Return_After_Cost': round(float(realized_return * 100.0), 4),
+        'Realized_Return_After_Cost': round(float(realized_return), 6),
+        'Realized_Return_After_Cost_Pct': round(float(realized_return * 100.0), 4),
         'Direction': 'SHORT' if is_short else 'LONG',
         'Setup_Ready_Label': setup_ready_label,
         'Trigger_Confirm_Label': trigger_confirm_label,
@@ -173,7 +175,104 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
         'Exit_Confirm_Label': exit_confirm_label,
         'Exit_State_At_Label': exit_state_at_label,
         'Target_Position_At_Label': _safe_float(computed_df.iloc[i].get('Target_Position', 0.0), 0.0),
+        'Sample_Type': 'ENTRY_SIGNAL',
+        'Is_Position_Day': 0,
+        'Position_Day': 0,
+        'Position_Age_Days': 0,
     }
+
+
+def _build_position_day_label_records(
+    computed_df: pd.DataFrame,
+    i: int,
+    hold_days: int,
+    setup_tag: str,
+    entry_label: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Build one exit-training sample per simulated holding day."""
+    if not bool(PARAMS.get('EXIT_MODEL_REQUIRE_POSITION_DAY_SAMPLES', True)):
+        return []
+    is_long, is_short = _signal_flags(setup_tag)
+    if not (is_long or is_short):
+        return []
+    entry_idx = i + 1
+    if entry_idx >= len(computed_df):
+        return []
+    entry_price = _safe_float(entry_label.get('Entry_Price'), 0.0)
+    if entry_price <= 0:
+        return []
+    final_exit_price = _safe_float(entry_label.get('Exit_Price'), entry_price)
+    sl_pct = float(PARAMS.get('SL_MIN_PCT', 0.03))
+    round_trip_cost = _round_trip_cost()
+    out: list[dict[str, Any]] = []
+    max_day = min(int(hold_days), len(computed_df) - entry_idx)
+    for age in range(1, max_day + 1):
+        pos_idx = entry_idx + age - 1
+        current_row = computed_df.iloc[pos_idx]
+        window_to_now = computed_df.iloc[entry_idx:pos_idx + 1]
+        current_close = _safe_float(current_row.get('Close', final_exit_price), final_exit_price)
+        current_high = _safe_float(window_to_now['High'].max() if 'High' in window_to_now else current_close, current_close)
+        current_low = _safe_float(window_to_now['Low'].min() if 'Low' in window_to_now else current_close, current_close)
+        if is_short:
+            unrealized_return = ((entry_price - current_close) / entry_price) - round_trip_cost
+            remaining_return = ((current_close - final_exit_price) / current_close) - round_trip_cost if current_close > 0 else 0.0
+            adverse_to_date = max((current_high - entry_price) / entry_price, 0.0)
+            favorable_to_date = max((entry_price - current_low) / entry_price, 0.0)
+        else:
+            unrealized_return = ((current_close - entry_price) / entry_price) - round_trip_cost
+            remaining_return = ((final_exit_price - current_close) / current_close) - round_trip_cost if current_close > 0 else 0.0
+            adverse_to_date = max((entry_price - current_low) / entry_price, 0.0)
+            favorable_to_date = max((current_high - entry_price) / entry_price, 0.0)
+        hazard = _safe_float(current_row.get('Exit_Hazard_Score', 0.0), 0.0)
+        exit_state = str(current_row.get('Exit_State', 'HOLD')).upper()
+        stop_hit_to_date = adverse_to_date >= sl_pct
+        defend_label = int(
+            hazard >= float(PARAMS.get('EXIT_LABEL_DEFEND_HAZARD', 0.55))
+            or adverse_to_date * 100.0 >= float(PARAMS.get('EXIT_LABEL_DEFEND_ADVERSE_PCT', 1.20))
+            or exit_state in {'DEFEND', 'REDUCE', 'EXIT'}
+            or unrealized_return <= -abs(sl_pct) * 0.35
+        )
+        reduce_label = int(
+            hazard >= float(PARAMS.get('EXIT_LABEL_REDUCE_HAZARD', 0.68))
+            or adverse_to_date * 100.0 >= float(PARAMS.get('EXIT_LABEL_REDUCE_ADVERSE_PCT', 2.00))
+            or exit_state in {'REDUCE', 'EXIT'}
+            or unrealized_return <= -abs(sl_pct) * 0.55
+            or stop_hit_to_date
+        )
+        confirm_label = int(
+            hazard >= float(PARAMS.get('EXIT_LABEL_CONFIRM_HAZARD', 0.82))
+            or exit_state == 'EXIT'
+            or stop_hit_to_date
+            or unrealized_return <= -abs(sl_pct) * 0.75
+            or remaining_return <= -abs(sl_pct) * 0.50
+        )
+        dt = pd.to_datetime(current_row.name, errors='coerce')
+        out.append({
+            **entry_label,
+            'Sample_Type': 'POSITION_DAY',
+            'Is_Position_Day': 1,
+            'Position_Day': int(age),
+            'Position_Age_Days': int(age),
+            'Feature_Row_Index': int(pos_idx),
+            'Date': dt.strftime('%Y-%m-%d') if pd.notna(dt) else None,
+            'Position_Date': dt.strftime('%Y-%m-%d') if pd.notna(dt) else None,
+            'Current_Close': round(float(current_close), 4),
+            'Unrealized_Return': round(float(unrealized_return), 6),
+            'Unrealized_Return_Pct': round(float(unrealized_return * 100.0), 4),
+            'Remaining_Return_To_Planned_Exit': round(float(remaining_return), 6),
+            'Remaining_Return_To_Planned_Exit_Pct': round(float(remaining_return * 100.0), 4),
+            'Adverse_To_Date_Pct': round(float(adverse_to_date * 100.0), 4),
+            'Favorable_To_Date_Pct': round(float(favorable_to_date * 100.0), 4),
+            'Target_Return': round(float(remaining_return), 6),
+            'Target_Return_Unit': 'decimal_return',
+            'Future_Return_Pct': round(float(remaining_return * 100.0), 4),
+            'Exit_Defend_Label': defend_label,
+            'Exit_Reduce_Label': reduce_label,
+            'Exit_Confirm_Label': confirm_label,
+            'Exit_State_At_Label': exit_state,
+            'Label_Reason': f'position_day_{age}_exit_training',
+        })
+    return out
 
 
 def generate_ml_dataset(tickers=None):
@@ -185,10 +284,12 @@ def generate_ml_dataset(tickers=None):
     hold_days = int(PARAMS.get('ML_LABEL_HOLD_DAYS', 5))
     base_columns = [
         'Ticker SYMBOL', 'Ticker', 'Date', 'Setup_Tag', 'Setup', 'Regime',
-        'Label', 'Label_Y', 'Target_Return', 'Future_Return_Pct', 'Entry_Price', 'Exit_Price',
+        'Sample_Type', 'Is_Position_Day', 'Position_Day', 'Position_Age_Days',
+        'Label', 'Label_Y', 'Target_Return', 'Target_Return_Unit', 'Future_Return_Pct', 'Entry_Price', 'Exit_Price',
         'Entry_Date', 'Exit_Date', 'Hold_Days', 'Direction', 'Setup_Ready_Label', 'Trigger_Confirm_Label',
         'Entry_State_At_Label', 'Early_Path_State_At_Label', 'Confirm_Path_State_At_Label',
         'Exit_Defend_Label', 'Exit_Reduce_Label', 'Exit_Confirm_Label', 'Exit_State_At_Label', 'Target_Position_At_Label',
+        'Current_Close', 'Unrealized_Return', 'Remaining_Return_To_Planned_Exit', 'Adverse_To_Date_Pct', 'Favorable_To_Date_Pct',
     ]
 
     for ticker in tickers:
@@ -246,6 +347,34 @@ def generate_ml_dataset(tickers=None):
                     sample[f'MOUNT__{k}'] = v
                 rows.append(sample)
                 added += 1
+
+                # v89: formal exit training uses position-day samples.
+                for pos_label in _build_position_day_label_records(computed_df, i, hold_days, setup_tag, label_block):
+                    pos_idx = int(pos_label.get('Feature_Row_Index', i))
+                    if pos_idx < 0 or pos_idx >= len(computed_df):
+                        continue
+                    pos_row = computed_df.iloc[pos_idx]
+                    pos_feats = _features.extract_ai_features(
+                        pos_row.to_dict(),
+                        history_df=computed_df.iloc[:pos_idx + 1].copy(),
+                        ticker=ticker,
+                        as_of_date=pos_row.name if hasattr(pos_row, 'name') else None,
+                    )
+                    pos_mounted = _features.select_live_features(pos_feats)
+                    pos_sample = {
+                        'Ticker SYMBOL': ticker,
+                        'Ticker': ticker,
+                        'Date': pos_label.get('Date'),
+                        'Setup_Tag': setup_tag,
+                        'Setup': setup_tag,
+                        'Regime': str(pos_row.get('Regime', regime)).strip(),
+                    }
+                    pos_sample.update(pos_label)
+                    pos_sample.update(pos_feats)
+                    for k, v in pos_mounted.items():
+                        pos_sample[f'MOUNT__{k}'] = v
+                    rows.append(pos_sample)
+                    added += 1
             ticker_report['rows_added'] = added
             ticker_report['status'] = 'ok' if added > 0 else 'skip_no_labelled_rows'
             ticker_reports.append(ticker_report)

@@ -1,29 +1,29 @@
 {
   "latest": {
     "LONG": {
-      "registered_at": "2026-04-14 23:27:59",
+      "registered_at": "2026-04-15 00:06:46",
       "pool_type": "LONG",
-      "approved_version": "2026-04-14 23:27:59",
-      "rollback_source": "2026-04-14 23:27:32",
-      "promotion_batch_id": "2026-04-14 23:27:59",
+      "approved_version": "2026-04-15 00:06:46",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:46",
       "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_long.json",
       "item_count": 8
     },
     "SHORT": {
-      "registered_at": "2026-04-14 23:27:59",
+      "registered_at": "2026-04-15 00:06:46",
       "pool_type": "SHORT",
-      "approved_version": "2026-04-14 23:27:59",
-      "rollback_source": "2026-04-14 23:27:32",
-      "promotion_batch_id": "2026-04-14 23:27:59",
+      "approved_version": "2026-04-15 00:06:46",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:46",
       "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_short.json",
       "item_count": 8
     },
     "RANGE": {
-      "registered_at": "2026-04-14 23:27:59",
+      "registered_at": "2026-04-15 00:06:46",
       "pool_type": "RANGE",
-      "approved_version": "2026-04-14 23:27:59",
-      "rollback_source": "2026-04-14 23:27:32",
-      "promotion_batch_id": "2026-04-14 23:27:59",
+      "approved_version": "2026-04-15 00:06:46",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:46",
       "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
       "item_count": 8
     }
@@ -2996,6 +2996,141 @@
       "approved_version": "2026-04-14 23:27:59",
       "rollback_source": "2026-04-14 23:27:32",
       "promotion_batch_id": "2026-04-14 23:27:59",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:05:52",
+      "pool_type": "LONG",
+      "approved_version": "2026-04-15 00:05:51",
+      "rollback_source": "2026-04-14 23:27:59",
+      "promotion_batch_id": "2026-04-15 00:05:51",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_long.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:05:52",
+      "pool_type": "SHORT",
+      "approved_version": "2026-04-15 00:05:52",
+      "rollback_source": "2026-04-14 23:27:59",
+      "promotion_batch_id": "2026-04-15 00:05:52",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_short.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:05:52",
+      "pool_type": "RANGE",
+      "approved_version": "2026-04-15 00:05:52",
+      "rollback_source": "2026-04-14 23:27:59",
+      "promotion_batch_id": "2026-04-15 00:05:52",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:05:52",
+      "pool_type": "LONG",
+      "approved_version": "2026-04-15 00:05:52",
+      "rollback_source": "2026-04-15 00:05:51",
+      "promotion_batch_id": "2026-04-15 00:05:52",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_long.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:05:52",
+      "pool_type": "SHORT",
+      "approved_version": "2026-04-15 00:05:52",
+      "rollback_source": "2026-04-15 00:05:52",
+      "promotion_batch_id": "2026-04-15 00:05:52",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_short.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:05:52",
+      "pool_type": "RANGE",
+      "approved_version": "2026-04-15 00:05:52",
+      "rollback_source": "2026-04-15 00:05:52",
+      "promotion_batch_id": "2026-04-15 00:05:52",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:19",
+      "pool_type": "LONG",
+      "approved_version": "2026-04-15 00:06:19",
+      "rollback_source": "2026-04-15 00:05:52",
+      "promotion_batch_id": "2026-04-15 00:06:19",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_long.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:19",
+      "pool_type": "SHORT",
+      "approved_version": "2026-04-15 00:06:19",
+      "rollback_source": "2026-04-15 00:05:52",
+      "promotion_batch_id": "2026-04-15 00:06:19",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_short.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:19",
+      "pool_type": "RANGE",
+      "approved_version": "2026-04-15 00:06:19",
+      "rollback_source": "2026-04-15 00:05:52",
+      "promotion_batch_id": "2026-04-15 00:06:19",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:19",
+      "pool_type": "LONG",
+      "approved_version": "2026-04-15 00:06:19",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:19",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_long.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:19",
+      "pool_type": "SHORT",
+      "approved_version": "2026-04-15 00:06:19",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:19",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_short.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:19",
+      "pool_type": "RANGE",
+      "approved_version": "2026-04-15 00:06:19",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:19",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:46",
+      "pool_type": "LONG",
+      "approved_version": "2026-04-15 00:06:46",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:46",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_long.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:46",
+      "pool_type": "SHORT",
+      "approved_version": "2026-04-15 00:06:46",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:46",
+      "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_short.json",
+      "item_count": 8
+    },
+    {
+      "registered_at": "2026-04-15 00:06:46",
+      "pool_type": "RANGE",
+      "approved_version": "2026-04-15 00:06:46",
+      "rollback_source": "2026-04-15 00:06:19",
+      "promotion_batch_id": "2026-04-15 00:06:46",
       "source_path": "C:\\test\\test-2026-3-22OK\\runtime\\approved_live_watchlist_range.json",
       "item_count": 8
     }

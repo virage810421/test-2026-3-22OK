@@ -39,7 +39,13 @@ def _infer_lane(row: pd.Series) -> str:
 
 
 def _lane_return(row: pd.Series, lane: str) -> float:
-    r = float(pd.to_numeric(row.get('Target_Return', row.get('Future_Return_Pct', 0.0)), errors='coerce') or 0.0)
+    raw = row.get('Target_Return', None)
+    if raw is None or str(raw) == 'nan':
+        raw = (float(pd.to_numeric(row.get('Future_Return_Pct', 0.0), errors='coerce') or 0.0) / 100.0)
+    r = float(pd.to_numeric(raw, errors='coerce') or 0.0)
+    # Backward compatibility: old datasets stored percent points in Target_Return.
+    if abs(r) > 0.80 and abs(r) <= 100.0:
+        r = r / 100.0
     if lane == 'SHORT':
         return -r
     if lane == 'RANGE':

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-14 23:27:59",
+  "generated_at": "2026-04-15 00:06:46",
   "module_version": "v20260414_training_governance_truthful_live_metrics",
   "system_name": "正式交易主控版_v83_official_main",
   "orchestrator_status": "training_governed_v83",
@@ -364,7 +364,7 @@
     }
   },
   "training_integrity": {
-    "generated_at": "2026-04-14 23:27:59",
+    "generated_at": "2026-04-15 00:06:46",
     "thresholds": {
       "min_oot_hit_rate": 0.5,
       "min_oot_profit_factor": 1.0,
@@ -736,7 +736,7 @@
     "status": "training_integrity_blocked"
   },
   "candidate_evaluation": {
-    "generated_at": "2026-04-14 23:27:59",
+    "generated_at": "2026-04-15 00:06:46",
     "system_name": "正式交易主控版_v83_official_main",
     "thresholds": {
       "min_win_rate": 0.5,

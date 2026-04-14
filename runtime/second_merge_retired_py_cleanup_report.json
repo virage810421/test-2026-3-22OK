@@ -1,7 +1,7 @@
 {
   "tool": "cleanup_second_merge_retired_py_files",
   "version": "dependency_aware_cleanup_v2",
-  "generated_at": "2026-04-14 20:44:19",
+  "generated_at": "2026-04-15 00:02:14",
   "project_root": "C:\\test\\test-2026-3-22OK",
   "apply": true,
   "policy": {
@@ -11,60 +11,14 @@
     "reconciliation_recovery_watchlist_are_protected": true
   },
   "counts": {
-    "retired_list_total": 34,
+    "retired_list_total": 36,
     "ready": 0,
-    "removed": 3,
-    "missing": 26,
+    "removed": 0,
+    "missing": 31,
     "blocked": 5
   },
   "ready": [],
-  "removed": [
-    {
-      "file": "run_full_market_percentile_snapshot.py",
-      "exists": true,
-      "ready_to_delete": true,
-      "action": "ready",
-      "reasons": [
-        "admin_cli_replacement_verified"
-      ],
-      "references": [],
-      "replacement": {
-        "type": "fts_admin_cli",
-        "command": "full-market-percentile"
-      },
-      "deleted": true
-    },
-    {
-      "file": "run_precise_event_calendar_build.py",
-      "exists": true,
-      "ready_to_delete": true,
-      "action": "ready",
-      "reasons": [
-        "admin_cli_replacement_verified"
-      ],
-      "references": [],
-      "replacement": {
-        "type": "fts_admin_cli",
-        "command": "event-calendar-build"
-      },
-      "deleted": true
-    },
-    {
-      "file": "run_sync_feature_snapshots_to_sql.py",
-      "exists": true,
-      "ready_to_delete": true,
-      "action": "ready",
-      "reasons": [
-        "admin_cli_replacement_verified"
-      ],
-      "references": [],
-      "replacement": {
-        "type": "fts_admin_cli",
-        "command": "sync-feature-snapshots"
-      },
-      "deleted": true
-    }
-  ],
+  "removed": [],
   "missing": [
     {
       "file": "_clean_old_doors_manifest.py",
@@ -90,6 +44,28 @@
     },
     {
       "file": "_patch_manifest_│]¡pñú¿}¡╫º∩5.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "_patch_manifest_#U67b6#U69cb#U6536#U5c3e.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "_patch_manifest_#U8a2d#U8a08#U4e0d#U826f#U4fee#U65395.py",
       "exists": false,
       "ready_to_delete": false,
       "action": "missing",
@@ -320,6 +296,28 @@
       "replacement": null
     },
     {
+      "file": "run_full_market_percentile_snapshot.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "run_precise_event_calendar_build.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
       "file": "run_project_completion_audit.py",
       "exists": false,
       "ready_to_delete": false,
@@ -332,6 +330,17 @@
     },
     {
       "file": "run_project_healthcheck.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "run_sync_feature_snapshots_to_sql.py",
       "exists": false,
       "ready_to_delete": false,
       "action": "missing",

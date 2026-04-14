@@ -143,6 +143,8 @@ class LiveReadinessGate:
             warnings.append('directional_selected_features_missing')
         if not checks['directional_lane_models_present']:
             warnings.append('directional_lane_models_missing')
+        if not checks.get('real_broker_five_lights_green'):
+            warnings.append('real_broker_five_red_lights_not_green_live_forbidden')
 
         prelive_score = sum([
             int(checks['training_artifacts_present']),
@@ -170,8 +172,8 @@ class LiveReadinessGate:
             'hard_blocks': hard_blocks,
             'warnings': warnings,
             'prelive_ready': prelive_score >= 5 and len(hard_blocks) == 0,
-            'broker_production_ready': broker_score >= 4 and checks['broker_is_real'],
-            'live_ready': len(hard_blocks) == 0 and checks['broker_is_real'] and checks['manual_live_arm'] and checks['credentials_file_present'],
+            'broker_production_ready': broker_score >= 4 and checks['broker_is_real'] and checks.get('real_broker_five_lights_green', False),
+            'live_ready': len(hard_blocks) == 0 and checks['broker_is_real'] and checks['manual_live_arm'] and checks['credentials_file_present'] and checks.get('real_broker_five_lights_green', False),
             'score_split': {
                 'research_paper_prelive_score': prelive_score,
                 'true_broker_score': broker_score,

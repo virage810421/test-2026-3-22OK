@@ -43,10 +43,10 @@ STRICT_PARITY = bool(PARAMS.get('LIVE_REQUIRE_SELECTED_FEATURES', True)) or bool
 MIN_LIVE_FEATURES = int(getattr(CONFIG, 'selected_features_min_count_for_live', 6))
 MIN_DIRECTIONAL_LIVE_FEATURES = int(getattr(CONFIG, 'live_directional_min_feature_count', 4))
 ENABLE_DIRECTIONAL = bool(PARAMS.get('ENABLE_DIRECTIONAL_MODEL_LOADING', True))
-ENABLE_BOOTSTRAP = bool(PARAMS.get('ENABLE_DIRECTIONAL_ARTIFACT_BOOTSTRAP', True))
+ENABLE_BOOTSTRAP = bool(PARAMS.get('ENABLE_DIRECTIONAL_ARTIFACT_BOOTSTRAP', False)) and bool(PARAMS.get('DIRECTIONAL_BOOTSTRAP_FORCE_SHARED', False))
 ALLOW_HEURISTIC_FALLBACK = bool(getattr(CONFIG, 'allow_heuristic_model_fallback', False))
 DIRECTIONAL_LIVE_ENABLED = bool(getattr(CONFIG, 'enable_directional_features_in_live', True)) and (not bool(getattr(CONFIG, 'force_shared_feature_universe', False)))
-ALLOW_SHARED_FALLBACK_PER_LANE = bool(getattr(CONFIG, 'live_allow_directional_shared_fallback', True))
+ALLOW_SHARED_FALLBACK_PER_LANE = bool(getattr(CONFIG, 'live_allow_directional_shared_fallback', False)) and not bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True))
 
 
 @dataclass
@@ -80,7 +80,7 @@ def _safe_float(v: Any, default: float = 0.0) -> float:
             return default
         return float(v)
     except Exception as exc:  # runtime diagnostics
-        record_issue('model_layer', 'safe_float_cast', exc, severity='WARNING', fail_mode='fail_open')
+        record_issue('model_layer', 'safe_float_cast', exc, severity='WARNING', fail_mode='fail_closed')
         return default
 
 
@@ -93,6 +93,10 @@ def _normalize_scope(value: Any) -> str:
 def _lane_seed_from_shared(scope: str) -> None:
     scope = _normalize_scope(scope)
     if scope == 'SHARED':
+        return
+    # v89: lane models must be independently trained.  Shared seeding is allowed
+    # only when explicitly re-enabled for research diagnostics.
+    if bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True)):
         return
     if not DIRECTIONAL_FEATURES.get(scope) and SELECTED_FEATURES and ENABLE_BOOTSTRAP:
         DIRECTIONAL_FEATURES[scope] = list(SELECTED_FEATURES)
@@ -135,7 +139,7 @@ def _load_artifacts() -> None:
                     try:
                         DIRECTIONAL_MODELS[scope][regime] = joblib.load(p)
                     except Exception as exc:  # runtime diagnostics
-                        record_issue('model_layer', 'artifact_probe_failed', exc, severity='WARNING', fail_mode='fail_open')
+                        record_issue('model_layer', 'artifact_probe_failed', exc, severity='ERROR', fail_mode='fail_closed')
             _lane_seed_from_shared(scope)
 
 
@@ -169,6 +173,8 @@ def _refresh_model_runtime_base() -> Path:
         'strict_parity': bool(STRICT_PARITY),
         'directional_model_counts': {k: len(v) for k, v in DIRECTIONAL_MODELS.items()},
         'directional_bootstrap_enabled': bool(ENABLE_BOOTSTRAP),
+        'directional_require_independent_lane_models': bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True)),
+        'allow_shared_fallback_per_lane': bool(ALLOW_SHARED_FALLBACK_PER_LANE),
         'directional_feature_counts': {k: len(v) for k, v in DIRECTIONAL_FEATURES.items()},
         'status': 'model_layer_ready' if selected_features_ready('SHARED') else 'model_layer_degraded',
         'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK),
@@ -183,6 +189,8 @@ def _feature_input_from_row(latest_row, regime: str, scope: str = 'SHARED') -> t
     scope = _normalize_scope(scope)
     models = AI_MODELS if scope == 'SHARED' else DIRECTIONAL_MODELS.get(scope, {})
     selected = _selected_features_for_scope(scope)
+    if scope != 'SHARED' and (regime not in models or not selected_features_ready(scope)):
+        return {'proba': 0.01}, 'directional_lane_model_unavailable_fail_closed'
     if regime in models and selected_features_ready(scope):
         try:
             from fts_feature_service import FeatureService
@@ -191,8 +199,8 @@ def _feature_input_from_row(latest_row, regime: str, scope: str = 'SHARED') -> t
             proba = float(models[regime].predict_proba(pd.DataFrame([X]))[0][1])
             return {'proba': max(0.01, min(0.99, proba)), **X}, ('ai_model_directional' if scope != 'SHARED' and scope in DIRECTIONAL_MODELS and DIRECTIONAL_MODELS.get(scope) else ('ai_model_bootstrapped_from_shared' if scope != 'SHARED' else 'ai_model'))
         except Exception as exc:  # runtime diagnostics
-            record_issue('model_layer', 'runtime_model_diagnostic_failed', exc, severity='WARNING', fail_mode='fail_open')
-    return {'proba': max(0.01, min(0.99, signal_conf))}, source
+            record_issue('model_layer', 'runtime_model_diagnostic_failed', exc, severity='ERROR', fail_mode='fail_closed')
+    return {'proba': 0.01 if bool(PARAMS.get('SIGNAL_PATH_FAIL_CLOSED', True)) else max(0.01, min(0.99, signal_conf))}, ('model_unavailable_fail_closed' if bool(PARAMS.get('SIGNAL_PATH_FAIL_CLOSED', True)) else source)
 
 
 def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_multiplier: float = 1.0, direction_scope: str = 'SHARED') -> ModelDecision:
@@ -217,6 +225,11 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         proba = float(payload.get('proba', signal_conf))
 
     heuristic_fallback_active = 'signal_confidence' in str(model_source)
+    if 'fail_closed' in str(model_source) or 'unavailable' in str(model_source):
+        veto_reasons.append(str(model_source))
+    if direction_scope != 'SHARED' and bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True)):
+        if direction_scope not in DIRECTIONAL_MODELS or regime not in DIRECTIONAL_MODELS.get(direction_scope, {}):
+            veto_reasons.append(f'independent_directional_model_missing:{direction_scope}:{regime}')
     if heuristic_fallback_active and not ALLOW_HEURISTIC_FALLBACK:
         veto_reasons.append('heuristic_model_fallback_blocked')
 
@@ -415,7 +428,7 @@ def _write_exit_runtime_status() -> dict[str, Any]:
         EXIT_STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
         EXIT_STATUS_PATH.write_text(json.dumps(status, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception as exc:  # runtime diagnostics
-        record_issue('model_layer', 'exit_runtime_status_write_failed', exc, severity='WARNING', fail_mode='fail_open')
+        record_issue('model_layer', 'exit_runtime_status_write_failed', exc, severity='WARNING', fail_mode='fail_closed')
     return status
 
 
@@ -513,7 +526,7 @@ def refresh_model_runtime() -> Path:  # type: ignore[override]
         payload.update(status)
         RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception as exc:  # runtime diagnostics
-        record_issue('model_layer', 'model_layer_runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
+        record_issue('model_layer', 'model_layer_runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_closed')
     return path
 
 

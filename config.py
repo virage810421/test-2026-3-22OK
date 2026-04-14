@@ -251,8 +251,8 @@ PARAMS.setdefault("ENABLE_DIRECTIONAL_WATCHLIST_IN_LIVE", True)
 
 
 # ---- directional strengthening pack ----
-PARAMS.setdefault("ENABLE_DIRECTIONAL_ARTIFACT_BOOTSTRAP", True)
-PARAMS.setdefault("DIRECTIONAL_BOOTSTRAP_FORCE_SHARED", True)
+PARAMS.setdefault("ENABLE_DIRECTIONAL_ARTIFACT_BOOTSTRAP", False)
+PARAMS.setdefault("DIRECTIONAL_BOOTSTRAP_FORCE_SHARED", False)
 PARAMS.setdefault("DIRECTIONAL_SEED_FROM_CORE_WATCHLIST", True)
 PARAMS.setdefault("DIRECTIONAL_SCOREBOARD_AUTO_BUILD", True)
 PARAMS.setdefault("DIRECTIONAL_PROMOTION_MIN_COUNT", 3)
@@ -263,6 +263,21 @@ PARAMS.setdefault("SHORT_FALLBACK_FROM_CORE", True)
 PARAMS.setdefault("RANGE_FALLBACK_FROM_CORE", True)
 PARAMS.setdefault("LIVE_WATCHLIST_SHORT_MAX_NAMES", max(int(PARAMS.get("LIVE_WATCHLIST_SHORT_MAX_NAMES", 8)), 5))
 PARAMS.setdefault("LIVE_WATCHLIST_RANGE_MAX_NAMES", max(int(PARAMS.get("LIVE_WATCHLIST_RANGE_MAX_NAMES", 8)), 5))
+
+
+# ---- v89 formal hardening: target-return unit / lane independence / fail-closed defaults ----
+# Target_Return is the canonical decimal return: 0.032 means +3.2%.
+# Future_Return_Pct remains display/backward-compat percentage: 3.2 means +3.2%.
+PARAMS.setdefault("TARGET_RETURN_UNIT", "decimal_return")
+PARAMS.setdefault("TARGET_RETURN_LEGACY_PERCENT_AUTOFIX", True)
+PARAMS.setdefault("TARGET_RETURN_ABS_MAX_DECIMAL", 0.80)
+PARAMS.setdefault("TARGET_RETURN_BLOCK_IF_IMPLAUSIBLE", True)
+PARAMS.setdefault("DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS", True)
+PARAMS.setdefault("DIRECTIONAL_MIN_LANE_SAMPLES", max(80, int(PARAMS.get("MODEL_MIN_REGIME_SAMPLES", 50))))
+PARAMS.setdefault("DIRECTIONAL_MIN_LANE_FEATURES", max(4, int(PARAMS.get("MODEL_MIN_SELECTED_FEATURES", 8)) // 2))
+PARAMS.setdefault("EXIT_MODEL_REQUIRE_POSITION_DAY_SAMPLES", True)
+PARAMS.setdefault("EXIT_MODEL_MIN_POSITION_DAY_ROWS", 80)
+PARAMS.setdefault("SIGNAL_PATH_FAIL_CLOSED", True)
 
 # ---- long/range activation + short/range event flow ----
 PARAMS.setdefault("LIVE_WATCHLIST_MIN_PER_LANE_LONG", 2)

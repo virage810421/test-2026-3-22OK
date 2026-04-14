@@ -19,7 +19,9 @@
     "SHORT": 3,
     "RANGE": 3
   },
-  "directional_bootstrap_enabled": true,
+  "directional_bootstrap_enabled": false,
+  "directional_require_independent_lane_models": true,
+  "allow_shared_fallback_per_lane": false,
   "directional_feature_counts": {
     "LONG": 4,
     "SHORT": 4,

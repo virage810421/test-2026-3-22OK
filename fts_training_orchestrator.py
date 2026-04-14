@@ -108,7 +108,7 @@ class TrainingOrchestrator:
                 "readiness_score": 10,
             }
 
-        base_drop = {"Ticker", "Ticker SYMBOL", "Date", "Setup", "Setup_Tag", "Regime", "Label", "Label_Y", "Target_Return", "Future_Return_Pct", "Entry_Price", "Entry_Price_Basis", "Exit_Price", "Entry_Date", "Exit_Date", "Direction", "Stop_Hit", "Hold_Days", "Touched_TP", "Touched_SL", "Label_Reason", "Label_Exit_Type", "Favorable_Move_Pct", "Adverse_Move_Pct", "Max_Favorable_Excursion", "Max_Adverse_Excursion", "Realized_Return_After_Cost"}
+        base_drop = {"Ticker", "Ticker SYMBOL", "Date", "Setup", "Setup_Tag", "Regime", "Label", "Label_Y", "Target_Return", "Future_Return_Pct", "Entry_Price", "Entry_Price_Basis", "Exit_Price", "Entry_Date", "Exit_Date", "Direction", "Stop_Hit", "Hold_Days", "Touched_TP", "Touched_SL", "Label_Reason", "Label_Exit_Type", "Favorable_Move_Pct", "Adverse_Move_Pct", "Max_Favorable_Excursion", "Max_Adverse_Excursion", "Realized_Return_After_Cost", "Realized_Return_After_Cost_Pct", "Target_Return_Unit", "Sample_Type", "Is_Position_Day", "Position_Day", "Position_Age_Days", "Feature_Row_Index", "Position_Date", "Current_Close", "Unrealized_Return", "Unrealized_Return_Pct", "Remaining_Return_To_Planned_Exit", "Remaining_Return_To_Planned_Exit_Pct", "Adverse_To_Date_Pct", "Favorable_To_Date_Pct"}
         feature_cols = [c for c in df.columns if c not in base_drop]
         label_balance = {}
         regime_counts = {}
