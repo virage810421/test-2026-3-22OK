@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
 from fts_config import PATHS, CONFIG
 from fts_utils import log, safe_float
 
@@ -166,15 +174,15 @@ class DecisionCompatibilityLayer:
                         row = snap[snap[tcol].astype(str).str.strip() == str(ticker).strip()]
                         if not row.empty:
                             return safe_float(row.iloc[-1][pcol], 0.0)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    record_issue('compat', 'numeric_integrity_parse_failed', exc, severity='WARNING', fail_mode='fail_open')
         try:
             import yfinance as yf
             hist = yf.Ticker(str(ticker)).history(period="5d", interval="1d", auto_adjust=False)
             if hist is not None and not hist.empty and "Close" in hist.columns:
                 return safe_float(hist["Close"].dropna().iloc[-1], 0.0)
-        except Exception:
-            pass
+        except Exception as exc:
+            record_issue('compat', 'decision_row_integrity_failed', exc, severity='ERROR', fail_mode='fail_closed')
         return 0.0
 
     def normalize(self, csv_path):

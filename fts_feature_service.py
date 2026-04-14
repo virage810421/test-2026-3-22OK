@@ -13,6 +13,14 @@ import numpy as np
 import pandas as pd
 
 try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
+try:
     from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # pragma: no cover
     class _Paths:
@@ -50,6 +58,15 @@ except Exception:  # pragma: no cover
             return default
     def log(msg: str) -> None:
         print(msg)
+
+
+
+def get_runtime_diagnostics_safe() -> dict:
+    try:
+        from fts_runtime_diagnostics import get_summary
+        return get_summary()
+    except Exception:
+        return {}
 
 from fts_feature_catalog import FEATURE_BUCKETS, PRIORITY_NEW_FEATURES_20, FEATURE_SPECS, LIVE_SAFE_FEATURES, APPROVED_LIVE_DIRECTIONAL_FEATURES, is_feature_live_approved, get_training_feature_groups, get_live_feature_groups
 
@@ -96,7 +113,8 @@ class FeatureService:
                 obj = pickle.load(fh)
             if isinstance(obj, (list, tuple)):
                 return [str(x) for x in obj if str(x).strip()]
-        except Exception:
+        except Exception as exc:
+            record_issue('feature_service', 'load_selected_features_pickle', exc, severity='ERROR', fail_mode='fail_closed', context={'path': str(path)})
             return []
         return []
 
@@ -251,7 +269,8 @@ class FeatureService:
             from fts_regime_service import RegimeService
             regime_row = RegimeService().build_regime_row(row, history_df=history_df)
             out.update({k: safe_float(v, 0.0) for k, v in regime_row.items()})
-        except Exception:
+        except Exception as exc:
+            record_issue('feature_service', 'compute_regime_features', exc, severity='ERROR', fail_mode='fail_closed')
             out.setdefault('Range_Confidence', 0.0)
             out.setdefault('Trend_Confidence', 0.0)
             out.setdefault('Range_Width_Pctl', 0.5)
@@ -274,7 +293,8 @@ class FeatureService:
         if self.training_registry_csv.exists():
             try:
                 return pd.read_csv(self.training_registry_csv, encoding='utf-8-sig')
-            except Exception:
+            except Exception as exc:
+                record_issue('feature_service', 'training_registry_utf8_read_failed', exc, severity='WARNING', fail_mode='fail_open', context={'path': str(self.training_registry_csv)})
                 return pd.read_csv(self.training_registry_csv)
         return pd.DataFrame(columns=['feature_name', 'source', 'role', 'selected', 'present_in_sample'])
 
@@ -333,7 +353,8 @@ class FeatureService:
             return {}
         try:
             return json.loads(path.read_text(encoding='utf-8'))
-        except Exception:
+        except Exception as exc:
+            record_issue('feature_service', 'read_json_if_exists', exc, severity='WARNING', fail_mode='fail_open', context={'path': str(path)})
             return {}
     
     def _artifact_status(self, path: Path, required_columns: Sequence[str] | None = None) -> dict[str, Any]:
@@ -357,7 +378,8 @@ class FeatureService:
             age_days = age_seconds / 86400.0
             status['age_days'] = round(age_days, 4)
             status['fresh'] = bool(age_days <= float(self.artifact_max_age_days))
-        except Exception:
+        except Exception as exc:
+            record_issue('feature_service', 'artifact_stat_failed', exc, severity='WARNING', fail_mode='fail_open', context={'path': str(path)})
             status['fresh'] = False
         if path.suffix.lower() == '.json':
             payload = self._read_json_if_exists(path)
@@ -374,7 +396,8 @@ class FeatureService:
                 status['coverage_ratio'] = 1.0 if status['row_count'] else 0.0
                 if 'Date' in df.columns and not df.empty:
                     status['source_data_cutoff'] = str(df['Date'].iloc[-1])
-            except Exception:
+            except Exception as exc:
+                record_issue('feature_service', 'artifact_csv_read_failed', exc, severity='ERROR', fail_mode='fail_closed', context={'path': str(path)})
                 if required_columns:
                     status['missing_columns'] = list(required_columns)
         elif required_columns:
@@ -600,7 +623,8 @@ class FeatureService:
         s = pd.to_numeric(history_df[col], errors='coerce').ffill().fillna(0.0)
         try:
             return float(s.iloc[-1] - s.iloc[-(periods + 1)])
-        except Exception:
+        except Exception as exc:
+            record_issue('feature_service', 'history_delta_failed', exc, severity='WARNING', fail_mode='fail_open', context={'column': col, 'periods': periods})
             return 0.0
 
     def _compute_exit_timing_features(self, row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> dict[str, float]:
@@ -794,6 +818,7 @@ class FeatureService:
             'strict_feature_parity': bool(getattr(CONFIG, 'strict_feature_parity', True)),
             'feature_manifest_path': str(self.feature_manifest_path),
             'status': 'feature_service_ready',
+            'runtime_diagnostics': get_runtime_diagnostics_safe() if 'get_runtime_diagnostics_safe' in globals() else {},
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🧩 feature service ready: {self.runtime_path}')
@@ -807,7 +832,8 @@ FeatureService._read_json_if_exists = staticmethod(FeatureService._read_json_if_
 from typing import Mapping as _PatchMapping
 try:
     from fts_regime_service import RegimeService as _PatchedRegimeService
-except Exception:
+except Exception as exc:
+    record_issue('feature_service', 'import_regime_service_for_patch_failed', exc, severity='ERROR', fail_mode='fail_closed')
     _PatchedRegimeService = None
 
 _fts_orig_enrich_from_history = FeatureService.enrich_from_history
@@ -850,8 +876,9 @@ def _patched_sync_enrich_from_history(self, df: pd.DataFrame) -> pd.DataFrame:
     if _PatchedRegimeService is not None and ('Transition_Label' not in out.columns or 'Hysteresis_Regime_Label' not in out.columns):
         try:
             out = _PatchedRegimeService().enrich_dataframe(out)
-        except Exception:
-            pass
+        except Exception as exc:
+            record_issue('feature_service', 'regime_enrich_dataframe_failed', exc, severity='ERROR', fail_mode='fail_closed')
+            out['FeatureService_Regime_Enrich_Failed'] = True
     return out
 
 def _patched_sync_extract_ai_features(self, row: _PatchMapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:

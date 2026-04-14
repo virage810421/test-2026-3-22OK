@@ -7,6 +7,14 @@ from typing import Optional, Any
 
 import pandas as pd
 
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
 from broker_base import OrderRequest, OrderSide, OrderType, OrderStatus
 try:
     from paper_broker import PaperBroker
@@ -334,8 +342,8 @@ class ExecutionEngine:
         if gate is not None:
             try:
                 gate.evaluate(df.rename(columns={'Ticker SYMBOL': 'Ticker'}))
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'live_readiness_preflight_failed', exc, severity='ERROR', fail_mode='fail_closed')
         recovery = self.level3_services.get('RecoveryEngine')
         if recovery is not None:
             try:
@@ -348,14 +356,14 @@ class ExecutionEngine:
                     kill_switch_state=kill_state,
                     meta={'phase': 'pre_execution', 'source_meta': source_meta},
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'recovery_snapshot_failed', exc, severity='ERROR', fail_mode='fail_closed')
         machine = self.level3_services.get('OrderStateMachine')
         if machine is not None:
             try:
                 machine.build_definition()
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'order_state_machine_definition_failed', exc, severity='ERROR', fail_mode='fail_closed')
 
     def _push_market_prices(self, df: pd.DataFrame) -> None:
         price_map = {}
@@ -443,24 +451,24 @@ class ExecutionEngine:
         if hasattr(self.broker, 'get_open_orders_dicts'):
             try:
                 return self.broker.get_open_orders_dicts()
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'runtime_side_effect_failed', exc, severity='WARNING', fail_mode='fail_open')
         return [self._order_record_to_row(x) for x in self.broker.get_open_orders()]
 
     def _broker_fills_for_runtime(self) -> list[dict[str, Any]]:
         if hasattr(self.broker, 'get_fill_history_dicts'):
             try:
                 return self.broker.get_fill_history_dicts()
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'runtime_side_effect_failed', exc, severity='WARNING', fail_mode='fail_open')
         return []
 
     def _broker_positions_for_runtime(self) -> list[dict[str, Any]]:
         if hasattr(self.broker, 'get_positions_detailed'):
             try:
                 return self.broker.get_positions_detailed()
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'runtime_side_effect_failed', exc, severity='WARNING', fail_mode='fail_open')
         rows = []
         price_map = getattr(self.broker, 'last_prices', {}) or {}
         for k, v in self.broker.get_positions().items():
@@ -646,16 +654,19 @@ try:
             except TypeError:
                 try:
                     return getter() or []
-                except Exception:
+                except Exception as exc:
+                    record_issue('execution_engine', 'broker_getter_fallback_failed', exc, severity='WARNING', fail_mode='fail_open')
                     return []
-            except Exception:
+            except Exception as exc:
+                record_issue('execution_engine', 'broker_runtime_getter_failed', exc, severity='WARNING', fail_mode='fail_open')
                 return []
         snapper = getattr(self.broker, 'export_runtime_snapshot', None)
         if callable(snapper):
             try:
                 snap = snapper() or {}
                 return list(snap.get('position_lots', []) or [])
-            except Exception:
+            except Exception as exc:
+                record_issue('execution_engine', 'broker_runtime_snapshot_failed', exc, severity='WARNING', fail_mode='fail_open')
                 return []
         return []
 
@@ -665,8 +676,8 @@ try:
         if callable(drain):
             try:
                 return drain() or []
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'broker_callback_drain_failed', exc, severity='ERROR', fail_mode='fail_closed')
         poll = getattr(self.broker, 'poll_callbacks', None)
         if callable(poll):
             try:
@@ -674,9 +685,11 @@ try:
             except TypeError:
                 try:
                     return poll() or []
-                except Exception:
+                except Exception as exc:
+                    record_issue('execution_engine', 'broker_callback_poll_legacy_failed', exc, severity='ERROR', fail_mode='fail_closed')
                     return []
-            except Exception:
+            except Exception as exc:
+                record_issue('execution_engine', 'broker_callback_poll_failed', exc, severity='ERROR', fail_mode='fail_closed')
                 return []
         return []
 
@@ -689,8 +702,8 @@ try:
             rows.append(row)
             try:
                 self._append_csv_row(CALLBACK_BLOTTER_PATH, row)
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'callback_blotter_write_failed', exc, severity='WARNING', fail_mode='fail_open')
             if self.db_logger:
                 try:
                     self.db_logger.ingest_broker_callback(row)
@@ -704,8 +717,8 @@ try:
             row.setdefault('snapshot_time', datetime.now().isoformat(timespec='seconds'))
             try:
                 self._append_csv_row(LOT_SNAPSHOT_PATH, row)
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('execution_engine', 'lot_snapshot_blotter_write_failed', exc, severity='WARNING', fail_mode='fail_open')
 
     def _ee_sync_lot_snapshot(self, note: str = '') -> list[dict[str, Any]]:
         lots = self._broker_lots_for_runtime()
@@ -728,8 +741,8 @@ try:
         cash = None
         try:
             cash = float(self.broker.get_cash())
-        except Exception:
-            pass
+        except Exception as exc:
+            record_issue('execution_engine', 'broker_cash_read_failed', exc, severity='ERROR', fail_mode='fail_closed')
         if self.db_logger and hasattr(self.db_logger, 'reconcile_execution_state'):
             try:
                 summary = self.db_logger.reconcile_execution_state(
@@ -751,8 +764,8 @@ try:
             summary = {'status': 'SKIPPED', 'reason': 'db_logger_missing'}
         try:
             self._append_csv_row(RECONCILIATION_BLOTTER_PATH, {'run_time': datetime.now().isoformat(timespec='seconds'), **summary})
-        except Exception:
-            pass
+        except Exception as exc:
+            record_issue('execution_engine', 'reconciliation_blotter_write_failed', exc, severity='WARNING', fail_mode='fail_open')
         return summary
 
     def _ee_patched_sync_sql_runtime(self, status: str, note: str = '') -> None:
@@ -768,8 +781,8 @@ try:
                 acct = {'snapshot_time': snap_time, 'cash': float(self.broker.get_cash() or 0.0), 'equity': float(self.broker.get_cash() or 0.0), 'broker_type': self.broker.__class__.__name__, 'note': f'{status}|{note}', 'position_lots': lots}
                 try:
                     self.db_logger.sync_runtime_snapshot(acct, self._broker_positions_for_runtime(), snapshot_time=snap_time, note=acct['note'])
-                except Exception:
-                    pass
+                except Exception as exc:
+                    record_issue('execution_engine', 'sync_runtime_snapshot_failed', exc, severity='ERROR', fail_mode='fail_closed')
             self._ee_reconcile_execution_state(callbacks=callbacks, note=f'{status}|{note}')
         except Exception as exc:
             print(f"⚠️ callback/lot/reconcile runtime sync 失敗：{exc}")
@@ -804,5 +817,5 @@ try:
     ExecutionEngine._write_level3_runtime = _ee_patched_write_level3_runtime
     ExecutionEngine.run_from_csv = _ee_patched_run_from_csv
 
-except Exception:
-    pass
+except Exception as exc:
+    record_issue('execution_engine', 'lot_callback_reconcile_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')

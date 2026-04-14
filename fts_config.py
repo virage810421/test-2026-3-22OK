@@ -105,6 +105,13 @@ class SystemConfig:
     scan_recursive_depth: int = 3
     continue_on_stage_failure: bool = True
     safe_upgrade_mode: bool = True
+
+    # ---- runtime diagnostics / fail-open-fail-closed policy ----
+    runtime_diagnostics_enabled: bool = True
+    runtime_diagnostics_jsonl: str = 'runtime_diagnostics_events.jsonl'
+    runtime_diagnostics_summary: str = 'runtime_diagnostics_summary.json'
+    runtime_diagnostics_fail_closed_components: tuple = ('exit_ai','execution_sql','broker_callback','regime','feature_service','protective_stop')
+    runtime_diagnostics_max_recent_events: int = 50
     stage_soft_timeout_seconds: int = 120
     max_stage_retries: int = 1
     resume_completed_stages: bool = True
@@ -241,5 +248,9 @@ try:
     CONFIG.execution_lot_snapshot_csv = 'execution_logs/position_lot_snapshot.csv'
     CONFIG.execution_callback_blotter_csv = 'execution_logs/broker_callback_blotter.csv'
     CONFIG.execution_reconciliation_blotter_csv = 'execution_logs/execution_reconciliation_blotter.csv'
-except Exception:
-    pass
+except Exception as exc:
+    try:
+        from fts_runtime_diagnostics import record_issue
+        record_issue('fts_config', 'optional_runtime_defaults_patch_failed', exc, severity='WARNING', fail_mode='fail_open')
+    except Exception:
+        print(f'⚠️ fts_config optional runtime defaults patch failed: {exc}')

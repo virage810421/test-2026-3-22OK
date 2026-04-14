@@ -13,6 +13,14 @@ from typing import Any, Optional, List
 
 import pandas as pd
 
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
 from fts_config import PATHS, CONFIG
 from fts_utils import log, now_str
 from fts_project_healthcheck import ProjectHealthcheck

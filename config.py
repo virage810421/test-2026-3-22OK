@@ -342,3 +342,12 @@ EXECUTION_RECONCILIATION_WRITE_SQL = True
 EXECUTION_LOT_SNAPSHOT_CSV = 'execution_logs/position_lot_snapshot.csv'
 EXECUTION_CALLBACK_BLOTTER_CSV = 'execution_logs/broker_callback_blotter.csv'
 EXECUTION_RECONCILIATION_BLOTTER_CSV = 'execution_logs/execution_reconciliation_blotter.csv'
+
+# runtime diagnostics defaults
+try:
+    CONFIG.runtime_diagnostics_enabled = True
+    CONFIG.runtime_diagnostics_jsonl = 'runtime_diagnostics_events.jsonl'
+    CONFIG.runtime_diagnostics_summary = 'runtime_diagnostics_summary.json'
+    CONFIG.runtime_diagnostics_fail_closed_components = ('exit_ai','execution_sql','broker_callback','regime','feature_service','protective_stop')
+except Exception:
+    pass

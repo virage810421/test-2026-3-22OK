@@ -9,6 +9,14 @@ from typing import Any
 import joblib
 import pandas as pd
 
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
 from config import PARAMS
 try:
     from fts_config import PATHS, CONFIG  # type: ignore
@@ -108,8 +116,8 @@ def _load_artifacts() -> None:
         if p.exists():
             try:
                 AI_MODELS[regime] = joblib.load(p)
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('model_layer', 'exit_artifact_candidate_scan_failed', exc, severity='ERROR', fail_mode='fail_closed')
     if ENABLE_DIRECTIONAL:
         for scope in ['LONG', 'SHORT', 'RANGE']:
             sf = MODEL_DIR / f'selected_features_{scope.lower()}.pkl'
@@ -123,8 +131,8 @@ def _load_artifacts() -> None:
                 if p.exists():
                     try:
                         DIRECTIONAL_MODELS[scope][regime] = joblib.load(p)
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        record_issue('model_layer', 'artifact_probe_failed', exc, severity='WARNING', fail_mode='fail_open')
             _lane_seed_from_shared(scope)
 
 
@@ -179,8 +187,8 @@ def _feature_input_from_row(latest_row, regime: str, scope: str = 'SHARED') -> t
             X = {f: _safe_float(features_dict.get(f, latest_row.get(f, 0.0)), 0.0) for f in selected}
             proba = float(models[regime].predict_proba(pd.DataFrame([X]))[0][1])
             return {'proba': max(0.01, min(0.99, proba)), **X}, ('ai_model_directional' if scope != 'SHARED' and scope in DIRECTIONAL_MODELS and DIRECTIONAL_MODELS.get(scope) else ('ai_model_bootstrapped_from_shared' if scope != 'SHARED' else 'ai_model'))
-        except Exception:
-            pass
+        except Exception as exc:
+            record_issue('model_layer', 'runtime_model_diagnostic_failed', exc, severity='WARNING', fail_mode='fail_open')
     return {'proba': max(0.01, min(0.99, signal_conf))}, source
 
 
@@ -313,8 +321,8 @@ def _load_exit_artifacts() -> None:
         if p.exists():
             try:
                 EXIT_MODELS[key] = joblib.load(p)
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('model_layer', 'exit_artifact_candidate_scan_failed', exc, severity='ERROR', fail_mode='fail_closed')
 
 
 def _exit_selected_features_ready() -> bool:
@@ -341,8 +349,8 @@ def _predict_exit_proba(model_key: str, row: Any) -> tuple[float, str]:
             if len(X) >= max(1, EXIT_MODEL_MIN_FEATURES):
                 proba = float(EXIT_MODELS[model_key].predict_proba(pd.DataFrame([X]))[0][1])
                 return max(0.01, min(0.99, proba)), 'exit_ai_model'
-        except Exception:
-            pass
+        except Exception as exc:
+            record_issue('model_layer', 'runtime_model_diagnostic_failed', exc, severity='WARNING', fail_mode='fail_open')
     hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0) if hasattr(row, 'get') else 0.0
     if EXIT_FALLBACK_TO_HAZARD:
         if model_key == 'DEFEND':
@@ -420,8 +428,8 @@ def refresh_model_runtime() -> Path:  # type: ignore[override]
             'exit_models_loaded': sorted(list(EXIT_MODELS.keys())),
         })
         RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception:
-        pass
+    except Exception as exc:
+        record_issue('model_layer', 'runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
     return path
 
 
@@ -517,8 +525,8 @@ def _write_exit_runtime_status() -> dict[str, Any]:
     try:
         EXIT_STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
         EXIT_STATUS_PATH.write_text(json.dumps(status, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception:
-        pass
+    except Exception as exc:
+        record_issue('model_layer', 'runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
     return status
 
 
@@ -620,8 +628,8 @@ def refresh_model_runtime() -> Path:  # type: ignore[override]
         payload = json.loads(RUNTIME_PATH.read_text(encoding='utf-8')) if RUNTIME_PATH.exists() else {}
         payload.update(status)
         RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception:
-        pass
+    except Exception as exc:
+        record_issue('model_layer', 'runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
     return path
 
 

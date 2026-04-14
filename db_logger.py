@@ -1,6 +1,14 @@
 # db_logger.py
 from __future__ import annotations
 
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
 from datetime import datetime
 from typing import Any, Optional
 try:
@@ -23,7 +31,8 @@ def _dt(value):
         return value
     try:
         return datetime.fromisoformat(str(value).replace('Z', ''))
-    except Exception:
+    except Exception as exc:
+        record_issue('db_logger', 'parse_datetime_failed', exc, severity='WARNING', fail_mode='fail_open', context={'value': repr(value)})
         return None
 
 
@@ -214,7 +223,8 @@ try:
     def _dblogger_json(value: Any) -> str:
         try:
             return _json.dumps(value, ensure_ascii=False, default=str)
-        except Exception:
+        except Exception as exc:
+            record_issue('db_logger', 'json_serialize_failed', exc, severity='WARNING', fail_mode='fail_open')
             return str(value)
 
     _DBL_ORIG_INIT = SQLServerExecutionLogger.__init__
@@ -395,7 +405,8 @@ try:
         try:
             if local_cash is not None and broker_cash is not None:
                 cash_diff = round(float(local_cash)-float(broker_cash), 4)
-        except Exception:
+        except Exception as exc:
+            record_issue('db_logger', 'reconciliation_cash_diff_failed', exc, severity='WARNING', fail_mode='fail_open')
             cash_diff = None
         status = 'OK' if not (order_diff or fill_diff or pos_diff or lot_diff or (cash_diff is not None and abs(cash_diff)>1.0)) else 'MISMATCH'
         summary = {'status':status,'order_mismatch_count':len(order_diff),'fill_mismatch_count':len(fill_diff),'position_mismatch_count':len(pos_diff),'lot_mismatch_count':len(lot_diff),'cash_diff':cash_diff,'orders':order_diff[:50],'fills':fill_diff[:50],'positions':pos_diff[:50],'lots':lot_diff[:50],'note':note}
@@ -436,5 +447,5 @@ try:
     SQLServerExecutionLogger.reconcile_execution_state = _dbl_reconcile_execution_state
     SQLServerExecutionLogger.sync_runtime_snapshot = _dbl_patched_sync_runtime_snapshot
 
-except Exception:
-    pass
+except Exception as exc:
+    record_issue('db_logger', 'lot_callback_reconcile_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')

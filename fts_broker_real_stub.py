@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
 import uuid
 from dataclasses import asdict, is_dataclass
 from typing import Any, Dict, List, Tuple
@@ -630,8 +638,8 @@ class RealBrokerStub(BrokerBase):
         if self._event_store is not None:
             try:
                 self._event_store.record(event)
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('real_broker_stub', 'runtime_callback_emit_failed', exc, severity='ERROR', fail_mode='fail_closed')
 
 # =============================================================================
 # vNext callback / reconciliation / lot-level extension for mock real broker
@@ -749,8 +757,8 @@ try:
         for handler in list(getattr(self, '_callback_handlers', []) or []):
             try:
                 handler(dict(event))
-            except Exception:
-                pass
+            except Exception as exc:
+                record_issue('real_broker_stub', 'runtime_callback_emit_failed', exc, severity='ERROR', fail_mode='fail_closed')
 
     def _rbs_register_callback_handler(self, handler) -> dict[str, Any]:
         _rbs_init_lot_book(self)
@@ -815,5 +823,5 @@ try:
         RealBrokerStub._orig_export_runtime_snapshot = RealBrokerStub.export_runtime_snapshot
     RealBrokerStub.export_runtime_snapshot = _rbs_export_runtime_snapshot
 
-except Exception:
-    pass
+except Exception as exc:
+    record_issue('real_broker_stub', 'runtime_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')

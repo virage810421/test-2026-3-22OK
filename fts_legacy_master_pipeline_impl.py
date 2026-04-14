@@ -7,6 +7,14 @@ from datetime import datetime
 
 import joblib
 import pandas as pd
+
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
 import pyodbc
 import yfinance as yf
 

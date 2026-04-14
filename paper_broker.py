@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -34,7 +42,8 @@ class PaperBroker(BrokerBase):
         for symbol, price in price_map.items():
             try:
                 px = float(price)
-            except Exception:
+            except Exception as exc:
+                record_issue('paper_broker', 'invalid_market_price_ignored', exc, severity='WARNING', fail_mode='fail_open', context={'symbol': str(symbol), 'price': repr(price)})
                 continue
             if px > 0:
                 self.last_prices[str(symbol)] = px
@@ -618,6 +627,6 @@ try:
         return snap
     PaperBroker.export_runtime_snapshot = _pb_patched_export_runtime_snapshot
 
-except Exception:
-    # Keep import safety even if a downstream legacy PaperBroker differs.
-    pass
+except Exception as exc:
+    # Keep import safety even if a downstream legacy PaperBroker differs, but do not hide the failure.
+    record_issue('paper_broker', 'lot_level_runtime_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')

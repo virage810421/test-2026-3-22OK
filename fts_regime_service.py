@@ -8,6 +8,14 @@ from typing import Any, Mapping
 import pandas as pd
 
 try:
+    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
+    def write_runtime_diagnostics_summary(*args, **kwargs):
+        return None
+
+try:
     from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # pragma: no cover
     class _Paths:

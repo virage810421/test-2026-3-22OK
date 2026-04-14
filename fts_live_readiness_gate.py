@@ -9,6 +9,11 @@ from fts_config import CONFIG, PATHS
 from fts_market_rules_tw import validate_order_payload
 from fts_feature_observability import FeatureObservability
 from fts_compat import apply_decision_integrity_flags
+try:
+    from fts_runtime_diagnostics import get_summary as get_runtime_diagnostics_summary
+except Exception:  # pragma: no cover
+    def get_runtime_diagnostics_summary():
+        return {}
 
 
 class LiveReadinessGate:
@@ -26,6 +31,10 @@ class LiveReadinessGate:
         checks['kill_switch_defined'] = bool(getattr(CONFIG, 'enable_live_kill_switch', True))
         checks['credentials_file_present'] = (PATHS.base_dir / 'secrets' / 'broker_credentials.json').exists()
         checks['price_snapshot_present'] = (PATHS.data_dir / 'last_price_snapshot.csv').exists() or (PATHS.base_dir / 'last_price_snapshot.csv').exists()
+        runtime_diag = get_runtime_diagnostics_summary() or {}
+        checks['runtime_diagnostics_event_count'] = int(runtime_diag.get('event_count', 0) or 0)
+        checks['runtime_diagnostics_hard_block_count'] = int(runtime_diag.get('hard_block_count', 0) or 0)
+        checks['runtime_diagnostics_hard_blocks_present'] = checks['runtime_diagnostics_hard_block_count'] > 0
 
         shared_expected = ['selected_features.pkl', 'model_趨勢多頭.pkl', 'model_區間盤整.pkl', 'model_趨勢空頭.pkl']
         lane_feature_expected = [f'selected_features_{lane}.pkl' for lane in ['long', 'short', 'range']]
@@ -73,6 +82,8 @@ class LiveReadinessGate:
             hard_blocks.append('broker_credentials_missing')
         if checks['mode_is_live'] and not checks['price_snapshot_present']:
             hard_blocks.append('price_snapshot_missing')
+        if checks.get('runtime_diagnostics_hard_blocks_present'):
+            hard_blocks.append('runtime_diagnostics_hard_blocks_present')
         if total_payloads > 0 and valid_payloads < total_payloads:
             hard_blocks.append('some_order_payloads_fail_tw_market_rules')
         if checks['decision_desk_present'] and not checks['decision_desk_usable_rows_present']:
@@ -126,6 +137,7 @@ class LiveReadinessGate:
                 'executable_score': executable_score,
             },
             'feature_observability': {'path': str(observability_path), 'payload': observability},
+            'runtime_diagnostics': runtime_diag,
             'status': 'ready' if len(hard_blocks) == 0 else 'blocked'
         }
         self.out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
