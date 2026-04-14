@@ -1,15 +1,8 @@
 # db_logger.py
 from __future__ import annotations
 
-try:
-    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
-except Exception:  # pragma: no cover
-    def record_issue(*args, **kwargs):
-        return {}
-    def write_runtime_diagnostics_summary(*args, **kwargs):
-        return None
-
 from datetime import datetime
+from fts_symbol_contract import ensure_execution_symbol
 from typing import Any, Optional
 try:
     import pyodbc
@@ -31,8 +24,7 @@ def _dt(value):
         return value
     try:
         return datetime.fromisoformat(str(value).replace('Z', ''))
-    except Exception as exc:
-        record_issue('db_logger', 'parse_datetime_failed', exc, severity='WARNING', fail_mode='fail_open', context={'value': repr(value)})
+    except Exception:
         return None
 
 
@@ -67,6 +59,7 @@ class SQLServerExecutionLogger:
         self.cursor.execute(sql, params)
 
     def insert_order(self, row: dict) -> None:
+        row = ensure_execution_symbol(dict(row or {}), keep_legacy=True)
         if not self.enabled or not self.cursor:
             return
         order_id = _pick(row, 'order_id', '委託單號', 'broker_order_id', 'client_order_id')
@@ -82,7 +75,7 @@ class SQLServerExecutionLogger:
         WHEN MATCHED THEN UPDATE SET
             [client_order_id]=?,
             [broker_order_id]=?,
-            [Ticker SYMBOL]=?,
+            ticker_symbol=?,
             [direction_bucket]=?,
             [strategy_bucket]=?,
             [status]=?,
@@ -91,7 +84,7 @@ class SQLServerExecutionLogger:
             [created_at]=COALESCE(tgt.[created_at], ?),
             [updated_at]=?
         WHEN NOT MATCHED THEN INSERT (
-            [order_id], [client_order_id], [broker_order_id], [Ticker SYMBOL], [direction_bucket], [strategy_bucket],
+            [order_id], [client_order_id], [broker_order_id], ticker_symbol, [direction_bucket], [strategy_bucket],
             [status], [qty], [ref_price], [created_at], [updated_at]
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
@@ -114,6 +107,7 @@ class SQLServerExecutionLogger:
         self.conn.commit()
 
     def insert_fill(self, row: dict) -> None:
+        row = ensure_execution_symbol(dict(row or {}), keep_legacy=True)
         if not self.enabled or not self.cursor:
             return
         fill_id = _pick(row, 'fill_id', '成交編號')
@@ -127,13 +121,13 @@ class SQLServerExecutionLogger:
         ON tgt.[fill_id] = src.[fill_id]
         WHEN MATCHED THEN UPDATE SET
             [order_id]=?,
-            [Ticker SYMBOL]=?,
+            ticker_symbol=?,
             [direction_bucket]=?,
             [fill_qty]=?,
             [fill_price]=?,
             [fill_time]=?
         WHEN NOT MATCHED THEN INSERT (
-            [fill_id], [order_id], [Ticker SYMBOL], [direction_bucket], [fill_qty], [fill_price], [fill_time]
+            [fill_id], [order_id], ticker_symbol, [direction_bucket], [fill_qty], [fill_price], [fill_time]
         ) VALUES (?, ?, ?, ?, ?, ?, ?);
         """
         vals = [
@@ -170,7 +164,7 @@ class SQLServerExecutionLogger:
         snap_time = _dt(snapshot_time) or datetime.now()
         self.cursor.execute("DELETE FROM dbo.execution_positions_snapshot WHERE [snapshot_time]=?", snap_time)
         sql = """
-        INSERT INTO dbo.execution_positions_snapshot ([snapshot_time], [Ticker SYMBOL], [direction_bucket], [qty], [avg_cost])
+        INSERT INTO dbo.execution_positions_snapshot ([snapshot_time], ticker_symbol, [direction_bucket], [qty], [avg_cost])
         VALUES (?, ?, ?, ?, ?)
         """
         for row in rows or []:
@@ -196,7 +190,7 @@ class SQLServerExecutionLogger:
             'order_id': _pick(row, 'broker_order_id', 'order_id', 'client_order_id'),
             'client_order_id': _pick(row, 'client_order_id'),
             'broker_order_id': _pick(row, 'broker_order_id', 'order_id'),
-            'Ticker SYMBOL': _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'ticker', 'symbol'),
+            'ticker_symbol': _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'ticker', 'symbol'),
             'direction_bucket': _pick(row, 'direction_bucket', 'side', default='STOP'),
             'strategy_bucket': _pick(row, 'strategy_bucket', 'strategy_name', default='protective_stop'),
             'status': _pick(row, 'status', default='WORKING'),
@@ -223,8 +217,7 @@ try:
     def _dblogger_json(value: Any) -> str:
         try:
             return _json.dumps(value, ensure_ascii=False, default=str)
-        except Exception as exc:
-            record_issue('db_logger', 'json_serialize_failed', exc, severity='WARNING', fail_mode='fail_open')
+        except Exception:
             return str(value)
 
     _DBL_ORIG_INIT = SQLServerExecutionLogger.__init__
@@ -273,11 +266,11 @@ try:
         USING (SELECT ? AS lot_id) AS src
         ON tgt.lot_id = src.lot_id
         WHEN MATCHED THEN UPDATE SET
-            snapshot_time=?, [Ticker SYMBOL]=?, direction_bucket=?, status=?, open_qty=?, remaining_qty=?, avg_cost=?, entry_price=?,
+            snapshot_time=?, ticker_symbol=?, direction_bucket=?, status=?, open_qty=?, remaining_qty=?, avg_cost=?, entry_price=?,
             market_price=?, market_value=?, unrealized_pnl=?, realized_pnl=?, entry_time=?, close_time=?, entry_order_id=?, exit_order_id=?,
             strategy_name=?, updated_at=?, raw_json=?
         WHEN NOT MATCHED THEN INSERT (
-            lot_id, snapshot_time, [Ticker SYMBOL], direction_bucket, status, open_qty, remaining_qty, avg_cost, entry_price,
+            lot_id, snapshot_time, ticker_symbol, direction_bucket, status, open_qty, remaining_qty, avg_cost, entry_price,
             market_price, market_value, unrealized_pnl, realized_pnl, entry_time, close_time, entry_order_id, exit_order_id,
             strategy_name, updated_at, raw_json
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
@@ -285,7 +278,7 @@ try:
         vals = [
             str(lot_id),
             snap_time,
-            _pick(row, 'ticker', 'symbol', 'Ticker SYMBOL'),
+            _pick(row, 'ticker_symbol', 'ticker', 'symbol', 'Ticker SYMBOL'),
             _pick(row, 'direction_bucket', 'side'),
             _pick(row, 'status', default='OPEN'),
             _pick(row, 'open_qty'),
@@ -328,9 +321,9 @@ try:
         USING (SELECT ? AS callback_id) AS src
         ON tgt.callback_id = src.callback_id
         WHEN MATCHED THEN UPDATE SET
-            broker_order_id=?, client_order_id=?, event_type=?, status=?, [Ticker SYMBOL]=?, filled_qty=?, remaining_qty=?, avg_fill_price=?, callback_time=?, raw_json=?
+            broker_order_id=?, client_order_id=?, event_type=?, status=?, ticker_symbol=?, filled_qty=?, remaining_qty=?, avg_fill_price=?, callback_time=?, raw_json=?
         WHEN NOT MATCHED THEN INSERT (
-            callback_id, broker_order_id, client_order_id, event_type, status, [Ticker SYMBOL], filled_qty, remaining_qty, avg_fill_price, callback_time, raw_json
+            callback_id, broker_order_id, client_order_id, event_type, status, ticker_symbol, filled_qty, remaining_qty, avg_fill_price, callback_time, raw_json
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
         vals = [
@@ -339,7 +332,7 @@ try:
             _pick(event, 'client_order_id'),
             event_type,
             _pick(event, 'status'),
-            _pick(event, 'symbol', 'ticker', 'Ticker SYMBOL'),
+            _pick(event, 'ticker_symbol', 'symbol', 'ticker', 'Ticker SYMBOL'),
             _pick(event, 'filled_qty'),
             _pick(event, 'remaining_qty'),
             _pick(event, 'avg_fill_price', 'fill_price'),
@@ -387,7 +380,7 @@ try:
         def pos_map(rows):
             out={}
             for r in rows or []:
-                k=str(r.get('ticker', r.get('symbol', r.get('Ticker SYMBOL',''))))
+                k=str(r.get('ticker_symbol', r.get('ticker', r.get('symbol', r.get('Ticker SYMBOL','')))))
                 if k:
                     out[k]=int(r.get('qty', r.get('quantity', 0)) or 0)
             return out
@@ -405,8 +398,7 @@ try:
         try:
             if local_cash is not None and broker_cash is not None:
                 cash_diff = round(float(local_cash)-float(broker_cash), 4)
-        except Exception as exc:
-            record_issue('db_logger', 'reconciliation_cash_diff_failed', exc, severity='WARNING', fail_mode='fail_open')
+        except Exception:
             cash_diff = None
         status = 'OK' if not (order_diff or fill_diff or pos_diff or lot_diff or (cash_diff is not None and abs(cash_diff)>1.0)) else 'MISMATCH'
         summary = {'status':status,'order_mismatch_count':len(order_diff),'fill_mismatch_count':len(fill_diff),'position_mismatch_count':len(pos_diff),'lot_mismatch_count':len(lot_diff),'cash_diff':cash_diff,'orders':order_diff[:50],'fills':fill_diff[:50],'positions':pos_diff[:50],'lots':lot_diff[:50],'note':note}
@@ -447,5 +439,88 @@ try:
     SQLServerExecutionLogger.reconcile_execution_state = _dbl_reconcile_execution_state
     SQLServerExecutionLogger.sync_runtime_snapshot = _dbl_patched_sync_runtime_snapshot
 
-except Exception as exc:
-    record_issue('db_logger', 'lot_callback_reconcile_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')
+except Exception:
+    pass
+
+
+# =============================================================================
+# vNext institutional lot lifecycle extension
+# =============================================================================
+try:
+    import uuid as _uuid2
+
+    def _dbl_json_list(v):
+        import json
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return v
+        try:
+            return json.dumps(list(v), ensure_ascii=False)
+        except Exception:
+            try:
+                return json.dumps(v, ensure_ascii=False)
+            except Exception:
+                return None
+
+    def _dbl_upsert_position_lot_v2(self, row: dict, snapshot_time: Optional[str] = None) -> None:
+        if not self.enabled or not self.cursor:
+            return
+        lot_id = _pick(row, 'lot_id', 'Lot_ID')
+        if not lot_id:
+            return
+        snap_time = _dt(snapshot_time) or _dt(_pick(row, 'snapshot_time')) or datetime.now()
+        sql = """
+        MERGE dbo.execution_position_lots AS tgt
+        USING (SELECT ? AS lot_id) AS src
+        ON tgt.lot_id = src.lot_id
+        WHEN MATCHED THEN UPDATE SET
+            snapshot_time=?, ticker_symbol=?, direction_bucket=?, status=?, open_qty=?, remaining_qty=?, avg_cost=?, entry_price=?,
+            market_price=?, market_value=?, unrealized_pnl=?, realized_pnl=?, entry_time=?, close_time=?, entry_order_id=?, exit_order_id=?,
+            strategy_name=?, signal_id=?, client_order_id=?, position_key=?, strategy_bucket=?, cost_basis_method=?,
+            entry_fill_qty=?, close_fill_qty=?, entry_fill_count=?, close_fill_count=?, entry_fill_ids_json=?, exit_fill_ids_json=?,
+            open_commission=?, open_tax=?, close_commission=?, close_tax=?, stop_order_id=?, stop_price=?, stop_status=?, linked_stop_qty=?,
+            last_fill_time=?, updated_at=?, raw_json=?
+        WHEN NOT MATCHED THEN INSERT (
+            lot_id, snapshot_time, ticker_symbol, direction_bucket, status, open_qty, remaining_qty, avg_cost, entry_price,
+            market_price, market_value, unrealized_pnl, realized_pnl, entry_time, close_time, entry_order_id, exit_order_id,
+            strategy_name, signal_id, client_order_id, position_key, strategy_bucket, cost_basis_method,
+            entry_fill_qty, close_fill_qty, entry_fill_count, close_fill_count, entry_fill_ids_json, exit_fill_ids_json,
+            open_commission, open_tax, close_commission, close_tax, stop_order_id, stop_price, stop_status, linked_stop_qty,
+            last_fill_time, updated_at, raw_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        vals = [str(lot_id), snap_time, _pick(row, 'ticker_symbol', 'ticker', 'symbol', 'Ticker SYMBOL'), _pick(row, 'direction_bucket', 'side'), _pick(row, 'lifecycle_status', 'status', default='OPEN'), _pick(row, 'open_qty'), _pick(row, 'remaining_qty', 'qty'), _pick(row, 'avg_cost'), _pick(row, 'entry_price'), _pick(row, 'market_price'), _pick(row, 'market_value'), _pick(row, 'unrealized_pnl'), _pick(row, 'realized_pnl'), _dt(_pick(row, 'entry_time')), _dt(_pick(row, 'close_time')), _pick(row, 'entry_order_id'), _pick(row, 'exit_order_id'), _pick(row, 'strategy_name'), _pick(row, 'signal_id'), _pick(row, 'client_order_id'), _pick(row, 'position_key'), _pick(row, 'strategy_bucket'), _pick(row, 'cost_basis_method'), _pick(row, 'entry_fill_qty'), _pick(row, 'close_fill_qty'), _pick(row, 'entry_fill_count'), _pick(row, 'close_fill_count'), _dbl_json_list(_pick(row, 'entry_fill_ids_json', 'entry_fill_ids')), _dbl_json_list(_pick(row, 'exit_fill_ids_json', 'exit_fill_ids')), _pick(row, 'open_commission'), _pick(row, 'open_tax'), _pick(row, 'close_commission'), _pick(row, 'close_tax'), _pick(row, 'stop_order_id'), _pick(row, 'stop_price'), _pick(row, 'stop_status'), _pick(row, 'linked_stop_qty'), _dt(_pick(row, 'last_fill_time')), datetime.now(), _dblogger_json(row)]
+        self.cursor.execute(sql, vals + vals)
+        self.conn.commit()
+
+    def _dbl_ingest_broker_callback_v2(self, event: dict) -> None:
+        if not self.enabled or not self.cursor:
+            return
+        self.ensure_lot_callback_tables()
+        broker_order_id = _pick(event, 'broker_order_id', 'order_id')
+        event_type = _pick(event, 'event_type', 'type', default='UNKNOWN')
+        ts = _dt(_pick(event, 'timestamp', 'callback_time', 'updated_at', 'fill_time')) or datetime.now()
+        callback_id = _pick(event, 'callback_id') or f"{broker_order_id or 'NOORDER'}-{event_type}-{ts.isoformat(timespec='seconds')}-{_uuid2.uuid4().hex[:6]}"
+        fill_qty = int(_pick(event, 'filled_qty', 'fill_qty', default=0) or 0)
+        avg_fill_price = _pick(event, 'avg_fill_price', 'fill_price')
+        fill_notional = None
+        try:
+            fill_notional = round(float(avg_fill_price or 0.0) * fill_qty, 4)
+        except Exception:
+            fill_notional = None
+        sql = """
+        MERGE dbo.execution_broker_callbacks AS tgt
+        USING (SELECT ? AS callback_id) AS src
+        ON tgt.callback_id = src.callback_id
+        WHEN MATCHED THEN UPDATE SET broker_order_id=?, client_order_id=?, event_type=?, status=?, ticker_symbol=?, filled_qty=?, remaining_qty=?, avg_fill_price=?, lot_id=?, position_key=?, strategy_name=?, signal_id=?, fill_notional=?, callback_time=?, raw_json=?
+        WHEN NOT MATCHED THEN INSERT (callback_id, broker_order_id, client_order_id, event_type, status, ticker_symbol, filled_qty, remaining_qty, avg_fill_price, lot_id, position_key, strategy_name, signal_id, fill_notional, callback_time, raw_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        vals = [str(callback_id), broker_order_id, _pick(event, 'client_order_id'), event_type, _pick(event, 'status'), _pick(event, 'ticker_symbol', 'symbol', 'ticker', 'Ticker SYMBOL'), fill_qty, _pick(event, 'remaining_qty'), avg_fill_price, _pick(event, 'lot_id'), _pick(event, 'position_key'), _pick(event, 'strategy_name'), _pick(event, 'signal_id'), fill_notional, ts, _dblogger_json(event)]
+        self.cursor.execute(sql, vals + vals)
+        self.conn.commit()
+
+    SQLServerExecutionLogger.upsert_position_lot = _dbl_upsert_position_lot_v2
+    SQLServerExecutionLogger.ingest_broker_callback = _dbl_ingest_broker_callback_v2
+except Exception:
+    pass

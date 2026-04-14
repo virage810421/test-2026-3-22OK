@@ -1,0 +1,1205 @@
+{
+  "generated_at": "2026-04-14T05:49:23",
+  "tool": "fts_deprecated_drop_readiness.py",
+  "tool_version": "v20260414_deprecated_drop_readiness_audit",
+  "project_root": "/mnt/data/system_guard_continue_work",
+  "status": "not_ready_core_findings",
+  "summary": {
+    "py_files": 155,
+    "findings_total": 106,
+    "severity_counts": {
+      "medium": 60,
+      "high": 43,
+      "low": 3
+    },
+    "drop_readiness_counts": {
+      "NOT_READY": 3,
+      "READY_CLEAN": 1,
+      "UNKNOWN_DB_NOT_CHECKED": 5,
+      "KEEP_COMPAT_DB_NOT_CHECKED": 2,
+      "NOT_READY_FOR_GLOBAL_FAIL_CLOSED": 1
+    },
+    "legacy_Ticker_SYMBOL_refs": 218,
+    "canonical_ticker_symbol_refs": 165,
+    "except_exception_count": 468,
+    "pass_count": 51,
+    "fallback_count": 221,
+    "db_probe_status": "not_checked_static_only"
+  },
+  "drop_candidates": [
+    {
+      "target": "file:system_guard.py",
+      "current_status": "wrapper_only",
+      "drop_readiness": "NOT_READY",
+      "evidence": [
+        "delegates_to_fts_system_guard_service=True",
+        "risky_legacy_patterns=none",
+        "import_refs=1",
+        "import_ref:fts_legacy_master_pipeline_impl.py"
+      ],
+      "blockers": [
+        "仍有其他檔案 import system_guard；刪檔前需改 import 到 fts_system_guard_service。"
+      ],
+      "required_steps_before_drop": [
+        "改掉 import refs",
+        "確認 fts_system_guard_service.py 已是唯一主線",
+        "跑 healthcheck/bootstrap/daily"
+      ]
+    },
+    {
+      "target": "duplicate_defs:fts_model_layer.py",
+      "current_status": "duplicate_defs_found",
+      "drop_readiness": "NOT_READY",
+      "evidence": [
+        "duplicate_defs={'as_dict': 2}"
+      ],
+      "blockers": [
+        "fts_model_layer.py 仍有重複函式定義"
+      ],
+      "required_steps_before_drop": [
+        "刪除被後段覆寫的舊函式",
+        "重新跑 py_compile",
+        "確認 exit runtime 欄位存在"
+      ]
+    },
+    {
+      "target": "config:exit_model_hazard_fallback",
+      "current_status": "fallback_disabled",
+      "drop_readiness": "READY_CLEAN",
+      "evidence": [
+        "fallback_enabled=False",
+        "hard_block_seen=True"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "code:execution_Ticker_SYMBOL_references",
+      "current_status": "58 refs, 22 unapproved",
+      "drop_readiness": "NOT_READY",
+      "evidence": [
+        "total_execution_context_refs=58",
+        "unapproved_refs=22",
+        "db_logger.py:383",
+        "execution_engine.py:70",
+        "execution_engine.py:238",
+        "execution_engine.py:341",
+        "execution_engine.py:342",
+        "execution_engine.py:357",
+        "fts_db_migrations.py:136",
+        "fts_db_migrations.py:140",
+        "fts_db_schema.py:42",
+        "fts_db_schema.py:49",
+        "fts_db_schema.py:55",
+        "fts_db_schema.py:106",
+        "fts_db_schema.py:111",
+        "fts_deprecated_drop_readiness.py:302",
+        "fts_deprecated_drop_readiness.py:395",
+        "fts_deprecated_drop_readiness.py:413",
+        "live_paper_trading.py:363",
+        "live_paper_trading.py:385",
+        "live_paper_trading.py:787",
+        "live_paper_trading.py:788",
+        "live_paper_trading.py:876",
+        "live_paper_trading.py:1028"
+      ],
+      "blockers": [
+        "核心/execution 檔案仍有未標示 alias/backfill/compat 的 Ticker SYMBOL 使用。"
+      ],
+      "required_steps_before_drop": [
+        "跑 fts_db_migrations.py upgrade 回填 DB",
+        "確認所有 execution runtime/output 都有 ticker_symbol",
+        "觀察 3~5 輪 daily/paper 無舊欄位讀取告警"
+      ]
+    },
+    {
+      "target": "db:execution_orders.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_fills.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_positions_snapshot.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_position_lots.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:execution_broker_callbacks.[Ticker SYMBOL]",
+      "current_status": "db_not_checked",
+      "drop_readiness": "UNKNOWN_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查或未連線；此報告只完成靜態掃描。"
+      ],
+      "blockers": [
+        "需要在本機 SQL Server 跑本工具才知道舊欄位是否存在。"
+      ],
+      "required_steps_before_drop": [
+        "python fts_db_migrations.py upgrade",
+        "python fts_admin_cli.py drop-readiness"
+      ]
+    },
+    {
+      "target": "db:active_positions.[Ticker SYMBOL]",
+      "current_status": "legacy_table_compat_layer",
+      "drop_readiness": "KEEP_COMPAT_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查；舊表建議保留相容欄位。"
+      ],
+      "blockers": [
+        "active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。"
+      ],
+      "required_steps_before_drop": [
+        "若未來要 drop：先改所有報表/SQL/CSV/training 讀 ticker_symbol，再連跑多輪確認。"
+      ]
+    },
+    {
+      "target": "db:trade_history.[Ticker SYMBOL]",
+      "current_status": "legacy_table_compat_layer",
+      "drop_readiness": "KEEP_COMPAT_DB_NOT_CHECKED",
+      "evidence": [
+        "DB 無法檢查；舊表建議保留相容欄位。"
+      ],
+      "blockers": [
+        "active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。"
+      ],
+      "required_steps_before_drop": [
+        "若未來要 drop：先改所有報表/SQL/CSV/training 讀 ticker_symbol，再連跑多輪確認。"
+      ]
+    },
+    {
+      "target": "policy:global_exception_fail_closed",
+      "current_status": "except_exception=468, pass=51, fallback=221, high_findings=43",
+      "drop_readiness": "NOT_READY_FOR_GLOBAL_FAIL_CLOSED",
+      "evidence": [
+        "py_files=155",
+        "core_runtime_files=24"
+      ],
+      "blockers": [
+        "ETL/research/legacy wrapper 不應全改 fail-closed；只需 diagnostics。",
+        "core_high_findings=43"
+      ],
+      "required_steps_before_drop": [
+        "核心交易路徑 fail-closed",
+        "ETL/research fail-open + diagnostics",
+        "不要全域硬刪 except Exception"
+      ]
+    }
+  ],
+  "top_findings": [
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "db_logger.py",
+      "line": 383,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 9,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 27,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 401,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 460,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 463,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 510,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 525,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "db_logger.py",
+      "line": 526,
+      "message": "db_logger.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 70,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 238,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 341,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 342,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 357,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 145,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 153,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 169,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 191,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 208,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 222,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 225,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 290,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 299,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 434,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 442,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 451,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 562,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 647,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 670,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 718,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 723,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 733,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 742,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "execution_engine.py",
+      "line": 815,
+      "message": "execution_engine.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_admin_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x18, savex2, loadx3, buildx14, evaluatex2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_broker_core.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x7, buildx6",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_chart_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x7, buildx6",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_control_tower.py",
+      "line": 144,
+      "message": "fts_control_tower.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_db_migrations.py",
+      "line": 136,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_db_migrations.py",
+      "line": 140,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_db_migrations.py",
+      "line": 100,
+      "message": "fts_db_migrations.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_db_migrations.py",
+      "line": 142,
+      "message": "fts_db_migrations.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_db_migrations.py",
+      "line": 152,
+      "message": "fts_db_migrations.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_db_migrations.py",
+      "line": 183,
+      "message": "fts_db_migrations.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_db_schema.py",
+      "line": 42,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_db_schema.py",
+      "line": 49,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_db_schema.py",
+      "line": 55,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_db_schema.py",
+      "line": 106,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_db_schema.py",
+      "line": 111,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_deprecated_drop_readiness.py",
+      "line": 302,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_deprecated_drop_readiness.py",
+      "line": 395,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_deprecated_drop_readiness.py",
+      "line": 413,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_etl_quality_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x5, buildx5",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_exception_policy.py",
+      "line": 153,
+      "message": "fts_exception_policy.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_exception_policy.py",
+      "line": 171,
+      "message": "fts_exception_policy.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "fts_exception_policy.py",
+      "line": 154,
+      "message": "fts_exception_policy.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "fts_exception_policy.py",
+      "line": 172,
+      "message": "fts_exception_policy.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "fts_exception_policy.py",
+      "line": 178,
+      "message": "fts_exception_policy.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_execution_layer.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：as_dictx2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_execution_models.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x4, build_definitionx2, buildx2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_execution_runtime.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x4, summarizex2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_legacy_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x7, buildx6",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_live_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x3, buildx3",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_model_gate.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_model_layer.py",
+      "line": 82,
+      "message": "fts_model_layer.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_model_layer.py",
+      "line": 137,
+      "message": "fts_model_layer.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_model_layer.py",
+      "line": 336,
+      "message": "fts_model_layer.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 286,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 287,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 287,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 287,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 321,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 321,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 321,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 386,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 386,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 387,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 387,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 396,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 396,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 431,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 435,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 437,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 439,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 440,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "medium",
+      "category": "core_fallback",
+      "file": "fts_model_layer.py",
+      "line": 458,
+      "message": "fts_model_layer.py 出現 fallback 字樣，需確認不是 exit AI 靜默降級。",
+      "recommendation": "核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。"
+    },
+    {
+      "severity": "high",
+      "category": "duplicate_function_definitions",
+      "file": "fts_model_layer.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：as_dictx2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_operations_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x11, writex2, buildx8",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_project_quality_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x9, buildx9",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_research_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x6, buildx4",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_resilience.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_runtime_ops.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x6, writex2, summaryx2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_strategy_policy_layer.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x4, get_exit_rulesx3",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "fts_symbol_contract.py",
+      "line": 70,
+      "message": "fts_symbol_contract.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_target95_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x2, buildx2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_tests.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：runx2",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_training_quality_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x3, buildx3",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_upgrade_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x4, runx4",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_watchlist_service.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x4",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "fts_wave_suite.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x5, buildx5",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    }
+  ],
+  "static_counters": {
+    "py_files": 155,
+    "file_class.general": 107,
+    "except_exception": 468,
+    "bare_except": 2,
+    "pass": 51,
+    "fallback": 221,
+    "legacy_Ticker_SYMBOL": 218,
+    "canonical_ticker_symbol": 165,
+    "todo": 72,
+    "file_class.etl_research_or_legacy": 24,
+    "file_class.core_runtime": 24
+  },
+  "ticker_refs_by_file_top": {
+    "fts_etl_daily_chip_service.py": 22,
+    "fts_fundamentals_etl_mainline.py": 16,
+    "fundamental_screener.py": 15,
+    "fts_deprecated_drop_readiness.py": 12,
+    "fts_training_universe_service.py": 12,
+    "live_paper_trading.py": 12,
+    "db_setup_research_plus.py": 11,
+    "fts_db_migrations.py": 10,
+    "db_logger.py": 9,
+    "fts_stock_master_service.py": 9,
+    "fts_company_quality_snapshot_service.py": 8,
+    "execution_engine.py": 7,
+    "fts_cross_sectional_percentile_service.py": 7,
+    "fts_revenue_momentum_snapshot_service.py": 7,
+    "fts_chip_factor_snapshot_service.py": 5,
+    "fts_db_schema.py": 5,
+    "fts_price_liquidity_snapshot_service.py": 5,
+    "fts_chip_enrichment_service.py": 4,
+    "fts_sector_service.py": 4,
+    "fts_event_calendar_service.py": 3,
+    "fts_symbol_contract.py": 3,
+    "fts_data_quality_guard.py": 2,
+    "fts_decision_desk_builder.py": 2,
+    "fts_etl_monthly_revenue_service.py": 2,
+    "fts_feature_service.py": 2,
+    "fts_fundamentals_true_backfill.py": 2,
+    "fts_research_suite.py": 2,
+    "fts_training_data_builder.py": 2,
+    "fts_training_ticker_scoreboard.py": 2,
+    "sector_classifier.py": 2,
+    "config.py": 1,
+    "fts_admin_suite.py": 1,
+    "fts_compat.py": 1,
+    "fts_legacy_master_pipeline_impl.py": 1,
+    "fts_local_history_bootstrap.py": 1,
+    "fts_risk_gateway.py": 1,
+    "fts_sql_feature_snapshot_sync.py": 1,
+    "fts_trainer_backend.py": 1,
+    "fts_training_orchestrator.py": 1,
+    "fts_training_universe_common.py": 1,
+    "fts_watchlist_service.py": 1,
+    "monitor_center.py": 1,
+    "risk_gateway.py": 1,
+    "update_training_universe_daily_columns_to_zh.py": 1
+  },
+  "duplicate_defs": {
+    "fts_admin_suite.py": {
+      "__init__": 18,
+      "save": 2,
+      "load": 3,
+      "build": 14,
+      "evaluate": 2
+    },
+    "fts_broker_core.py": {
+      "__init__": 7,
+      "build": 6
+    },
+    "fts_chart_suite.py": {
+      "__init__": 7,
+      "build": 6
+    },
+    "fts_etl_quality_suite.py": {
+      "__init__": 5,
+      "build": 5
+    },
+    "fts_execution_layer.py": {
+      "as_dict": 2
+    },
+    "fts_execution_models.py": {
+      "__init__": 4,
+      "build_definition": 2,
+      "build": 2
+    },
+    "fts_execution_runtime.py": {
+      "__init__": 4,
+      "summarize": 2
+    },
+    "fts_legacy_suite.py": {
+      "__init__": 7,
+      "build": 6
+    },
+    "fts_live_suite.py": {
+      "__init__": 3,
+      "build": 3
+    },
+    "fts_model_gate.py": {
+      "__init__": 2
+    },
+    "fts_model_layer.py": {
+      "as_dict": 2
+    },
+    "fts_operations_suite.py": {
+      "__init__": 11,
+      "write": 2,
+      "build": 8
+    },
+    "fts_project_quality_suite.py": {
+      "__init__": 9,
+      "build": 9
+    },
+    "fts_research_suite.py": {
+      "__init__": 6,
+      "build": 4
+    },
+    "fts_resilience.py": {
+      "__init__": 2
+    },
+    "fts_runtime_ops.py": {
+      "__init__": 6,
+      "write": 2,
+      "summary": 2
+    },
+    "fts_strategy_policy_layer.py": {
+      "__init__": 4,
+      "get_exit_rules": 3
+    },
+    "fts_target95_suite.py": {
+      "__init__": 2,
+      "build": 2
+    },
+    "fts_tests.py": {
+      "run": 2
+    },
+    "fts_training_quality_suite.py": {
+      "__init__": 3,
+      "build": 3
+    },
+    "fts_upgrade_suite.py": {
+      "__init__": 4,
+      "run": 4
+    },
+    "fts_watchlist_service.py": {
+      "__init__": 4
+    },
+    "fts_wave_suite.py": {
+      "__init__": 5,
+      "build": 5
+    }
+  },
+  "db_probe": {
+    "available": false,
+    "status": "not_checked_static_only",
+    "tables": {},
+    "error": "Use --check-db on the target machine to inspect SQL Server columns."
+  },
+  "policy": {
+    "execution_contract": "ticker_symbol",
+    "legacy_symbol_contract": "Ticker SYMBOL allowed only in ETL/research/legacy alias/backfill",
+    "core_runtime_policy": "fail-closed + runtime diagnostics",
+    "etl_research_policy": "fail-open + runtime diagnostics",
+    "destructive_actions": "report_only; this tool never deletes files or drops columns"
+  }
+}

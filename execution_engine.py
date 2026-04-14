@@ -46,6 +46,17 @@ class ExecutionEngine:
         self.level3_services, self.level3_meta = build_level3_services()
         self._load_state()
 
+    @staticmethod
+    def _symbol_from_row(row: Any) -> str:
+        """Execution-domain symbol accessor.
+
+        Official execution field is ticker_symbol.  Ticker SYMBOL is accepted
+        only as an inbound legacy decision-desk alias and normalized before use.
+        """
+        if hasattr(row, 'get'):
+            return str(row.get('ticker_symbol', row.get('Ticker SYMBOL', row.get('Ticker', ''))) or '').strip()
+        return ''
+
     def run_from_csv(self, decision_csv_path: str) -> None:
         print("========================================================")
         print("🚀 啟動 Execution Engine：決策桌 → 風控 → 券商 → blotter")
@@ -54,8 +65,10 @@ class ExecutionEngine:
         if df is None or df.empty:
             print("⚠️ 決策桌為空")
             return
-        required_cols = {"Ticker SYMBOL", "Action", "Target_Qty", "Reference_Price"}
+        required_cols = {"Action", "Target_Qty", "Reference_Price"}
         missing = required_cols - set(df.columns)
+        if 'ticker_symbol' not in df.columns and 'Ticker SYMBOL' not in df.columns and 'Ticker' not in df.columns:
+            missing.add('ticker_symbol')
         if missing:
             print(f"❌ 缺少必要欄位：{missing}")
             return
@@ -222,7 +235,7 @@ class ExecutionEngine:
                 should_replace = bool(row.get('Should_Replace_Stop', False))
                 if not should_replace:
                     continue
-                symbol = str(row.get('Ticker', '')).strip()
+                symbol = str(row.get('ticker_symbol', row.get('Ticker', row.get('Ticker SYMBOL', ''))) or '').strip()
                 qty = int(float(row.get('Current_Position_Qty', 0) or 0))
                 stop_price = float(row.get('Desired_Stop_Price', 0) or 0)
                 mode = str(row.get('Stop_Workflow_Mode', 'PLAN_ONLY') or 'PLAN_ONLY').strip().upper()
@@ -239,7 +252,7 @@ class ExecutionEngine:
                         result['status'] = 'plan_only'
                 blotter_row = {
                     'run_time': datetime.now().isoformat(timespec='seconds'),
-                    'Ticker SYMBOL': symbol,
+                    'ticker_symbol': symbol,
                     'Broker_Stop_Order_ID': broker_order_id,
                     'Stop_Workflow_Mode': mode,
                     'Desired_Stop_Price': stop_price,
@@ -275,7 +288,7 @@ class ExecutionEngine:
                     }
                     self.db_logger.ingest_protective_stop_order(payload)
             except Exception as e:
-                rows.append({'run_time': datetime.now().isoformat(timespec='seconds'), 'Ticker SYMBOL': str(row.get('Ticker', '') or ''), 'Result_Status': f'exception:{e}', 'Result_OK': False})
+                rows.append({'run_time': datetime.now().isoformat(timespec='seconds'), 'ticker_symbol': self._symbol_from_row(row), 'Result_Status': f'exception:{e}', 'Result_OK': False})
         return rows
 
     def _apply_protective_stop_trigger_workflow(self) -> list[dict[str, Any]]:
@@ -290,7 +303,7 @@ class ExecutionEngine:
         for item in triggered:
             row = {
                 'run_time': datetime.now().isoformat(timespec='seconds'),
-                'Ticker SYMBOL': str(item.get('symbol', '') or ''),
+                'ticker_symbol': str(item.get('symbol', '') or ''),
                 'Broker_Stop_Order_ID': str(item.get('order_id', '') or ''),
                 'Stop_Price': float(item.get('stop_price', 0) or 0),
                 'Trigger_Price': float(item.get('trigger_price', 0) or 0),
@@ -324,11 +337,11 @@ class ExecutionEngine:
     @staticmethod
     def _normalize_execution_df(df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
-        rename_map = {}
-        if 'Ticker' in df.columns and 'Ticker SYMBOL' not in df.columns:
-            rename_map['Ticker'] = 'Ticker SYMBOL'
-        if rename_map:
-            df = df.rename(columns=rename_map)
+        if 'ticker_symbol' not in df.columns:
+            if 'Ticker SYMBOL' in df.columns:
+                df['ticker_symbol'] = df['Ticker SYMBOL']
+            elif 'Ticker' in df.columns:
+                df['ticker_symbol'] = df['Ticker']
         if 'Strategy' in df.columns and 'Strategy_Name' not in df.columns:
             df['Strategy_Name'] = df['Strategy']
         if 'Client_Order_ID' in df.columns and 'Signal_ID' not in df.columns:
@@ -341,7 +354,7 @@ class ExecutionEngine:
         gate = self.level3_services.get('LiveReadinessGate')
         if gate is not None:
             try:
-                gate.evaluate(df.rename(columns={'Ticker SYMBOL': 'Ticker'}))
+                gate.evaluate(df.assign(Ticker=df.get('ticker_symbol', df.get('Ticker SYMBOL', ''))))
             except Exception as exc:
                 record_issue('execution_engine', 'live_readiness_preflight_failed', exc, severity='ERROR', fail_mode='fail_closed')
         recovery = self.level3_services.get('RecoveryEngine')
@@ -368,14 +381,14 @@ class ExecutionEngine:
     def _push_market_prices(self, df: pd.DataFrame) -> None:
         price_map = {}
         for _, row in df.iterrows():
-            symbol = str(row.get("Ticker SYMBOL", "")).strip()
+            symbol = self._symbol_from_row(row)
             ref_price = self._safe_float(row.get("Reference_Price", 0))
             if symbol and ref_price > 0:
                 price_map[symbol] = ref_price
         self.broker.update_market_prices(price_map)
 
     def _row_to_order_request(self, row: pd.Series) -> Optional[OrderRequest]:
-        symbol = str(row.get("Ticker SYMBOL", "")).strip()
+        symbol = self._symbol_from_row(row)
         action_raw = str(row.get("Action", "")).strip().upper()
         qty = int(self._safe_float(row.get("Target_Qty", 0)))
         ref_price = self._safe_float(row.get("Reference_Price", 0))
@@ -509,7 +522,7 @@ class ExecutionEngine:
             return {'total_alloc': 0.0, 'sector_alloc': {}, 'sector_count': {}, 'direction_alloc': {'LONG': 0.0, 'SHORT': 0.0}}
         try:
             snapshot = pd.DataFrame([
-                {'Ticker SYMBOL': row.get('ticker', ''), '投入資金': row.get('market_value', 0.0), '方向': '做多(Long)' if int(row.get('qty', 0)) >= 0 else '做空(Short)'}
+                {'ticker_symbol': row.get('ticker', ''), '投入資金': row.get('market_value', 0.0), '方向': '做多(Long)' if int(row.get('qty', 0)) >= 0 else '做空(Short)'}
                 for row in self._broker_positions_for_runtime()
             ])
             account_snapshot = self.broker.get_account_snapshot() if hasattr(self.broker, 'get_account_snapshot') else {'equity': self.broker.get_cash()}

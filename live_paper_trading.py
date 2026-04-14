@@ -17,16 +17,20 @@ from fts_model_layer import evaluate_model_signal
 from fts_execution_layer import build_entry_metrics as _build_entry_metrics_layer, signal_gate as _signal_gate_layer, portfolio_gate as _portfolio_gate_layer, compute_position_plan
 from sector_classifier import get_stock_sector
 from fts_execution_ledger import ExecutionLedger
+from fts_exception_policy import record_diagnostic, fail_closed_reason
+from fts_symbol_contract import get_ticker_symbol, ensure_execution_symbol, ensure_dataframe_symbol_contract
 try:
     from db_logger import SQLServerExecutionLogger
-except Exception:
+except Exception as exc:
+    record_diagnostic('live_paper_trading', 'import_db_logger', exc, severity='error', fail_closed=True)
     SQLServerExecutionLogger = None
 from fts_watchlist_service import LiveWatchlistLoader
 try:
     from fts_level_runtime import build_level3_services
     _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()
-except Exception:
-    _LEVEL3_SERVICES, _LEVEL3_META = ({}, {'status': 'level3_unavailable'})
+except Exception as exc:
+    record_diagnostic('live_paper_trading', 'build_level3_services', exc, severity='error', fail_closed=True)
+    _LEVEL3_SERVICES, _LEVEL3_META = ({}, {'status': 'level3_unavailable', 'policy': 'fail_closed'})
 
 
 # ==========================================
@@ -44,6 +48,81 @@ DB_CONN_STR = (
     r"Trusted_Connection=yes;"
 )
 
+
+# ==========================================
+# 🧷 Symbol contract + exception policy helpers
+# ==========================================
+def _diag(operation: str, exc: BaseException | None = None, *, severity: str = 'warning', fail_closed: bool | None = None, context: dict | None = None):
+    return record_diagnostic('live_paper_trading', operation, exc, severity=severity, fail_closed=fail_closed, context=context)
+
+
+def _pos_ticker(pos, default: str = '') -> str:
+    return get_ticker_symbol(pos, default=default)
+
+
+def _decision_ticker(row, default: str = '') -> str:
+    return get_ticker_symbol(row, default=default)
+
+
+def _sync_symbol_aliases_df(df):
+    return ensure_dataframe_symbol_contract(df)
+
+
+def _ensure_symbol_alias_columns(cursor) -> None:
+    """Add non-breaking ticker_symbol aliases to legacy SQL tables.
+
+    We keep [Ticker SYMBOL] for old tables, but add ticker_symbol so newer runtime
+    diagnostics and migration checks can verify the canonical execution contract.
+    """
+    for table in ('active_positions', 'trade_history'):
+        try:
+            cursor.execute(f"IF COL_LENGTH('dbo.{table}', N'ticker_symbol') IS NULL ALTER TABLE dbo.{table} ADD [ticker_symbol] VARCHAR(20) NULL")
+            cursor.execute(f"UPDATE dbo.{table} SET [ticker_symbol] = COALESCE([ticker_symbol], [Ticker SYMBOL]) WHERE [Ticker SYMBOL] IS NOT NULL")
+        except Exception as exc:
+            _diag('ensure_symbol_alias_columns', exc, severity='warning', fail_closed=False, context={'table': table})
+    try:
+        cursor.connection.commit()
+    except Exception as exc:
+        _diag('ensure_symbol_alias_columns_commit', exc, severity='warning', fail_closed=False)
+
+
+def _update_active_position_symbol_alias(cursor, ticker: str, entry_time) -> None:
+    try:
+        if _table_has_column(cursor, 'active_positions', 'ticker_symbol'):
+            cursor.execute(f"UPDATE active_positions SET [ticker_symbol] = ? WHERE {_position_identity_clause(cursor)}", (ticker, ticker, entry_time))
+    except Exception as exc:
+        _diag('update_active_position_symbol_alias', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
+
+
+def _positions_where_symbol_clause(cursor) -> str:
+    try:
+        if _table_has_column(cursor, 'active_positions', 'ticker_symbol'):
+            return "COALESCE(NULLIF([ticker_symbol], ''), [Ticker SYMBOL]) = ?"
+    except Exception as exc:
+        _diag('positions_where_symbol_clause', exc, severity='warning', fail_closed=False)
+    return "[Ticker SYMBOL] = ?"
+
+
+
+def _position_identity_clause(cursor) -> str:
+    return f"{_positions_where_symbol_clause(cursor)} AND [進場時間] = ?"
+
+
+def _update_trade_history_symbol_alias(cursor, ticker: str, entry_time, exit_time) -> None:
+    try:
+        if _table_has_column(cursor, 'trade_history', 'ticker_symbol'):
+            cursor.execute(
+                """
+                UPDATE trade_history
+                SET [ticker_symbol] = ?
+                WHERE COALESCE(NULLIF([ticker_symbol], ''), [Ticker SYMBOL]) = ?
+                  AND [進場時間] = ?
+                  AND [出場時間] = ?
+                """,
+                (ticker, ticker, entry_time, exit_time),
+            )
+    except Exception as exc:
+        _diag('update_trade_history_symbol_alias', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
 
 def send_line_bot_msg(msg: str):
     if IS_TEST_MODE:
@@ -74,8 +153,8 @@ def send_line_bot_msg(msg: str):
         else:
             print(f"⚠️ LINE 官方拒絕了發送！狀態碼: {response.status_code}")
             print(f"🔍 錯誤詳情: {response.text}")
-    except Exception as e:
-        print(f"⚠️ LINE 網路發送發生例外錯誤: {e}")
+    except Exception as exc:
+        _diag("line_bot_send", exc, severity="warning", fail_closed=False)
 
 
 def get_available_cash(cursor) -> float:
@@ -84,8 +163,8 @@ def get_available_cash(cursor) -> float:
         row = cursor.fetchone()
         if row:
             return float(row[0])
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('get_available_cash_select', exc, severity='warning', fail_closed=False)
 
     try:
         cursor.execute(
@@ -96,8 +175,8 @@ def get_available_cash(cursor) -> float:
             (datetime.now(),),
         )
         cursor.connection.commit()
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('get_available_cash_seed', exc, severity='warning', fail_closed=False)
 
     return 5000000.0
 
@@ -107,7 +186,8 @@ def _safe_float(x, default=0.0):
         if pd.isna(x):
             return default
         return float(x)
-    except Exception:
+    except Exception as exc:
+        _diag("safe_numeric_cast", exc, severity="warning", fail_closed=False, context={"value": str(x)[:80]})
         return default
 
 
@@ -116,7 +196,8 @@ def _safe_int(x, default=0):
         if pd.isna(x):
             return default
         return int(float(x))
-    except Exception:
+    except Exception as exc:
+        _diag("safe_numeric_cast", exc, severity="warning", fail_closed=False, context={"value": str(x)[:80]})
         return default
 
 
@@ -129,7 +210,8 @@ def _table_has_column(cursor, table_name: str, column_name: str) -> bool:
             WHERE TABLE_NAME = ? AND COLUMN_NAME = ?
         """, (table_name, column_name))
         return cursor.fetchone() is not None
-    except Exception:
+    except Exception as exc:
+        _diag('table_has_column', exc, severity='warning', fail_closed=False, context={'table': table_name, 'column': column_name})
         return False
 
 
@@ -145,16 +227,16 @@ def _ensure_exit_sql_columns(cursor):
     for col, typ in additions.items():
         try:
             cursor.execute(f"IF COL_LENGTH('dbo.active_positions', N'{col}') IS NULL ALTER TABLE dbo.active_positions ADD [{col}] {typ}")
-        except Exception:
-            pass
+        except Exception as exc:
+            _diag('ensure_exit_sql_columns_add', exc, severity='warning', fail_closed=False, context={'column': col})
     try:
         cursor.execute("IF COL_LENGTH('dbo.trade_history', N'出場原因') IS NULL ALTER TABLE dbo.trade_history ADD [出場原因] NVARCHAR(100) NULL")
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('ensure_trade_history_exit_reason_column', exc, severity='warning', fail_closed=False)
     try:
         cursor.connection.commit()
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('ensure_exit_sql_columns_commit', exc, severity='warning', fail_closed=False)
 
 
 def _load_stop_replace_payloads() -> pd.DataFrame:
@@ -168,10 +250,12 @@ def _load_stop_replace_payloads() -> pd.DataFrame:
         if path and os.path.exists(path):
             try:
                 return pd.read_csv(path, encoding='utf-8-sig')
-            except Exception:
+            except Exception as exc:
+                _diag('load_stop_replace_payload_utf8', exc, severity='warning', fail_closed=False, context={'path': path})
                 try:
                     return pd.read_csv(path)
-                except Exception:
+                except Exception as exc2:
+                    _diag('load_stop_replace_payload_default', exc2, severity='warning', fail_closed=False, context={'path': path})
                     continue
     return pd.DataFrame()
 
@@ -191,7 +275,7 @@ def _build_stop_payload_map(stop_df: pd.DataFrame) -> dict[str, dict]:
 def _sync_stop_plan_to_sql(cursor, pos, stop_row: dict) -> None:
     if not bool(PARAMS.get('EXIT_SQL_STOP_SYNC_ENABLE', True)):
         return
-    ticker = str(pos.get('Ticker SYMBOL', '') or '').strip()
+    ticker = _pos_ticker(pos)
     entry_time = pos.get('進場時間')
     if not ticker or entry_time is None:
         return
@@ -224,16 +308,16 @@ def _sync_stop_plan_to_sql(cursor, pos, stop_row: dict) -> None:
         params.append(datetime.now())
     if not updates:
         return
-    sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?"
+    sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE {_position_identity_clause(cursor)}"
     params.extend([ticker, entry_time])
     try:
         cursor.execute(sql, tuple(params))
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('sync_stop_plan_to_sql', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
 
 
 def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price: float, current_cash: float, daily_log: list[str], exit_msg: str, exit_reason: str = '', execution_logger=None) -> float:
-    ticker = str(pos.get('Ticker SYMBOL', '') or '')
+    ticker = _pos_ticker(pos)
     direction = pos.get('方向', '')
     entry_price = _safe_float(pos.get('進場價', 0), 0.0)
     shares = _safe_int(pos.get('進場股數', 0), 0)
@@ -255,7 +339,7 @@ def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price:
     remaining_shares = shares - sell_shares
     if remaining_shares <= 0:
         cursor.execute(
-            'DELETE FROM active_positions WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?',
+            f'DELETE FROM active_positions WHERE {_position_identity_clause(cursor)}',
             (ticker, pos['進場時間']),
         )
     else:
@@ -265,12 +349,13 @@ def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price:
         if _table_has_column(cursor, 'active_positions', '目標倉位倍率'):
             updates.append('[目標倉位倍率] = ?')
             params.append(round(remaining_shares / max(shares, 1), 4))
-        sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?"
+        sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE {_position_identity_clause(cursor)}"
         params.extend([ticker, pos['進場時間']])
         cursor.execute(sql, tuple(params))
     try:
         profit_pct = (pnl / invested) * 100 if invested > 0 else 0.0
         has_reason_col = _table_has_column(cursor, 'trade_history', '出場原因')
+        exit_time = datetime.now()
         if has_reason_col:
             cursor.execute(
                 """
@@ -283,7 +368,7 @@ def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    '實戰自動結算', ticker, direction, pos['進場時間'], datetime.now(), entry_price, actual_exit_price, profit_pct, pnl, current_cash,
+                    '實戰自動結算', ticker, direction, pos['進場時間'], exit_time, entry_price, actual_exit_price, profit_pct, pnl, current_cash,
                     pos.get('市場狀態', None), setup_tag,
                     float(pos.get('期望值', 0) if pd.notna(pos.get('期望值', 0)) else 0),
                     float(pos.get('預期停損(%)', 0) if pd.notna(pos.get('預期停損(%)', 0)) else 0),
@@ -305,7 +390,7 @@ def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    '實戰自動結算', ticker, direction, pos['進場時間'], datetime.now(), entry_price, actual_exit_price, profit_pct, pnl, current_cash,
+                    '實戰自動結算', ticker, direction, pos['進場時間'], exit_time, entry_price, actual_exit_price, profit_pct, pnl, current_cash,
                     pos.get('市場狀態', None), setup_tag,
                     float(pos.get('期望值', 0) if pd.notna(pos.get('期望值', 0)) else 0),
                     float(pos.get('預期停損(%)', 0) if pd.notna(pos.get('預期停損(%)', 0)) else 0),
@@ -314,13 +399,15 @@ def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price:
                     float(pos.get('風險金額', 0) if pd.notna(pos.get('風險金額', 0)) else 0),
                 ),
             )
-    except Exception as e:
-        print(f"⚠️ {ticker} 寫入歷史戰績表失敗: {e}")
+        _update_trade_history_symbol_alias(cursor, ticker, pos['進場時間'], exit_time)
+    except Exception as exc:
+        _diag("trade_history_insert", exc, severity="error", fail_closed=True, context={"ticker_symbol": ticker})
     if execution_logger is not None:
         try:
             side = 'SELL' if is_long else 'BUY'
             ts = datetime.now().isoformat(timespec='seconds')
-            order_id = f'SQL-EXIT-{ticker}-{str(pos.get('進場時間', ts)).replace(':', '').replace(' ', '_')}'
+            entry_key = str(pos.get('進場時間', ts)).replace(':', '').replace(' ', '_')
+            order_id = f'SQL-EXIT-{ticker}-{entry_key}'
             execution_logger.insert_order({
                 'order_id': order_id,
                 'client_order_id': order_id,
@@ -335,7 +422,7 @@ def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price:
                 'order_type': 'MARKET',
                 'submitted_price': float(actual_exit_price),
                 'ref_price': float(actual_exit_price),
-                'signal_id': str(pos.get('Ticker SYMBOL', ticker)),
+                'signal_id': ticker,
                 'note': str(exit_reason or exit_msg),
                 'created_at': ts,
                 'updated_at': ts,
@@ -352,17 +439,17 @@ def _execute_sql_position_exit(cursor, pos, sell_shares: int, actual_exit_price:
                 'tax': 0.0,
                 'slippage': 0.0,
                 'strategy_name': 'live_paper_trading_sql_exit',
-                'signal_id': str(pos.get('Ticker SYMBOL', ticker)),
+                'signal_id': ticker,
                 'note': str(exit_reason or exit_msg),
             })
-        except Exception:
-            pass
+        except Exception as exc:
+            _diag('execution_logger_sql_exit_insert', exc, severity='error', fail_closed=True, context={'ticker_symbol': ticker, 'order_id': order_id if 'order_id' in locals() else ''})
     daily_log.append(f"{exit_msg} {ticker}: 損益 ${pnl:,.0f}")
     return current_cash
 
 
 def _maybe_apply_protective_stop(cursor, pos, curr_price: float, stop_row: dict, current_cash: float, daily_log: list[str], execution_logger=None) -> tuple[float, bool]:
-    ticker = str(pos.get('Ticker SYMBOL', '') or '').strip()
+    ticker = _pos_ticker(pos)
     direction = str(pos.get('方向', '') or '')
     shares = _safe_int(pos.get('進場股數', 0), 0)
     is_long = ('Long' in direction) or ('多' in direction)
@@ -406,7 +493,7 @@ def _sync_execution_sql_runtime_tables(conn, current_cash: float, execution_logg
         active_df = _read_active_positions(conn)
         rows = []
         for _, pos in active_df.iterrows():
-            ticker = str(pos.get('Ticker SYMBOL', '') or '').strip()
+            ticker = _pos_ticker(pos)
             qty = _safe_int(pos.get('進場股數', 0), 0)
             if not ticker or qty <= 0:
                 continue
@@ -414,6 +501,7 @@ def _sync_execution_sql_runtime_tables(conn, current_cash: float, execution_logg
             market_price = avg_cost
             market_value = _safe_float(pos.get('投入資金', 0), avg_cost * qty)
             rows.append({
+                'ticker_symbol': ticker,
                 'ticker': ticker,
                 'qty': qty if ('Long' in str(pos.get('方向', '')) or '多' in str(pos.get('方向', ''))) else -qty,
                 'available_qty': qty,
@@ -436,8 +524,8 @@ def _sync_execution_sql_runtime_tables(conn, current_cash: float, execution_logg
             'broker_type': 'live_paper_sql',
             'note': note or 'live_paper_trading_sync',
         }, rows, snapshot_time=datetime.now().isoformat(timespec='seconds'), note=note or 'live_paper_trading_sync')
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('sync_execution_sql_runtime_tables', exc, severity='error', fail_closed=True)
 
 def _infer_candidate_lane(row) -> str:
     direction = str(row.get("Direction", "")).upper()
@@ -462,7 +550,8 @@ def _load_directional_allow_map():
                     continue
                 allow_map.setdefault(ticker, set()).add(str(lane).upper())
         return allow_map
-    except Exception:
+    except Exception as exc:
+        _diag('load_directional_allow_map', exc, severity='warning', fail_closed=False)
         return {}
 
 def _direction_bucket(direction_text: str) -> str:
@@ -472,8 +561,9 @@ def _direction_bucket(direction_text: str) -> str:
 
 def _read_active_positions(conn):
     try:
-        return pd.read_sql("SELECT * FROM active_positions", conn)
-    except Exception:
+        return _sync_symbol_aliases_df(pd.read_sql("SELECT * FROM active_positions", conn))
+    except Exception as exc:
+        _diag('read_active_positions', exc, severity='error', fail_closed=True)
         return pd.DataFrame()
 
 
@@ -485,8 +575,8 @@ def _current_portfolio_state(active_df, total_nav):
     if service is not None:
         try:
             return service.current_portfolio_state(active_df, total_nav)
-        except Exception:
-            pass
+        except Exception as exc:
+            _diag('position_state_service', exc, severity='warning', fail_closed=False)
     state = {
         "total_alloc": 0.0,
         "sector_alloc": {},
@@ -498,7 +588,7 @@ def _current_portfolio_state(active_df, total_nav):
         return state
 
     for _, pos in active_df.iterrows():
-        ticker = str(pos.get("Ticker SYMBOL", "")).strip()
+        ticker = _pos_ticker(pos)
         invested = _safe_float(pos.get("投入資金", 0.0), 0.0)
         if invested <= 0:
             continue
@@ -553,16 +643,21 @@ def run_eod_broker():
         cursor = conn.cursor()
         execution_logger = SQLServerExecutionLogger(enabled=bool(PARAMS.get('EXECUTION_SQL_SYNC_ENABLED', True))) if SQLServerExecutionLogger is not None else None
         _ensure_exit_sql_columns(cursor)
-    except Exception as e:
-        print(f"🛑 無法連線 SQL 資料庫: {e}")
+        _ensure_symbol_alias_columns(cursor)
+    except Exception as exc:
+        _diag("sql_connect", exc, severity="critical", fail_closed=True)
+        print(f"🛑 無法連線 SQL 資料庫: {exc}")
         return
 
     try:
         gate = _LEVEL3_SERVICES.get("LiveReadinessGate")
         if gate is not None:
             gate.evaluate(None)
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('live_readiness_gate_evaluate', exc, severity='error', fail_closed=True)
+        daily_msg = fail_closed_reason('live_paper_trading', 'live_readiness_gate_evaluate', exc)
+        print(f'🛑 readiness gate 失敗，fail-closed：{daily_msg}')
+        cursor.close(); conn.close(); return
 
     current_cash = get_available_cash(cursor)
     active_df = _read_active_positions(conn)
@@ -577,7 +672,7 @@ def run_eod_broker():
     # ==========================================
     if not active_df.empty:
         for _, pos in active_df.iterrows():
-            ticker = pos["Ticker SYMBOL"]
+            ticker = _pos_ticker(pos)
             direction = pos["方向"]
             entry_price = float(pos["進場價"])
             shares = int(pos["進場股數"])
@@ -653,7 +748,7 @@ def run_eod_broker():
             elif is_tp_half:
                 if trend_is_with_me and adx_is_strong:
                     cursor.execute(
-                        "UPDATE active_positions SET [停利階段] = 1 WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?",
+                        f"UPDATE active_positions SET [停利階段] = 1 WHERE {_position_identity_clause(cursor)}",
                         (ticker, pos["進場時間"]),
                     )
                     daily_log.append(f"🌊 {ticker} 達第一階段，趨勢強抱緊！")
@@ -680,7 +775,8 @@ def run_eod_broker():
     # ==========================================
     try:
         decisions = pd.read_csv("daily_decision_desk.csv")
-    except Exception:
+    except Exception as exc:
+        _diag('read_daily_decision_desk', exc, severity='warning', fail_closed=False)
         decisions = pd.DataFrame()
     if decisions.empty:
         try:
@@ -692,8 +788,10 @@ def run_eod_broker():
                     decisions["Ticker"] = decisions["Ticker SYMBOL"]
                 if "Action" in decisions.columns and "Direction" not in decisions.columns:
                     decisions["Direction"] = decisions["Action"].map({"BUY": "做多(Long)", "SELL": "做空(Short)", "SHORT": "做空(Short)", "COVER": "做多(Long)"}).fillna("做多(Long)")
-        except Exception:
-            pass
+        except Exception as exc:
+            _diag('decision_execution_bridge_build', exc, severity='error', fail_closed=True)
+
+    decisions = _sync_symbol_aliases_df(decisions)
 
     if not decisions.empty:
         directional_allow_map = _load_directional_allow_map()
@@ -701,7 +799,7 @@ def run_eod_broker():
         for _, row in decisions.iterrows():
             if str(row.get('Exit_Action', '') or '').strip().upper() in {'REDUCE', 'EXIT', 'TIGHTEN_STOP', 'MOVE_TO_BREAK_EVEN'} or str(row.get('Exit_State', '') or '').strip().upper() in {'WATCH_EXIT', 'DEFEND', 'REDUCE', 'EXIT'}:
                 continue
-            ticker = row.get("Ticker", "Unknown")
+            ticker = _decision_ticker(row, default='Unknown')
             trade_direction = row.get("Direction", "做多(Long)")
             candidate_lane = _infer_candidate_lane(row)
             row['Candidate_Long'] = int(candidate_lane == 'LONG')
@@ -722,15 +820,17 @@ def run_eod_broker():
                     if blocked:
                         daily_log.append(f"🛑 略過 {ticker}: {' | '.join(reasons)}")
                         continue
-            except Exception:
-                pass
+            except Exception as exc:
+                _diag('kill_switch_check', exc, severity='error', fail_closed=True, context={'ticker_symbol': ticker})
+                daily_log.append(f'🛑 略過 {ticker}: kill_switch_check_fail_closed')
+                continue
 
             allow_signal, reason_signal = _passes_signal_gate(row, candidate_lane)
             if not allow_signal:
                 daily_log.append(f"⛔ 略過 {ticker}: {reason_signal}")
                 continue
 
-            cursor.execute("SELECT COUNT(*) FROM active_positions WHERE [Ticker SYMBOL] = ?", (ticker,))
+            cursor.execute(f"SELECT COUNT(*) FROM active_positions WHERE {_positions_where_symbol_clause(cursor)}", (ticker,))
             if cursor.fetchone()[0] > 0:
                 daily_log.append(f"⏭️ 略過 {ticker}: 已有持倉")
                 continue
@@ -796,6 +896,7 @@ def run_eod_broker():
                 ),
             )
             conn.commit()
+            _update_active_position_symbol_alias(cursor, ticker, entry_time)
             try:
                 stop_px = curr_price * (1 - float(entry_metrics['預期停損(%)'])) if 'Long' in str(trade_direction) or '多' in str(trade_direction) else curr_price * (1 + float(entry_metrics['預期停損(%)']))
                 updates = []
@@ -816,15 +917,15 @@ def run_eod_broker():
                     updates.append('[最後停損更新時間] = ?')
                     params.append(datetime.now())
                 if updates:
-                    sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE [Ticker SYMBOL] = ? AND [進場時間] = ?"
+                    sql = f"UPDATE active_positions SET {', '.join(updates)} WHERE {_position_identity_clause(cursor)}"
                     params.extend([ticker, entry_time])
                     try:
                         cursor.execute(sql, tuple(params))
                         conn.commit()
-                    except Exception:
-                        pass
-            except Exception:
-                pass
+                    except Exception as exc:
+                        _diag('update_new_position_exit_columns', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
+            except Exception as exc:
+                _diag('prepare_new_position_exit_columns', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
 
             # 立刻更新組合狀態，避免同一輪連續下單超限
             sector = get_stock_sector(ticker)
@@ -882,22 +983,23 @@ def run_eod_broker():
     if execution_logger is not None:
         try:
             execution_logger.close()
-        except Exception:
-            pass
+        except Exception as exc:
+            _diag('execution_logger_close', exc, severity='warning', fail_closed=False)
 
 
 def _record_directional_execution_event(event_type: str, payload: dict):
     try:
         ExecutionLedger().record(event_type, payload)
-    except Exception:
-        pass
+    except Exception as exc:
+        _diag('record_directional_execution_event', exc, severity='warning', fail_closed=False, context={'event_type': event_type})
 
 def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str, set[str]]) -> pd.DataFrame:
     if not bool(PARAMS.get("DIRECTIONAL_DECISION_AUGMENT", True)):
         return decisions
     try:
         _, payload = LiveWatchlistLoader().resolve_live_watchlist()
-    except Exception:
+    except Exception as exc:
+        _diag('augment_directional_decisions_watchlist', exc, severity='warning', fail_closed=False)
         return decisions
     lanes_payload = payload.get('lanes', {}) if isinstance(payload, dict) else {}
     max_per_lane = int(PARAMS.get('DIRECTIONAL_DECISION_AUGMENT_MAX_PER_LANE', 2))
@@ -918,7 +1020,8 @@ def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str,
             if use_screening:
                 try:
                     row = inspect_stock(ticker) or {}
-                except Exception:
+                except Exception as exc:
+                    _diag('augment_directional_inspect_stock', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
                     row = {}
             row = dict(row or {})
             row['Ticker'] = ticker

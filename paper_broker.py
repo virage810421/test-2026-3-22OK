@@ -1,13 +1,5 @@
 from __future__ import annotations
 
-try:
-    from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
-except Exception:  # pragma: no cover
-    def record_issue(*args, **kwargs):
-        return {}
-    def write_runtime_diagnostics_summary(*args, **kwargs):
-        return None
-
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -42,8 +34,7 @@ class PaperBroker(BrokerBase):
         for symbol, price in price_map.items():
             try:
                 px = float(price)
-            except Exception as exc:
-                record_issue('paper_broker', 'invalid_market_price_ignored', exc, severity='WARNING', fail_mode='fail_open', context={'symbol': str(symbol), 'price': repr(price)})
+            except Exception:
                 continue
             if px > 0:
                 self.last_prices[str(symbol)] = px
@@ -627,6 +618,301 @@ try:
         return snap
     PaperBroker.export_runtime_snapshot = _pb_patched_export_runtime_snapshot
 
-except Exception as exc:
-    # Keep import safety even if a downstream legacy PaperBroker differs, but do not hide the failure.
-    record_issue('paper_broker', 'lot_level_runtime_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')
+except Exception:
+    # Keep import safety even if a downstream legacy PaperBroker differs.
+    pass
+
+
+# =============================================================================
+# vNext institutional lot lifecycle / multi-strategy partition extension
+# =============================================================================
+try:
+    import json as _json
+    try:
+        import config as _PB_CFG
+    except Exception:
+        _PB_CFG = None
+
+    _PB_V2_ORIG_INIT = globals().get('_PB_ORIG_INIT', PaperBroker.__init__)
+    _PB_V2_ORIG_APPEND_FILL = globals().get('_PB_ORIG_APPEND_FILL', PaperBroker._append_fill)
+    _PB_V2_ORIG_UPSERT_STOP = PaperBroker.upsert_protective_stop
+    _PB_V2_ORIG_REPLACE_ORDER = PaperBroker.replace_order
+    _PB_V2_ORIG_PROCESS_STOPS2 = globals().get('_PB_ORIG_PROCESS_STOPS', PaperBroker.process_protective_stops)
+
+    def _pb_cfg(name, default=None):
+        return getattr(_PB_CFG, name, default) if _PB_CFG is not None else default
+
+    def _pb_v2_now():
+        return _now()
+
+    def _pb_json_append(raw, value):
+        try:
+            arr = list(raw) if isinstance(raw, (list, tuple)) else (_json.loads(raw) if isinstance(raw, str) and raw else [])
+        except Exception:
+            arr = []
+        arr.append(value)
+        return _json.dumps(arr, ensure_ascii=False)
+
+    def _pb_cost_method():
+        return str(_pb_cfg('LOT_ACCOUNTING_METHOD', 'FIFO') or 'FIFO').upper()
+
+    def _pb_init_lifecycle(self):
+        self.position_lots = [] if not isinstance(getattr(self, 'position_lots', None), list) else self.position_lots
+        self._lot_seq = int(getattr(self, '_lot_seq', 0) or 0)
+        self.lot_close_history = [] if not isinstance(getattr(self, 'lot_close_history', None), list) else self.lot_close_history
+        self.lot_fill_history = [] if not isinstance(getattr(self, 'lot_fill_history', None), list) else self.lot_fill_history
+        self.lot_stop_link_events = [] if not isinstance(getattr(self, 'lot_stop_link_events', None), list) else self.lot_stop_link_events
+        self.lot_lifecycle_errors = [] if not isinstance(getattr(self, 'lot_lifecycle_errors', None), list) else self.lot_lifecycle_errors
+
+    def _pb_position_key(symbol, side, strategy_name='', signal_id=''):
+        parts=[str(symbol).upper(), str(side).upper()]
+        if bool(_pb_cfg('LOT_PARTITION_BY_STRATEGY', True)):
+            parts.append(str(strategy_name or ''))
+        if bool(_pb_cfg('LOT_PARTITION_BY_SIGNAL', True)):
+            parts.append(str(signal_id or ''))
+        return '|'.join(parts)
+
+    def _pb_next_lot_id_v2(self, symbol: str) -> str:
+        _pb_init_lifecycle(self)
+        self._lot_seq += 1
+        return f"LOT2-{str(symbol).replace('.', '')}-{self._lot_seq:07d}"
+
+    def _pb_side_from_order(side) -> str:
+        side_v = side.value if hasattr(side, 'value') else str(side)
+        side_v = str(side_v).upper()
+        return 'LONG' if side_v in {'BUY','LONG'} else ('SHORT' if side_v == 'SHORT' else side_v)
+
+    def _pb_close_bucket_from_order(side) -> str:
+        side_v = side.value if hasattr(side, 'value') else str(side)
+        side_v = str(side_v).upper()
+        return 'LONG' if side_v == 'SELL' else ('SHORT' if side_v in {'COVER','BUY_TO_COVER'} else '')
+
+    def _pb_open_lot_v2(self, symbol: str, side: str, qty: int, price: float, order=None, fill_id: str = '', commission: float = 0.0, tax: float = 0.0, note: str = ''):
+        _pb_init_lifecycle(self)
+        qty = int(qty or 0)
+        if qty <= 0:
+            return {}
+        strategy_name = getattr(order, 'strategy_name', '') or (order.get('strategy_name') if isinstance(order, dict) else '') or ''
+        signal_id = getattr(order, 'signal_id', '') or (order.get('signal_id') if isinstance(order, dict) else '') or ''
+        client_order_id = getattr(order, 'client_order_id', '') or (order.get('client_order_id') if isinstance(order, dict) else '') or ''
+        order_id = getattr(order, 'order_id', '') or (order.get('order_id') if isinstance(order, dict) else '') or ''
+        lot = {
+            'lot_id': _pb_next_lot_id_v2(self, symbol), 'ticker': str(symbol), 'symbol': str(symbol), 'side': str(side).upper(), 'direction_bucket': str(side).upper(),
+            'position_key': _pb_position_key(symbol, side, strategy_name, signal_id), 'strategy_name': str(strategy_name), 'strategy_bucket': str(strategy_name), 'signal_id': str(signal_id), 'client_order_id': str(client_order_id),
+            'open_qty': qty, 'remaining_qty': qty, 'avg_cost': float(price or 0.0), 'entry_price': float(price or 0.0), 'entry_time': _pb_v2_now(), 'entry_order_id': str(order_id),
+            'entry_fill_qty': qty, 'close_fill_qty': 0, 'entry_fill_count': 1, 'close_fill_count': 0, 'entry_fill_ids_json': _json.dumps([fill_id] if fill_id else []), 'exit_fill_ids_json': _json.dumps([]),
+            'open_commission': float(commission or 0.0), 'open_tax': float(tax or 0.0), 'close_commission': 0.0, 'close_tax': 0.0, 'cost_basis_method': _pb_cost_method(),
+            'status': 'OPEN', 'lifecycle_status': 'OPEN', 'realized_pnl': 0.0, 'close_qty': 0, 'close_price': 0.0, 'close_time': '', 'stop_order_id': '', 'stop_price': 0.0, 'stop_status': '', 'linked_stop_qty': 0, 'last_fill_time': _pb_v2_now(), 'note': str(note or '')
+        }
+        self.position_lots.append(lot)
+        self.lot_fill_history.append({'fill_id': fill_id or '', 'lot_id': lot['lot_id'], 'symbol': symbol, 'event': 'OPEN', 'qty': qty, 'price': float(price or 0.0), 'commission': float(commission or 0.0), 'tax': float(tax or 0.0), 'time': _pb_v2_now()})
+        return dict(lot)
+
+    def _pb_iter_eligible_lots(self, symbol: str, close_side: str, strategy_name: str = '', signal_id: str = ''):
+        rows=[]
+        for lot in self.position_lots:
+            if str(lot.get('ticker', lot.get('symbol', ''))).upper()!=str(symbol).upper(): continue
+            if str(lot.get('side','')).upper()!=str(close_side).upper(): continue
+            if int(lot.get('remaining_qty',0) or 0)<=0: continue
+            if bool(_pb_cfg('LOT_PARTITION_BY_STRATEGY', True)) and strategy_name and str(lot.get('strategy_name',''))!=str(strategy_name): continue
+            if bool(_pb_cfg('LOT_PARTITION_BY_SIGNAL', True)) and signal_id and str(lot.get('signal_id',''))!=str(signal_id): continue
+            rows.append(lot)
+        if not rows and bool(_pb_cfg('LOT_ALLOW_CROSS_STRATEGY_CLOSE', False)):
+            rows=[lot for lot in self.position_lots if str(lot.get('ticker', lot.get('symbol',''))).upper()==str(symbol).upper() and str(lot.get('side','')).upper()==str(close_side).upper() and int(lot.get('remaining_qty',0) or 0)>0]
+        rows.sort(key=lambda r:(str(r.get('entry_time','')), str(r.get('lot_id',''))))
+        return rows
+
+    def _pb_close_lots_v2(self, symbol: str, close_side: str, qty: int, price: float, order=None, fill_id: str = '', commission: float = 0.0, tax: float = 0.0, note: str = ''):
+        _pb_init_lifecycle(self)
+        remaining=int(qty or 0)
+        if remaining<=0 or close_side not in {'LONG','SHORT'}: return []
+        strategy_name = getattr(order, 'strategy_name', '') or (order.get('strategy_name') if isinstance(order, dict) else '') or ''
+        signal_id = getattr(order, 'signal_id', '') or (order.get('signal_id') if isinstance(order, dict) else '') or ''
+        order_id = getattr(order, 'order_id', '') or (order.get('order_id') if isinstance(order, dict) else '') or ''
+        eligible=_pb_iter_eligible_lots(self, symbol, close_side, strategy_name=strategy_name, signal_id=signal_id)
+        avg_basis=None
+        if _pb_cost_method()=='AVERAGE' and eligible:
+            tq=sum(int(l.get('remaining_qty',0) or 0) for l in eligible)
+            tc=sum(int(l.get('remaining_qty',0) or 0)*float(l.get('avg_cost',0) or 0.0) for l in eligible)
+            avg_basis=(tc/tq) if tq else None
+        events=[]
+        for lot in eligible:
+            if remaining<=0: break
+            lot_qty=int(lot.get('remaining_qty',0) or 0)
+            if lot_qty<=0: continue
+            take=min(lot_qty, remaining)
+            basis=float(avg_basis if avg_basis is not None else (lot.get('avg_cost', lot.get('entry_price',0)) or 0.0))
+            pnl=(float(price)-basis)*take if close_side=='LONG' else (basis-float(price))*take
+            lot['remaining_qty']=lot_qty-take
+            lot['close_qty']=int(lot.get('close_qty',0) or 0)+take
+            lot['close_fill_qty']=int(lot.get('close_fill_qty',0) or 0)+take
+            lot['close_fill_count']=int(lot.get('close_fill_count',0) or 0)+1
+            if fill_id: lot['exit_fill_ids_json']=_pb_json_append(lot.get('exit_fill_ids_json'), fill_id)
+            lot['realized_pnl']=round(float(lot.get('realized_pnl',0) or 0.0)+pnl-float(commission or 0.0)-float(tax or 0.0),4)
+            lot['close_commission']=round(float(lot.get('close_commission',0) or 0.0)+float(commission or 0.0),4)
+            lot['close_tax']=round(float(lot.get('close_tax',0) or 0.0)+float(tax or 0.0),4)
+            lot['close_price']=float(price or 0.0)
+            lot['close_time']=_pb_v2_now()
+            lot['exit_order_id']=str(order_id)
+            lot['last_fill_time']=_pb_v2_now()
+            lot['close_cost_basis_method']=_pb_cost_method()
+            lot['close_cost_basis_price']=round(float(basis or 0.0),4)
+            if lot['remaining_qty']<=0:
+                lot['status']='CLOSED'; lot['lifecycle_status']='CLOSED'
+            else:
+                lot['status']='PARTIAL_EXIT'; lot['lifecycle_status']='PARTIAL_EXIT'
+            ev={'lot_id': lot.get('lot_id'), 'ticker': symbol, 'side': close_side, 'closed_qty': take, 'entry_price': float(lot.get('entry_price', lot.get('avg_cost',0)) or 0.0), 'close_price': float(price or 0.0), 'cost_basis_price': round(float(basis or 0.0),4), 'cost_basis_method': _pb_cost_method(), 'realized_pnl': round(float(pnl)-float(commission or 0.0)-float(tax or 0.0),4), 'exit_order_id': str(order_id), 'fill_id': fill_id, 'position_key': lot.get('position_key'), 'strategy_name': lot.get('strategy_name'), 'signal_id': lot.get('signal_id'), 'closed_at': _pb_v2_now(), 'note': str(note or '')}
+            self.lot_close_history.append(ev); self.lot_fill_history.append({'fill_id': fill_id or '', 'lot_id': lot.get('lot_id'), 'symbol': symbol, 'event': 'CLOSE', 'qty': take, 'price': float(price or 0.0), 'commission': float(commission or 0.0), 'tax': float(tax or 0.0), 'time': _pb_v2_now()})
+            events.append(ev); remaining-=take
+        return events
+
+    def _pb_link_stop_to_lots(self, stop_rec: dict):
+        if not bool(_pb_cfg('LOT_STOP_LINKAGE_ENABLED', True)): return {'linked':0,'lot_ids':[]}
+        symbol=str(stop_rec.get('symbol','') or '').upper(); stop_side=str(stop_rec.get('side','SELL') or 'SELL').upper(); close_side='LONG' if stop_side=='SELL' else 'SHORT'
+        qty_need=int(stop_rec.get('quantity',0) or 0); strategy_name=str(stop_rec.get('strategy_name','') or ''); signal_id=str(stop_rec.get('signal_id','') or '')
+        linked=[]; remaining=qty_need
+        for lot in _pb_iter_eligible_lots(self, symbol, close_side, strategy_name=strategy_name if bool(_pb_cfg('LOT_STOP_LINKAGE_MATCH_STRATEGY', True)) else '', signal_id=signal_id if bool(_pb_cfg('LOT_STOP_LINKAGE_MATCH_SIGNAL', False)) else ''):
+            if remaining<=0: break
+            take=min(int(lot.get('remaining_qty',0) or 0), remaining)
+            lot['stop_order_id']=str(stop_rec.get('order_id') or '')
+            lot['stop_price']=float(stop_rec.get('stop_price',0) or 0.0)
+            lot['stop_status']=str(stop_rec.get('status','WORKING') or '')
+            lot['linked_stop_qty']=take
+            linked.append(str(lot.get('lot_id'))); remaining-=take
+        stop_rec['linked_lot_ids']=linked
+        stop_rec['linked_position_keys']=[str(l.get('position_key')) for l in self.position_lots if str(l.get('lot_id')) in linked]
+        self.lot_stop_link_events.append({'time': _pb_v2_now(), 'order_id': stop_rec.get('order_id'), 'symbol': symbol, 'linked_lot_ids': list(linked), 'linked_qty': qty_need-remaining})
+        return {'linked': qty_need-remaining, 'lot_ids': linked}
+
+    def _pb_init_wrapper_v2(self, *args, **kwargs):
+        _PB_V2_ORIG_INIT(self, *args, **kwargs)
+        self.position_lots=[]
+        _pb_init_lifecycle(self)
+
+    def _pb_append_fill_wrapper_v2(self, order, qty: int, px: float, commission: float, tax: float):
+        _PB_V2_ORIG_APPEND_FILL(self, order, qty, px, commission, tax)
+        try:
+            fill_idx=len(getattr(self,'fill_history',[]) or [])
+            fill_id=f"PFILL-{getattr(order,'order_id','') or (order.get('order_id') if isinstance(order, dict) else '')}-{fill_idx:06d}"
+            side=getattr(order,'side','') or (order.get('side') if isinstance(order, dict) else '')
+            side_v=side.value if hasattr(side,'value') else str(side)
+            side_v=str(side_v).upper()
+            symbol=getattr(order,'symbol','') or (order.get('symbol') if isinstance(order, dict) else '')
+            if side_v in {'BUY','SHORT'}:
+                _pb_open_lot_v2(self, symbol, _pb_side_from_order(side_v), int(qty), float(px), order=order, fill_id=fill_id, commission=commission, tax=tax, note=getattr(order,'note','') or 'paper_fill')
+            elif side_v in {'SELL','COVER','BUY_TO_COVER'}:
+                _pb_close_lots_v2(self, symbol, _pb_close_bucket_from_order(side_v), int(qty), float(px), order=order, fill_id=fill_id, commission=commission, tax=tax, note=getattr(order,'note','') or 'paper_fill')
+        except Exception as exc:
+            self.lot_lifecycle_errors.append({'time': _pb_v2_now(), 'error': repr(exc), 'phase': 'append_fill_v2'})
+
+    def _pb_upsert_stop_wrapper_v2(self, symbol: str, quantity: int, stop_price: float, side: str = 'SELL', client_order_id: str = '', note: str = '', strategy_name: str = '', signal_id: str = '', position_key: str = ''):
+        resp=_PB_V2_ORIG_UPSERT_STOP(self, symbol, quantity, stop_price, side=side, client_order_id=client_order_id, note=note)
+        try:
+            if resp.get('ok'):
+                rec=resp.get('record') or {}
+                if strategy_name: rec['strategy_name']=strategy_name
+                if signal_id: rec['signal_id']=signal_id
+                if position_key: rec['position_key']=position_key
+                self.protective_stops[str(rec.get('order_id') or resp.get('broker_order_id'))]=rec
+                _pb_link_stop_to_lots(self, rec)
+                resp['record']=dict(rec)
+        except Exception as exc:
+            self.lot_lifecycle_errors.append({'time': _pb_v2_now(), 'error': repr(exc), 'phase': 'upsert_stop_v2'})
+        return resp
+
+    def _pb_replace_order_wrapper_v2(self, order_id: str, payload: dict):
+        resp=_PB_V2_ORIG_REPLACE_ORDER(self, order_id, payload)
+        try:
+            rec=self.protective_stops.get(order_id)
+            if rec is not None:
+                if 'strategy_name' in payload: rec['strategy_name']=payload.get('strategy_name') or rec.get('strategy_name','')
+                if 'signal_id' in payload: rec['signal_id']=payload.get('signal_id') or rec.get('signal_id','')
+                if 'position_key' in payload: rec['position_key']=payload.get('position_key') or rec.get('position_key','')
+                _pb_link_stop_to_lots(self, rec)
+                resp['record']=dict(rec)
+        except Exception as exc:
+            self.lot_lifecycle_errors.append({'time': _pb_v2_now(), 'error': repr(exc), 'phase': 'replace_stop_v2'})
+        return resp
+
+    def _pb_process_stops_wrapper_v2(self, price_map=None):
+        before=len(getattr(self,'stop_trigger_history',[]) or [])
+        events=_PB_V2_ORIG_PROCESS_STOPS2(self, price_map)
+        try:
+            new_events=list((getattr(self,'stop_trigger_history',[]) or [])[before:])
+            for ev in new_events:
+                oid=str(ev.get('order_id') or '')
+                stop_rec=self.protective_stops.get(oid,{})
+                side=str(ev.get('side','') or '').upper(); close_side='LONG' if side=='SELL' else 'SHORT'
+                dummy={'order_id': oid, 'strategy_name': stop_rec.get('strategy_name',''), 'signal_id': stop_rec.get('signal_id',''), 'client_order_id': stop_rec.get('client_order_id','')}
+                _pb_close_lots_v2(self, ev.get('symbol',''), close_side, int(ev.get('qty',0) or 0), float(ev.get('fill_price',0) or 0.0), order=dummy, fill_id=f"STOPFILL-{oid}-{len(getattr(self,'lot_fill_history',[]) or []):06d}", note='protective_stop_triggered')
+                for lot in self.position_lots:
+                    if str(lot.get('stop_order_id',''))==oid:
+                        lot['stop_status']='TRIGGERED_FILLED'
+                        if int(lot.get('remaining_qty',0) or 0)<=0:
+                            lot['status']='CLOSED'; lot['lifecycle_status']='CLOSED'
+        except Exception as exc:
+            self.lot_lifecycle_errors.append({'time': _pb_v2_now(), 'error': repr(exc), 'phase': 'process_stop_v2'})
+        return events
+
+    def _pb_get_position_lots_v2(self, include_closed: bool = False):
+        rows=[]
+        for lot in self.position_lots:
+            if include_closed or int(lot.get('remaining_qty',0) or 0)>0 or str(lot.get('status','')).upper()=='PARTIAL_EXIT':
+                row=dict(lot)
+                market_px=float(self.last_prices.get(row.get('ticker',row.get('symbol','')), row.get('avg_cost',0)) or 0.0)
+                rem=int(row.get('remaining_qty',0) or 0); avg=float(row.get('avg_cost',0) or 0.0)
+                row['market_price']=market_px; row['market_value']=abs(rem)*market_px; row['cost_value']=abs(rem)*avg
+                row['unrealized_pnl']=round((market_px-avg)*rem if row.get('side')=='LONG' else (avg-market_px)*rem,4)
+                row['realized_unrealized_total']=round(float(row.get('realized_pnl',0) or 0.0)+float(row.get('unrealized_pnl',0) or 0.0),4)
+                row['is_multi_fill_entry']=int(row.get('entry_fill_count',0) or 0)>1
+                row['is_partial_exit']=int(row.get('close_fill_qty',0) or 0)>0 and rem>0
+                rows.append(row)
+        return rows
+
+    def _pb_get_position_lot_summary_v2(self):
+        lots=_pb_get_position_lots_v2(self, include_closed=False); out={}
+        for lot in lots:
+            key=(lot.get('ticker'), lot.get('side'), lot.get('strategy_name',''), lot.get('signal_id',''))
+            bucket=out.setdefault(key, {'ticker':key[0], 'direction_bucket':key[1], 'strategy_name':key[2], 'signal_id':key[3], 'position_key': _pb_position_key(key[0], key[1], key[2], key[3]), 'qty':0, 'market_value':0.0, 'cost_value':0.0, 'lot_count':0, 'realized_pnl':0.0, 'unrealized_pnl':0.0})
+            qty=int(lot.get('remaining_qty',0) or 0)
+            bucket['qty'] += qty if key[1]=='LONG' else -qty
+            bucket['market_value'] += float(lot.get('market_value',0) or 0.0)
+            bucket['cost_value'] += float(lot.get('cost_value',0) or 0.0)
+            bucket['lot_count'] += 1
+            bucket['realized_pnl'] += float(lot.get('realized_pnl',0) or 0.0)
+            bucket['unrealized_pnl'] += float(lot.get('unrealized_pnl',0) or 0.0)
+        for row in out.values():
+            abs_qty=abs(int(row.get('qty',0) or 0)); row['avg_cost']=round(row['cost_value']/abs_qty,4) if abs_qty else 0.0; row['total_pnl']=round(float(row['realized_pnl'])+float(row['unrealized_pnl']),4)
+        return list(out.values())
+
+    def _pb_reconcile_lots_v2(self):
+        lots=_pb_get_position_lots_v2(self, include_closed=False); lot_pos={}; strategy_buckets={}
+        for lot in lots:
+            sym=lot.get('ticker', lot.get('symbol','')); rem=int(lot.get('remaining_qty',0) or 0)
+            lot_pos[sym]=lot_pos.get(sym,0)+(rem if lot.get('side')=='LONG' else -rem); strategy_buckets.setdefault(sym,set()).add(str(lot.get('strategy_name','')))
+        diffs=[]
+        for sym in sorted(set(lot_pos)|set(getattr(self,'positions',{}).keys())):
+            agg=int(getattr(self,'positions',{}).get(sym,0) or 0); lot_qty=int(lot_pos.get(sym,0) or 0)
+            if agg!=lot_qty: diffs.append({'ticker':sym,'aggregate_qty':agg,'lot_qty':lot_qty,'diff_qty':agg-lot_qty,'strategy_buckets': sorted(strategy_buckets.get(sym,set()))})
+        return {'ok': len(diffs)==0, 'diffs': diffs, 'lot_count': len(lots), 'cost_basis_method': _pb_cost_method()}
+
+    PaperBroker.__init__ = _pb_init_wrapper_v2
+    PaperBroker._append_fill = _pb_append_fill_wrapper_v2
+    PaperBroker.upsert_protective_stop = _pb_upsert_stop_wrapper_v2
+    PaperBroker.replace_order = _pb_replace_order_wrapper_v2
+    PaperBroker.process_protective_stops = _pb_process_stops_wrapper_v2
+    PaperBroker.get_position_lots = _pb_get_position_lots_v2
+    PaperBroker.get_position_lot_summary = _pb_get_position_lot_summary_v2
+    PaperBroker.reconcile_lots_to_positions = _pb_reconcile_lots_v2
+    _PB_V2_ORIG_EXPORT = PaperBroker.export_runtime_snapshot
+    def _pb_export_v2(self):
+        snap=_PB_V2_ORIG_EXPORT(self)
+        snap['position_lots']=self.get_position_lots(include_closed=True)
+        snap['position_lot_summary']=self.get_position_lot_summary()
+        snap['lot_reconciliation']=self.reconcile_lots_to_positions()
+        snap['lot_fill_history']=list(getattr(self,'lot_fill_history',[])[-200:])
+        snap['lot_stop_link_events']=list(getattr(self,'lot_stop_link_events',[])[-100:])
+        return snap
+    PaperBroker.export_runtime_snapshot = _pb_export_v2
+except Exception:
+    pass

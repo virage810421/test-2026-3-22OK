@@ -126,6 +126,7 @@ def _safe_build(module_name: str, class_name: str, method_name: str, kwargs: Opt
             return {'status': 'ok', 'path': str(path), 'payload': payload}
         return {'status': 'ok', 'payload': result}
     except Exception as exc:
+        record_issue('control_tower', 'run_service_failed', exc, severity='ERROR', fail_mode='fail_closed')
         return {'status': 'error', 'error': repr(exc), 'module': module_name, 'class_name': class_name, 'method': method_name}
 
 
@@ -140,7 +141,8 @@ def _load_decision_df() -> pd.DataFrame:
         if candidate.exists():
             try:
                 return pd.read_csv(candidate)
-            except Exception:
+            except Exception as exc:
+                record_issue('control_tower', 'read_decision_csv_candidate_failed', exc, severity='WARNING', fail_mode='fail_open')
                 continue
     return pd.DataFrame()
 
@@ -267,7 +269,7 @@ def run_daily() -> dict[str, Any]:
     log('🧭 模式：DAILY')
     log('=' * 72)
     outputs = _build_control_outputs()
-    payload = {'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v86_level3_control_tower_split_ready', 'outputs': outputs, 'readiness_split': outputs.get('live_readiness_gate', {}).get('payload', {}).get('score_split', {}), 'operational_scope': {'prelive': outputs.get('live_readiness_gate', {}).get('payload', {}).get('prelive_ready', False), 'broker_production': outputs.get('live_readiness_gate', {}).get('payload', {}).get('broker_production_ready', False)}, 'status': 'control_tower_ready'}
+    payload = {'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v20260414_bootstrap_migration_first', 'outputs': outputs, 'readiness_split': outputs.get('live_readiness_gate', {}).get('payload', {}).get('score_split', {}), 'operational_scope': {'prelive': outputs.get('live_readiness_gate', {}).get('payload', {}).get('prelive_ready', False), 'broker_production': outputs.get('live_readiness_gate', {}).get('payload', {}).get('broker_production_ready', False)}, 'status': 'control_tower_ready'}
     _write_json('formal_trading_system_v83_official_main.json', payload)
     return payload
 
@@ -289,6 +291,7 @@ def run_train() -> dict[str, Any]:
             'entrypoint': 'fts_training_data_builder.generate_ml_dataset',
         })
     except Exception as exc:
+        record_issue('control_tower', 'training_data_builder_failed', exc, severity='ERROR', fail_mode='fail_closed')
         steps.append({
             'stage': 'training_data_builder',
             'status': 'error',
@@ -306,6 +309,7 @@ def run_train() -> dict[str, Any]:
             'entrypoint': 'fts_trainer_backend.train_models',
         })
     except Exception as exc:
+        record_issue('control_tower', 'trainer_backend_failed', exc, severity='ERROR', fail_mode='fail_closed')
         steps.append({
             'stage': 'trainer_backend',
             'status': 'error',
@@ -341,6 +345,7 @@ def run_bootstrap() -> dict[str, Any]:
     log('🧭 模式：BOOTSTRAP')
     log('=' * 72)
     steps = [
+        _call_script('fts_db_migrations.py', ['upgrade'], allow_missing=False),
         _call_script('db_setup.py', ['--mode', 'upgrade'], allow_missing=False),
         _call_script('db_setup_research_plus.py', allow_missing=True),
         _call_script('run_full_market_percentile_snapshot.py', allow_missing=True),
@@ -348,7 +353,7 @@ def run_bootstrap() -> dict[str, Any]:
         _call_script('run_sync_feature_snapshots_to_sql.py', allow_missing=True),
     ]
     daily_payload = run_daily()
-    payload = {'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v86_level3_control_tower_split_ready', 'steps': steps, 'daily_status': daily_payload.get('status'), 'daily_readiness_split': daily_payload.get('readiness_split', {}), 'status': 'bootstrap_ready'}
+    payload = {'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v20260414_bootstrap_migration_first', 'steps': steps, 'daily_status': daily_payload.get('status'), 'daily_readiness_split': daily_payload.get('readiness_split', {}), 'status': 'bootstrap_ready'}
     _write_json('formal_trading_system_v83_bootstrap.json', payload)
     return payload
 
@@ -373,6 +378,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             payload = run_daily()
         return 0 if payload.get('status') in {'control_tower_ready', 'train_ready', 'bootstrap_ready'} else 1
     except Exception as exc:
+        record_issue('control_tower', 'main_failure', exc, severity='CRITICAL', fail_mode='fail_closed')
         payload = {'generated_at': now_str(), 'module_version': 'v83_level3_control_tower_integrated', 'error_type': type(exc).__name__, 'error': str(exc)}
         _write_json('formal_trading_system_v83_official_main_error.json', payload)
         log(f'❌ control tower failure: {exc}')

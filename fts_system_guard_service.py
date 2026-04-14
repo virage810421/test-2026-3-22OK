@@ -8,6 +8,11 @@ from typing import Any
 import pandas as pd
 
 from fts_config import PATHS
+try:
+    from fts_runtime_diagnostics import record_issue
+except Exception:  # pragma: no cover
+    def record_issue(*args, **kwargs):
+        return {}
 from fts_utils import now_str, log, resolve_decision_csv, safe_float
 
 
@@ -34,8 +39,11 @@ class SystemGuardService:
             return {'health': 'FAIL', 'rows': 0, 'message': '找不到決策桌', 'path': str(path)}
         try:
             df = pd.read_csv(path, encoding='utf-8-sig')
-        except Exception:
+        except UnicodeDecodeError:
             df = pd.read_csv(path)
+        except Exception as exc:
+            record_issue('system_guard', 'decision_desk_read_failed', exc, severity='ERROR', fail_mode='fail_closed')
+            return {'health': 'FAIL', 'rows': 0, 'message': f'決策桌讀取失敗:{type(exc).__name__}', 'path': str(path)}
         if df.empty:
             return {'health': 'FAIL', 'rows': 0, 'message': '決策桌為空', 'path': str(path)}
         avg_ai = safe_float(pd.to_numeric(df.get('AI_Proba', pd.Series([0.5]*len(df))), errors='coerce').mean(), 0.5)
@@ -55,8 +63,11 @@ class SystemGuardService:
             return {'health': 'WARN', 'sample_size': 0, 'message': '近期無成交報表'}
         try:
             df = pd.read_csv(path, encoding='utf-8-sig')
-        except Exception:
+        except UnicodeDecodeError:
             df = pd.read_csv(path)
+        except Exception as exc:
+            record_issue('system_guard', 'recent_trades_read_failed', exc, severity='WARNING', fail_mode='fail_closed')
+            return {'health': 'WARN', 'sample_size': 0, 'message': f'近期成交表讀取失敗:{type(exc).__name__}', 'path': str(path)}
         if df.empty:
             return {'health': 'WARN', 'sample_size': 0, 'message': '近期成交表為空'}
         df = df.tail(limit)
@@ -92,6 +103,8 @@ class SystemGuardService:
             'model_status': model_status,
             'decision_desk': desk_status,
             'recent_trades': trade_status,
+            'guard_source': 'fts_system_guard_service',
+            'legacy_system_guard_wrapper_only': True,
         }
 
     def format_alert_message(self, payload: dict[str, Any]) -> str:

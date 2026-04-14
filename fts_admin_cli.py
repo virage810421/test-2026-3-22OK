@@ -15,6 +15,7 @@ Supported examples:
   python fts_admin_cli.py event-calendar-build
   python fts_admin_cli.py sync-feature-snapshots
   python fts_admin_cli.py clean-old-doors --apply
+  python fts_admin_cli.py drop-readiness
 """
 
 import argparse
@@ -90,6 +91,11 @@ def run_sync_feature_snapshots(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
+
+def run_drop_readiness(argv: Sequence[str] | None = None) -> int:
+    from fts_deprecated_drop_readiness import main
+    return _call_main_with_argv(main, argv)
+
 def run_clean_old_doors(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog='fts_admin_cli.py clean-old-doors')
     parser.add_argument('--apply', action='store_true', help='Actually remove retired old-door files.')
@@ -107,6 +113,7 @@ _COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     'event-calendar-build': run_event_calendar_build,
     'sync-feature-snapshots': run_sync_feature_snapshots,
     'clean-old-doors': run_clean_old_doors,
+    'drop-readiness': run_drop_readiness,
 }
 
 
@@ -114,6 +121,8 @@ _ALIASES = {
     'project-healthcheck': 'healthcheck',
     'run-healthcheck': 'healthcheck',
     'clean': 'clean-old-doors',
+    'deprecated-scan': 'drop-readiness',
+    'drop-readiness-report': 'drop-readiness',
 }
 
 

@@ -79,7 +79,8 @@ def _safe_float(v: Any, default: float = 0.0) -> float:
         if pd.isna(v):
             return default
         return float(v)
-    except Exception:
+    except Exception as exc:
+        record_issue('model_layer', 'safe_float_cast', exc, severity='WARNING', fail_mode='fail_open')
         return default
 
 
@@ -109,7 +110,8 @@ def _load_artifacts() -> None:
         try:
             SELECTED_FEATURES = [str(x) for x in joblib.load(SELECTED_PATH) if str(x).strip()]
             SELECTED_FEATURES = list(dict.fromkeys(SELECTED_FEATURES))
-        except Exception:
+        except Exception as exc:
+            record_issue('model_layer', 'load_selected_features', exc, severity='ERROR', fail_mode='fail_closed')
             SELECTED_FEATURES = []
     for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
         p = MODEL_DIR / f'model_{regime}.pkl'
@@ -124,7 +126,8 @@ def _load_artifacts() -> None:
             if sf.exists():
                 try:
                     DIRECTIONAL_FEATURES[scope] = [str(x) for x in joblib.load(sf) if str(x).strip()]
-                except Exception:
+                except Exception as exc:
+                    record_issue('model_layer', 'load_directional_selected_features', exc, severity='ERROR', fail_mode='fail_closed')
                     DIRECTIONAL_FEATURES[scope] = []
             for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
                 p = MODEL_DIR / f'model_{scope.lower()}_{regime}.pkl'
@@ -153,7 +156,7 @@ def selected_features_ready(scope: str = 'SHARED') -> bool:
     return len(feats) >= threshold
 
 
-def refresh_model_runtime() -> Path:
+def _refresh_model_runtime_base() -> Path:
     _load_artifacts()
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -265,22 +268,26 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
     return decision
 
 
-refresh_model_runtime()
-
 # -----------------------------------------------------------------------------
-# vNext overlay: independent exit AI model workflow
+# Exit AI model workflow (single official implementation)
 # -----------------------------------------------------------------------------
 EXIT_MODELS: dict[str, Any] = {}
 EXIT_SELECTED_FEATURES: list[str] = []
+EXIT_LOAD_ERRORS: dict[str, str] = {}
 EXIT_MODEL_FILES = {
     'DEFEND': lambda: str(getattr(CONFIG, 'exit_defend_model_filename', 'exit_model_defend.pkl')),
     'REDUCE': lambda: str(getattr(CONFIG, 'exit_reduce_model_filename', 'exit_model_reduce.pkl')),
     'CONFIRM': lambda: str(getattr(CONFIG, 'exit_confirm_model_filename', 'exit_model_confirm.pkl')),
 }
+EXIT_REQUIRED_KEYS = ('DEFEND', 'REDUCE', 'CONFIRM')
 ENABLE_EXIT_MODEL_WORKFLOW = bool(getattr(CONFIG, 'enable_exit_model_workflow', True)) and bool(PARAMS.get('ENABLE_EXIT_MODEL_WORKFLOW', True))
 EXIT_MODEL_PRIMARY = bool(getattr(CONFIG, 'exit_model_primary', True)) and bool(PARAMS.get('EXIT_MODEL_PRIMARY', True))
 EXIT_MODEL_MIN_FEATURES = int(getattr(CONFIG, 'exit_model_min_features', PARAMS.get('EXIT_MODEL_MIN_FEATURES', 6)))
-EXIT_FALLBACK_TO_HAZARD = bool(getattr(CONFIG, 'exit_model_fallback_to_hazard', True)) and bool(PARAMS.get('EXIT_MODEL_FALLBACK_TO_HAZARD', True))
+# Hard-block default: hazard fallback is opt-in only.
+EXIT_FALLBACK_TO_HAZARD = bool(getattr(CONFIG, 'exit_model_fallback_to_hazard', False)) and bool(PARAMS.get('EXIT_MODEL_FALLBACK_TO_HAZARD', False))
+EXIT_REQUIRE_ALL_ARTIFACTS = bool(getattr(CONFIG, 'exit_model_require_all_artifacts', True)) and bool(PARAMS.get('EXIT_MODEL_REQUIRE_ALL_ARTIFACTS', True))
+EXIT_HARD_BLOCK_IF_MISSING = bool(getattr(CONFIG, 'exit_model_hard_block_if_missing', True)) and bool(PARAMS.get('EXIT_MODEL_HARD_BLOCK_IF_MISSING', True))
+EXIT_STATUS_PATH = Path(getattr(PATHS, 'runtime_dir', Path('runtime'))) / str(getattr(CONFIG, 'exit_model_runtime_status_filename', PARAMS.get('EXIT_MODEL_RUNTIME_STATUS_PATH', 'exit_model_status.json')).split('/')[-1])
 
 
 @dataclass
@@ -303,157 +310,15 @@ class ExitDecision:
         return asdict(self)
 
 
-def _load_exit_artifacts() -> None:
-    global EXIT_MODELS, EXIT_SELECTED_FEATURES
-    EXIT_MODELS = {}
-    EXIT_SELECTED_FEATURES = []
-    if not ENABLE_EXIT_MODEL_WORKFLOW:
-        return
-    sf = MODEL_DIR / str(getattr(CONFIG, 'exit_selected_features_filename', 'selected_features_exit.pkl'))
-    if sf.exists():
-        try:
-            EXIT_SELECTED_FEATURES = [str(x) for x in joblib.load(sf) if str(x).strip()]
-            EXIT_SELECTED_FEATURES = list(dict.fromkeys(EXIT_SELECTED_FEATURES))
-        except Exception:
-            EXIT_SELECTED_FEATURES = []
-    for key, fn in EXIT_MODEL_FILES.items():
-        p = MODEL_DIR / fn()
-        if p.exists():
-            try:
-                EXIT_MODELS[key] = joblib.load(p)
-            except Exception as exc:
-                record_issue('model_layer', 'exit_artifact_candidate_scan_failed', exc, severity='ERROR', fail_mode='fail_closed')
-
-
-def _exit_selected_features_ready() -> bool:
-    return len(EXIT_SELECTED_FEATURES) >= max(1, EXIT_MODEL_MIN_FEATURES)
-
-
-def _exit_features_from_row(row: Any) -> dict[str, float]:
-    if not EXIT_SELECTED_FEATURES:
-        return {}
-    try:
-        from fts_feature_service import FeatureService
-        features_dict = FeatureService().extract_ai_features(row, history_df=None)
-    except Exception:
-        features_dict = {}
-    return {f: _safe_float(features_dict.get(f, row.get(f, 0.0) if hasattr(row, 'get') else 0.0), 0.0) for f in EXIT_SELECTED_FEATURES}
-
-
-def _predict_exit_proba(model_key: str, row: Any) -> tuple[float, str]:
-    if not EXIT_MODELS and not EXIT_SELECTED_FEATURES:
-        _load_exit_artifacts()
-    if ENABLE_EXIT_MODEL_WORKFLOW and EXIT_MODEL_PRIMARY and model_key in EXIT_MODELS and _exit_selected_features_ready():
-        try:
-            X = _exit_features_from_row(row)
-            if len(X) >= max(1, EXIT_MODEL_MIN_FEATURES):
-                proba = float(EXIT_MODELS[model_key].predict_proba(pd.DataFrame([X]))[0][1])
-                return max(0.01, min(0.99, proba)), 'exit_ai_model'
-        except Exception as exc:
-            record_issue('model_layer', 'runtime_model_diagnostic_failed', exc, severity='WARNING', fail_mode='fail_open')
-    hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0) if hasattr(row, 'get') else 0.0
-    if EXIT_FALLBACK_TO_HAZARD:
-        if model_key == 'DEFEND':
-            return max(0.01, min(0.99, hazard * 0.85 + 0.10)), 'exit_hazard_fallback'
-        if model_key == 'REDUCE':
-            return max(0.01, min(0.99, hazard * 0.95)), 'exit_hazard_fallback'
-        return max(0.01, min(0.99, hazard * 1.05 - 0.03)), 'exit_hazard_fallback'
-    return 0.01, 'exit_model_unavailable'
-
-
-def evaluate_exit_signal(row: Any) -> ExitDecision:
-    if not EXIT_MODELS and not EXIT_SELECTED_FEATURES:
-        _load_exit_artifacts()
-    hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0) if hasattr(row, 'get') else 0.0
-    defend_p, src_def = _predict_exit_proba('DEFEND', row)
-    reduce_p, src_red = _predict_exit_proba('REDUCE', row)
-    confirm_p, src_con = _predict_exit_proba('CONFIRM', row)
-    source = 'exit_ai_model' if {'DEFEND', 'REDUCE', 'CONFIRM'}.issubset(set(EXIT_MODELS.keys())) and _exit_selected_features_ready() else ','.join(sorted({src_def, src_red, src_con}))
-    defend_th = float(PARAMS.get('EXIT_DEFEND_THRESHOLD', 0.58))
-    reduce_th = float(PARAMS.get('EXIT_REDUCE_THRESHOLD', 0.62))
-    confirm_th = float(PARAMS.get('EXIT_CONFIRM_THRESHOLD', 0.66))
-    if confirm_p >= confirm_th:
-        state, action = 'EXIT', 'FLAT_EXIT'
-        target_mult = float(PARAMS.get('EXIT_CONFIRM_POSITION_MULTIPLIER', 0.0))
-        stop_mult = float(PARAMS.get('EXIT_CONFIRM_STOP_TIGHTEN', 0.0))
-    elif reduce_p >= reduce_th:
-        state, action = 'REDUCE', 'TRIM_POSITION'
-        target_mult = float(PARAMS.get('EXIT_REDUCE_POSITION_MULTIPLIER', 0.35))
-        stop_mult = float(PARAMS.get('EXIT_REDUCE_STOP_TIGHTEN', 0.60))
-    elif defend_p >= defend_th:
-        state, action = 'DEFEND', 'TIGHTEN_AND_DEFEND'
-        target_mult = float(PARAMS.get('EXIT_DEFEND_POSITION_MULTIPLIER', 0.60))
-        stop_mult = float(PARAMS.get('EXIT_DEFEND_STOP_TIGHTEN', 0.80))
-    else:
-        state, action = 'HOLD', 'HOLD'
-        target_mult = 1.0
-        stop_mult = 1.0
-    veto: list[str] = []
-    ready = _exit_selected_features_ready()
-    if EXIT_MODEL_PRIMARY and not ready and not EXIT_FALLBACK_TO_HAZARD:
-        veto.append('exit_selected_features_not_ready')
-    return ExitDecision(
-        model_source=source,
-        exit_state=state,
-        exit_action=action,
-        defend_proba=float(defend_p),
-        reduce_proba=float(reduce_p),
-        confirm_proba=float(confirm_p),
-        exit_hazard_score=float(hazard),
-        target_position_multiplier=float(target_mult),
-        stop_tighten_multiplier=float(stop_mult),
-        approved=not veto,
-        selected_features_ready=ready,
-        veto_reasons=veto,
-        debug={
-            'exit_models_loaded': sorted(list(EXIT_MODELS.keys())),
-            'exit_selected_feature_count': len(EXIT_SELECTED_FEATURES),
-            'configured_thresholds': {'defend': defend_th, 'reduce': reduce_th, 'confirm': confirm_th},
-        },
-    )
-
-
-_base_refresh_model_runtime = refresh_model_runtime
-
-def refresh_model_runtime() -> Path:  # type: ignore[override]
-    path = _base_refresh_model_runtime()
-    _load_exit_artifacts()
-    try:
-        payload = json.loads(RUNTIME_PATH.read_text(encoding='utf-8')) if RUNTIME_PATH.exists() else {}
-        payload.update({
-            'exit_model_workflow_enabled': bool(ENABLE_EXIT_MODEL_WORKFLOW),
-            'exit_model_primary': bool(EXIT_MODEL_PRIMARY),
-            'exit_selected_feature_count': len(EXIT_SELECTED_FEATURES),
-            'exit_selected_features_ready': _exit_selected_features_ready(),
-            'exit_models_loaded': sorted(list(EXIT_MODELS.keys())),
-        })
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception as exc:
-        record_issue('model_layer', 'runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
-    return path
-
-
-refresh_model_runtime()
-
-# -----------------------------------------------------------------------------
-# vNext hardening: exit AI model must be explicit; fallback is disabled by default
-# -----------------------------------------------------------------------------
-EXIT_LOAD_ERRORS: dict[str, str] = {}
-EXIT_REQUIRED_KEYS = ('DEFEND', 'REDUCE', 'CONFIRM')
-EXIT_REQUIRE_ALL_ARTIFACTS = bool(getattr(CONFIG, 'exit_model_require_all_artifacts', True)) and bool(PARAMS.get('EXIT_MODEL_REQUIRE_ALL_ARTIFACTS', True))
-EXIT_HARD_BLOCK_IF_MISSING = bool(getattr(CONFIG, 'exit_model_hard_block_if_missing', True)) and bool(PARAMS.get('EXIT_MODEL_HARD_BLOCK_IF_MISSING', True))
-EXIT_STATUS_PATH = Path(getattr(PATHS, 'runtime_dir', Path('runtime'))) / str(getattr(CONFIG, 'exit_model_runtime_status_filename', PARAMS.get('EXIT_MODEL_RUNTIME_STATUS_PATH', 'exit_model_status.json')).split('/')[-1])
-
-
 def _exit_required_model_files() -> dict[str, str]:
     return {key: str(MODEL_DIR / EXIT_MODEL_FILES[key]()) for key in EXIT_REQUIRED_KEYS}
 
 
-def _load_exit_artifacts() -> None:  # type: ignore[override]
-    """Load exit AI artifacts and preserve exact missing/load-error status.
+def _load_exit_artifacts() -> None:
+    """Load exit AI artifacts once, with explicit missing/load-error status.
 
-    This replaces the earlier permissive loader. Missing artifacts are not silent:
-    runtime diagnostics can now prove whether exit decisions are AI-driven.
+    This is the only official exit artifact loader.  It does not silently use the
+    hazard fallback; fallback requires EXIT_MODEL_FALLBACK_TO_HAZARD=True.
     """
     global EXIT_MODELS, EXIT_SELECTED_FEATURES, EXIT_LOAD_ERRORS
     EXIT_MODELS = {}
@@ -471,6 +336,7 @@ def _load_exit_artifacts() -> None:  # type: ignore[override]
         except Exception as exc:
             EXIT_SELECTED_FEATURES = []
             EXIT_LOAD_ERRORS['selected_features_exit'] = f'load_error:{type(exc).__name__}:{exc}'
+            record_issue('model_layer', 'exit_selected_features_load_failed', exc, severity='ERROR', fail_mode='fail_closed')
     else:
         EXIT_LOAD_ERRORS['selected_features_exit'] = 'missing'
 
@@ -481,19 +347,40 @@ def _load_exit_artifacts() -> None:  # type: ignore[override]
                 EXIT_MODELS[key] = joblib.load(p)
             except Exception as exc:
                 EXIT_LOAD_ERRORS[key] = f'load_error:{type(exc).__name__}:{exc}'
+                record_issue('model_layer', f'exit_model_{key.lower()}_load_failed', exc, severity='ERROR', fail_mode='fail_closed')
         else:
             EXIT_LOAD_ERRORS[key] = 'missing'
 
 
+def _exit_selected_features_ready() -> bool:
+    return len(EXIT_SELECTED_FEATURES) >= max(1, EXIT_MODEL_MIN_FEATURES)
+
+
+def _exit_features_from_row(row: Any) -> dict[str, float]:
+    if not EXIT_SELECTED_FEATURES:
+        return {}
+    try:
+        from fts_feature_service import FeatureService
+        features_dict = FeatureService().extract_ai_features(row, history_df=None)
+    except Exception as exc:
+        record_issue('model_layer', 'exit_feature_extract_failed', exc, severity='ERROR', fail_mode='fail_closed')
+        features_dict = {}
+    return {
+        f: _safe_float(features_dict.get(f, row.get(f, 0.0) if hasattr(row, 'get') else 0.0), 0.0)
+        for f in EXIT_SELECTED_FEATURES
+    }
+
+
 def _exit_artifact_status() -> dict[str, Any]:
-    required_files = _exit_required_model_files()
+    if not EXIT_MODELS and not EXIT_SELECTED_FEATURES and not EXIT_LOAD_ERRORS:
+        _load_exit_artifacts()
     loaded = sorted(list(EXIT_MODELS.keys()))
     missing_models = [key for key in EXIT_REQUIRED_KEYS if key not in EXIT_MODELS]
     selected_ready = _exit_selected_features_ready()
     complete = bool(ENABLE_EXIT_MODEL_WORKFLOW and selected_ready and not missing_models)
     if EXIT_REQUIRE_ALL_ARTIFACTS:
         complete = bool(complete and set(EXIT_REQUIRED_KEYS).issubset(set(EXIT_MODELS.keys())))
-    status = {
+    return {
         'exit_model_workflow_enabled': bool(ENABLE_EXIT_MODEL_WORKFLOW),
         'exit_model_primary': bool(EXIT_MODEL_PRIMARY),
         'exit_model_fallback_to_hazard': bool(EXIT_FALLBACK_TO_HAZARD),
@@ -508,14 +395,13 @@ def _exit_artifact_status() -> dict[str, Any]:
         'exit_artifacts_complete': bool(complete),
         'exit_model_source': 'exit_ai_model' if complete else ('exit_hazard_fallback' if EXIT_FALLBACK_TO_HAZARD else 'exit_ai_model_unavailable'),
         'exit_load_errors': dict(EXIT_LOAD_ERRORS),
-        'exit_required_model_files': required_files,
+        'exit_required_model_files': _exit_required_model_files(),
         'exit_selected_features_file': str(MODEL_DIR / str(getattr(CONFIG, 'exit_selected_features_filename', 'selected_features_exit.pkl'))),
     }
-    return status
 
 
 def get_exit_model_runtime_status(refresh: bool = False) -> dict[str, Any]:
-    if refresh or (not EXIT_MODELS and not EXIT_SELECTED_FEATURES):
+    if refresh or (not EXIT_MODELS and not EXIT_SELECTED_FEATURES and not EXIT_LOAD_ERRORS):
         _load_exit_artifacts()
     return _exit_artifact_status()
 
@@ -526,13 +412,11 @@ def _write_exit_runtime_status() -> dict[str, Any]:
         EXIT_STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
         EXIT_STATUS_PATH.write_text(json.dumps(status, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception as exc:
-        record_issue('model_layer', 'runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
+        record_issue('model_layer', 'exit_runtime_status_write_failed', exc, severity='WARNING', fail_mode='fail_open')
     return status
 
 
-def _predict_exit_proba(model_key: str, row: Any) -> tuple[float, str]:  # type: ignore[override]
-    if not EXIT_MODELS and not EXIT_SELECTED_FEATURES:
-        _load_exit_artifacts()
+def _predict_exit_proba(model_key: str, row: Any) -> tuple[float, str]:
     status = _exit_artifact_status()
     if ENABLE_EXIT_MODEL_WORKFLOW and EXIT_MODEL_PRIMARY and status.get('exit_artifacts_complete') and model_key in EXIT_MODELS:
         try:
@@ -543,9 +427,10 @@ def _predict_exit_proba(model_key: str, row: Any) -> tuple[float, str]:  # type:
             return 0.01, 'exit_selected_features_not_ready'
         except Exception as exc:
             EXIT_LOAD_ERRORS[f'{model_key}_predict'] = f'predict_error:{type(exc).__name__}:{exc}'
+            record_issue('model_layer', f'exit_model_{model_key.lower()}_predict_failed', exc, severity='ERROR', fail_mode='fail_closed')
             if not EXIT_FALLBACK_TO_HAZARD:
                 return 0.01, 'exit_ai_model_predict_error'
-    # Emergency fallback is explicitly opt-in only. Default config keeps this disabled.
+
     hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0) if hasattr(row, 'get') else 0.0
     if EXIT_FALLBACK_TO_HAZARD:
         if model_key == 'DEFEND':
@@ -556,9 +441,7 @@ def _predict_exit_proba(model_key: str, row: Any) -> tuple[float, str]:  # type:
     return 0.01, 'exit_ai_model_unavailable'
 
 
-def evaluate_exit_signal(row: Any) -> ExitDecision:  # type: ignore[override]
-    if not EXIT_MODELS and not EXIT_SELECTED_FEATURES:
-        _load_exit_artifacts()
+def evaluate_exit_signal(row: Any) -> ExitDecision:
     status = _exit_artifact_status()
     hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0) if hasattr(row, 'get') else 0.0
     defend_p, src_def = _predict_exit_proba('DEFEND', row)
@@ -611,17 +494,15 @@ def evaluate_exit_signal(row: Any) -> ExitDecision:  # type: ignore[override]
         approved=not veto,
         selected_features_ready=bool(status.get('exit_selected_features_ready')),
         veto_reasons=veto,
-        debug={
-            **status,
-            'configured_thresholds': {'defend': defend_th, 'reduce': reduce_th, 'confirm': confirm_th},
-        },
+        debug={**status, 'configured_thresholds': {'defend': defend_th, 'reduce': reduce_th, 'confirm': confirm_th}},
     )
 
 
-_hardened_base_refresh_model_runtime = refresh_model_runtime
+_base_refresh_model_runtime = _refresh_model_runtime_base
+
 
 def refresh_model_runtime() -> Path:  # type: ignore[override]
-    path = _hardened_base_refresh_model_runtime()
+    path = _base_refresh_model_runtime()
     _load_exit_artifacts()
     status = _write_exit_runtime_status()
     try:
@@ -629,7 +510,7 @@ def refresh_model_runtime() -> Path:  # type: ignore[override]
         payload.update(status)
         RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception as exc:
-        record_issue('model_layer', 'runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
+        record_issue('model_layer', 'model_layer_runtime_status_update_failed', exc, severity='WARNING', fail_mode='fail_open')
     return path
 
 

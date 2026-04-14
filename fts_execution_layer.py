@@ -10,6 +10,8 @@ import pandas as pd
 
 from config import PARAMS
 from fts_strategy_policy_layer import get_active_strategy, get_strategy_policy
+from fts_exception_policy import record_diagnostic
+from fts_symbol_contract import get_ticker_symbol, ensure_execution_symbol
 
 try:
     from fts_config import PATHS  # type: ignore
@@ -51,7 +53,8 @@ def _safe_float(x, default=0.0):
         if pd.isna(x):
             return default
         return float(x)
-    except Exception:
+    except Exception as exc:
+        record_diagnostic('execution_layer', 'safe_float_cast', exc, severity='warning', fail_closed=False, context={'value': str(x)[:80]})
         return default
 
 
@@ -60,7 +63,8 @@ def _safe_int(x, default=0):
         if pd.isna(x):
             return default
         return int(float(x))
-    except Exception:
+    except Exception as exc:
+        record_diagnostic('execution_layer', 'safe_int_cast', exc, severity='warning', fail_closed=False, context={'value': str(x)[:80]})
         return default
 
 
@@ -97,6 +101,7 @@ def build_entry_metrics(row, params=PARAMS):
     preentry_score = _safe_float(row.get('PreEntry_Score', 0.0), 0.0)
     confirm_score = _safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0)
 
+    policy_ready = True
     try:
         dummy_vol = 0.05
         trend_is_with_me = '多頭' in str(regime)
@@ -104,10 +109,12 @@ def build_entry_metrics(row, params=PARAMS):
         active_strategy = get_active_strategy(structure, regime=regime)
         dynamic_sl, dynamic_tp, _ = active_strategy.get_exit_rules(params, dummy_vol, trend_is_with_me, adx_is_strong, 0)
         policy = get_strategy_policy(structure, regime=regime)
-    except Exception:
+    except Exception as exc:
+        policy_ready = False
+        record_diagnostic('execution_layer', 'build_entry_metrics_policy_load', exc, severity='error', fail_closed=True, context={'ticker_symbol': get_ticker_symbol(row), 'structure': structure, 'regime': regime})
         dynamic_sl = float(params.get('SL_MIN_PCT', 0.03))
         dynamic_tp = float(params.get('TP_BASE_PCT', 0.10))
-        policy = {'name': 'fallback'}
+        policy = {'name': 'policy_unavailable_fail_closed', 'playbook': 'fail_closed'}
 
     rr_ratio = (dynamic_tp / dynamic_sl) if dynamic_sl > 0 else 0.0
     risk_budget_ratio = 0.05
@@ -129,8 +136,9 @@ def build_entry_metrics(row, params=PARAMS):
     return {
         '市場狀態': regime,
         '進場陣型': structure,
-        '策略名稱': policy.get('name', 'fallback'),
-        '策略劇本': policy.get('playbook', 'fallback'),
+        '策略名稱': policy.get('name', 'policy_unavailable_fail_closed'),
+        '策略劇本': policy.get('playbook', 'fail_closed'),
+        'Policy_Ready': bool(policy_ready),
         '期望值': realized_ev,
         '預期停損(%)': round(dynamic_sl * 100, 3),
         '預期停利(%)': round(dynamic_tp * 100, 3),
@@ -335,6 +343,9 @@ def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', 
 
 
 def compute_position_plan(row, curr_price: float, total_nav: float, current_cash: float, entry_metrics: dict[str, Any], params=PARAMS) -> PositionPlan:
+    if not bool(entry_metrics.get('Policy_Ready', True)):
+        record_diagnostic('execution_layer', 'compute_position_plan_policy_not_ready', severity='error', fail_closed=True, context={'ticker_symbol': get_ticker_symbol(row)})
+        return PositionPlan(False, 'policy_not_ready_fail_closed', 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     if curr_price <= 0:
         return PositionPlan(False, 'price_invalid', 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()

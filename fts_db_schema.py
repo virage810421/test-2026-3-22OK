@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable
 
-SCHEMA_VERSION = '20260413_architecture_finish_v3_execution_schema_managed'
+SCHEMA_VERSION = '20260414_schema_single_source_execution_ticker_symbol_v2_legacy_alias'
 
 
 @dataclass(frozen=True)
@@ -39,14 +39,14 @@ def _c(name, sql_type, nullable=True, default_sql=None, primary_key=False):
 
 CORE_TABLES: tuple[TableSpec, ...] = (
     TableSpec('trade_history', (
-        _c('策略名稱', 'NVARCHAR(50)'), _c('Ticker SYMBOL', 'VARCHAR(20)', nullable=False, default_sql="''"), _c('方向', 'NVARCHAR(10)'),
+        _c('策略名稱', 'NVARCHAR(50)'), _c('Ticker SYMBOL', 'VARCHAR(20)', nullable=False, default_sql="''"), _c('ticker_symbol', 'VARCHAR(20)'), _c('方向', 'NVARCHAR(10)'),
         _c('進場時間', 'DATETIME'), _c('出場時間', 'DATETIME'), _c('進場價', 'FLOAT'), _c('出場價', 'FLOAT'),
         _c('報酬率(%)', 'DECIMAL(10,3)'), _c('淨損益金額', 'FLOAT'), _c('結餘本金', 'FLOAT'), _c('市場狀態', 'NVARCHAR(50)'),
         _c('進場陣型', 'NVARCHAR(50)'), _c('期望值', 'DECIMAL(10,3)'), _c('預期停損(%)', 'DECIMAL(10,3)'), _c('預期停利(%)', 'DECIMAL(10,3)'),
         _c('風報比(RR)', 'DECIMAL(10,3)'), _c('風險金額', 'FLOAT'),
     )),
     TableSpec('active_positions', (
-        _c('Ticker SYMBOL', 'VARCHAR(20)', nullable=False, default_sql="''"), _c('方向', 'NVARCHAR(10)'), _c('進場時間', 'DATETIME'),
+        _c('Ticker SYMBOL', 'VARCHAR(20)', nullable=False, default_sql="''"), _c('ticker_symbol', 'VARCHAR(20)'), _c('方向', 'NVARCHAR(10)'), _c('進場時間', 'DATETIME'),
         _c('進場價', 'FLOAT'), _c('投入資金', 'FLOAT'), _c('停利階段', 'INT'), _c('進場股數', 'INT'), _c('市場狀態', 'NVARCHAR(50)'),
         _c('進場陣型', 'NVARCHAR(50)'), _c('期望值', 'DECIMAL(10,3)'), _c('預期停損(%)', 'DECIMAL(10,3)'), _c('預期停利(%)', 'DECIMAL(10,3)'),
         _c('風報比(RR)', 'DECIMAL(10,3)'), _c('風險金額', 'FLOAT'),
@@ -83,7 +83,7 @@ CORE_TABLES: tuple[TableSpec, ...] = (
         _c('industry', 'NVARCHAR(64)'), _c('note', 'NVARCHAR(MAX)'),
     )),
     TableSpec('execution_position_lots', (
-        _c('lot_id', 'NVARCHAR(80)', nullable=False, primary_key=True), _c('snapshot_time', 'DATETIME2'), _c('Ticker SYMBOL', 'NVARCHAR(30)'),
+        _c('lot_id', 'NVARCHAR(80)', nullable=False, primary_key=True), _c('snapshot_time', 'DATETIME2'), _c('ticker_symbol', 'NVARCHAR(32)'),
         _c('direction_bucket', 'NVARCHAR(20)'), _c('status', 'NVARCHAR(30)'), _c('open_qty', 'INT'), _c('remaining_qty', 'INT'),
         _c('avg_cost', 'FLOAT'), _c('entry_price', 'FLOAT'), _c('market_price', 'FLOAT'), _c('market_value', 'FLOAT'),
         _c('unrealized_pnl', 'FLOAT'), _c('realized_pnl', 'FLOAT'), _c('entry_time', 'DATETIME2'), _c('close_time', 'DATETIME2'),
@@ -92,7 +92,7 @@ CORE_TABLES: tuple[TableSpec, ...] = (
     )),
     TableSpec('execution_broker_callbacks', (
         _c('callback_id', 'NVARCHAR(120)', nullable=False, primary_key=True), _c('broker_order_id', 'NVARCHAR(120)'), _c('client_order_id', 'NVARCHAR(120)'),
-        _c('event_type', 'NVARCHAR(60)'), _c('status', 'NVARCHAR(60)'), _c('Ticker SYMBOL', 'NVARCHAR(30)'), _c('filled_qty', 'INT'),
+        _c('event_type', 'NVARCHAR(60)'), _c('status', 'NVARCHAR(60)'), _c('ticker_symbol', 'NVARCHAR(32)'), _c('filled_qty', 'INT'),
         _c('remaining_qty', 'INT'), _c('avg_fill_price', 'FLOAT'), _c('callback_time', 'DATETIME2'),
         _c('ingested_at', 'DATETIME2', nullable=False, default_sql='SYSUTCDATETIME()'), _c('raw_json', 'NVARCHAR(MAX)'),
     )),

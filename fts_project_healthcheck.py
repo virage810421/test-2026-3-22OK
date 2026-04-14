@@ -393,6 +393,13 @@ class ProjectHealthcheck:
             return {'args': args, 'ok': False, 'seconds': round(time.time() - start, 3), 'error': str(e)}
 
 
+    def _exception_policy_audit(self) -> Dict[str, object]:
+        try:
+            from fts_exception_policy import audit_exception_policy
+            return audit_exception_policy(self.project_root)
+        except Exception as e:
+            return {'summary': {'core_policy_ready': False, 'error': str(e)}, 'by_file': {}}
+
     def _training_dataset_audit(self) -> Dict[str, object]:
         dataset_path = self.project_root / 'data' / 'ml_training_data.csv'
         if not dataset_path.exists():
@@ -430,6 +437,7 @@ class ProjectHealthcheck:
         json_persistence_audit = self._json_persistence_audit()
         tri_lane_completion = self._tri_lane_completion_audit()
         training_dataset_audit = self._training_dataset_audit()
+        exception_policy_audit = self._exception_policy_audit()
 
         report = {
             'project_root': str(self.project_root),
@@ -444,6 +452,7 @@ class ProjectHealthcheck:
                 'bridge_interface_failures': sum(0 if v.get('compatible', False) else 1 for v in bridge_interface_audit.values() if isinstance(v, dict)),
                 'tri_lane_smoke_failures': sum(0 if x.get('ok') else 1 for x in tri_lane_smoke.values()),
                 'json_persistence_risk_failures': 0 if json_persistence_audit.get('risk_ok') else 1,
+                'core_exception_policy_failures': 0 if exception_policy_audit.get('summary', {}).get('core_policy_ready') else 1,
             },
             'compile_results': [asdict(r) for r in compile_results],
             'core_import_smoke': [asdict(r) for r in import_results],
@@ -459,6 +468,7 @@ class ProjectHealthcheck:
             'json_persistence_audit': json_persistence_audit,
             'tri_lane_completion_audit': tri_lane_completion,
             'training_dataset_audit': training_dataset_audit,
+            'exception_policy_audit': exception_policy_audit,
         }
         if deep:
             deep_runs = []
@@ -496,8 +506,9 @@ def main(argv: List[str] | None = None) -> int:
     print(f'🪛 bridge 介面失敗：{summary.get("bridge_interface_failures", 0)}')
     print(f'🚦 tri-lane smoke 失敗：{summary.get("tri_lane_smoke_failures", 0)}')
     print(f'🧱 JSON 併發風險失敗：{summary.get("json_persistence_risk_failures", 0)}')
+    print(f'🧯 核心 exception policy 失敗：{summary.get("core_exception_policy_failures", 0)}')
     print('=' * 72)
-    ok = (summary['compile_failures'] == 0 and summary['core_import_failures'] == 0 and summary['tri_lane_import_failures'] == 0 and summary['missing_local_import_edges'] == 0 and summary.get('bridge_interface_failures', 0) == 0 and summary.get('tri_lane_smoke_failures', 0) == 0 and summary.get('json_persistence_risk_failures', 0) == 0)
+    ok = (summary['compile_failures'] == 0 and summary['core_import_failures'] == 0 and summary['tri_lane_import_failures'] == 0 and summary['missing_local_import_edges'] == 0 and summary.get('bridge_interface_failures', 0) == 0 and summary.get('tri_lane_smoke_failures', 0) == 0 and summary.get('json_persistence_risk_failures', 0) == 0 and summary.get('core_exception_policy_failures', 0) == 0)
     return 0 if ok else 1
 
 if __name__ == '__main__':

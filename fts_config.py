@@ -105,13 +105,6 @@ class SystemConfig:
     scan_recursive_depth: int = 3
     continue_on_stage_failure: bool = True
     safe_upgrade_mode: bool = True
-
-    # ---- runtime diagnostics / fail-open-fail-closed policy ----
-    runtime_diagnostics_enabled: bool = True
-    runtime_diagnostics_jsonl: str = 'runtime_diagnostics_events.jsonl'
-    runtime_diagnostics_summary: str = 'runtime_diagnostics_summary.json'
-    runtime_diagnostics_fail_closed_components: tuple = ('exit_ai','execution_sql','broker_callback','regime','feature_service','protective_stop')
-    runtime_diagnostics_max_recent_events: int = 50
     stage_soft_timeout_seconds: int = 120
     max_stage_retries: int = 1
     resume_completed_stages: bool = True
@@ -192,7 +185,8 @@ class SystemConfig:
     enable_exit_model_workflow: bool = True
     exit_model_primary: bool = True
     exit_model_min_features: int = 6
-    exit_model_fallback_to_hazard: bool = True
+    exit_model_fallback_to_hazard: bool = False
+    exit_model_hard_block_when_unavailable: bool = True
     exit_selected_features_filename: str = 'selected_features_exit.pkl'
     exit_defend_model_filename: str = 'exit_model_defend.pkl'
     exit_reduce_model_filename: str = 'exit_model_reduce.pkl'
@@ -248,9 +242,17 @@ try:
     CONFIG.execution_lot_snapshot_csv = 'execution_logs/position_lot_snapshot.csv'
     CONFIG.execution_callback_blotter_csv = 'execution_logs/broker_callback_blotter.csv'
     CONFIG.execution_reconciliation_blotter_csv = 'execution_logs/execution_reconciliation_blotter.csv'
-except Exception as exc:
-    try:
-        from fts_runtime_diagnostics import record_issue
-        record_issue('fts_config', 'optional_runtime_defaults_patch_failed', exc, severity='WARNING', fail_mode='fail_open')
-    except Exception:
-        print(f'⚠️ fts_config optional runtime defaults patch failed: {exc}')
+except Exception:
+    pass
+
+
+# vNext institutional lot lifecycle settings
+if not hasattr(CONFIG, "lot_accounting_method"): CONFIG.lot_accounting_method = "FIFO"
+if not hasattr(CONFIG, "lot_partition_by_strategy"): CONFIG.lot_partition_by_strategy = True
+if not hasattr(CONFIG, "lot_partition_by_signal"): CONFIG.lot_partition_by_signal = True
+if not hasattr(CONFIG, "lot_allow_cross_strategy_close"): CONFIG.lot_allow_cross_strategy_close = False
+if not hasattr(CONFIG, "lot_stop_linkage_enabled"): CONFIG.lot_stop_linkage_enabled = True
+if not hasattr(CONFIG, "lot_stop_linkage_match_strategy"): CONFIG.lot_stop_linkage_match_strategy = True
+if not hasattr(CONFIG, "lot_stop_linkage_match_signal"): CONFIG.lot_stop_linkage_match_signal = False
+if not hasattr(CONFIG, "lot_track_partial_fill_lifecycle"): CONFIG.lot_track_partial_fill_lifecycle = True
+if not hasattr(CONFIG, "lot_close_match_tolerance_qty"): CONFIG.lot_close_match_tolerance_qty = 0

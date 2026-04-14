@@ -10,6 +10,7 @@ from typing import Any
 from fts_config import PATHS, CONFIG
 from fts_real_broker_adapter_blueprint import RealBrokerAdapterBlueprint
 from fts_utils import now_str
+from fts_exception_policy import record_diagnostic
 
 try:
     import requests  # type: ignore
@@ -110,7 +111,8 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
         self.ensure_template_files()
         try:
             return json.loads(self.paths.config_path.read_text(encoding='utf-8'))
-        except Exception:
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'load_config', exc, severity='warning', fail_closed=True)
             return self.default_template()
 
     def _is_ready(self) -> tuple[bool, list[str]]:
@@ -193,7 +195,8 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
         body: Any
         try:
             body = response.json()
-        except Exception:
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'parse_http_response_json', exc, severity='warning', fail_closed=True)
             body = {'raw_text': response.text}
         return {
             'ok': response.ok,

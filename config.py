@@ -301,7 +301,7 @@ PARAMS.setdefault("LEGACY_SCORE_ALERT_ONLY", True)
 PARAMS.setdefault("ENABLE_EXIT_MODEL_WORKFLOW", True)
 PARAMS.setdefault("EXIT_MODEL_PRIMARY", True)
 PARAMS.setdefault("EXIT_MODEL_MIN_FEATURES", 6)
-PARAMS.setdefault("EXIT_MODEL_FALLBACK_TO_HAZARD", True)
+PARAMS.setdefault("EXIT_MODEL_FALLBACK_TO_HAZARD", False)
 PARAMS.setdefault("EXIT_DEFEND_THRESHOLD", 0.58)
 PARAMS.setdefault("EXIT_REDUCE_THRESHOLD", 0.62)
 PARAMS.setdefault("EXIT_CONFIRM_THRESHOLD", 0.66)
@@ -343,11 +343,23 @@ EXECUTION_LOT_SNAPSHOT_CSV = 'execution_logs/position_lot_snapshot.csv'
 EXECUTION_CALLBACK_BLOTTER_CSV = 'execution_logs/broker_callback_blotter.csv'
 EXECUTION_RECONCILIATION_BLOTTER_CSV = 'execution_logs/execution_reconciliation_blotter.csv'
 
-# runtime diagnostics defaults
-try:
-    CONFIG.runtime_diagnostics_enabled = True
-    CONFIG.runtime_diagnostics_jsonl = 'runtime_diagnostics_events.jsonl'
-    CONFIG.runtime_diagnostics_summary = 'runtime_diagnostics_summary.json'
-    CONFIG.runtime_diagnostics_fail_closed_components = ('exit_ai','execution_sql','broker_callback','regime','feature_service','protective_stop')
-except Exception:
-    pass
+
+# vNext institutional lot lifecycle settings
+LOT_ACCOUNTING_METHOD = "FIFO"  # FIFO | AVERAGE
+LOT_PARTITION_BY_STRATEGY = True
+LOT_PARTITION_BY_SIGNAL = True
+LOT_ALLOW_CROSS_STRATEGY_CLOSE = False
+LOT_STOP_LINKAGE_ENABLED = True
+LOT_STOP_LINKAGE_MATCH_STRATEGY = True
+LOT_STOP_LINKAGE_MATCH_SIGNAL = False
+LOT_TRACK_PARTIAL_FILL_LIFECYCLE = True
+LOT_CLOSE_MATCH_TOLERANCE_QTY = 0
+
+# === v83 hard exit AI policy: no hazard fallback unless explicitly re-enabled ===
+PARAMS.setdefault("EXIT_MODEL_REQUIRE_ALL_ARTIFACTS", True)
+PARAMS.setdefault("EXIT_MODEL_HARD_BLOCK_IF_MISSING", True)
+PARAMS["EXIT_MODEL_FALLBACK_TO_HAZARD"] = bool(PARAMS.get("EXIT_MODEL_FALLBACK_TO_HAZARD", False))
+
+# v83+ exit AI hard-block policy: no hidden fallback to hazard unless explicitly re-enabled.
+PARAMS.setdefault('EXIT_MODEL_HARD_BLOCK_WHEN_UNAVAILABLE', True)
+PARAMS['EXIT_MODEL_FALLBACK_TO_HAZARD'] = False

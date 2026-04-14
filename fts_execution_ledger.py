@@ -7,6 +7,7 @@ import json
 
 from fts_prelive_runtime import PATHS, now_str, append_jsonl, write_json, normalize_key
 from fts_broker_core import BrokerShadowLedgerMutator
+from fts_exception_policy import record_diagnostic
 
 
 class ExecutionLedger:
@@ -53,7 +54,8 @@ class ExecutionLedger:
                     continue
                 try:
                     row = json.loads(raw)
-                except Exception:
+                except Exception as exc:
+                    record_diagnostic('execution_ledger', 'parse_event_jsonl_line', exc, severity='warning', fail_closed=False)
                     continue
                 lane = normalize_key(row.get('lane')) or 'UNKNOWN'
                 lane_event_counts[lane] += 1

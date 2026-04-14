@@ -1,0 +1,1261 @@
+{
+  "generated_at": "2026-04-14T14:08:55",
+  "tool": "fts_deprecated_drop_readiness.py",
+  "tool_version": "v20260414_deprecated_drop_readiness_audit",
+  "project_root": "C:\\test\\test-2026-3-22OK",
+  "status": "not_ready_core_findings",
+  "summary": {
+    "py_files": 222,
+    "findings_total": 193,
+    "severity_counts": {
+      "low": 22,
+      "medium": 94,
+      "high": 77
+    },
+    "drop_readiness_counts": {
+      "NOT_READY": 3,
+      "READY_CLEAN": 1,
+      "NO_OLD_COLUMN": 5,
+      "KEEP_COMPAT_NOT_DROP": 2,
+      "NOT_READY_FOR_GLOBAL_FAIL_CLOSED": 1
+    },
+    "legacy_Ticker_SYMBOL_refs": 428,
+    "canonical_ticker_symbol_refs": 253,
+    "except_exception_count": 678,
+    "pass_count": 71,
+    "fallback_count": 270,
+    "db_probe_status": "checked"
+  },
+  "drop_candidates": [
+    {
+      "target": "file:system_guard.py",
+      "current_status": "wrapper_only",
+      "drop_readiness": "NOT_READY",
+      "evidence": [
+        "delegates_to_fts_system_guard_service=True",
+        "risky_legacy_patterns=none",
+        "import_refs=2",
+        "import_ref:absorbed_references\\advanced_chart1_original\\master_pipeline.py",
+        "import_ref:fts_legacy_master_pipeline_impl.py"
+      ],
+      "blockers": [
+        "仍有其他檔案 import system_guard；刪檔前需改 import 到 fts_system_guard_service。"
+      ],
+      "required_steps_before_drop": [
+        "改掉 import refs",
+        "確認 fts_system_guard_service.py 已是唯一主線",
+        "跑 healthcheck/bootstrap/daily"
+      ]
+    },
+    {
+      "target": "duplicate_defs:fts_model_layer.py",
+      "current_status": "duplicate_defs_found",
+      "drop_readiness": "NOT_READY",
+      "evidence": [
+        "duplicate_defs={'as_dict': 2}"
+      ],
+      "blockers": [
+        "fts_model_layer.py 仍有重複函式定義"
+      ],
+      "required_steps_before_drop": [
+        "刪除被後段覆寫的舊函式",
+        "重新跑 py_compile",
+        "確認 exit runtime 欄位存在"
+      ]
+    },
+    {
+      "target": "config:exit_model_hazard_fallback",
+      "current_status": "fallback_disabled",
+      "drop_readiness": "READY_CLEAN",
+      "evidence": [
+        "fallback_enabled=False",
+        "hard_block_seen=True"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "code:execution_Ticker_SYMBOL_references",
+      "current_status": "118 refs, 73 unapproved",
+      "drop_readiness": "NOT_READY",
+      "evidence": [
+        "total_execution_context_refs=118",
+        "unapproved_refs=73",
+        "_backup_monthly_fix\\db_setup.py:90",
+        "_backup_monthly_fix\\db_setup.py:111",
+        "_backup_monthly_fix\\db_setup.py:136",
+        "_backup_monthly_fix\\db_setup.py:154",
+        "_backup_monthly_fix\\db_setup.py:178",
+        "_backup_monthly_fix\\db_setup.py:185",
+        "_backup_monthly_fix\\db_setup.py:191",
+        "_backup_monthly_fix\\db_setup.py:211",
+        "_backup_monthly_fix\\db_setup.py:226",
+        "_backup_monthly_fix\\db_setup.py:246",
+        "_backup_monthly_fix\\db_setup.py:250",
+        "_backup_monthly_fix\\db_setup.py:258",
+        "_backup_monthly_fix\\db_setup.py:274",
+        "_backup_monthly_fix\\db_setup.py:295",
+        "_backup_monthly_fix\\db_setup.py:306",
+        "_backup_monthly_fix\\db_setup.py:322",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:52",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:115",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:122",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:260",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:270",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:280",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:290",
+        "absorbed_references\\advanced_chart1_original\\execution_engine.py:300",
+        "absorbed_references\\advanced_chart1_original\\live_paper_trading.py:134",
+        "absorbed_references\\advanced_chart1_original\\live_paper_trading.py:294",
+        "absorbed_references\\advanced_chart1_original\\live_paper_trading.py:363",
+        "absorbed_references\\advanced_chart1_original\\live_paper_trading.py:389",
+        "absorbed_references\\advanced_chart1_original\\live_paper_trading.py:398",
+        "absorbed_references\\advanced_chart1_original\\live_paper_trading.py:408"
+      ],
+      "blockers": [
+        "核心/execution 檔案仍有未標示 alias/backfill/compat 的 Ticker SYMBOL 使用。"
+      ],
+      "required_steps_before_drop": [
+        "跑 fts_db_migrations.py upgrade 回填 DB",
+        "確認所有 execution runtime/output 都有 ticker_symbol",
+        "觀察 3~5 輪 daily/paper 無舊欄位讀取告警"
+      ]
+    },
+    {
+      "target": "db:execution_orders.[Ticker SYMBOL]",
+      "current_status": "exists=True old=False new=True null_new=None",
+      "drop_readiness": "NO_OLD_COLUMN",
+      "evidence": [
+        "{\"exists\": true, \"has_Ticker_SYMBOL\": false, \"has_ticker_symbol\": true, \"row_count\": null, \"null_ticker_symbol_count\": null, \"row_count_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\", \"null_ticker_symbol_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\"}"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "db:execution_fills.[Ticker SYMBOL]",
+      "current_status": "exists=True old=False new=True null_new=None",
+      "drop_readiness": "NO_OLD_COLUMN",
+      "evidence": [
+        "{\"exists\": true, \"has_Ticker_SYMBOL\": false, \"has_ticker_symbol\": true, \"row_count\": null, \"null_ticker_symbol_count\": null, \"row_count_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\", \"null_ticker_symbol_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\"}"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "db:execution_positions_snapshot.[Ticker SYMBOL]",
+      "current_status": "exists=True old=False new=True null_new=None",
+      "drop_readiness": "NO_OLD_COLUMN",
+      "evidence": [
+        "{\"exists\": true, \"has_Ticker_SYMBOL\": false, \"has_ticker_symbol\": true, \"row_count\": null, \"null_ticker_symbol_count\": null, \"row_count_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\", \"null_ticker_symbol_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\"}"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "db:execution_position_lots.[Ticker SYMBOL]",
+      "current_status": "exists=False old=False new=False null_new=None",
+      "drop_readiness": "NO_OLD_COLUMN",
+      "evidence": [
+        "{\"exists\": false, \"has_Ticker_SYMBOL\": false, \"has_ticker_symbol\": false, \"row_count\": null, \"null_ticker_symbol_count\": null}"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "db:execution_broker_callbacks.[Ticker SYMBOL]",
+      "current_status": "exists=False old=False new=False null_new=None",
+      "drop_readiness": "NO_OLD_COLUMN",
+      "evidence": [
+        "{\"exists\": false, \"has_Ticker_SYMBOL\": false, \"has_ticker_symbol\": false, \"row_count\": null, \"null_ticker_symbol_count\": null}"
+      ],
+      "blockers": [],
+      "required_steps_before_drop": []
+    },
+    {
+      "target": "db:active_positions.[Ticker SYMBOL]",
+      "current_status": "legacy_table_compat_layer",
+      "drop_readiness": "KEEP_COMPAT_NOT_DROP",
+      "evidence": [
+        "{\"exists\": true, \"has_Ticker_SYMBOL\": true, \"has_ticker_symbol\": false, \"row_count\": null, \"null_ticker_symbol_count\": null, \"row_count_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\"}"
+      ],
+      "blockers": [
+        "active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。"
+      ],
+      "required_steps_before_drop": [
+        "若未來要 drop：先改所有報表/SQL/CSV/training 讀 ticker_symbol，再連跑多輪確認。"
+      ]
+    },
+    {
+      "target": "db:trade_history.[Ticker SYMBOL]",
+      "current_status": "legacy_table_compat_layer",
+      "drop_readiness": "KEEP_COMPAT_NOT_DROP",
+      "evidence": [
+        "{\"exists\": true, \"has_Ticker_SYMBOL\": true, \"has_ticker_symbol\": false, \"row_count\": null, \"null_ticker_symbol_count\": null, \"row_count_error\": \"AttributeError: 'DatabaseSession' object has no attribute 'fetchall'\"}"
+      ],
+      "blockers": [
+        "active_positions/trade_history 是舊相容層；目前不建議破壞式 drop。"
+      ],
+      "required_steps_before_drop": [
+        "若未來要 drop：先改所有報表/SQL/CSV/training 讀 ticker_symbol，再連跑多輪確認。"
+      ]
+    },
+    {
+      "target": "policy:global_exception_fail_closed",
+      "current_status": "except_exception=678, pass=71, fallback=270, high_findings=77",
+      "drop_readiness": "NOT_READY_FOR_GLOBAL_FAIL_CLOSED",
+      "evidence": [
+        "py_files=222",
+        "core_runtime_files=32"
+      ],
+      "blockers": [
+        "ETL/research/legacy wrapper 不應全改 fail-closed；只需 diagnostics。",
+        "core_high_findings=77"
+      ],
+      "required_steps_before_drop": [
+        "核心交易路徑 fail-closed",
+        "ETL/research fail-open + diagnostics",
+        "不要全域硬刪 except Exception"
+      ]
+    }
+  ],
+  "top_findings": [
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 90,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 111,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 136,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 154,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 178,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 185,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 191,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 211,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 226,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 246,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 250,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 258,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 274,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 295,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 306,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "_backup_monthly_fix\\db_setup.py",
+      "line": 322,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 52,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 115,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 122,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 260,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 270,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 280,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 290,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 300,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 193,
+      "message": "absorbed_references\\advanced_chart1_original\\execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\execution_engine.py",
+      "line": 253,
+      "message": "absorbed_references\\advanced_chart1_original\\execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 134,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 294,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 363,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 389,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 398,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 408,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 466,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 507,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 61,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 71,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 83,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 94,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 103,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 115,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 169,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 279,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 435,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 453,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 72,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py",
+      "line": 84,
+      "message": "absorbed_references\\advanced_chart1_original\\live_paper_trading.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "absorbed_references\\advanced_chart1_original\\strategies.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x4, get_exit_rulesx3",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\system_guard.py",
+      "line": 25,
+      "message": "absorbed_references\\advanced_chart1_original\\system_guard.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\system_guard.py",
+      "line": 34,
+      "message": "absorbed_references\\advanced_chart1_original\\system_guard.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "absorbed_references\\advanced_chart1_original\\system_guard.py",
+      "line": 42,
+      "message": "absorbed_references\\advanced_chart1_original\\system_guard.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 52,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 115,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 122,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 260,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 270,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 280,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 290,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 300,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 193,
+      "message": "advanced_chart1_runtime_variants\\execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\execution_engine.py",
+      "line": 253,
+      "message": "advanced_chart1_runtime_variants\\execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 134,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 294,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 363,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 389,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 398,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 408,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 466,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 507,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 61,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 71,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 83,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 94,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 103,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 115,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 169,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 279,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 435,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 453,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 72,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "advanced_chart1_runtime_variants\\live_paper_trading.py",
+      "line": 84,
+      "message": "advanced_chart1_runtime_variants\\live_paper_trading.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "medium",
+      "category": "duplicate_function_definitions",
+      "file": "advanced_chart1_runtime_variants\\strategies.py",
+      "line": 0,
+      "message": "同一檔案存在重複函式定義：__init__x4, get_exit_rulesx3",
+      "recommendation": "保留最後正式版，刪除前段覆寫版本，避免修到無效函式。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\system_guard.py",
+      "line": 25,
+      "message": "advanced_chart1_runtime_variants\\system_guard.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\system_guard.py",
+      "line": 34,
+      "message": "advanced_chart1_runtime_variants\\system_guard.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "advanced_chart1_runtime_variants\\system_guard.py",
+      "line": 42,
+      "message": "advanced_chart1_runtime_variants\\system_guard.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "db_logger.py",
+      "line": 383,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 9,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 27,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 401,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 460,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 463,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 510,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "db_logger.py",
+      "line": 525,
+      "message": "db_logger.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_pass",
+      "file": "db_logger.py",
+      "line": 526,
+      "message": "db_logger.py 核心路徑出現 \\bpass\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 70,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 238,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 341,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 342,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "medium",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "execution_engine.py",
+      "line": 357,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 145,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    },
+    {
+      "severity": "high",
+      "category": "core_except_exception",
+      "file": "execution_engine.py",
+      "line": 153,
+      "message": "execution_engine.py 核心路徑出現 except\\s+Exception\\b 且附近未見 diagnostics/fail-closed。",
+      "recommendation": "核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。"
+    }
+  ],
+  "static_counters": {
+    "py_files": 222,
+    "file_class.general": 149,
+    "except_exception": 678,
+    "bare_except": 18,
+    "pass": 71,
+    "fallback": 270,
+    "legacy_Ticker_SYMBOL": 428,
+    "canonical_ticker_symbol": 253,
+    "todo": 82,
+    "file_class.etl_research_or_legacy": 41,
+    "file_class.core_runtime": 32
+  },
+  "ticker_refs_by_file_top": {
+    "absorbed_references\\advanced_chart1_original\\daily_chip_etl.py": 22,
+    "advanced_chart1_runtime_variants\\daily_chip_etl.py": 22,
+    "fts_etl_daily_chip_service.py": 22,
+    "absorbed_references\\advanced_chart1_original\\yahoo_csv_to_sql.py": 18,
+    "advanced_chart1_runtime_variants\\yahoo_csv_to_sql.py": 18,
+    "_backup_monthly_fix\\db_setup.py": 16,
+    "fts_fundamentals_etl_mainline.py": 16,
+    "absorbed_references\\advanced_chart1_original\\fundamental_screener.py": 15,
+    "advanced_chart1_runtime_variants\\fundamental_screener.py": 15,
+    "fundamental_screener.py": 15,
+    "fts_deprecated_drop_readiness.py": 12,
+    "fts_training_universe_service.py": 12,
+    "live_paper_trading.py": 12,
+    "更新檔版本_deprecated掃描_drop_readiness報告_patch_已確認有資料\\fts_deprecated_drop_readiness.py": 12,
+    "absorbed_references\\advanced_chart1_original\\db_setup.py": 11,
+    "advanced_chart1_runtime_variants\\db_setup.py": 11,
+    "db_setup_research_plus.py": 11,
+    "fts_db_migrations.py": 10,
+    "db_logger.py": 9,
+    "fts_stock_master_service.py": 9,
+    "absorbed_references\\advanced_chart1_original\\execution_engine.py": 8,
+    "absorbed_references\\advanced_chart1_original\\live_paper_trading.py": 8,
+    "advanced_chart1_runtime_variants\\execution_engine.py": 8,
+    "advanced_chart1_runtime_variants\\live_paper_trading.py": 8,
+    "fts_company_quality_snapshot_service.py": 8,
+    "execution_engine.py": 7,
+    "fts_cross_sectional_percentile_service.py": 7,
+    "fts_revenue_momentum_snapshot_service.py": 7,
+    "fts_chip_factor_snapshot_service.py": 5,
+    "fts_db_schema.py": 5,
+    "fts_price_liquidity_snapshot_service.py": 5,
+    "fts_chip_enrichment_service.py": 4,
+    "fts_sector_service.py": 4,
+    "absorbed_references\\advanced_chart1_original\\screening.py": 3,
+    "advanced_chart1_runtime_variants\\screening.py": 3,
+    "fts_event_calendar_service.py": 3,
+    "fts_symbol_contract.py": 3,
+    "_backup_monthly_fix\\fts_etl_monthly_revenue_service.py": 2,
+    "absorbed_references\\advanced_chart1_original\\sector_classifier.py": 2,
+    "advanced_chart1_runtime_variants\\sector_classifier.py": 2,
+    "fts_data_quality_guard.py": 2,
+    "fts_decision_desk_builder.py": 2,
+    "fts_etl_monthly_revenue_service.py": 2,
+    "fts_feature_service.py": 2,
+    "fts_fundamentals_true_backfill.py": 2,
+    "fts_research_suite.py": 2,
+    "fts_training_data_builder.py": 2,
+    "fts_training_ticker_scoreboard.py": 2,
+    "sector_classifier.py": 2,
+    "absorbed_references\\advanced_chart1_original\\master_pipeline.py": 1
+  },
+  "duplicate_defs": {
+    "absorbed_references\\advanced_chart1_original\\strategies.py": {
+      "__init__": 4,
+      "get_exit_rules": 3
+    },
+    "advanced_chart1_runtime_variants\\strategies.py": {
+      "__init__": 4,
+      "get_exit_rules": 3
+    },
+    "fts_admin_suite.py": {
+      "__init__": 18,
+      "save": 2,
+      "load": 3,
+      "build": 14,
+      "evaluate": 2
+    },
+    "fts_broker_core.py": {
+      "__init__": 7,
+      "build": 6
+    },
+    "fts_chart_suite.py": {
+      "__init__": 7,
+      "build": 6
+    },
+    "fts_etl_quality_suite.py": {
+      "__init__": 5,
+      "build": 5
+    },
+    "fts_execution_layer.py": {
+      "as_dict": 2
+    },
+    "fts_execution_models.py": {
+      "__init__": 4,
+      "build_definition": 2,
+      "build": 2
+    },
+    "fts_execution_runtime.py": {
+      "__init__": 4,
+      "summarize": 2
+    },
+    "fts_legacy_suite.py": {
+      "__init__": 7,
+      "build": 6
+    },
+    "fts_live_suite.py": {
+      "__init__": 3,
+      "build": 3
+    },
+    "fts_model_gate.py": {
+      "__init__": 2
+    },
+    "fts_model_layer.py": {
+      "as_dict": 2
+    },
+    "fts_operations_suite.py": {
+      "__init__": 11,
+      "write": 2,
+      "build": 8
+    },
+    "fts_project_quality_suite.py": {
+      "__init__": 9,
+      "build": 9
+    },
+    "fts_research_suite.py": {
+      "__init__": 6,
+      "build": 4
+    },
+    "fts_resilience.py": {
+      "__init__": 2
+    },
+    "fts_runtime_ops.py": {
+      "__init__": 6,
+      "write": 2,
+      "summary": 2
+    },
+    "fts_strategy_policy_layer.py": {
+      "__init__": 4,
+      "get_exit_rules": 3
+    },
+    "fts_target95_suite.py": {
+      "__init__": 2,
+      "build": 2
+    },
+    "fts_tests.py": {
+      "run": 2
+    },
+    "fts_training_quality_suite.py": {
+      "__init__": 3,
+      "build": 3
+    },
+    "fts_upgrade_suite.py": {
+      "__init__": 4,
+      "run": 4
+    },
+    "fts_watchlist_service.py": {
+      "__init__": 4
+    },
+    "fts_wave_suite.py": {
+      "__init__": 5,
+      "build": 5
+    }
+  },
+  "db_probe": {
+    "available": true,
+    "status": "checked",
+    "tables": {
+      "execution_orders": {
+        "exists": true,
+        "has_Ticker_SYMBOL": false,
+        "has_ticker_symbol": true,
+        "row_count": null,
+        "null_ticker_symbol_count": null,
+        "row_count_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'",
+        "null_ticker_symbol_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'"
+      },
+      "execution_fills": {
+        "exists": true,
+        "has_Ticker_SYMBOL": false,
+        "has_ticker_symbol": true,
+        "row_count": null,
+        "null_ticker_symbol_count": null,
+        "row_count_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'",
+        "null_ticker_symbol_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'"
+      },
+      "execution_positions_snapshot": {
+        "exists": true,
+        "has_Ticker_SYMBOL": false,
+        "has_ticker_symbol": true,
+        "row_count": null,
+        "null_ticker_symbol_count": null,
+        "row_count_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'",
+        "null_ticker_symbol_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'"
+      },
+      "execution_position_lots": {
+        "exists": false,
+        "has_Ticker_SYMBOL": false,
+        "has_ticker_symbol": false,
+        "row_count": null,
+        "null_ticker_symbol_count": null
+      },
+      "execution_broker_callbacks": {
+        "exists": false,
+        "has_Ticker_SYMBOL": false,
+        "has_ticker_symbol": false,
+        "row_count": null,
+        "null_ticker_symbol_count": null
+      },
+      "active_positions": {
+        "exists": true,
+        "has_Ticker_SYMBOL": true,
+        "has_ticker_symbol": false,
+        "row_count": null,
+        "null_ticker_symbol_count": null,
+        "row_count_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'"
+      },
+      "trade_history": {
+        "exists": true,
+        "has_Ticker_SYMBOL": true,
+        "has_ticker_symbol": false,
+        "row_count": null,
+        "null_ticker_symbol_count": null,
+        "row_count_error": "AttributeError: 'DatabaseSession' object has no attribute 'fetchall'"
+      }
+    },
+    "error": null
+  },
+  "policy": {
+    "execution_contract": "ticker_symbol",
+    "legacy_symbol_contract": "Ticker SYMBOL allowed only in ETL/research/legacy alias/backfill",
+    "core_runtime_policy": "fail-closed + runtime diagnostics",
+    "etl_research_policy": "fail-open + runtime diagnostics",
+    "destructive_actions": "report_only; this tool never deletes files or drops columns"
+  }
+}
