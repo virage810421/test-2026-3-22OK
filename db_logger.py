@@ -3,10 +3,16 @@ from __future__ import annotations
 
 from datetime import datetime
 from fts_symbol_contract import ensure_execution_symbol
+try:
+    from fts_runtime_diagnostics import record_issue
+except Exception:  # pragma: no cover - diagnostics must not block logger import
+    def record_issue(*args, **kwargs):
+        return {}
 from typing import Any, Optional
 try:
     import pyodbc
-except Exception:  # allow non-SQL smoke tests without ODBC installed
+except Exception as exc:  # allow non-SQL smoke tests without ODBC installed; runtime diagnostics
+    record_issue('db_logger', 'pyodbc_import_failed', exc, severity='WARNING', fail_mode='fail_open')
     pyodbc = None
 
 
@@ -24,7 +30,8 @@ def _dt(value):
         return value
     try:
         return datetime.fromisoformat(str(value).replace('Z', ''))
-    except Exception:
+    except Exception as exc:
+        record_issue('db_logger', 'datetime_parse_failed', exc, severity='WARNING', fail_mode='fail_open', context={'value': str(value)[:80]})
         return None
 
 
@@ -94,7 +101,7 @@ class SQLServerExecutionLogger:
             str(order_id),
             _pick(row, 'client_order_id', '客戶委託編號'),
             _pick(row, 'broker_order_id'),
-            _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'symbol', 'ticker', '股票代號'),
+            _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'symbol', 'ticker', '股票代號'),  # legacy alias compat
             _pick(row, 'direction_bucket', 'side', '買賣方向'),
             _pick(row, 'strategy_bucket', 'strategy_name', '策略名稱'),
             _pick(row, 'status', '委託狀態'),
@@ -133,7 +140,7 @@ class SQLServerExecutionLogger:
         vals = [
             str(fill_id),
             _pick(row, 'order_id', '委託單號', 'client_order_id', 'broker_order_id'),
-            _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'symbol', 'ticker', '股票代號'),
+            _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'symbol', 'ticker', '股票代號'),  # legacy alias compat
             _pick(row, 'direction_bucket', 'side', '買賣方向'),
             _pick(row, 'fill_qty', '成交股數'),
             _pick(row, 'fill_price', '成交價格'),
@@ -190,7 +197,7 @@ class SQLServerExecutionLogger:
             'order_id': _pick(row, 'broker_order_id', 'order_id', 'client_order_id'),
             'client_order_id': _pick(row, 'client_order_id'),
             'broker_order_id': _pick(row, 'broker_order_id', 'order_id'),
-            'ticker_symbol': _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'ticker', 'symbol'),
+            'ticker_symbol': _pick(row, 'ticker_symbol', 'Ticker SYMBOL', 'ticker', 'symbol'),  # legacy alias compat
             'direction_bucket': _pick(row, 'direction_bucket', 'side', default='STOP'),
             'strategy_bucket': _pick(row, 'strategy_bucket', 'strategy_name', default='protective_stop'),
             'status': _pick(row, 'status', default='WORKING'),
@@ -217,7 +224,8 @@ try:
     def _dblogger_json(value: Any) -> str:
         try:
             return _json.dumps(value, ensure_ascii=False, default=str)
-        except Exception:
+        except Exception as exc:
+            record_issue('db_logger', 'json_serialize_failed', exc, severity='WARNING', fail_mode='fail_open')
             return str(value)
 
     _DBL_ORIG_INIT = SQLServerExecutionLogger.__init__
@@ -380,7 +388,7 @@ try:
         def pos_map(rows):
             out={}
             for r in rows or []:
-                k=str(r.get('ticker_symbol', r.get('ticker', r.get('symbol', r.get('Ticker SYMBOL','')))))
+                k=str(r.get('ticker_symbol', r.get('ticker', r.get('symbol', r.get('Ticker SYMBOL','')))))  # legacy alias compat
                 if k:
                     out[k]=int(r.get('qty', r.get('quantity', 0)) or 0)
             return out
@@ -398,7 +406,8 @@ try:
         try:
             if local_cash is not None and broker_cash is not None:
                 cash_diff = round(float(local_cash)-float(broker_cash), 4)
-        except Exception:
+        except Exception as exc:
+            record_issue('db_logger', 'cash_diff_calc_failed', exc, severity='WARNING', fail_mode='fail_open')
             cash_diff = None
         status = 'OK' if not (order_diff or fill_diff or pos_diff or lot_diff or (cash_diff is not None and abs(cash_diff)>1.0)) else 'MISMATCH'
         summary = {'status':status,'order_mismatch_count':len(order_diff),'fill_mismatch_count':len(fill_diff),'position_mismatch_count':len(pos_diff),'lot_mismatch_count':len(lot_diff),'cash_diff':cash_diff,'orders':order_diff[:50],'fills':fill_diff[:50],'positions':pos_diff[:50],'lots':lot_diff[:50],'note':note}
@@ -439,8 +448,8 @@ try:
     SQLServerExecutionLogger.reconcile_execution_state = _dbl_reconcile_execution_state
     SQLServerExecutionLogger.sync_runtime_snapshot = _dbl_patched_sync_runtime_snapshot
 
-except Exception:
-    pass
+except Exception as exc:
+    record_issue('db_logger', 'lot_callback_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')
 
 
 # =============================================================================
@@ -457,10 +466,12 @@ try:
             return v
         try:
             return json.dumps(list(v), ensure_ascii=False)
-        except Exception:
+        except Exception as exc:
+            record_issue('db_logger', 'json_list_serialize_list_failed', exc, severity='WARNING', fail_mode='fail_open')
             try:
                 return json.dumps(v, ensure_ascii=False)
-            except Exception:
+            except Exception as exc2:
+                record_issue('db_logger', 'json_list_serialize_value_failed', exc2, severity='WARNING', fail_mode='fail_open')
                 return None
 
     def _dbl_upsert_position_lot_v2(self, row: dict, snapshot_time: Optional[str] = None) -> None:
@@ -507,7 +518,8 @@ try:
         fill_notional = None
         try:
             fill_notional = round(float(avg_fill_price or 0.0) * fill_qty, 4)
-        except Exception:
+        except Exception as exc:
+            record_issue('db_logger', 'callback_fill_notional_calc_failed', exc, severity='WARNING', fail_mode='fail_open')
             fill_notional = None
         sql = """
         MERGE dbo.execution_broker_callbacks AS tgt
@@ -522,5 +534,5 @@ try:
 
     SQLServerExecutionLogger.upsert_position_lot = _dbl_upsert_position_lot_v2
     SQLServerExecutionLogger.ingest_broker_callback = _dbl_ingest_broker_callback_v2
-except Exception:
-    pass
+except Exception as exc:
+    record_issue('db_logger', 'institutional_lot_patch_install_failed', exc, severity='CRITICAL', fail_mode='fail_closed')

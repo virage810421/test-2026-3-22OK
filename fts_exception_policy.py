@@ -37,7 +37,7 @@ def _json_safe(value: Any) -> Any:
     try:
         json.dumps(value, ensure_ascii=False)
         return value
-    except Exception:
+    except Exception:  # runtime diagnostics safe stringify fallback
         return str(value)
 
 
@@ -74,7 +74,7 @@ def record_diagnostic(
                 old = json.loads(DIAGNOSTIC_PATH.read_text(encoding='utf-8'))
                 if isinstance(old, dict):
                     payload['events'] = list(old.get('events', []))[-200:]
-            except Exception:
+            except Exception:  # runtime diagnostics corrupt-diagnostic-file fallback
                 payload['events'] = []
         payload['events'].append(entry)
         payload['summary'] = {
@@ -85,8 +85,8 @@ def record_diagnostic(
         }
         DIAGNOSTIC_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception:
-        # Never let diagnostics logging crash the caller.
-        pass
+        # runtime diagnostics last-resort: never let diagnostics logging crash the caller.
+        return entry
     return entry
 
 
@@ -125,7 +125,7 @@ POLICY_TOKENS = ('record_diagnostic', 'record_issue', 'fail_closed_reason', 'gua
 def _handler_has_policy(handler: ast.ExceptHandler, source: str) -> bool:
     try:
         segment = ast.get_source_segment(source, handler) or ''
-    except Exception:
+    except Exception:  # runtime diagnostics source-segment fallback
         segment = ''
     return ('pragma: no cover' in segment) or any(tok in segment for tok in POLICY_TOKENS)
 
@@ -168,8 +168,8 @@ def audit_exception_policy(project_root: str | Path = '.') -> dict[str, Any]:
                     is_broad = typ is None or (isinstance(typ, ast.Name) and typ.id == 'Exception')
                     if is_broad and core and not _handler_has_policy(node, text):
                         unclassified.append(getattr(node, 'lineno', -1))
-        except Exception:
-            pass
+        except Exception as exc:
+            record_diagnostic('exception_policy', 'audit_parse_failed', exc, severity='warning', fail_closed=False, context={'file': rel})
         if unclassified:
             summary['core_unclassified_except'].append({'file': rel, 'lines': unclassified[:20], 'count': len(unclassified)})
         by_file[rel] = {

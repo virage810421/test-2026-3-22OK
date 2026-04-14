@@ -9,6 +9,13 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+try:
+    from fts_exception_policy import record_diagnostic
+except Exception:  # pragma: no cover - diagnostics must never block symbol normalization
+    def record_diagnostic(*args, **kwargs):
+        return {}
+
+
 CANONICAL_EXECUTION_TICKER = 'ticker_symbol'
 LEGACY_TICKER_SYMBOL = 'Ticker SYMBOL'
 DISPLAY_TICKER = 'Ticker'
@@ -67,7 +74,8 @@ def ensure_dataframe_symbol_contract(df):
             df[DISPLAY_TICKER] = df[CANONICAL_EXECUTION_TICKER]
         if LEGACY_TICKER_SYMBOL not in df.columns:
             df[LEGACY_TICKER_SYMBOL] = df[CANONICAL_EXECUTION_TICKER]
-    except Exception:
+    except Exception as exc:
+        record_diagnostic('symbol_contract', 'ensure_dataframe_symbol_contract_failed', exc, severity='warning', fail_closed=False)
         return df
     return df
 

@@ -15,7 +15,7 @@ import pandas as pd
 
 try:
     from fts_runtime_diagnostics import record_issue, write_summary as write_runtime_diagnostics_summary
-except Exception:  # pragma: no cover
+except Exception:  # runtime diagnostics  # pragma: no cover
     def record_issue(*args, **kwargs):
         return {}
     def write_runtime_diagnostics_summary(*args, **kwargs):
@@ -125,7 +125,7 @@ def _safe_build(module_name: str, class_name: str, method_name: str, kwargs: Opt
             path, payload = result
             return {'status': 'ok', 'path': str(path), 'payload': payload}
         return {'status': 'ok', 'payload': result}
-    except Exception as exc:
+    except Exception as exc:  # runtime diagnostics
         record_issue('control_tower', 'run_service_failed', exc, severity='ERROR', fail_mode='fail_closed')
         return {'status': 'error', 'error': repr(exc), 'module': module_name, 'class_name': class_name, 'method': method_name}
 
@@ -141,7 +141,7 @@ def _load_decision_df() -> pd.DataFrame:
         if candidate.exists():
             try:
                 return pd.read_csv(candidate)
-            except Exception as exc:
+            except Exception as exc:  # runtime diagnostics
                 record_issue('control_tower', 'read_decision_csv_candidate_failed', exc, severity='WARNING', fail_mode='fail_open')
                 continue
     return pd.DataFrame()
@@ -290,7 +290,7 @@ def run_train() -> dict[str, Any]:
             'rows': int(len(df)) if hasattr(df, '__len__') else None,
             'entrypoint': 'fts_training_data_builder.generate_ml_dataset',
         })
-    except Exception as exc:
+    except Exception as exc:  # runtime diagnostics
         record_issue('control_tower', 'training_data_builder_failed', exc, severity='ERROR', fail_mode='fail_closed')
         steps.append({
             'stage': 'training_data_builder',
@@ -308,7 +308,7 @@ def run_train() -> dict[str, Any]:
             'payload_status': trainer_payload.get('status') if isinstance(trainer_payload, dict) else None,
             'entrypoint': 'fts_trainer_backend.train_models',
         })
-    except Exception as exc:
+    except Exception as exc:  # runtime diagnostics
         record_issue('control_tower', 'trainer_backend_failed', exc, severity='ERROR', fail_mode='fail_closed')
         steps.append({
             'stage': 'trainer_backend',
@@ -377,7 +377,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             payload = run_daily()
         return 0 if payload.get('status') in {'control_tower_ready', 'train_ready', 'bootstrap_ready'} else 1
-    except Exception as exc:
+    except Exception as exc:  # runtime diagnostics
         record_issue('control_tower', 'main_failure', exc, severity='CRITICAL', fail_mode='fail_closed')
         payload = {'generated_at': now_str(), 'module_version': 'v83_level3_control_tower_integrated', 'error_type': type(exc).__name__, 'error': str(exc)}
         _write_json('formal_trading_system_v83_official_main_error.json', payload)

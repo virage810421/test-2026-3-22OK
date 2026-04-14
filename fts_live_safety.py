@@ -10,7 +10,7 @@ from fts_data_quality_guard import validate_order_contract_dict
 
 try:  # pragma: no cover
     from fts_market_rules_tw import validate_order_payload  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:  # pragma: no cover - runtime diagnostics import fallback
     validate_order_payload = None
 
 

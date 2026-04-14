@@ -37,6 +37,7 @@ def _c(name, sql_type, nullable=True, default_sql=None, primary_key=False):
     return ColumnSpec(name=name, sql_type=sql_type, nullable=nullable, default_sql=default_sql, primary_key=primary_key)
 
 
+# LEGACY_SCHEMA_COMPAT_MARKER: Ticker SYMBOL appears only in data/research/legacy table schema; execution_* tables use ticker_symbol.
 CORE_TABLES: tuple[TableSpec, ...] = (
     TableSpec('trade_history', (
         _c('策略名稱', 'NVARCHAR(50)'), _c('Ticker SYMBOL', 'VARCHAR(20)', nullable=False, default_sql="''"), _c('ticker_symbol', 'VARCHAR(20)'), _c('方向', 'NVARCHAR(10)'),

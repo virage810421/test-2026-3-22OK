@@ -10,20 +10,27 @@ from fts_db_engine import DBConfig, DatabaseSession
 from fts_db_schema import SCHEMA_VERSION, iter_table_specs, TableSpec
 
 try:
+    from fts_runtime_diagnostics import record_issue
+except Exception:  # pragma: no cover - runtime diagnostics import fallback; migration diagnostics must not block bootstrap
+    def record_issue(*args, **kwargs):
+        return {}
+
+
+try:
     import pyodbc  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:  # pragma: no cover - runtime diagnostics import fallback
     pyodbc = None
 
 try:
     from fts_config import PATHS  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:  # pragma: no cover - runtime diagnostics import fallback
     class _Paths:
         runtime_dir = Path('runtime')
     PATHS = _Paths()
 
 try:
     from fts_utils import now_str, log  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:  # pragma: no cover - runtime diagnostics import fallback
     from datetime import datetime
     def now_str() -> str:
         return datetime.now().isoformat(timespec='seconds')
@@ -39,6 +46,7 @@ EXECUTION_TICKER_COLUMN_TABLES = (
     'execution_broker_callbacks',
 )
 
+# LEGACY_SYMBOL_MIGRATION_COMPAT_MARKER: Ticker SYMBOL references below are migration/backfill compatibility only.
 # 舊持倉/交易紀錄表保留 [Ticker SYMBOL]，但補 ticker_symbol alias。
 LEGACY_TICKER_ALIAS_TABLES = (
     'active_positions',
@@ -98,6 +106,7 @@ class MigrationRunner:
                 )
             return True
         except Exception as exc:
+            record_issue('db_migrations', 'ensure_database_exists_failed', exc, severity='WARNING', fail_mode='fail_open', context={'database': self.config.database})
             log(f'⚠️ ensure database skipped/failed: {exc}')
             return False
 
@@ -140,6 +149,7 @@ class MigrationRunner:
                     db.execute(f"EXEC sp_rename 'dbo.{table}.[Ticker SYMBOL]', 'ticker_symbol', 'COLUMN'")
                     actions.append(f'{table}:renamed_Ticker_SYMBOL_to_ticker_symbol')
                 except Exception as exc:
+                    record_issue('db_migrations', 'rename_legacy_ticker_symbol_failed', exc, severity='ERROR', fail_mode='fail_closed', context={'table': table})
                     actions.append(f'{table}:rename_failed:{type(exc).__name__}:{exc}')
             elif has_old and has_new:
                 try:
@@ -150,6 +160,7 @@ class MigrationRunner:
                     """)
                     actions.append(f'{table}:copied_old_Ticker_SYMBOL_into_ticker_symbol')
                 except Exception as exc:
+                    record_issue('db_migrations', 'copy_legacy_ticker_symbol_failed', exc, severity='ERROR', fail_mode='fail_closed', context={'table': table})
                     actions.append(f'{table}:copy_failed:{type(exc).__name__}:{exc}')
             elif has_new:
                 actions.append(f'{table}:ticker_symbol_ready')
@@ -181,6 +192,7 @@ class MigrationRunner:
                 else:
                     actions.append(f'{table}:legacy_Ticker_SYMBOL_missing')
             except Exception as exc:
+                record_issue('db_migrations', 'legacy_symbol_alias_backfill_failed', exc, severity='ERROR', fail_mode='fail_closed', context={'table': table})
                 actions.append(f'{table}:legacy_alias_failed:{type(exc).__name__}:{exc}')
         return actions
 

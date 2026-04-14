@@ -127,3 +127,19 @@ class SystemGuardService:
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🛡️ system guard ready: {self.runtime_path}')
         return self.runtime_path, payload
+
+
+def run_system_guard() -> dict[str, Any]:
+    """Canonical system guard entrypoint.
+
+    Kept here so legacy callers no longer need to import system_guard.py.
+    """
+    svc = SystemGuardService()
+    path, payload = svc.build_summary()
+    print(svc.format_alert_message(payload))
+    print(f"📁 已輸出：{path}")
+    return payload
+
+
+if __name__ == '__main__':
+    run_system_guard()

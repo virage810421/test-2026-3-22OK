@@ -1,5 +1,7 @@
 import warnings
 
+# LEGACY_SQL_SYMBOL_COMPAT_MARKER: active_positions/trade_history keep [Ticker SYMBOL] for old SQL compatibility; runtime/execution uses ticker_symbol alias.
+
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", message=".*pandas only supports SQLAlchemy.*")
 

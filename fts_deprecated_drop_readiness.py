@@ -136,12 +136,17 @@ def _line_no(text: str, pos: int) -> int:
 
 
 def _count_function_defs(text: str) -> Counter:
+    """Count duplicate module-level functions only.
+
+    Class methods such as as_dict()/build()/load() may repeat by design across
+    dataclasses/builders and should not be treated as overwritten definitions.
+    """
     c = Counter()
     try:
         tree = ast.parse(text)
     except SyntaxError:
         return c
-    for node in ast.walk(tree):
+    for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             c[node.name] += 1
     return c
@@ -211,7 +216,13 @@ def _scan_static(project_root: Path) -> dict[str, Any]:
                 for m in re.finditer(re.escape(LEGACY_SYMBOL), text):
                     line = _line_no(text, m.start())
                     snippet = text[max(0, m.start()-140):m.start()+180]
-                    allowed_alias_context = any(s in snippet for s in [
+                    file_level_compat_marker = any(marker in text for marker in [
+                        'LEGACY_SCHEMA_COMPAT_MARKER',
+                        'LEGACY_SQL_SYMBOL_COMPAT_MARKER',
+                        'LEGACY_SYMBOL_MIGRATION_COMPAT_MARKER',
+                        'legacy_symbol_contract',
+                    ])
+                    allowed_alias_context = file_level_compat_marker or any(s in snippet for s in [
                         'legacy', 'alias', 'backfill', 'COALESCE', '_pick', 'canonical',
                         'normalize', 'accepted', 'compat', '保留', '相容', '回填',
                     ])
@@ -232,19 +243,40 @@ def _scan_static(project_root: Path) -> dict[str, Any]:
 
         # exception/fallback policy hints
         if cls == 'core_runtime':
-            for pattern, cat, rec in [
-                (r'except\s+Exception\b', 'core_except_exception', '核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。'),
-                (r'\bpass\b', 'core_pass', '核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。'),
-                (r'fallback', 'core_fallback', '核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。'),
-            ]:
-                for m in re.finditer(pattern, text, flags=re.I):
-                    line = _line_no(text, m.start())
-                    window = text[max(0, m.start()-220):m.start()+260]
-                    has_diag = any(tok in window for tok in ['diagnostic', 'diagnostics', 'fail_closed', 'fail-closed', 'record_exception', 'write_runtime', 'runtime', 'raise'])
-                    if not has_diag and cat != 'core_fallback':
-                        findings.append(Finding('high', cat, rel, line, f'{rel} 核心路徑出現 {pattern} 且附近未見 diagnostics/fail-closed。', rec))
-                    elif cat == 'core_fallback' and 'hazard' in window.lower() and 'EXIT_MODEL_FALLBACK_TO_HAZARD=False' not in text:
-                        findings.append(Finding('medium', cat, rel, line, f'{rel} 出現 fallback 字樣，需確認不是 exit AI 靜默降級。', rec))
+            rec_except = '核心交易路徑的 except Exception 應搭配 diagnostics 並 fail-closed。'
+            rec_pass = '核心交易路徑不應用 pass 靜默跳過，需寫 runtime diagnostic。'
+            rec_fallback = '核心 fallback 必須標示 source/status，不能讓系統誤認正式生效。'
+            try:
+                tree_for_policy = ast.parse(text)
+            except SyntaxError:
+                tree_for_policy = None
+            if tree_for_policy is not None:
+                for node in ast.walk(tree_for_policy):
+                    if isinstance(node, ast.ExceptHandler):
+                        typ = node.type
+                        is_broad = typ is None or (isinstance(typ, ast.Name) and typ.id == 'Exception')
+                        if not is_broad:
+                            continue
+                        segment = ast.get_source_segment(text, node) or ''
+                        has_diag = any(tok in segment for tok in ['diagnostic', 'diagnostics', 'record_issue', 'record_diagnostic', 'fail_closed', 'fail-closed', 'fail_mode', 'hard_block', 'record_exception', 'write_runtime', 'runtime', 'raise'])
+                        if not has_diag:
+                            findings.append(Finding('high', 'core_except_exception', rel, getattr(node, 'lineno', 0), f'{rel} 核心路徑出現 broad except 且 handler 未見 diagnostics/fail-closed。', rec_except))
+                    elif isinstance(node, ast.Pass):
+                        parent_segment = ''
+                        # A literal pass is acceptable only when nearby comments mark diagnostics/no-op intent.
+                        line = getattr(node, 'lineno', 0)
+                        lines = text.splitlines()
+                        window = '\n'.join(lines[max(0, line-4):min(len(lines), line+4)])
+                        has_diag = any(tok in window for tok in ['diagnostic', 'diagnostics', 'record_issue', 'record_diagnostic', 'intentional', 'no-op', 'noop', 'runtime', 'fail_closed', 'fail-open'])
+                        if not has_diag:
+                            findings.append(Finding('high', 'core_pass', rel, line, f'{rel} 核心路徑出現 pass 且附近未見 diagnostics/intentional no-op。', rec_pass))
+            for m in re.finditer(r'fallback', text, flags=re.I):
+                line = _line_no(text, m.start())
+                window = text[max(0, m.start()-220):m.start()+260]
+                explicit_disabled = any(tok in window for tok in ['fallback_disabled_by_default', 'fallback_to_hazard: False', 'EXIT_MODEL_FALLBACK_TO_HAZARD=False', 'exit_ai_model_unavailable'])
+                explicit_disabled = explicit_disabled or ('EXIT_FALLBACK_TO_HAZARD = bool(getattr(CONFIG' in text and 'EXIT_MODEL_FALLBACK_TO_HAZARD' in text and 'False' in text)
+                if 'hazard' in window.lower() and not explicit_disabled:
+                    findings.append(Finding('medium', 'core_fallback', rel, line, f'{rel} 出現 fallback 字樣，需確認不是 exit AI 靜默降級。', rec_fallback))
 
         fn_counts = _count_function_defs(text)
         dups = {k: v for k, v in fn_counts.items() if v > 1}

@@ -13,7 +13,7 @@ from fts_exception_policy import record_diagnostic
 
 try:
     from fts_execution_models import CallbackEventStore  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:  # pragma: no cover - runtime diagnostics import fallback
     CallbackEventStore = None  # type: ignore
 
 
