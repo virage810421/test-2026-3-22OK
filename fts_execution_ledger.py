@@ -6,7 +6,7 @@ from typing import Any
 import json
 
 from fts_prelive_runtime import PATHS, now_str, append_jsonl, write_json, normalize_key
-from fts_broker_shadow_mutator import BrokerShadowLedgerMutator
+from fts_broker_core import BrokerShadowLedgerMutator
 
 
 class ExecutionLedger:

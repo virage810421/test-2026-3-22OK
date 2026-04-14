@@ -10,7 +10,7 @@
         "approved_pool_type": "LONG",
         "model_scope": "LONG",
         "range_confidence": 0.0,
-        "updated_at": "2026-04-14 11:09:08"
+        "updated_at": "2026-04-14 11:21:18"
       },
       "C1": {
         "order_id": "C1",
@@ -199,6 +199,27 @@
     },
     {
       "at": "2026-04-14 11:09:08",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 11:18:31",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 11:20:33",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 11:21:18",
       "order_id": "HC1",
       "lane": "LONG",
       "status": "FILLED",

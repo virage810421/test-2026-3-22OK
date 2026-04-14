@@ -21,7 +21,7 @@ try:
     from db_logger import SQLServerExecutionLogger
 except Exception:
     SQLServerExecutionLogger = None
-from fts_live_watchlist_loader import LiveWatchlistLoader
+from fts_watchlist_service import LiveWatchlistLoader
 try:
     from fts_level_runtime import build_level3_services
     _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()

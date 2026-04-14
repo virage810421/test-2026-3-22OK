@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from fts_project_hygiene import ProjectHygieneManager
-from fts_runtime_cleanup import RuntimeCleanupManager
+from fts_runtime_ops import RuntimeCleanupManager
 from fts_data_cleanup import DataCleanupManager
 from fts_fundamentals_true_backfill import FundamentalsTrueBackfill
 

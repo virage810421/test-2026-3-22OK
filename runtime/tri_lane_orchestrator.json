@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-14 11:09:26",
+  "generated_at": "2026-04-14 11:21:32",
   "status": "tri_lane_orchestration_ready",
   "lanes": {
     "LONG": {
@@ -34,7 +34,7 @@
       "ledger": {
         "status": "ready",
         "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-        "event_count": 32
+        "event_count": 35
       },
       "reconciliation": {
         "status": "ready",
@@ -171,7 +171,7 @@
       "ledger": {
         "status": "ready",
         "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-        "event_count": 32
+        "event_count": 35
       },
       "reconciliation": {
         "status": "ready",

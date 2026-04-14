@@ -145,7 +145,7 @@ from fts_prelive_runtime import PATHS, now_str, append_jsonl, write_json
 # merged-local import removed: from fts_execution_models import CallbackEventSchema
 from fts_execution_state_machine import DirectionalExecutionStateMachine
 from fts_execution_ledger import ExecutionLedger
-from fts_broker_shadow_mutator import BrokerShadowLedgerMutator
+from fts_broker_core import BrokerShadowLedgerMutator
 
 
 class CallbackEventStore:

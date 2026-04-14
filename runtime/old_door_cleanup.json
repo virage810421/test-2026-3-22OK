@@ -28,7 +28,8 @@
     "master_pipeline.py": "fts_pipeline.py / fts_control_tower.py"
   },
   "planned": [],
-  "removed": [
+  "removed": [],
+  "missing": [
     {
       "file": "advanced_chart.py",
       "function_body_owner": "fts_chart_service.py"
@@ -60,9 +61,7 @@
     {
       "file": "kline_cache.py",
       "function_body_owner": "fts_market_data_service.py"
-    }
-  ],
-  "missing": [
+    },
     {
       "file": "screening.py",
       "function_body_owner": "fts_screening_engine.py / fts_service_api.py"

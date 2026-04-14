@@ -7,7 +7,7 @@ from config import PARAMS
 from fts_prelive_runtime import PATHS, now_str, write_json, append_jsonl, normalize_key
 from fts_execution_ledger import ExecutionLedger
 from fts_execution_state_machine import DirectionalExecutionStateMachine
-from fts_broker_shadow_mutator import BrokerShadowLedgerMutator
+from fts_broker_core import BrokerShadowLedgerMutator
 
 
 class RepairWorkflowEngine:

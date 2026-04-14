@@ -1,0 +1,99 @@
+{
+  "generated_at": "2026-04-14 03:09:40",
+  "source_zip": "檢查合併.zip",
+  "merge_groups": {
+    "fts_watchlist_service": [
+      "fts_live_watchlist_registry",
+      "fts_live_watchlist_loader",
+      "fts_live_watchlist_promoter",
+      "fts_watchlist_service"
+    ],
+    "fts_runtime_ops": [
+      "fts_runtime_ops",
+      "fts_daily_ops",
+      "fts_progress",
+      "fts_runtime_cleanup"
+    ],
+    "fts_research_suite": [
+      "fts_research_suite",
+      "fts_research_gate",
+      "feature_selector",
+      "alpha_miner"
+    ],
+    "fts_broker_core": [
+      "fts_broker_core",
+      "fts_broker_approval",
+      "fts_broker_shadow_mutator"
+    ],
+    "fts_execution_runtime": [
+      "fts_reconciliation_engine",
+      "fts_recovery_engine",
+      "fts_retry_queue",
+      "fts_execution"
+    ],
+    "fts_upgrade_suite": [
+      "fts_upgrade_plan",
+      "fts_phase1_upgrade",
+      "fts_phase2_mock_broker_stage",
+      "fts_phase3_real_cutover_stage",
+      "fts_ab_wave_upgrade"
+    ],
+    "system_guard": [
+      "alert_manager",
+      "system_guard"
+    ],
+    "fts_risk_gateway": [
+      "fts_risk_gateway",
+      "fts_portfolio_gate"
+    ]
+  },
+  "removed_after_merge": [
+    "fts_live_watchlist_loader.py",
+    "fts_live_watchlist_promoter.py",
+    "fts_live_watchlist_registry.py",
+    "fts_daily_ops.py",
+    "fts_progress.py",
+    "fts_runtime_cleanup.py",
+    "fts_research_gate.py",
+    "alpha_miner.py",
+    "feature_selector.py",
+    "fts_broker_approval.py",
+    "fts_broker_shadow_mutator.py",
+    "fts_recovery_engine.py",
+    "fts_reconciliation_engine.py",
+    "fts_retry_queue.py",
+    "fts_execution.py",
+    "fts_phase2_mock_broker_stage.py",
+    "fts_upgrade_plan.py",
+    "fts_ab_wave_upgrade.py",
+    "fts_phase1_upgrade.py",
+    "fts_phase3_real_cutover_stage.py",
+    "alert_manager.py",
+    "fts_portfolio_gate.py",
+    "run_backfill_resilience_audit.py",
+    "run_full_market_percentile_snapshot.py",
+    "run_precise_event_calendar_build.py",
+    "run_project_completion_audit.py",
+    "run_project_healthcheck.py",
+    "run_sync_feature_snapshots_to_sql.py",
+    "run_training_stress_audit.py",
+    "apply_clean_old_doors.py"
+  ],
+  "removed_non_runtime_manifests": [
+    "_clean_old_doors_manifest.py",
+    "fts_merge_manifest.py",
+    "_patch_manifest_¼[║cª¼º└.py",
+    "_patch_manifest_│]¡pñú¿}¡╫º∩5.py"
+  ],
+  "import_rewrites": {
+    "fts_control_tower.py": 3,
+    "fts_execution_ledger.py": 1,
+    "fts_execution_models.py": 1,
+    "fts_project_healthcheck.py": 3,
+    "fts_repair_workflow_engine.py": 1,
+    "fts_tri_lane_orchestrator.py": 3,
+    "fts_v83_housekeeping_once.py": 1,
+    "live_paper_trading.py": 1,
+    "fts_upgrade_suite.py": 2
+  }
+}

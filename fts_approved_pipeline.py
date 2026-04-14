@@ -11,7 +11,7 @@ from fts_utils import now_str, log
 from fts_research_lab import ResearchLab
 from fts_approved_artifact_loader import ApprovedArtifactLoader
 from param_storage import approve_latest_candidate, load_latest_candidate, load_approved_params
-from alpha_miner import auto_approve_latest_alpha_candidate
+from fts_research_suite import auto_approve_latest_alpha_candidate
 from model_governance import load_registry, get_best_version_entry
 
 

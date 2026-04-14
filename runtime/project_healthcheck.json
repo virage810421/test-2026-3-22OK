@@ -1,7 +1,7 @@
 {
   "project_root": "C:\\test\\test-2026-3-22OK",
   "summary": {
-    "python_files_total": 241,
+    "python_files_total": 244,
     "compile_failures": 0,
     "core_import_failures": 0,
     "tri_lane_import_failures": 0,
@@ -409,6 +409,11 @@
       "error": ""
     },
     {
+      "file": "fts_admin_cli.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_admin_suite.py",
       "ok": true,
       "error": ""
@@ -615,6 +620,11 @@
     },
     {
       "file": "fts_execution_models.py",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "file": "fts_execution_runtime.py",
       "ok": true,
       "error": ""
     },
@@ -1084,6 +1094,11 @@
       "error": ""
     },
     {
+      "file": "fts_upgrade_suite.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_utils.py",
       "ok": true,
       "error": ""
@@ -1224,77 +1239,77 @@
       "module": "formal_trading_system_v83_official_main",
       "ok": true,
       "error": "",
-      "seconds": 3.352,
+      "seconds": 3.104,
       "severity": "hard"
     },
     {
       "module": "fts_fundamentals_etl_mainline",
       "ok": true,
       "error": "",
-      "seconds": 1.494,
+      "seconds": 1.38,
       "severity": "hard"
     },
     {
       "module": "fts_training_governance_mainline",
       "ok": true,
       "error": "",
-      "seconds": 3.227,
+      "seconds": 3.033,
       "severity": "hard"
     },
     {
       "module": "fts_feature_service",
       "ok": true,
       "error": "",
-      "seconds": 0.891,
+      "seconds": 0.856,
       "severity": "hard"
     },
     {
       "module": "fts_screening_engine",
       "ok": true,
       "error": "",
-      "seconds": 1.949,
+      "seconds": 1.756,
       "severity": "hard"
     },
     {
       "module": "fts_cross_sectional_percentile_service",
       "ok": true,
       "error": "",
-      "seconds": 1.424,
+      "seconds": 1.316,
       "severity": "hard"
     },
     {
       "module": "fts_event_calendar_service",
       "ok": true,
       "error": "",
-      "seconds": 0.863,
+      "seconds": 0.806,
       "severity": "hard"
     },
     {
       "module": "fts_decision_execution_bridge",
       "ok": true,
       "error": "",
-      "seconds": 0.852,
+      "seconds": 0.838,
       "severity": "hard"
     },
     {
       "module": "fts_phase1_upgrade",
       "ok": true,
       "error": "",
-      "seconds": 3.107,
+      "seconds": 3.262,
       "severity": "hard"
     },
     {
       "module": "fts_phase2_mock_broker_stage",
       "ok": true,
       "error": "",
-      "seconds": 0.868,
+      "seconds": 1.027,
       "severity": "hard"
     },
     {
       "module": "fts_phase3_real_cutover_stage",
       "ok": true,
       "error": "",
-      "seconds": 1.027,
+      "seconds": 0.952,
       "severity": "hard"
     },
     {
@@ -1317,84 +1332,84 @@
       "module": "fts_tri_lane_orchestrator",
       "ok": true,
       "error": "",
-      "seconds": 0.846,
+      "seconds": 1.369,
       "severity": "hard"
     },
     {
       "module": "fts_live_watchlist_promoter",
       "ok": true,
       "error": "",
-      "seconds": 0.846,
+      "seconds": 0.896,
       "severity": "hard"
     },
     {
       "module": "fts_live_watchlist_loader",
       "ok": true,
       "error": "",
-      "seconds": 0.14,
+      "seconds": 0.15,
       "severity": "hard"
     },
     {
       "module": "fts_live_watchlist_registry",
       "ok": true,
       "error": "",
-      "seconds": 0.137,
+      "seconds": 0.144,
       "severity": "hard"
     },
     {
       "module": "fts_execution_layer",
       "ok": true,
       "error": "",
-      "seconds": 0.85,
+      "seconds": 0.871,
       "severity": "hard"
     },
     {
       "module": "fts_execution_ledger",
       "ok": true,
       "error": "",
-      "seconds": 0.137,
+      "seconds": 1.001,
       "severity": "hard"
     },
     {
       "module": "fts_execution_state_machine",
       "ok": true,
       "error": "",
-      "seconds": 0.139,
+      "seconds": 0.129,
       "severity": "hard"
     },
     {
       "module": "fts_execution_models",
       "ok": true,
       "error": "",
-      "seconds": 0.92,
+      "seconds": 0.964,
       "severity": "hard"
     },
     {
       "module": "fts_reconciliation_engine",
       "ok": true,
       "error": "",
-      "seconds": 0.14,
+      "seconds": 1.122,
       "severity": "hard"
     },
     {
       "module": "fts_repair_workflow_engine",
       "ok": true,
       "error": "",
-      "seconds": 0.146,
+      "seconds": 1.058,
       "severity": "hard"
     },
     {
       "module": "fts_model_layer",
       "ok": true,
       "error": "C:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator DecisionTreeClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(\nC:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator RandomForestClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(",
-      "seconds": 3.659,
+      "seconds": 3.376,
       "severity": "hard"
     },
     {
       "module": "live_paper_trading",
       "ok": true,
       "error": "",
-      "seconds": 4.633,
+      "seconds": 4.485,
       "severity": "hard"
     }
   ],
@@ -1628,6 +1643,16 @@
       "fts_utils",
       "fts_watchlist_service"
     ],
+    "fts_admin_cli.py": [
+      "fts_backfill_resilience_audit",
+      "fts_cross_sectional_percentile_service",
+      "fts_event_calendar_service",
+      "fts_legacy_facade_cleanup",
+      "fts_project_healthcheck",
+      "fts_project_quality_suite",
+      "fts_sql_feature_snapshot_sync",
+      "fts_training_quality_suite"
+    ],
     "fts_admin_suite.py": [
       "fts_config",
       "fts_models",
@@ -1652,11 +1677,11 @@
       "param_storage"
     ],
     "fts_approved_pipeline.py": [
-      "alpha_miner",
       "config",
       "fts_approved_artifact_loader",
       "fts_config",
       "fts_research_lab",
+      "fts_research_suite",
       "fts_utils",
       "model_governance",
       "param_storage"
@@ -1724,8 +1749,9 @@
     "fts_config.py": [],
     "fts_control_tower.py": [
       "fts_admin_suite",
-      "fts_broker_approval",
+      "fts_broker_core",
       "fts_config",
+      "fts_execution_runtime",
       "fts_gatekeeper",
       "fts_live_readiness_gate",
       "fts_live_safety",
@@ -1736,8 +1762,6 @@
       "fts_prelive_runtime",
       "fts_project_healthcheck",
       "fts_project_quality_suite",
-      "fts_reconciliation_engine",
-      "fts_recovery_engine",
       "fts_trainer_backend",
       "fts_training_data_builder",
       "fts_tri_lane_orchestrator",
@@ -1819,15 +1843,23 @@
       "fts_strategy_policy_layer"
     ],
     "fts_execution_ledger.py": [
-      "fts_broker_shadow_mutator",
+      "fts_broker_core",
       "fts_prelive_runtime"
     ],
     "fts_execution_models.py": [
-      "fts_broker_shadow_mutator",
+      "fts_broker_core",
       "fts_config",
       "fts_execution_ledger",
       "fts_execution_state_machine",
       "fts_prelive_runtime",
+      "fts_utils"
+    ],
+    "fts_execution_runtime.py": [
+      "fts_config",
+      "fts_models",
+      "fts_prelive_runtime",
+      "fts_repair_workflow_engine",
+      "fts_upgrade_runtime",
       "fts_utils"
     ],
     "fts_execution_state_machine.py": [
@@ -2064,7 +2096,7 @@
     ],
     "fts_repair_workflow_engine.py": [
       "config",
-      "fts_broker_shadow_mutator",
+      "fts_broker_core",
       "fts_execution_ledger",
       "fts_execution_state_machine",
       "fts_prelive_runtime"
@@ -2079,6 +2111,7 @@
     ],
     "fts_research_suite.py": [
       "fts_config",
+      "fts_research_lab",
       "fts_utils"
     ],
     "fts_resilience.py": [
@@ -2099,11 +2132,14 @@
     ],
     "fts_risk_gateway.py": [
       "fts_config",
+      "fts_sector_service",
       "fts_utils"
     ],
     "fts_runtime_cleanup.py": [],
     "fts_runtime_ops.py": [
       "fts_config",
+      "fts_target95_suite",
+      "fts_upgrade_runtime",
       "fts_utils"
     ],
     "fts_runtime_ops_v59_patch.py": [],
@@ -2247,17 +2283,48 @@
     ],
     "fts_tri_lane_orchestrator.py": [
       "fts_execution_ledger",
+      "fts_execution_runtime",
       "fts_execution_state_machine",
-      "fts_live_watchlist_loader",
-      "fts_live_watchlist_promoter",
       "fts_prelive_runtime",
-      "fts_reconciliation_engine"
+      "fts_watchlist_service"
     ],
     "fts_upgrade_plan.py": [
       "fts_upgrade_runtime"
     ],
     "fts_upgrade_runtime.py": [
       "fts_config"
+    ],
+    "fts_upgrade_suite.py": [
+      "fts_admin_suite",
+      "fts_broker_api_adapter",
+      "fts_broker_core",
+      "fts_broker_real_stub",
+      "fts_chip_enrichment_service",
+      "fts_config",
+      "fts_decision_desk_builder",
+      "fts_decision_execution_bridge",
+      "fts_execution_models",
+      "fts_execution_runtime",
+      "fts_feature_service",
+      "fts_live_safety",
+      "fts_live_suite",
+      "fts_market_climate_service",
+      "fts_market_data_service",
+      "fts_models",
+      "fts_operations_suite",
+      "fts_project_quality_suite",
+      "fts_real_broker_adapter_blueprint",
+      "fts_risk_gateway",
+      "fts_screening_engine",
+      "fts_sector_service",
+      "fts_system_guard_service",
+      "fts_tests",
+      "fts_trainer_promotion_policy",
+      "fts_training_orchestrator",
+      "fts_training_quality_suite",
+      "fts_upgrade_runtime",
+      "fts_utils",
+      "fts_watchlist_service"
     ],
     "fts_utils.py": [
       "fts_config"
@@ -2266,12 +2333,13 @@
       "fts_data_cleanup",
       "fts_fundamentals_true_backfill",
       "fts_project_hygiene",
-      "fts_runtime_cleanup"
+      "fts_runtime_ops"
     ],
     "fts_watchlist_service.py": [
       "config",
       "fts_config",
-      "fts_live_watchlist_loader",
+      "fts_prelive_runtime",
+      "fts_training_ticker_scoreboard",
       "fts_utils"
     ],
     "fts_wave_suite.py": [
@@ -2289,10 +2357,10 @@
       "fts_execution_layer",
       "fts_execution_ledger",
       "fts_level_runtime",
-      "fts_live_watchlist_loader",
       "fts_model_layer",
       "fts_service_api",
       "fts_strategy_policy_layer",
+      "fts_watchlist_service",
       "sector_classifier"
     ],
     "market_language.py": [],
@@ -2354,7 +2422,6 @@
     ],
     "sector_classifier.py": [],
     "system_guard.py": [
-      "alert_manager",
       "config",
       "fts_sql_table_name_map",
       "performance"
@@ -2521,36 +2588,36 @@
   "tri_lane_smoke": {
     "tri_lane_orchestrator": {
       "ok": true,
-      "seconds": 0.921,
+      "seconds": 1.028,
       "stdout_tail": "2OK\\\\models\\\\selected_features_range.pkl', 'model_count': 3}, 'candidate_filter': {'status': 'ready', 'count': 3}, 'callback_pipeline': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json'}, 'state_machine': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\state\\\\directional_execution_state_machine.json', 'count': 0}, 'ledger': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\execution_ledger_summary.json', 'event_count': 0}, 'reconciliation': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', 'issue_count': 0}, 'repair_execution': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'action_count': 0}}}, 'tri_lane_execution_status': {'LONG': {'ready_stages': 9, 'fallback_stages': []}, 'SHORT': {'ready_stages': 9, 'fallback_stages': []}, 'RANGE': {'ready_stages': 9, 'fallback_stages': []}}, 'deep_full_split_complete': True})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "watchlist_promoter": {
       "ok": true,
-      "seconds": 0.922,
-      "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-14 11:09:07', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
+      "seconds": 0.857,
+      "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-14 11:20:30', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "watchlist_loader": {
       "ok": true,
-      "seconds": 0.154,
+      "seconds": 0.823,
       "stdout_tail": "approved', 'optimizer_penalty': 0.05, 'optimized_score': 1.1527848674857768}, {'ticker': '2002.TW', 'lane': 'RANGE', 'promotion_score': 1.2023287513734435, 'oot_ev': 0.0006741379310344, 'hit_rate': 0.0482758620689655, 'sector': '未知', 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'approval_reason': 'scoreboard_promotion', 'provisional': False, 'readiness_tier': 'approved', 'optimizer_penalty': 0.1, 'optimized_score': 1.1023287513734434}]}, 'lane_readiness': {'LONG': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'SHORT': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'RANGE': {'count': 3, 'approved_count': 3, 'provisional_count': 0, 'status': 'approved_only'}}, 'total_count': 7, 'provisional_item_count': 0, 'approved_item_count': 7, 'sector_counts': {'未知::LONG': 2, '未知::SHORT': 2, '未知::RANGE': 3}, 'net_exposure_proxy': {'LONG': 2, 'SHORT': 2, 'RANGE': 3}, 'min_counts': {'LONG': 2, 'SHORT': 2, 'RANGE': 2}})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "callback_event_store": {
       "ok": true,
-      "seconds": 0.874,
-      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-14 11:09:08', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
+      "seconds": 1.246,
+      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-14 11:20:33', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "reconciliation_engine": {
       "ok": true,
-      "seconds": 0.155,
-      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-14 11:09:08', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-14 11:09:08', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
+      "seconds": 1.189,
+      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-14 11:20:34', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-14 11:20:34', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
       "stderr_tail": "",
       "returncode": 0
     }
@@ -2591,5 +2658,26 @@
     "size": 30104491,
     "rows": 41813,
     "columns": 85
-  }
+  },
+  "deep_runs": [
+    {
+      "args": [
+        "formal_trading_system_v83_official_main.py"
+      ],
+      "ok": true,
+      "seconds": 57.805,
+      "stdout_tail": "[11:20:38] ========================================================================\n[11:20:38] 🚀 啟動 正式交易主控版_v83_official_main\n[11:20:38] 🧭 模式：DAILY\n[11:20:38] ========================================================================\n[11:21:26] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False\n[11:21:27] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False\n[11:21:32] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False\n[11:21:32] 🧬 已輸出 model registry：C:\\test\\test-2026-3-22OK\\runtime\\model_registry_runtime.json\n[11:21:32] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1\n[11:21:32] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1\n[11:21:32] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0\n[11:21:32] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0\n[11:21:32] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1\n[11:21:32] 🧪 已輸出 validation suite report：C:\\test\\test-2026-3-22OK\\runtime\\validation_suite_report.json\n[11:21:32] ♻️ 已輸出 recovery plan：C:\\test\\test-2026-3-22OK\\runtime\\recovery_plan.json\n[11:21:32] ♻️ 已輸出 recovery validation：C:\\test\\test-2026-3-22OK\\runtime\\recovery_validation.json\n",
+      "stderr_tail": "",
+      "returncode": 0
+    },
+    {
+      "args": [
+        "formal_trading_system_v83_official_main.py",
+        "--train"
+      ],
+      "ok": false,
+      "seconds": 180.049,
+      "error": "Command '['C:\\\\Users\\\\FM_pc\\\\anaconda3\\\\python.exe', 'formal_trading_system_v83_official_main.py', '--train']' timed out after 180 seconds"
+    }
+  ]
 }

@@ -87,7 +87,7 @@
   "feature_observability": {
     "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
     "payload": {
-      "generated_at": "2026-04-14 11:09:25",
+      "generated_at": "2026-04-14 11:21:32",
       "module_version": "v87_feature_observability_vetted_live",
       "strict_feature_parity": true,
       "force_shared_feature_universe": false,

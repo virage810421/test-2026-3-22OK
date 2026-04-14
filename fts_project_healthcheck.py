@@ -334,10 +334,10 @@ class ProjectHealthcheck:
         checks = {}
         smoke_map = {
             'tri_lane_orchestrator': "from fts_tri_lane_orchestrator import TriLaneOrchestrator; print(TriLaneOrchestrator().build())",
-            'watchlist_promoter': "from fts_live_watchlist_promoter import LiveWatchlistPromoter; print(LiveWatchlistPromoter().build())",
-            'watchlist_loader': "from fts_live_watchlist_loader import LiveWatchlistLoader; print(LiveWatchlistLoader().resolve_live_watchlist())",
+            'watchlist_promoter': "from fts_watchlist_service import LiveWatchlistPromoter; print(LiveWatchlistPromoter().build())",
+            'watchlist_loader': "from fts_watchlist_service import LiveWatchlistLoader; print(LiveWatchlistLoader().resolve_live_watchlist())",
             'callback_event_store': "from fts_execution_models import CallbackEventStore; print(CallbackEventStore().record({'broker_order_id':'HC1','client_order_id':'HC1','event_type':'fill','status':'FILLED','symbol':'2330.TW','timestamp':'2026-04-12 09:01:00','direction_bucket':'LONG','strategy_bucket':'LONG','approved_pool_type':'LONG','model_scope':'LONG'}))",
-            'reconciliation_engine': "from fts_reconciliation_engine import ReconciliationEngine; print(ReconciliationEngine().reconcile([], [], [], [], [], [], 0.0, 0.0))",
+            'reconciliation_engine': "from fts_execution_runtime import ReconciliationEngine; print(ReconciliationEngine().reconcile([], [], [], [], [], [], 0.0, 0.0))",
         }
         for name, code in smoke_map.items():
             checks[name] = self._subprocess_code(code, timeout=45)
