@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Mapping
 
 
 class OrderSide(str, Enum):
@@ -42,6 +42,22 @@ class OrderRequest:
     client_order_id: str = ""
     note: str = ""
 
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "ticker": self.symbol,
+            "symbol": self.symbol,
+            "side": self.side.value if hasattr(self.side, "value") else str(self.side),
+            "qty": int(self.quantity),
+            "quantity": int(self.quantity),
+            "order_type": self.order_type.value if hasattr(self.order_type, "value") else str(self.order_type),
+            "price": self.limit_price,
+            "limit_price": self.limit_price,
+            "strategy_name": self.strategy_name,
+            "signal_id": self.signal_id,
+            "client_order_id": self.client_order_id,
+            "note": self.note,
+        }
+
 
 @dataclass
 class FillEvent:
@@ -57,6 +73,9 @@ class FillEvent:
     strategy_name: str = ""
     signal_id: str = ""
     note: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 
 @dataclass
@@ -84,30 +103,159 @@ class OrderRecord:
 
 
 class BrokerBase(ABC):
+    """
+    單一正式 broker contract。
+
+    這個檔案是唯一 BrokerBase 來源；fts_broker_interface.py 只做相容 re-export。
+    Contract 同時支援：
+    - paper broker 的 OrderRequest / OrderRecord 物件流
+    - pre-live / real broker 的 dict payload、callback、ledger、reconcile 流
+
+    實盤前必須由 capability_report() 證明 API / callback / ledger / reconcile / kill-switch 五項都為 True。
+    """
+
+    CONTRACT_VERSION = "v87_unified_broker_contract"
+
+    # ---- required minimum order operations ----
     @abstractmethod
-    def place_order(self, order: OrderRequest) -> OrderRecord:
+    def place_order(self, order: Any) -> Any:
         raise NotImplementedError
 
     @abstractmethod
-    def cancel_order(self, order_id: str) -> bool:
+    def cancel_order(self, order: Any) -> Any:
         raise NotImplementedError
 
-    @abstractmethod
-    def get_order_status(self, order_id: str) -> Optional[OrderRecord]:
-        raise NotImplementedError
+    # ---- strongly expected query operations; default fail-closed where needed ----
+    def get_order_status(self, order_id: str) -> Any:
+        return {"ok": False, "status": "get_order_status_not_implemented", "broker_order_id": order_id}
 
-    @abstractmethod
-    def get_open_orders(self) -> List[OrderRecord]:
-        raise NotImplementedError
+    def replace_order(self, order_id: str, payload: Mapping[str, Any]) -> dict[str, Any]:
+        return {"ok": False, "status": "replace_order_not_implemented", "broker_order_id": order_id}
 
-    @abstractmethod
-    def get_positions(self) -> Dict[str, int]:
-        raise NotImplementedError
+    def get_open_orders(self) -> list[Any]:
+        if hasattr(self, "query_open_orders"):
+            try:
+                return list(getattr(self, "query_open_orders")())
+            except Exception:
+                return []
+        if hasattr(self, "snapshot_orders"):
+            try:
+                rows = list(getattr(self, "snapshot_orders")())
+                return [x for x in rows if str((x or {}).get("status", "")).upper() in {"NEW", "PENDING_SUBMIT", "SUBMITTED", "PARTIALLY_FILLED", "WORKING"}]
+            except Exception:
+                return []
+        return []
 
-    @abstractmethod
-    def get_cash(self) -> float:
-        raise NotImplementedError
+    def query_open_orders(self) -> list[Any]:
+        return self.get_open_orders()
 
-    @abstractmethod
-    def poll_fills(self) -> List[FillEvent]:
-        raise NotImplementedError
+    def get_positions(self) -> Any:
+        return {}
+
+    def query_positions(self) -> list[dict[str, Any]]:
+        if hasattr(self, "get_positions_rows"):
+            try:
+                return list(getattr(self, "get_positions_rows")())
+            except Exception:
+                return []
+        pos = self.get_positions()
+        if isinstance(pos, dict):
+            return [{"ticker": k, "qty": v} for k, v in pos.items()]
+        return list(pos or [])
+
+    def get_cash(self) -> Any:
+        return {"cash_available": 0.0, "equity": 0.0, "market_value": 0.0}
+
+    def query_cash(self) -> dict[str, Any]:
+        snap = self.get_cash()
+        if isinstance(snap, dict):
+            return dict(snap)
+        return {"cash_available": float(snap or 0.0), "cash": float(snap or 0.0)}
+
+    def get_account_snapshot(self) -> Any:
+        return self.query_cash()
+
+    def poll_fills(self) -> list[Any]:
+        if hasattr(self, "get_fills"):
+            try:
+                return list(getattr(self, "get_fills")())
+            except Exception:
+                return []
+        return []
+
+    def get_fills(self, trading_date: str | None = None) -> list[Any]:
+        return []
+
+    # ---- market state / restore helpers ----
+    def update_market_price(self, ticker: str, price: float) -> None:
+        # Avoid recursive default calls. If a subclass implements plural update, use it;
+        # otherwise update a conventional last_prices dict when present.
+        if type(self).update_market_prices is not BrokerBase.update_market_prices:
+            type(self).update_market_prices(self, {ticker: price})
+            return
+        if hasattr(self, "last_prices") and isinstance(getattr(self, "last_prices"), dict):
+            try:
+                getattr(self, "last_prices")[str(ticker)] = float(price or 0.0)
+            except Exception:
+                pass
+
+    def update_market_prices(self, price_map: Mapping[str, float]) -> None:
+        for ticker, price in dict(price_map or {}).items():
+            if hasattr(self, "last_prices") and isinstance(getattr(self, "last_prices"), dict):
+                try:
+                    getattr(self, "last_prices")[str(ticker)] = float(price or 0.0)
+                except Exception:
+                    pass
+            else:
+                self.update_market_price(str(ticker), float(price or 0.0))
+
+    def restore_state(self, cash: Any, positions: Any, last_prices: Mapping[str, float] | None = None) -> None:
+        if hasattr(self, "cash"):
+            try:
+                setattr(self, "cash", float(cash or 0.0))
+            except Exception:
+                pass
+        if hasattr(self, "positions") and isinstance(positions, dict):
+            setattr(self, "positions", dict(positions))
+        if last_prices is not None and hasattr(self, "last_prices"):
+            setattr(self, "last_prices", dict(last_prices))
+
+    # ---- real broker lifecycle / callback / reconciliation contract ----
+    def connect(self) -> dict[str, Any]:
+        return {"ok": False, "status": "broker_connect_not_implemented"}
+
+    def refresh_auth(self) -> dict[str, Any]:
+        return {"ok": False, "status": "refresh_auth_not_implemented"}
+
+    def disconnect(self) -> dict[str, Any]:
+        return {"ok": False, "status": "disconnect_not_implemented"}
+
+    def poll_callbacks(self, clear: bool = False) -> list[dict[str, Any]]:
+        return []
+
+    def reconcile(self) -> dict[str, Any]:
+        return {"ok": False, "status": "reconcile_not_implemented"}
+
+    def capability_report(self) -> dict[str, Any]:
+        return {
+            "contract_version": self.CONTRACT_VERSION,
+            "api_bound": False,
+            "callback_bound": False,
+            "ledger_bound": False,
+            "reconcile_bound": False,
+            "kill_switch_bound": False,
+            "connect": False,
+            "refresh_auth": False,
+            "place_order": True,
+            "cancel_order": True,
+            "replace_order": False,
+            "get_order_status": False,
+            "query_open_orders": False,
+            "query_positions": False,
+            "query_cash": False,
+            "get_fills": False,
+            "poll_callbacks": False,
+            "reconcile": False,
+            "true_broker_ready": False,
+            "real_money_execution": False,
+        }

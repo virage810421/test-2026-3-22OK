@@ -613,8 +613,57 @@ class FeatureService:
         out['ADV20_Pctl'] = self._rolling_percentile(out['ADV20_Proxy'], 252)
         out['ATR_Pct_Pctl'] = self._rolling_percentile(out['ATR_Pct'], 252)
         out['RealizedVol_20_Pctl'] = self._rolling_percentile(out['RealizedVol_20'], 252)
+
+        # 正式 class 方法：原本尾端 monkey patch 的提前布局 / 出場 / regime transition 特徵，
+        # 現在直接落在 FeatureService.enrich_from_history() 內，不再靠執行期覆寫方法。
+        for col, default in [
+            ('Buy_Score', 0.0), ('Sell_Score', 0.0), ('Score_Gap', 0.0),
+            ('ADX14', 0.0), ('MACD_Hist', 0.0), ('RSI', 50.0),
+            ('BB_Width', 0.0), ('ATR_Pct', 0.0), ('Volume_Z20', 0.0),
+            ('Foreign_Ratio', 0.0), ('Total_Ratio', 0.0), ('AI_Proba', 0.5),
+        ]:
+            if col not in out.columns:
+                out[col] = default
+        out['Buy_Score_Slope_3d'] = self._history_delta_series(out, 'Buy_Score', 3)
+        out['Buy_Score_Slope_5d'] = self._history_delta_series(out, 'Buy_Score', 5)
+        out['Sell_Score_Slope_3d'] = self._history_delta_series(out, 'Sell_Score', 3)
+        out['Sell_Score_Slope_5d'] = self._history_delta_series(out, 'Sell_Score', 5)
+        out['Score_Gap_Slope_3d'] = self._history_delta_series(out, 'Score_Gap', 3)
+        out['Score_Gap_Slope_5d'] = self._history_delta_series(out, 'Score_Gap', 5)
+        out['ADX_Delta_3d'] = self._history_delta_series(out, 'ADX14', 3)
+        out['MACD_Hist_Delta_3d'] = self._history_delta_series(out, 'MACD_Hist', 3)
+        out['Volume_Z20_Delta'] = self._history_delta_series(out, 'Volume_Z20', 3)
+        out['Foreign_Ratio_Delta_3d'] = self._history_delta_series(out, 'Foreign_Ratio', 3)
+        out['Total_Ratio_Delta_3d'] = self._history_delta_series(out, 'Total_Ratio', 3)
+
+        rsi = pd.to_numeric(out['RSI'], errors='coerce').fillna(50.0)
+        bb_width = pd.to_numeric(out['BB_Width'], errors='coerce').fillna(0.0)
+        atr_pct = pd.to_numeric(out['ATR_Pct'], errors='coerce').fillna(0.0)
+        out['RSI_Reclaim_Speed'] = ((rsi - rsi.shift(3).fillna(rsi)) / 20.0).clip(-1.0, 1.0).fillna(0.0)
+        out['BB_Squeeze_Release'] = self._clip01_series((bb_width.rolling(3, min_periods=1).mean() - bb_width.rolling(10, min_periods=3).mean()).fillna(0.0) * 8.0)
+        out['ATR_Expansion_Start'] = self._clip01_series((atr_pct - atr_pct.rolling(10, min_periods=3).mean()).fillna(0.0) * 20.0)
+
+        if 'Transition_Label' not in out.columns or 'Hysteresis_Regime_Label' not in out.columns:
+            try:
+                from fts_regime_service import RegimeService
+                out = RegimeService().enrich_dataframe(out)
+            except Exception as exc:
+                record_issue('feature_service', 'regime_enrich_dataframe_failed', exc, severity='ERROR', fail_mode='fail_closed')
+                out['FeatureService_Regime_Enrich_Failed'] = True
         return out
 
+
+
+    @staticmethod
+    def _history_delta_series(df: pd.DataFrame, col: str, periods: int) -> pd.Series:
+        if df is None or df.empty or col not in df.columns:
+            return pd.Series([0.0] * len(df), index=df.index if df is not None else None, dtype=float)
+        s = pd.to_numeric(df[col], errors='coerce').ffill().fillna(0.0)
+        return (s - s.shift(periods)).fillna(0.0)
+
+    @staticmethod
+    def _clip01_series(series: pd.Series) -> pd.Series:
+        return pd.to_numeric(series, errors='coerce').fillna(0.0).clip(0.0, 1.0)
 
     @staticmethod
     def _history_delta(history_df: pd.DataFrame | None, col: str, periods: int = 3) -> float:
@@ -749,6 +798,54 @@ class FeatureService:
         if bool(getattr(CONFIG, 'enable_directional_features_in_training', False)):
             features.update(directional)
         features.update(self._compute_exit_timing_features({**row, **features}, history_df=history_df))
+
+        hist_enriched = pd.DataFrame()
+        if isinstance(history_df, pd.DataFrame) and not history_df.empty:
+            try:
+                hist_enriched = self.enrich_from_history(history_df)
+                if 'AI_Proba' not in hist_enriched.columns:
+                    hist_enriched['AI_Proba'] = pd.Series([0.5] * len(hist_enriched), index=hist_enriched.index, dtype=float)
+            except Exception as exc:
+                record_issue('feature_service', 'extract_ai_features_history_enrich_failed', exc, severity='ERROR', fail_mode='fail_closed')
+                hist_enriched = pd.DataFrame()
+
+        def _latest(name: str, default: float = 0.0) -> float:
+            if name in row:
+                return safe_float(row.get(name, default), default)
+            if not hist_enriched.empty and name in hist_enriched.columns:
+                return safe_float(hist_enriched[name].iloc[-1], default)
+            return default
+
+        features.update({
+            'Buy_Score_Slope_3d': _latest('Buy_Score_Slope_3d', 0.0),
+            'Buy_Score_Slope_5d': _latest('Buy_Score_Slope_5d', 0.0),
+            'Sell_Score_Slope_3d': _latest('Sell_Score_Slope_3d', 0.0),
+            'Sell_Score_Slope_5d': _latest('Sell_Score_Slope_5d', 0.0),
+            'Score_Gap_Slope_3d': _latest('Score_Gap_Slope_3d', 0.0),
+            'Score_Gap_Slope_5d': _latest('Score_Gap_Slope_5d', 0.0),
+            'ADX_Delta_3d': _latest('ADX_Delta_3d', 0.0),
+            'MACD_Hist_Delta_3d': _latest('MACD_Hist_Delta_3d', 0.0),
+            'RSI_Reclaim_Speed': _latest('RSI_Reclaim_Speed', 0.0),
+            'BB_Squeeze_Release': _latest('BB_Squeeze_Release', 0.0),
+            'ATR_Expansion_Start': _latest('ATR_Expansion_Start', 0.0),
+            'Volume_Z20_Delta': _latest('Volume_Z20_Delta', 0.0),
+            'Foreign_Ratio_Delta_3d': _latest('Foreign_Ratio_Delta_3d', 0.0),
+            'Total_Ratio_Delta_3d': _latest('Total_Ratio_Delta_3d', 0.0),
+            'Bull_Emerging_Score': _latest('Bull_Emerging_Score', 0.0),
+            'Bear_Emerging_Score': _latest('Bear_Emerging_Score', 0.0),
+            'Range_Compression_Score': _latest('Range_Compression_Score', 0.0),
+            'Breakout_Readiness': _latest('Breakout_Readiness', 0.0),
+            'Trend_Exhaustion_Score': _latest('Trend_Exhaustion_Score', 0.0),
+            'Entry_Readiness': _latest('Entry_Readiness', 0.0),
+            'Transition_Label': str(row.get('Transition_Label', hist_enriched['Transition_Label'].iloc[-1] if not hist_enriched.empty and 'Transition_Label' in hist_enriched.columns else 'Stable')),
+            'Next_Regime_Prob_Bull': _latest('Next_Regime_Prob_Bull', 0.34),
+            'Next_Regime_Prob_Bear': _latest('Next_Regime_Prob_Bear', 0.33),
+            'Next_Regime_Prob_Range': _latest('Next_Regime_Prob_Range', 0.33),
+            'Hysteresis_Regime_Label': str(row.get('Hysteresis_Regime_Label', hist_enriched['Hysteresis_Regime_Label'].iloc[-1] if not hist_enriched.empty and 'Hysteresis_Regime_Label' in hist_enriched.columns else row.get('Regime', '區間盤整'))),
+            'Proba_Delta_3d': _latest('Proba_Delta_3d', 0.0),
+            'Trend_Confidence_Delta': _latest('Trend_Confidence_Delta', 0.0),
+            'Range_Confidence_Delta': _latest('Range_Confidence_Delta', 0.0),
+        })
         return features
 
     def mount_live_features(self, ticker: str, as_of_row: Mapping[str, Any], history_df: pd.DataFrame | None = None) -> tuple[dict[str, Any], dict[str, float]]:
@@ -823,109 +920,3 @@ class FeatureService:
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🧩 feature service ready: {self.runtime_path}')
         return self.runtime_path, payload
-
-# Safety bindings for helper methods patched into class scope
-FeatureService._read_json_if_exists = staticmethod(FeatureService._read_json_if_exists)
-
-
-# --- patched_sync_enrich_from_history / extract_ai_features ---
-from typing import Mapping as _PatchMapping
-try:
-    from fts_regime_service import RegimeService as _PatchedRegimeService
-except Exception as exc:
-    record_issue('feature_service', 'import_regime_service_for_patch_failed', exc, severity='ERROR', fail_mode='fail_closed')
-    _PatchedRegimeService = None
-
-_fts_orig_enrich_from_history = FeatureService.enrich_from_history
-_fts_orig_extract_ai_features = FeatureService.extract_ai_features
-
-def _patch_hist_delta(df: pd.DataFrame, col: str, periods: int) -> pd.Series:
-    if col not in df.columns:
-        return pd.Series([0.0]*len(df), index=df.index, dtype=float)
-    s = pd.to_numeric(df[col], errors='coerce').ffill().fillna(0.0)
-    return (s - s.shift(periods)).fillna(0.0)
-
-def _patch_clip01(series: pd.Series) -> pd.Series:
-    return pd.to_numeric(series, errors='coerce').fillna(0.0).clip(0.0, 1.0)
-
-def _patched_sync_enrich_from_history(self, df: pd.DataFrame) -> pd.DataFrame:
-    out = _fts_orig_enrich_from_history(self, df)
-    if out is None or out.empty:
-        return out
-    # ensure core columns exist
-    for col, default in [('Buy_Score',0.0),('Sell_Score',0.0),('Score_Gap',0.0),('ADX14',0.0),('MACD_Hist',0.0),('RSI',50.0),('BB_Width',0.0),('ATR_Pct',0.0),('Volume_Z20',0.0),('Foreign_Ratio',0.0),('Total_Ratio',0.0),('AI_Proba',0.5)]:
-        if col not in out.columns:
-            out[col] = default
-    out['Buy_Score_Slope_3d'] = _patch_hist_delta(out, 'Buy_Score', 3)
-    out['Buy_Score_Slope_5d'] = _patch_hist_delta(out, 'Buy_Score', 5)
-    out['Sell_Score_Slope_3d'] = _patch_hist_delta(out, 'Sell_Score', 3)
-    out['Sell_Score_Slope_5d'] = _patch_hist_delta(out, 'Sell_Score', 5)
-    out['Score_Gap_Slope_3d'] = _patch_hist_delta(out, 'Score_Gap', 3)
-    out['Score_Gap_Slope_5d'] = _patch_hist_delta(out, 'Score_Gap', 5)
-    out['ADX_Delta_3d'] = _patch_hist_delta(out, 'ADX14', 3)
-    out['MACD_Hist_Delta_3d'] = _patch_hist_delta(out, 'MACD_Hist', 3)
-    out['Volume_Z20_Delta'] = _patch_hist_delta(out, 'Volume_Z20', 3)
-    out['Foreign_Ratio_Delta_3d'] = _patch_hist_delta(out, 'Foreign_Ratio', 3)
-    out['Total_Ratio_Delta_3d'] = _patch_hist_delta(out, 'Total_Ratio', 3)
-    rsi = pd.to_numeric(out['RSI'], errors='coerce').fillna(50.0) if 'RSI' in out.columns else pd.Series([50.0] * len(out), index=out.index, dtype=float)
-    bb_width = pd.to_numeric(out['BB_Width'], errors='coerce').fillna(0.0) if 'BB_Width' in out.columns else pd.Series([0.0] * len(out), index=out.index, dtype=float)
-    atr_pct = pd.to_numeric(out['ATR_Pct'], errors='coerce').fillna(0.0) if 'ATR_Pct' in out.columns else pd.Series([0.0] * len(out), index=out.index, dtype=float)
-    out['RSI_Reclaim_Speed'] = ((rsi - rsi.shift(3).fillna(rsi)) / 20.0).clip(-1.0,1.0).fillna(0.0)
-    out['BB_Squeeze_Release'] = _patch_clip01((bb_width.rolling(3, min_periods=1).mean() - bb_width.rolling(10, min_periods=3).mean()).fillna(0.0) * 8.0)
-    out['ATR_Expansion_Start'] = _patch_clip01((atr_pct - atr_pct.rolling(10, min_periods=3).mean()).fillna(0.0) * 20.0)
-    if _PatchedRegimeService is not None and ('Transition_Label' not in out.columns or 'Hysteresis_Regime_Label' not in out.columns):
-        try:
-            out = _PatchedRegimeService().enrich_dataframe(out)
-        except Exception as exc:
-            record_issue('feature_service', 'regime_enrich_dataframe_failed', exc, severity='ERROR', fail_mode='fail_closed')
-            out['FeatureService_Regime_Enrich_Failed'] = True
-    return out
-
-def _patched_sync_extract_ai_features(self, row: _PatchMapping[str, Any], history_df: pd.DataFrame | None = None, ticker: str | None = None, as_of_date: Any | None = None) -> dict[str, Any]:
-    features = _fts_orig_extract_ai_features(self, row, history_df=history_df, ticker=ticker, as_of_date=as_of_date)
-    h = history_df.copy() if isinstance(history_df, pd.DataFrame) else pd.DataFrame()
-    if not h.empty:
-        h = self.enrich_from_history(h)
-        if 'AI_Proba' not in h.columns:
-            h['AI_Proba'] = pd.Series([0.5] * len(h), index=h.index, dtype=float)
-    def _last(name, default=0.0):
-        if name in row:
-            return safe_float(row.get(name, default), default)
-        if not h.empty and name in h.columns:
-            return safe_float(h[name].iloc[-1], default)
-        return default
-    extras = {
-        'Buy_Score_Slope_3d': _last('Buy_Score_Slope_3d', 0.0),
-        'Buy_Score_Slope_5d': _last('Buy_Score_Slope_5d', 0.0),
-        'Sell_Score_Slope_3d': _last('Sell_Score_Slope_3d', 0.0),
-        'Sell_Score_Slope_5d': _last('Sell_Score_Slope_5d', 0.0),
-        'Score_Gap_Slope_3d': _last('Score_Gap_Slope_3d', 0.0),
-        'Score_Gap_Slope_5d': _last('Score_Gap_Slope_5d', 0.0),
-        'ADX_Delta_3d': _last('ADX_Delta_3d', 0.0),
-        'MACD_Hist_Delta_3d': _last('MACD_Hist_Delta_3d', 0.0),
-        'RSI_Reclaim_Speed': _last('RSI_Reclaim_Speed', 0.0),
-        'BB_Squeeze_Release': _last('BB_Squeeze_Release', 0.0),
-        'ATR_Expansion_Start': _last('ATR_Expansion_Start', 0.0),
-        'Volume_Z20_Delta': _last('Volume_Z20_Delta', 0.0),
-        'Foreign_Ratio_Delta_3d': _last('Foreign_Ratio_Delta_3d', 0.0),
-        'Total_Ratio_Delta_3d': _last('Total_Ratio_Delta_3d', 0.0),
-        'Bull_Emerging_Score': _last('Bull_Emerging_Score', 0.0),
-        'Bear_Emerging_Score': _last('Bear_Emerging_Score', 0.0),
-        'Range_Compression_Score': _last('Range_Compression_Score', 0.0),
-        'Breakout_Readiness': _last('Breakout_Readiness', 0.0),
-        'Trend_Exhaustion_Score': _last('Trend_Exhaustion_Score', 0.0),
-        'Entry_Readiness': _last('Entry_Readiness', 0.0),
-        'Transition_Label': str(row.get('Transition_Label', h['Transition_Label'].iloc[-1] if not h.empty and 'Transition_Label' in h.columns else 'Stable')),
-        'Next_Regime_Prob_Bull': _last('Next_Regime_Prob_Bull', 0.34),
-        'Next_Regime_Prob_Bear': _last('Next_Regime_Prob_Bear', 0.33),
-        'Next_Regime_Prob_Range': _last('Next_Regime_Prob_Range', 0.33),
-        'Hysteresis_Regime_Label': str(row.get('Hysteresis_Regime_Label', h['Hysteresis_Regime_Label'].iloc[-1] if not h.empty and 'Hysteresis_Regime_Label' in h.columns else row.get('Regime', '區間盤整'))),
-        'Proba_Delta_3d': _last('Proba_Delta_3d', 0.0),
-        'Trend_Confidence_Delta': _last('Trend_Confidence_Delta', 0.0),
-        'Range_Confidence_Delta': _last('Range_Confidence_Delta', 0.0),
-    }
-    features.update(extras)
-    return features
-
-FeatureService.enrich_from_history = _patched_sync_enrich_from_history
-FeatureService.extract_ai_features = _patched_sync_extract_ai_features

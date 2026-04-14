@@ -59,6 +59,62 @@ def _build_lane_series(df: pd.DataFrame) -> pd.Series:
 
 
 
+
+
+def _validate_target_return_frame(df: pd.DataFrame) -> tuple[pd.DataFrame | None, dict[str, Any]]:
+    """Fail closed: formal training must use real Target_Return, never synthetic ±0.05 labels."""
+    required = bool(PARAMS.get('MODEL_REQUIRE_TARGET_RETURN', True))
+    min_valid_ratio = float(PARAMS.get('MODEL_TARGET_RETURN_MIN_VALID_RATIO', 0.80))
+    if 'Target_Return' not in df.columns:
+        report = {
+            'status': 'blocked' if required else 'warning',
+            'reason': 'target_return_missing',
+            'message': '正式訓練禁止用 Label_Y 產生 ±0.05 假 Target_Return；請由未來報酬/成本/滑價標籤器產生 Target_Return。',
+            'required': required,
+        }
+        return (None if required else df), report
+    s = pd.to_numeric(df['Target_Return'], errors='coerce')
+    finite_mask = np.isfinite(s.astype(float))
+    valid_ratio = float(finite_mask.mean()) if len(s) else 0.0
+    nonzero_count = int((s[finite_mask].abs() > 1e-12).sum()) if finite_mask.any() else 0
+    report = {
+        'status': 'ok',
+        'required': required,
+        'rows_before': int(len(df)),
+        'valid_ratio': valid_ratio,
+        'nonzero_count': nonzero_count,
+        'min_valid_ratio': min_valid_ratio,
+    }
+    if valid_ratio < min_valid_ratio:
+        report.update({'status': 'blocked', 'reason': 'target_return_valid_ratio_below_floor'})
+        return None, report
+    if nonzero_count <= 0:
+        report.update({'status': 'blocked', 'reason': 'target_return_all_zero_or_missing'})
+        return None, report
+    cleaned = df.loc[finite_mask].copy()
+    cleaned['Target_Return'] = s.loc[finite_mask].astype(float)
+    report['rows_after'] = int(len(cleaned))
+    return cleaned, report
+
+
+def _write_model_live_signal_gate(report: dict[str, Any], promotion_ready: bool, promoted: bool, reason: str = '') -> dict[str, Any]:
+    gate = {
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'allow_live_signal': bool(promotion_ready and promoted),
+        'promotion_ready': bool(promotion_ready),
+        'promoted_current_candidate': bool(promoted),
+        'block_live_on_unpromoted': bool(PARAMS.get('MODEL_BLOCK_LIVE_ON_UNPROMOTED', True)),
+        'reason': reason or ('promoted' if promotion_ready and promoted else 'promotion_not_cleared'),
+        'promotion': report.get('promotion', {}),
+        'out_of_time': report.get('out_of_time', {}),
+        'walk_forward_summary': report.get('walk_forward_summary', {}),
+        'overall_score': report.get('overall_score', 0.0),
+        'status': 'live_signal_allowed' if bool(promotion_ready and promoted) else 'live_signal_blocked',
+    }
+    Path('runtime').mkdir(parents=True, exist_ok=True)
+    (Path('runtime') / 'model_live_signal_gate.json').write_text(json.dumps(gate, ensure_ascii=False, indent=2), encoding='utf-8')
+    return gate
+
 def _exit_selected_feature_pkl() -> Path:
     return Path('models') / 'selected_features_exit.pkl'
 
@@ -388,11 +444,28 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         return RUNTIME_PATH, payload
     if 'Date' in df.columns:
         df = df.sort_values('Date').reset_index(drop=True)
-    if 'Target_Return' not in df.columns:
-        _label_y_series = pd.to_numeric(df['Label_Y'], errors='coerce').fillna(0).astype(int) if 'Label_Y' in df.columns else pd.Series([0] * len(df), index=df.index, dtype=int)
-        df['Target_Return'] = np.where(_label_y_series == 1, 0.05, -0.05)
-    else:
-        df['Target_Return'] = pd.to_numeric(df['Target_Return'], errors='coerce').fillna(0.0)
+    df, target_return_report = _validate_target_return_frame(df)
+    if df is None:
+        payload = {
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'status': 'blocked_by_target_return',
+            'dataset_path': str(dataset_path),
+            'target_return_report': target_return_report,
+        }
+        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason=target_return_report.get('reason', 'target_return_blocked'))
+        return RUNTIME_PATH, payload
+    if len(df) < max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))):
+        payload = {
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'status': 'blocked_by_target_return_row_count',
+            'dataset_path': str(dataset_path),
+            'target_return_report': target_return_report,
+            'rows_after_target_return_clean': int(len(df)),
+        }
+        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason='target_return_clean_rows_below_floor')
+        return RUNTIME_PATH, payload
     df['Label_Y'] = pd.to_numeric(df['Label_Y'], errors='coerce').fillna(0).astype(int)
 
     all_features, _ = _build_feature_columns(df)
@@ -459,6 +532,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         'class_balance_oot': float(y_oot.mean()) if len(y_oot) else 0.0,
         'feature_selection_preview': ranked_features[:20],
         'warnings': warnings,
+        'target_return_report': target_return_report,
     }
 
     os.makedirs('models', exist_ok=True)
@@ -557,27 +631,47 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     version_tag = create_version_tag('trained')
     snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features), 'directional_lane_feature_counts': {k: v.get('selected_feature_count', 0) for k, v in lane_artifacts.items()}, 'directional_lane_model_counts': {k: v.get('saved_model_count', 0) for k, v in lane_artifacts.items()}}, note='任務收尾版訓練完成快照')
 
-    promotion_ready = (
-        save_count > 0
-        and len(selected_features) >= int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8))
-        and overall_score >= float(PARAMS.get('MODEL_MIN_PROMOTION_SCORE', 0.0))
-        and oot_metrics.get('profit_factor', 0.0) >= float(PARAMS.get('MODEL_MIN_OOT_PF', 1.0))
-        and oot_metrics.get('hit_rate', 0.0) >= float(PARAMS.get('MODEL_MIN_OOT_HIT_RATE', 0.45))
-    )
+    promotion_floors = {
+        'min_selected_features': int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)),
+        'min_overall_score': float(PARAMS.get('MODEL_MIN_PROMOTION_SCORE', 2.0)),
+        'min_oot_profit_factor': float(PARAMS.get('MODEL_MIN_OOT_PF', 1.15)),
+        'min_oot_hit_rate': float(PARAMS.get('MODEL_MIN_OOT_HIT_RATE', 0.52)),
+        'min_wf_effective_splits': int(PARAMS.get('MODEL_MIN_WF_EFFECTIVE_SPLITS', 3)),
+        'min_wf_ret_mean': float(PARAMS.get('MODEL_MIN_WF_RET_MEAN', 0.0)),
+    }
+    promotion_failures = []
+    if save_count <= 0:
+        promotion_failures.append('no_regime_models_saved')
+    if len(selected_features) < promotion_floors['min_selected_features']:
+        promotion_failures.append('selected_features_below_floor')
+    if overall_score < promotion_floors['min_overall_score']:
+        promotion_failures.append('overall_score_below_floor')
+    if oot_metrics.get('profit_factor', 0.0) < promotion_floors['min_oot_profit_factor']:
+        promotion_failures.append('oot_profit_factor_below_floor')
+    if oot_metrics.get('hit_rate', 0.0) < promotion_floors['min_oot_hit_rate']:
+        promotion_failures.append('oot_hit_rate_below_floor')
+    if int(wf_summary.get('effective_splits', 0) or 0) < promotion_floors['min_wf_effective_splits']:
+        promotion_failures.append('walk_forward_effective_splits_below_floor')
+    if float(wf_summary.get('ret_mean', 0.0) or 0.0) < promotion_floors['min_wf_ret_mean']:
+        promotion_failures.append('walk_forward_return_below_floor')
+    promotion_ready = len(promotion_failures) == 0
     best_entry = get_best_version_entry()
     best_score = float(best_entry.get('metrics', {}).get('overall_score', -1e18)) if best_entry else -1e18
 
+    promoted_current_candidate = False
     if promotion_ready and overall_score > best_score:
         promote_best_version(version_tag)
+        promoted_current_candidate = True
         report['promotion'] = {'status': 'promoted_best', 'version': version_tag}
     elif save_count == 0:
         restore_version(pretrain_version)
         report['promotion'] = {'status': 'restored_pretrain', 'version': pretrain_version, 'reason': 'no_regime_models_saved'}
     elif not promotion_ready:
         restore_version(pretrain_version)
-        report['promotion'] = {'status': 'restored_pretrain', 'version': pretrain_version, 'reason': 'promotion_floor_not_met'}
+        report['promotion'] = {'status': 'restored_pretrain', 'version': pretrain_version, 'reason': 'promotion_floor_not_met', 'failures': promotion_failures}
     else:
-        report['promotion'] = {'status': 'kept_current', 'version': version_tag}
+        restore_version(pretrain_version)
+        report['promotion'] = {'status': 'restored_pretrain', 'version': pretrain_version, 'reason': 'candidate_not_better_than_best', 'best_score': best_score}
 
     advanced_feature_candidates = [
         'Score_Gap_Slope_3d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release',
@@ -599,7 +693,10 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         if _exit_label in df.columns:
             report[_exit_label + '_positive_ratio'] = float(pd.to_numeric(df[_exit_label], errors='coerce').fillna(0).mean())
     report['overall_score'] = overall_score
+    report['promotion_floors'] = promotion_floors
+    report['promotion_failures'] = promotion_failures
     report['promotion_ready'] = promotion_ready
+    report['model_live_signal_gate'] = _write_model_live_signal_gate(report, promotion_ready=promotion_ready, promoted=promoted_current_candidate)
     RUNTIME_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     return RUNTIME_PATH, report
 

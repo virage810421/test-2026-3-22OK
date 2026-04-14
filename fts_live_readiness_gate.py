@@ -36,6 +36,29 @@ class LiveReadinessGate:
         checks['runtime_diagnostics_hard_block_count'] = int(runtime_diag.get('hard_block_count', 0) or 0)
         checks['runtime_diagnostics_hard_blocks_present'] = checks['runtime_diagnostics_hard_block_count'] > 0
 
+        # 真券商 readiness 五紅燈：API / callback / ledger / reconcile / kill-switch。
+        # 沒有實際券商綁定證據時，保持紅燈，不讓 LIVE 模式誤判為可上線。
+        real_readiness_path = PATHS.runtime_dir / 'real_api_readiness.json'
+        real_readiness = {}
+        try:
+            if real_readiness_path.exists():
+                real_readiness = json.loads(real_readiness_path.read_text(encoding='utf-8'))
+        except Exception:
+            real_readiness = {}
+        callback_events_path = PATHS.runtime_dir / 'broker_callback_events.jsonl'
+        reconciliation_path = PATHS.runtime_dir / 'reconciliation_report.json'
+        kill_switch_path = PATHS.runtime_dir / 'kill_switch_state.json'
+        real_broker_red_lights = {
+            'api': bool(checks['broker_is_real'] and checks['credentials_file_present'] and real_readiness.get('api_bound', False)),
+            'callback': bool(checks['broker_is_real'] and (real_readiness.get('callback_bound', False) or callback_events_path.exists())),
+            'ledger': bool(checks['broker_is_real'] and real_readiness.get('ledger_bound', False)),
+            'reconcile': bool(checks['broker_is_real'] and real_readiness.get('reconcile_bound', False) and reconciliation_path.exists()),
+            'kill_switch': bool(checks['kill_switch_defined'] and (kill_switch_path.exists() or not checks['mode_is_live'])),
+        }
+        checks['real_broker_red_lights'] = real_broker_red_lights
+        checks['real_broker_red_light_failures'] = [k for k, ok in real_broker_red_lights.items() if not ok]
+        checks['real_broker_five_lights_green'] = len(checks['real_broker_red_light_failures']) == 0
+
         shared_expected = ['selected_features.pkl', 'model_趨勢多頭.pkl', 'model_區間盤整.pkl', 'model_趨勢空頭.pkl']
         lane_feature_expected = [f'selected_features_{lane}.pkl' for lane in ['long', 'short', 'range']]
         lane_model_candidates = list(PATHS.model_dir.glob('model_long_*.pkl')) + list(PATHS.model_dir.glob('model_short_*.pkl')) + list(PATHS.model_dir.glob('model_range_*.pkl'))
@@ -82,6 +105,9 @@ class LiveReadinessGate:
             hard_blocks.append('broker_credentials_missing')
         if checks['mode_is_live'] and not checks['price_snapshot_present']:
             hard_blocks.append('price_snapshot_missing')
+        if checks['mode_is_live'] and not checks.get('real_broker_five_lights_green'):
+            for name in checks.get('real_broker_red_light_failures', []):
+                hard_blocks.append(f'real_broker_red_light_{name}')
         if checks.get('runtime_diagnostics_hard_blocks_present'):
             hard_blocks.append('runtime_diagnostics_hard_blocks_present')
         if total_payloads > 0 and valid_payloads < total_payloads:
@@ -134,6 +160,7 @@ class LiveReadinessGate:
             'score_split': {
                 'research_paper_prelive_score': prelive_score,
                 'true_broker_score': broker_score,
+                'real_broker_five_lights_green_count': 5 - len(checks.get('real_broker_red_light_failures', [])),
                 'executable_score': executable_score,
             },
             'feature_observability': {'path': str(observability_path), 'payload': observability},

@@ -35,10 +35,10 @@ class TrainerPromotionPolicyBuilder:
                     '可回退版本存在',
                 ],
                 'default_thresholds': {
-                    'min_walk_forward_score': 60,
-                    'min_profit_factor': 1.10,
-                    'min_win_rate': 0.50,
-                    'max_drawdown_pct': 0.12,
+                    'min_walk_forward_score': 70,
+                    'min_profit_factor': 1.15,
+                    'min_win_rate': 0.52,
+                    'max_drawdown_pct': 0.10,
                     'max_shadow_return_drift_pct': 0.08,
                 },
                 'deployment_rule': 'not_promote_to_live_without_all_required_stages',
@@ -69,13 +69,13 @@ class TrainerPromotionPolicyBuilder:
             failures.append('artifact_integrity_fail')
         if not registry_updated:
             failures.append('registry_update_fail')
-        if walk_forward_score < 60:
+        if walk_forward_score < 70:
             failures.append('walk_forward_score_fail')
-        if profit_factor < 1.10:
+        if profit_factor < 1.15:
             failures.append('profit_factor_fail')
-        if win_rate < 0.50:
+        if win_rate < 0.52:
             failures.append('win_rate_fail')
-        if max_drawdown_pct > 0.12:
+        if max_drawdown_pct > 0.10:
             failures.append('drawdown_fail')
         if shadow_return_drift_pct > 0.08:
             warnings.append('shadow_drift_high')

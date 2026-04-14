@@ -55,6 +55,9 @@ class ModelSelectionGate:
             warnings.append({'type': 'zero_signal', 'message': '目前 decision 輸出為 0 筆有效訊號'})
         if governance.get('go_for_promote') is False:
             failures.append({'type': 'governance_blocked', 'message': '模型治理閘門未放行'})
+        live_signal_gate = load_json(PATHS.runtime_dir / 'model_live_signal_gate.json', {}) or {}
+        if live_signal_gate and live_signal_gate.get('allow_live_signal') is False:
+            failures.append({'type': 'model_live_signal_blocked', 'message': '模型未通過 promotion floors，禁止 live signal', 'gate_status': live_signal_gate.get('status'), 'reason': live_signal_gate.get('reason')})
         suspicious = list((ai_status or {}).get('suspicious_small_artifacts', []) or [])
         if suspicious:
             warnings.append({'type': 'suspicious_small_model_artifacts', 'count': len(suspicious), 'items': suspicious[:10], 'message': '偵測到過小模型檔，請確認不是占位檔或損毀檔'})
@@ -63,6 +66,7 @@ class ModelSelectionGate:
             'system_name': CONFIG.system_name,
             'go_for_model_linkage': len(failures) == 0,
             'governance': governance,
+            'model_live_signal_gate': live_signal_gate if 'live_signal_gate' in locals() else {},
             'failures': failures,
             'warnings': warnings,
             'summary': {

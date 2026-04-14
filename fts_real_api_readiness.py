@@ -73,7 +73,19 @@ class RealAPIReadinessBuilder:
                     "T+1 / T+2 settlement awareness for cash forecasting",
                 ]
             },
-            "status": "contract_ready_but_not_live_bound"
+            "api_bound": False,
+            "callback_bound": False,
+            "ledger_bound": False,
+            "reconcile_bound": False,
+            "kill_switch_bound": bool(getattr(CONFIG, "enable_live_kill_switch", True)),
+            "true_broker_red_lights": {
+                "api": "RED: no real SDK/session binding",
+                "callback": "RED: no real callback receiver persistence",
+                "ledger": "RED: no broker ledger import/account statement binding",
+                "reconcile": "RED: no real broker ledger reconciliation proof",
+                "kill_switch": "GREEN if enable_live_kill_switch is true, otherwise RED"
+            },
+            "status": "five_red_lights_until_real_broker_bound"
         }
         with open(self.path, 'w', encoding='utf-8') as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
