@@ -1,0 +1,17 @@
+{
+  "patch_name": "更新檔版本_broker_exception_policy最後補檔",
+  "files": [
+    "fts_exception_policy.py",
+    "fts_broker_callback_mapping.py",
+    "fts_broker_real_stub.py"
+  ],
+  "compile_checked": true,
+  "expected_healthcheck": {
+    "core_exception_policy_failures": 0
+  },
+  "notes": [
+    "fts_broker_callback_mapping: _int/_float 改成明確型別例外，normalization failed 仍 fail-closed diagnostic",
+    "fts_broker_real_stub: tax-lot overlay broad except/pass 補 record_diagnostic",
+    "fts_exception_policy: archived/reference paths 不再當 active core 掃描"
+  ]
+}

@@ -119,6 +119,14 @@ CORE_FILE_HINTS = (
     'fts_model_layer.py', 'fts_system_guard_service.py', 'system_guard.py',
     'fts_training_governance_mainline.py', 'fts_control_tower.py',
 )
+ARCHIVED_PATH_MARKERS = (
+    'absorbed_references',
+    'advanced_chart1_runtime_variants',
+    '_backup',
+    '_legacy_retired',
+    '__pycache__',
+    '.git',
+)
 POLICY_TOKENS = ('record_diagnostic', 'record_issue', 'fail_closed_reason', 'guarded_call', '_diag(')
 
 
@@ -137,7 +145,10 @@ def audit_exception_policy(project_root: str | Path = '.') -> dict[str, Any]:
     ETL/research/legacy files may remain fail-open, but are counted for visibility.
     """
     root = Path(project_root)
-    files = [p for p in root.rglob('*.py') if '__pycache__' not in p.parts and '.git' not in p.parts]
+    files = [
+        p for p in root.rglob('*.py')
+        if not any(marker in p.parts or str(p).startswith(str(root / marker)) for marker in ARCHIVED_PATH_MARKERS)
+    ]
     summary: dict[str, Any] = {
         'files_total': len(files),
         'except_exception_total': 0,

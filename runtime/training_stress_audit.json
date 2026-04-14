@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-10 13:16:49",
+  "generated_at": "2026-04-14 23:33:03",
   "system_name": "正式交易主控版_v83_official_main",
-  "trainer_backend_report_exists": false,
+  "trainer_backend_report_exists": true,
   "integrity": {
-    "generated_at": "2026-04-10 13:16:49",
+    "generated_at": "2026-04-14 23:33:03",
     "thresholds": {
       "min_oot_hit_rate": 0.5,
       "min_oot_profit_factor": 1.0,
@@ -11,30 +11,374 @@
       "max_feature_to_sample_ratio": 0.35
     },
     "training_report": {
-      "leakage_guards": {},
-      "out_of_time": {},
-      "overfit_gap": 1.0,
-      "feature_to_sample_ratio": 1.0
+      "generated_at": "2026-04-13 00:58:37",
+      "status": "trained",
+      "dataset_path": "data\\ml_training_data.csv",
+      "rows_total": 5682,
+      "rows_train": 4546,
+      "rows_out_of_time": 1136,
+      "selected_features_count": 12,
+      "selected_features": [
+        "Score_Gap",
+        "Regime_TrendStrength_X_ScoreGap",
+        "MACD_Hist",
+        "Volume_Z20",
+        "Gap_Pct",
+        "Distance_To_Range_Top",
+        "MA_Slope_Flatness",
+        "buy_c6",
+        "Score_Gap_X_Distance_To_Range_Top",
+        "Score_Gap_X_MA_Slope_Flatness",
+        "MACD_Hist_X_Distance_To_Range_Top",
+        "MACD_Hist_X_MA_Slope_Flatness"
+      ],
+      "feature_to_sample_ratio": 0.0026396832380114386,
+      "walk_forward_summary": {
+        "ret_mean": -0.02920581241743725,
+        "hit_rate_mean": 0.18467635402906207,
+        "pf_mean": 1.0257391303405246,
+        "coverage_mean": 0.4145310435931308,
+        "effective_splits": 5,
+        "score": -1.8948421114032004
+      },
+      "walk_forward_results": [
+        {
+          "hit_rate": 0.13870541611624834,
+          "avg_return": 0.06540462351387055,
+          "pred_accuracy": 0.5799207397622193,
+          "profit_factor": 1.1259837851344565,
+          "coverage": 0.3130779392338177
+        },
+        {
+          "hit_rate": 0.20343461030383092,
+          "avg_return": 0.3576886393659181,
+          "pred_accuracy": 0.571994715984148,
+          "profit_factor": 1.5581393287535332,
+          "coverage": 0.3910171730515192
+        },
+        {
+          "hit_rate": 0.2047556142668428,
+          "avg_return": -0.22944557463672388,
+          "pred_accuracy": 0.5521796565389696,
+          "profit_factor": 0.7480806575621575,
+          "coverage": 0.4715984147952444
+        },
+        {
+          "hit_rate": 0.15852047556142668,
+          "avg_return": -0.4379660501981506,
+          "pred_accuracy": 0.45970937912813736,
+          "profit_factor": 0.5596426406435369,
+          "coverage": 0.4200792602377807
+        },
+        {
+          "hit_rate": 0.21796565389696168,
+          "avg_return": 0.09828929986789958,
+          "pred_accuracy": 0.5535006605019815,
+          "profit_factor": 1.1368492396089391,
+          "coverage": 0.47688243064729197
+        }
+      ],
+      "out_of_time": {
+        "hit_rate": 0.22535211267605634,
+        "avg_return": -0.18784366197183097,
+        "pred_accuracy": 0.5132042253521126,
+        "profit_factor": 0.8064291455711963,
+        "coverage": 0.5079225352112676
+      },
+      "overfit_gap": 0.15863784955439372,
+      "leakage_guards": {
+        "feature_selection_train_only": true,
+        "purged_walk_forward": true,
+        "out_of_time_holdout": true
+      },
+      "class_balance_train": 0.40519137703475583,
+      "class_balance_oot": 0.44014084507042256,
+      "feature_selection_preview": [
+        {
+          "feature": "Score_Gap",
+          "bucket": "signal_score",
+          "priority": 0,
+          "hit_rate": 0.5224373075230972,
+          "avg_return": 0.5018818961724593,
+          "profit_factor": 1.2974196202313666,
+          "expectancy": 0.5018818961724593,
+          "score": 57.91141919687129,
+          "corr_abs": 0.10071844208151624,
+          "active_ratio": 1.0
+        },
+        {
+          "feature": "Regime_TrendStrength_X_ScoreGap",
+          "bucket": "interaction",
+          "priority": 1,
+          "hit_rate": 0.5224373075230972,
+          "avg_return": 0.5018818961724593,
+          "profit_factor": 1.2974196202313666,
+          "expectancy": 0.5018818961724593,
+          "score": 57.9048609169845,
+          "corr_abs": 0.09765927574128679,
+          "active_ratio": 0.9995600527936648
+        },
+        {
+          "feature": "MACD_Hist",
+          "bucket": "momentum",
+          "priority": 0,
+          "hit_rate": 0.5145182578090629,
+          "avg_return": 0.37423922129344483,
+          "profit_factor": 1.2136952631287274,
+          "expectancy": 0.37423922129344483,
+          "score": 44.88760490034856,
+          "corr_abs": 0.052402464892365046,
+          "active_ratio": 1.0
+        },
+        {
+          "feature": "Volume_Z20",
+          "bucket": "tradeability",
+          "priority": 1,
+          "hit_rate": 0.5169379674439067,
+          "avg_return": 0.013134601847778255,
+          "profit_factor": 1.0067990550766515,
+          "expectancy": 0.013134601847778255,
+          "score": 8.500263207647485,
+          "corr_abs": 0.007621869510229736,
+          "active_ratio": 0.9953805543334799
+        },
+        {
+          "feature": "Return_Z20",
+          "bucket": "momentum",
+          "priority": 1,
+          "hit_rate": 0.49692036955565333,
+          "avg_return": -0.04209509458864934,
+          "profit_factor": 0.9785167990511858,
+          "expectancy": -0.04209509458864934,
+          "score": 2.764647548223523,
+          "corr_abs": 0.015527979073628614,
+          "active_ratio": 0.9953805543334799
+        },
+        {
+          "feature": "Intraday_Return",
+          "bucket": "price_action",
+          "priority": 1,
+          "hit_rate": 0.4903211614606247,
+          "avg_return": -0.061022943246810374,
+          "profit_factor": 0.9690066800861045,
+          "expectancy": -0.061022943246810374,
+          "score": 0.7270357337415909,
+          "corr_abs": 0.021010787276488797,
+          "active_ratio": 0.9150901891772987
+        },
+        {
+          "feature": "Gap_Pct",
+          "bucket": "price_action",
+          "priority": 1,
+          "hit_rate": 0.47822261328640564,
+          "avg_return": -0.0751543554773427,
+          "profit_factor": 0.9619658807204301,
+          "expectancy": -0.0751543554773427,
+          "score": -0.851957979409958,
+          "corr_abs": 0.042242865359353836,
+          "active_ratio": 0.8347998240211175
+        },
+        {
+          "feature": "Overnight_Return",
+          "bucket": "price_action",
+          "priority": 1,
+          "hit_rate": 0.47822261328640564,
+          "avg_return": -0.0751543554773427,
+          "profit_factor": 0.9619658807204301,
+          "expectancy": -0.0751543554773427,
+          "score": -0.851957979409958,
+          "corr_abs": 0.042242865359353836,
+          "active_ratio": 0.8347998240211175
+        },
+        {
+          "feature": "Distance_To_Range_Top",
+          "bucket": "directional_range",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.68854370888392,
+          "corr_abs": 0.09847216552969966,
+          "active_ratio": 0.9582050153981522
+        },
+        {
+          "feature": "RSI",
+          "bucket": "momentum",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.690375131605826,
+          "corr_abs": 0.07720889587574183,
+          "active_ratio": 0.9989001319841619
+        },
+        {
+          "feature": "Range_Position_Pct",
+          "bucket": "directional_range",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.694704964729038,
+          "corr_abs": 0.08780244829785737,
+          "active_ratio": 0.973383194016718
+        },
+        {
+          "feature": "ADV20_Proxy",
+          "bucket": "tradeability",
+          "priority": 1,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.70519895735187,
+          "corr_abs": 0.07155677182805989,
+          "active_ratio": 0.9953805543334799
+        },
+        {
+          "feature": "Distance_To_Range_Bottom",
+          "bucket": "directional_range",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.715985426375713,
+          "corr_abs": 0.08387141237113253,
+          "active_ratio": 0.9599648042234932
+        },
+        {
+          "feature": "ATR14",
+          "bucket": "volatility",
+          "priority": 1,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.786119751274875,
+          "corr_abs": 0.028786652033298478,
+          "active_ratio": 1.0
+        },
+        {
+          "feature": "RealizedVol_20",
+          "bucket": "volatility",
+          "priority": 1,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.803237092026496,
+          "corr_abs": 0.0225377044907488,
+          "active_ratio": 0.9953805543334799
+        },
+        {
+          "feature": "Trend_Confidence",
+          "bucket": "regime_confidence",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.806240866084817,
+          "corr_abs": 0.02103581746158728,
+          "active_ratio": 0.9953805543334799
+        },
+        {
+          "feature": "BB_Width",
+          "bucket": "volatility",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.808802227462646,
+          "corr_abs": 0.01744541393941207,
+          "active_ratio": 1.0
+        },
+        {
+          "feature": "ATR_Pct_Pctl",
+          "bucket": "volatility",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.8112318500475,
+          "corr_abs": 0.01623060264698711,
+          "active_ratio": 1.0
+        },
+        {
+          "feature": "ATR_Pctl_252",
+          "bucket": "volatility",
+          "priority": 1,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.812394382257203,
+          "corr_abs": 0.01564933654213479,
+          "active_ratio": 1.0
+        },
+        {
+          "feature": "Range_Width_Pct",
+          "bucket": "directional_range",
+          "priority": 0,
+          "hit_rate": 0.4335679718433788,
+          "avg_return": -0.2605342938847338,
+          "profit_factor": 0.8740566146981221,
+          "expectancy": -0.2605342938847338,
+          "score": -19.813090306863547,
+          "corr_abs": 0.01530137423896326,
+          "active_ratio": 1.0
+        }
+      ],
+      "warnings": [
+        "oot_profit_factor_below_floor",
+        "oot_hit_rate_below_floor"
+      ],
+      "promotion": {
+        "status": "restored_pretrain",
+        "version": "pretrain_20260413_005833",
+        "reason": "promotion_floor_not_met"
+      },
+      "regimes": {
+        "趨勢多頭": {
+          "status": "SAVE",
+          "rows": 2048,
+          "feature_count": 12
+        },
+        "區間盤整": {
+          "status": "SAVE",
+          "rows": 1089,
+          "feature_count": 12
+        },
+        "趨勢空頭": {
+          "status": "SAVE",
+          "rows": 1409,
+          "feature_count": 12
+        }
+      },
+      "overall_score": -15.724415924851336,
+      "promotion_ready": false
     },
     "failures": [
-      "feature_selection_not_train_only",
-      "purged_walk_forward_missing",
-      "out_of_time_holdout_missing",
       "overfit_gap_too_large"
     ],
     "warnings": [
       "oot_hit_rate_soft",
-      "oot_profit_factor_soft",
-      "feature_to_sample_ratio_high"
+      "oot_profit_factor_soft"
     ],
     "promotion_ready": false,
     "status": "training_integrity_blocked"
   },
   "key_findings": {
-    "overfit_gap": 0.0,
-    "oot_hit_rate": 0.0,
-    "oot_profit_factor": 0.0,
-    "feature_to_sample_ratio": 0.0
+    "overfit_gap": 0.15863784955439372,
+    "oot_hit_rate": 0.22535211267605634,
+    "oot_profit_factor": 0.8064291455711963,
+    "feature_to_sample_ratio": 0.0026396832380114386
   },
   "status": "training_integrity_blocked"
 }

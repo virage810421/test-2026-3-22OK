@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-04-14 23:27:02",
+  "status": "restart_recovery_ready",
+  "ready_to_resume_new_orders": true,
+  "blockers": [],
+  "actions": [
+    "restore_local_cash",
+    "restore_positions",
+    "restore_open_orders",
+    "replay_recent_fills"
+  ],
+  "local_snapshot_path": "C:\\test\\test-2026-3-22OK\\state\\restart_recovery_snapshot.json",
+  "local_snapshot_found": true,
+  "broker_snapshot_found": false
+}

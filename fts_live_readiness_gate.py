@@ -10,10 +10,16 @@ from fts_market_rules_tw import validate_order_payload
 from fts_feature_observability import FeatureObservability
 from fts_compat import apply_decision_integrity_flags
 try:
-    from fts_runtime_diagnostics import get_summary as get_runtime_diagnostics_summary
-except Exception:  # pragma: no cover
+    from fts_runtime_diagnostics import (
+        get_summary as get_runtime_diagnostics_summary,
+        record_issue as record_runtime_issue,
+    )
+except Exception:  # pragma: no cover - diagnostics import fallback
     def get_runtime_diagnostics_summary():
         return {}
+    def record_runtime_issue(*args, **kwargs):
+        return {}
+
 
 
 class LiveReadinessGate:
@@ -43,8 +49,17 @@ class LiveReadinessGate:
         try:
             if real_readiness_path.exists():
                 real_readiness = json.loads(real_readiness_path.read_text(encoding='utf-8'))
-        except Exception:
+        except Exception as exc:
+            record_runtime_issue(
+                'live_readiness_gate',
+                'real_api_readiness_json_read_failed',
+                exc,
+                severity='WARNING',
+                fail_mode='fail_closed',
+                context={'path': str(real_readiness_path)},
+            )
             real_readiness = {}
+            checks['real_api_readiness_read_failed'] = True
         callback_events_path = PATHS.runtime_dir / 'broker_callback_events.jsonl'
         reconciliation_path = PATHS.runtime_dir / 'reconciliation_report.json'
         kill_switch_path = PATHS.runtime_dir / 'kill_switch_state.json'

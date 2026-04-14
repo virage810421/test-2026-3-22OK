@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-04-14 21:40:00",
+  "status": "portfolio_backtest_no_trades",
+  "tickers": [
+    "2330.TW",
+    "2317.TW",
+    "2454.TW",
+    "2881.TW",
+    "2603.TW"
+  ],
+  "errors": [
+    {
+      "ticker": "2330.TW",
+      "error": "ValueError('The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().')"
+    },
+    {
+      "ticker": "2317.TW",
+      "error": "ValueError('The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().')"
+    },
+    {
+      "ticker": "2454.TW",
+      "error": "ValueError('The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().')"
+    },
+    {
+      "ticker": "2881.TW",
+      "error": "ValueError('The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().')"
+    },
+    {
+      "ticker": "2603.TW",
+      "error": "ValueError('The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().')"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-14 21:39:50",
+  "models_dir": "C:\\test\\test-2026-3-22OK\\models",
+  "created": {},
+  "missing": [
+    "Exit_Defend_Label",
+    "Exit_Reduce_Label",
+    "Exit_Confirm_Label"
+  ],
+  "errors": [],
+  "training_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
+  "selected_features_path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_exit.pkl",
+  "selected_feature_count": 72,
+  "created_count": 0,
+  "status": "exit_models_incomplete_block_live",
+  "live_exit_ai_ready": false
+}

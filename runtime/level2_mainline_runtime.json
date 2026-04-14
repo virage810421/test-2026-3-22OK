@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-14 11:21:32",
+  "generated_at": "2026-04-14 23:27:59",
   "module_version": "v87_level2_service_detached",
   "status": "mainline_ready",
   "legacy_mode": "detached_from_level2",
@@ -20,7 +20,7 @@
       "mode": "inprocess",
       "returncode": null,
       "error": "",
-      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 11:21。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：今天已成功執行過。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -44,7 +44,7 @@
       "mode": "inprocess",
       "returncode": null,
       "error": "",
-      "stdout_tail": "[11:21:32] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "stdout_tail": "[23:27:59] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false

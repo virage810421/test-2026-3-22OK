@@ -1,55 +1,413 @@
 {
   "tool": "cleanup_second_merge_retired_py_files",
-  "version": "148_merge_cleanup",
-  "generated_at": "2026-04-14 11:24:45",
+  "version": "dependency_aware_cleanup_v2",
+  "generated_at": "2026-04-14 20:44:19",
   "project_root": "C:\\test\\test-2026-3-22OK",
   "apply": true,
-  "note": "179 檔版合併到 148 檔版：淨少 31 支 .py；實際舊檔移除清單 34 支，因新增 3 支合併主檔。",
+  "policy": {
+    "core_files_are_never_deleted": true,
+    "delete_requires_no_import_or_text_reference": true,
+    "run_wrappers_require_admin_cli_replacement": true,
+    "reconciliation_recovery_watchlist_are_protected": true
+  },
   "counts": {
     "retired_list_total": 34,
-    "removed": 32,
-    "planned": 0,
-    "missing": 2,
-    "blocked": 0
+    "ready": 0,
+    "removed": 3,
+    "missing": 26,
+    "blocked": 5
   },
+  "ready": [],
   "removed": [
-    "_clean_old_doors_manifest.py",
-    "alert_manager.py",
-    "alpha_miner.py",
-    "apply_clean_old_doors.py",
-    "feature_selector.py",
-    "fts_ab_wave_upgrade.py",
-    "fts_broker_approval.py",
-    "fts_broker_shadow_mutator.py",
-    "fts_daily_ops.py",
-    "fts_execution.py",
-    "fts_live_watchlist_loader.py",
-    "fts_live_watchlist_promoter.py",
-    "fts_live_watchlist_registry.py",
-    "fts_merge_manifest.py",
-    "fts_phase1_upgrade.py",
-    "fts_phase2_mock_broker_stage.py",
-    "fts_phase3_real_cutover_stage.py",
-    "fts_portfolio_gate.py",
-    "fts_progress.py",
-    "fts_reconciliation_engine.py",
-    "fts_recovery_engine.py",
-    "fts_research_gate.py",
-    "fts_retry_queue.py",
-    "fts_runtime_cleanup.py",
-    "fts_upgrade_plan.py",
-    "run_backfill_resilience_audit.py",
-    "run_full_market_percentile_snapshot.py",
-    "run_precise_event_calendar_build.py",
-    "run_project_completion_audit.py",
-    "run_project_healthcheck.py",
-    "run_sync_feature_snapshots_to_sql.py",
-    "run_training_stress_audit.py"
+    {
+      "file": "run_full_market_percentile_snapshot.py",
+      "exists": true,
+      "ready_to_delete": true,
+      "action": "ready",
+      "reasons": [
+        "admin_cli_replacement_verified"
+      ],
+      "references": [],
+      "replacement": {
+        "type": "fts_admin_cli",
+        "command": "full-market-percentile"
+      },
+      "deleted": true
+    },
+    {
+      "file": "run_precise_event_calendar_build.py",
+      "exists": true,
+      "ready_to_delete": true,
+      "action": "ready",
+      "reasons": [
+        "admin_cli_replacement_verified"
+      ],
+      "references": [],
+      "replacement": {
+        "type": "fts_admin_cli",
+        "command": "event-calendar-build"
+      },
+      "deleted": true
+    },
+    {
+      "file": "run_sync_feature_snapshots_to_sql.py",
+      "exists": true,
+      "ready_to_delete": true,
+      "action": "ready",
+      "reasons": [
+        "admin_cli_replacement_verified"
+      ],
+      "references": [],
+      "replacement": {
+        "type": "fts_admin_cli",
+        "command": "sync-feature-snapshots"
+      },
+      "deleted": true
+    }
   ],
-  "planned": [],
   "missing": [
-    "_patch_manifest_¼[║cª¼º└.py",
-    "_patch_manifest_│]¡pñú¿}¡╫º∩5.py"
+    {
+      "file": "_clean_old_doors_manifest.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "_patch_manifest_¼[║cª¼º└.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "_patch_manifest_│]¡pñú¿}¡╫º∩5.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "alert_manager.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "alpha_miner.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "apply_clean_old_doors.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "feature_selector.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_ab_wave_upgrade.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_broker_approval.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_broker_shadow_mutator.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_daily_ops.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_execution.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_merge_manifest.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_phase1_upgrade.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_phase2_mock_broker_stage.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_phase3_real_cutover_stage.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_portfolio_gate.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_progress.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_research_gate.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_retry_queue.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_runtime_cleanup.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_upgrade_plan.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "run_backfill_resilience_audit.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "run_project_completion_audit.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "run_project_healthcheck.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "run_training_stress_audit.py",
+      "exists": false,
+      "ready_to_delete": false,
+      "action": "missing",
+      "reasons": [
+        "file_not_found"
+      ],
+      "references": [],
+      "replacement": null
+    }
   ],
-  "blocked": []
+  "blocked": [
+    {
+      "file": "fts_live_watchlist_loader.py",
+      "exists": true,
+      "ready_to_delete": false,
+      "action": "blocked",
+      "reasons": [
+        "protected_core_or_prelive_file"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_live_watchlist_promoter.py",
+      "exists": true,
+      "ready_to_delete": false,
+      "action": "blocked",
+      "reasons": [
+        "protected_core_or_prelive_file"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_live_watchlist_registry.py",
+      "exists": true,
+      "ready_to_delete": false,
+      "action": "blocked",
+      "reasons": [
+        "protected_core_or_prelive_file"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_reconciliation_engine.py",
+      "exists": true,
+      "ready_to_delete": false,
+      "action": "blocked",
+      "reasons": [
+        "protected_core_or_prelive_file"
+      ],
+      "references": [],
+      "replacement": null
+    },
+    {
+      "file": "fts_recovery_engine.py",
+      "exists": true,
+      "ready_to_delete": false,
+      "action": "blocked",
+      "reasons": [
+        "protected_core_or_prelive_file"
+      ],
+      "references": [],
+      "replacement": null
+    }
+  ]
 }

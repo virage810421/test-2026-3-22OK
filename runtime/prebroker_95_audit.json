@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-04-14 23:27:02",
+  "status": "prebroker_95_not_ready",
+  "score": 77.5,
+  "target_score": 95,
+  "blockers": [
+    "exit_ai_artifacts:exit_ai_model_unavailable",
+    "portfolio_backtest:portfolio_backtest_no_trades"
+  ],
+  "pillars": {
+    "broker_contract": {
+      "status": "paper_prelive_contract_smoke_ok",
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_contract_readiness.json",
+      "score_ratio": 1.0,
+      "blocking": false
+    },
+    "callback_ingestion": {
+      "status": "callback_ingestion_ready",
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_callback_ingestion_summary.json",
+      "score_ratio": 1.0,
+      "blocking": false
+    },
+    "reconciliation": {
+      "status": "reconciliation_clean",
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\prelive_reconciliation_runtime.json",
+      "score_ratio": 1.0,
+      "blocking": false
+    },
+    "restart_recovery": {
+      "status": "restart_recovery_ready",
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+      "score_ratio": 1.0,
+      "blocking": false
+    },
+    "exit_ai_artifacts": {
+      "status": "exit_ai_model_unavailable",
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\exit_model_status.json",
+      "score_ratio": 0.35,
+      "blocking": true
+    },
+    "portfolio_backtest": {
+      "status": "portfolio_backtest_no_trades",
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\portfolio_backtest_report.json",
+      "trade_count": 0,
+      "score_ratio": 0.4,
+      "blocking": true
+    }
+  },
+  "note": "Score is pre-broker/paper readiness. True live still requires real broker credentials and broker-side callback validation."
+}

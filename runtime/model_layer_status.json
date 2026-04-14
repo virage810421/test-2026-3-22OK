@@ -29,7 +29,34 @@
   "allow_heuristic_model_fallback": false,
   "exit_model_workflow_enabled": true,
   "exit_model_primary": true,
-  "exit_selected_feature_count": 0,
-  "exit_selected_features_ready": false,
-  "exit_models_loaded": []
+  "exit_model_fallback_to_hazard": false,
+  "exit_fallback_disabled_by_default": true,
+  "exit_require_all_artifacts": true,
+  "exit_hard_block_if_missing": true,
+  "exit_models_required": [
+    "DEFEND",
+    "REDUCE",
+    "CONFIRM"
+  ],
+  "exit_models_loaded": [],
+  "exit_models_missing": [
+    "DEFEND",
+    "REDUCE",
+    "CONFIRM"
+  ],
+  "exit_selected_feature_count": 72,
+  "exit_selected_features_ready": true,
+  "exit_artifacts_complete": false,
+  "exit_model_source": "exit_ai_model_unavailable",
+  "exit_load_errors": {
+    "DEFEND": "missing",
+    "REDUCE": "missing",
+    "CONFIRM": "missing"
+  },
+  "exit_required_model_files": {
+    "DEFEND": "C:\\test\\test-2026-3-22OK\\models\\exit_model_defend.pkl",
+    "REDUCE": "C:\\test\\test-2026-3-22OK\\models\\exit_model_reduce.pkl",
+    "CONFIRM": "C:\\test\\test-2026-3-22OK\\models\\exit_model_confirm.pkl"
+  },
+  "exit_selected_features_file": "C:\\test\\test-2026-3-22OK\\models\\selected_features_exit.pkl"
 }

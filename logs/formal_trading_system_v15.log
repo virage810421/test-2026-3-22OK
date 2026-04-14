@@ -739,3 +739,113 @@
 [11:21:35] 🚀 啟動 正式交易主控版_v83_official_main
 [11:21:35] 🧭 模式：TRAIN
 [11:21:35] ========================================================================
+[20:31:41] ========================================================================
+[20:31:41] 🚀 啟動 正式交易主控版_v83_official_main
+[20:31:41] 🧭 模式：DAILY
+[20:31:41] ========================================================================
+[20:33:31] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[20:33:34] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[20:33:43] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[20:33:43] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[20:33:44] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[20:33:44] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[20:33:44] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[20:33:44] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[20:33:44] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[20:33:44] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[20:33:46] ========================================================================
+[20:33:46] 🚀 啟動 正式交易主控版_v83_official_main
+[20:33:46] 🧭 模式：TRAIN
+[20:33:46] ========================================================================
+[21:34:19] ⚠️ ensure database skipped/failed: ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]接近 'QUOTENAME' 之處的語法不正確。 (102) (SQLExecDirectW); [42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)")
+[21:34:21] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[21:35:17] ========================================================================
+[21:35:17] 🚀 啟動 正式交易主控版_v83_official_main
+[21:35:17] 🧭 模式：DAILY
+[21:35:17] ========================================================================
+[21:36:00] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[21:36:03] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[21:36:12] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[21:36:12] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[21:36:13] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[21:36:13] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[21:36:13] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[21:36:13] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[21:36:13] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[21:36:13] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[21:36:15] ========================================================================
+[21:36:15] 🚀 啟動 正式交易主控版_v83_official_main
+[21:36:15] 🧭 模式：TRAIN
+[21:36:15] ========================================================================
+[22:12:40] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[22:40:40] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[22:41:54] ========================================================================
+[22:41:54] 🚀 啟動 正式交易主控版_v83_official_main
+[22:41:54] 🧭 模式：BOOTSTRAP
+[22:41:54] ========================================================================
+[22:41:57] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[22:41:59] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[22:41:59] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[23:04:46] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[23:05:15] ========================================================================
+[23:05:15] 🚀 啟動 正式交易主控版_v83_official_main
+[23:05:15] 🧭 模式：DAILY
+[23:05:15] ========================================================================
+[23:05:48] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[23:05:51] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[23:06:00] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[23:06:00] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[23:06:00] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[23:06:00] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[23:06:00] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[23:06:00] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[23:06:00] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[23:06:00] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[23:06:02] ========================================================================
+[23:06:02] 🚀 啟動 正式交易主控版_v83_official_main
+[23:06:02] 🧭 模式：TRAIN
+[23:06:02] ========================================================================
+[23:09:36] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[23:10:37] ========================================================================
+[23:10:37] 🚀 啟動 正式交易主控版_v83_official_main
+[23:10:37] 🧭 模式：DAILY
+[23:10:37] ========================================================================
+[23:11:17] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[23:11:19] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[23:11:28] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[23:11:28] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[23:11:29] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[23:11:29] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[23:11:29] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[23:11:29] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[23:11:29] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[23:11:29] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[23:11:31] ========================================================================
+[23:11:31] 🚀 啟動 正式交易主控版_v83_official_main
+[23:11:31] 🧭 模式：TRAIN
+[23:11:31] ========================================================================
+[23:14:54] ========================================================================
+[23:14:54] 🚀 啟動 正式交易主控版_v83_official_main
+[23:14:54] 🧭 模式：BOOTSTRAP
+[23:14:54] ========================================================================
+[23:14:56] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[23:14:58] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[23:14:58] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[23:26:47] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[23:26:48] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[23:27:02] ========================================================================
+[23:27:02] 🚀 啟動 正式交易主控版_v83_official_main
+[23:27:02] 🧭 模式：DAILY
+[23:27:02] ========================================================================
+[23:27:48] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[23:27:50] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[23:27:59] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[23:27:59] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[23:27:59] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[23:27:59] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[23:27:59] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[23:27:59] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[23:27:59] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[23:27:59] ♻️ 已輸出 recovery plan：C:\test\test-2026-3-22OK\runtime\recovery_plan.json
+[23:33:03] 🧪 已輸出 training stress audit：C:\test\test-2026-3-22OK\runtime\training_stress_audit.json
+[23:41:54] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json

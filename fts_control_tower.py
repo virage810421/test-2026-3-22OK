@@ -269,7 +269,7 @@ def run_daily() -> dict[str, Any]:
     log('🧭 模式：DAILY')
     log('=' * 72)
     outputs = _build_control_outputs()
-    payload = {'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v20260414_85pct_live_safe_ev_bootstrap_cli', 'outputs': outputs, 'readiness_split': outputs.get('live_readiness_gate', {}).get('payload', {}).get('score_split', {}), 'operational_scope': {'prelive': outputs.get('live_readiness_gate', {}).get('payload', {}).get('prelive_ready', False), 'broker_production': outputs.get('live_readiness_gate', {}).get('payload', {}).get('broker_production_ready', False)}, 'status': 'control_tower_ready'}
+    payload = {'generated_at': now_str(), 'mode': 'daily', 'module_version': 'v20260414_prebroker95_closure_bootstrap_cli', 'outputs': outputs, 'readiness_split': outputs.get('live_readiness_gate', {}).get('payload', {}).get('score_split', {}), 'operational_scope': {'prelive': outputs.get('live_readiness_gate', {}).get('payload', {}).get('prelive_ready', False), 'broker_production': outputs.get('live_readiness_gate', {}).get('payload', {}).get('broker_production_ready', False)}, 'status': 'control_tower_ready'}
     _write_json('formal_trading_system_v83_official_main.json', payload)
     return payload
 
@@ -351,9 +351,14 @@ def run_bootstrap() -> dict[str, Any]:
         _call_script('fts_admin_cli.py', ['full-market-percentile'], allow_missing=False),
         _call_script('fts_admin_cli.py', ['event-calendar-build'], allow_missing=False),
         _call_script('fts_admin_cli.py', ['sync-feature-snapshots'], allow_missing=False),
+        _call_script("fts_admin_cli.py", ["broker-contract-audit"], allow_missing=False),
+        _call_script("fts_admin_cli.py", ["callback-ingest"], allow_missing=False),
+        _call_script("fts_admin_cli.py", ["reconciliation-runtime"], allow_missing=False),
+        _call_script("fts_admin_cli.py", ["restart-recovery"], allow_missing=False),
+        _call_script("fts_admin_cli.py", ["prebroker-95-audit"], allow_missing=False),
     ]
     daily_payload = run_daily()
-    payload = {'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v20260414_85pct_live_safe_ev_bootstrap_cli', 'steps': steps, 'daily_status': daily_payload.get('status'), 'daily_readiness_split': daily_payload.get('readiness_split', {}), 'status': 'bootstrap_ready'}
+    payload = {'generated_at': now_str(), 'mode': 'bootstrap', 'module_version': 'v20260414_prebroker95_closure_bootstrap_cli', 'steps': steps, 'daily_status': daily_payload.get('status'), 'daily_readiness_split': daily_payload.get('readiness_split', {}), 'status': 'bootstrap_ready'}
     _write_json('formal_trading_system_v83_bootstrap.json', payload)
     return payload
 

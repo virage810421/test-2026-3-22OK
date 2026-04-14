@@ -7,7 +7,7 @@ FTS admin CLI: consolidated replacement for small run_*.py entry scripts.
 Supported examples:
   python fts_admin_cli.py healthcheck
   python fts_admin_cli.py healthcheck --deep
-  python fts_admin_cli.py --deep                         # backward-compatible shortcut
+  python fts_admin_cli.py --deep
   python fts_admin_cli.py completion-audit
   python fts_admin_cli.py training-stress-audit
   python fts_admin_cli.py backfill-resilience-audit
@@ -15,7 +15,15 @@ Supported examples:
   python fts_admin_cli.py event-calendar-build
   python fts_admin_cli.py sync-feature-snapshots
   python fts_admin_cli.py clean-old-doors --apply
+  python fts_admin_cli.py second-merge-cleanup
   python fts_admin_cli.py drop-readiness
+  python fts_admin_cli.py broker-contract-audit
+  python fts_admin_cli.py callback-ingest
+  python fts_admin_cli.py reconciliation-runtime
+  python fts_admin_cli.py restart-recovery
+  python fts_admin_cli.py exit-artifact-bootstrap
+  python fts_admin_cli.py portfolio-backtest --period 3y
+  python fts_admin_cli.py prebroker-95-audit --run-backtest --bootstrap-exit
 """
 
 import argparse
@@ -25,7 +33,6 @@ from typing import Callable, Sequence
 
 
 def _call_main_with_argv(main_func: Callable, argv: Sequence[str] | None = None) -> int:
-    """Call a module main() safely without leaking fts_admin_cli.py arguments."""
     argv_list = list(argv or [])
     try:
         sig = inspect.signature(main_func)
@@ -91,10 +98,15 @@ def run_sync_feature_snapshots(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-
 def run_drop_readiness(argv: Sequence[str] | None = None) -> int:
     from fts_deprecated_drop_readiness import main
     return _call_main_with_argv(main, argv)
+
+
+def run_second_merge_cleanup(argv: Sequence[str] | None = None) -> int:
+    from cleanup_second_merge_retired_py_files import main
+    return _call_main_with_argv(main, argv)
+
 
 def run_clean_old_doors(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog='fts_admin_cli.py clean-old-doors')
@@ -102,6 +114,41 @@ def run_clean_old_doors(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(list(argv or []))
     from fts_legacy_facade_cleanup import main as cleanup_main
     return int(cleanup_main(apply=bool(args.apply)) or 0)
+
+
+def run_broker_contract_audit(argv: Sequence[str] | None = None) -> int:
+    from fts_broker_contract_audit import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_callback_ingest(argv: Sequence[str] | None = None) -> int:
+    from fts_callback_ingestion_service import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_reconciliation_runtime(argv: Sequence[str] | None = None) -> int:
+    from fts_reconciliation_runtime import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_restart_recovery(argv: Sequence[str] | None = None) -> int:
+    from fts_restart_recovery_service import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_exit_artifact_bootstrap(argv: Sequence[str] | None = None) -> int:
+    from fts_exit_model_artifact_bootstrap import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_portfolio_backtest(argv: Sequence[str] | None = None) -> int:
+    from fts_portfolio_backtester import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_prebroker_95_audit(argv: Sequence[str] | None = None) -> int:
+    from fts_prebroker_95_audit import main
+    return _call_main_with_argv(main, argv)
 
 
 _COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
@@ -114,6 +161,14 @@ _COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     'sync-feature-snapshots': run_sync_feature_snapshots,
     'clean-old-doors': run_clean_old_doors,
     'drop-readiness': run_drop_readiness,
+    'second-merge-cleanup': run_second_merge_cleanup,
+    'broker-contract-audit': run_broker_contract_audit,
+    'callback-ingest': run_callback_ingest,
+    'reconciliation-runtime': run_reconciliation_runtime,
+    'restart-recovery': run_restart_recovery,
+    'exit-artifact-bootstrap': run_exit_artifact_bootstrap,
+    'portfolio-backtest': run_portfolio_backtest,
+    'prebroker-95-audit': run_prebroker_95_audit,
 }
 
 
@@ -123,25 +178,28 @@ _ALIASES = {
     'clean': 'clean-old-doors',
     'deprecated-scan': 'drop-readiness',
     'drop-readiness-report': 'drop-readiness',
+    'cleanup-second-merge': 'second-merge-cleanup',
+    'broker-audit': 'broker-contract-audit',
+    'callbacks': 'callback-ingest',
+    'reconcile': 'reconciliation-runtime',
+    'recovery': 'restart-recovery',
+    'exit-bootstrap': 'exit-artifact-bootstrap',
+    'portfolio-bt': 'portfolio-backtest',
+    'prelive-95': 'prebroker-95-audit',
 }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     raw = list(sys.argv[1:] if argv is None else argv)
-
-    # Backward-compatible shortcut: `python fts_admin_cli.py --deep` should run healthcheck --deep.
     if not raw or raw[0].startswith('-'):
         return run_healthcheck(raw)
-
     command = _ALIASES.get(raw[0], raw[0])
     passthrough = raw[1:]
-
     if command not in _COMMANDS:
         parser = argparse.ArgumentParser(description='FTS admin CLI')
         parser.add_argument('command', choices=sorted(_COMMANDS))
         parser.parse_args(raw[:1])
         return 2
-
     return int(_COMMANDS[command](passthrough) or 0)
 
 

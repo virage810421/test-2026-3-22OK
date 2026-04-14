@@ -10,7 +10,7 @@
         "approved_pool_type": "LONG",
         "model_scope": "LONG",
         "range_confidence": 0.0,
-        "updated_at": "2026-04-14 11:21:18"
+        "updated_at": "2026-04-14 23:27:34"
       },
       "C1": {
         "order_id": "C1",
@@ -220,6 +220,76 @@
     },
     {
       "at": "2026-04-14 11:21:18",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 20:31:37",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 20:32:00",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 20:57:14",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 21:35:12",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 21:35:44",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 23:05:10",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 23:05:39",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 23:10:32",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 23:11:02",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-14 23:27:34",
       "order_id": "HC1",
       "lane": "LONG",
       "status": "FILLED",

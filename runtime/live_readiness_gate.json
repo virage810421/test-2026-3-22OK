@@ -8,6 +8,23 @@
     "kill_switch_defined": true,
     "credentials_file_present": false,
     "price_snapshot_present": false,
+    "runtime_diagnostics_event_count": 0,
+    "runtime_diagnostics_hard_block_count": 0,
+    "runtime_diagnostics_hard_blocks_present": false,
+    "real_broker_red_lights": {
+      "api": false,
+      "callback": false,
+      "ledger": false,
+      "reconcile": false,
+      "kill_switch": true
+    },
+    "real_broker_red_light_failures": [
+      "api",
+      "callback",
+      "ledger",
+      "reconcile"
+    ],
+    "real_broker_five_lights_green": false,
     "training_artifacts_present": true,
     "directional_selected_features_present": true,
     "directional_lane_models_present": true,
@@ -82,12 +99,13 @@
   "score_split": {
     "research_paper_prelive_score": 5,
     "true_broker_score": 1,
+    "real_broker_five_lights_green_count": 1,
     "executable_score": 4
   },
   "feature_observability": {
     "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
     "payload": {
-      "generated_at": "2026-04-14 11:21:32",
+      "generated_at": "2026-04-14 23:27:59",
       "module_version": "v87_feature_observability_vetted_live",
       "strict_feature_parity": true,
       "force_shared_feature_universe": false,
@@ -130,6 +148,12 @@
       },
       "status": "observable"
     }
+  },
+  "runtime_diagnostics": {
+    "event_count": 0,
+    "hard_block_count": 0,
+    "counters": {},
+    "recent_events": []
   },
   "status": "blocked"
 }

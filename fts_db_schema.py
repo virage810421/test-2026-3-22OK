@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable
 
-SCHEMA_VERSION = '20260414_schema_single_source_execution_ticker_symbol_v3_tax_lot_washsale'
+SCHEMA_VERSION = '20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views'
 
 
 @dataclass(frozen=True)

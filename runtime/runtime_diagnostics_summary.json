@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-04-14T21:34:19",
+  "event_count": 1,
+  "hard_block_count": 0,
+  "warning_count": 1,
+  "error_count": 0,
+  "counters": {
+    "db_migrations::ensure_database_exists_failed::WARNING": 1
+  },
+  "recent_events": [
+    {
+      "time": "2026-04-14T21:34:19",
+      "component": "db_migrations",
+      "operation": "ensure_database_exists_failed",
+      "severity": "WARNING",
+      "fail_mode": "fail_open",
+      "hard_block": false,
+      "error_type": "ProgrammingError",
+      "error": "ProgrammingError('42000', \"[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]接近 'QUOTENAME' 之處的語法不正確。 (102) (SQLExecDirectW); [42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")",
+      "context": {
+        "database": "股票online"
+      }
+    }
+  ],
+  "hard_blocks": [],
+  "extra": {}
+}

@@ -1,0 +1,244 @@
+{
+  "generated_at": "2026-04-14 23:27:02",
+  "contract": {
+    "generated_at": "2026-04-14 23:27:02",
+    "adapter_class": "FormalRealBrokerStub",
+    "required_methods": [
+      "connect",
+      "refresh_auth",
+      "place_order",
+      "cancel_order",
+      "replace_order",
+      "get_order_status",
+      "get_fills",
+      "get_positions",
+      "get_cash",
+      "poll_callbacks",
+      "disconnect"
+    ],
+    "method_audit": [
+      {
+        "method": "connect",
+        "present": true,
+        "callable": true,
+        "signature": "() -> 'dict[str, Any]'",
+        "status": "ready"
+      },
+      {
+        "method": "refresh_auth",
+        "present": true,
+        "callable": true,
+        "signature": "() -> 'dict[str, Any]'",
+        "status": "ready"
+      },
+      {
+        "method": "place_order",
+        "present": true,
+        "callable": true,
+        "signature": "(order)",
+        "status": "ready"
+      },
+      {
+        "method": "cancel_order",
+        "present": true,
+        "callable": true,
+        "signature": "(order)",
+        "status": "ready"
+      },
+      {
+        "method": "replace_order",
+        "present": true,
+        "callable": true,
+        "signature": "(broker_order_id: 'str', payload: 'dict')",
+        "status": "ready"
+      },
+      {
+        "method": "get_order_status",
+        "present": true,
+        "callable": true,
+        "signature": "(broker_order_id: 'str') -> 'dict[str, Any]'",
+        "status": "ready"
+      },
+      {
+        "method": "get_fills",
+        "present": true,
+        "callable": true,
+        "signature": "(trading_date: 'str | None' = None) -> 'list[dict[str, Any]]'",
+        "status": "ready"
+      },
+      {
+        "method": "get_positions",
+        "present": true,
+        "callable": true,
+        "signature": "()",
+        "status": "ready"
+      },
+      {
+        "method": "get_cash",
+        "present": true,
+        "callable": true,
+        "signature": "() -> 'dict[str, Any]'",
+        "status": "ready"
+      },
+      {
+        "method": "poll_callbacks",
+        "present": true,
+        "callable": true,
+        "signature": "(clear: 'bool' = False) -> 'list[dict[str, Any]]'",
+        "status": "ready"
+      },
+      {
+        "method": "disconnect",
+        "present": true,
+        "callable": true,
+        "signature": "() -> 'dict[str, Any]'",
+        "status": "ready"
+      }
+    ],
+    "missing_methods": [],
+    "capability_report": {
+      "module_version": "v82_mock_real_broker",
+      "broker_kind": "paper_prelive_only_stub",
+      "broker_mode": "paper_prelive_only",
+      "paper_prelive_ready": true,
+      "true_broker_ready": false,
+      "real_money_execution": false,
+      "broker_bound": false,
+      "missing_for_true_broker": [
+        "real_sdk_binding",
+        "real_callback_wireup",
+        "broker_ledger_reconcile",
+        "credential_rotation"
+      ]
+    },
+    "paper_prelive_ready": true,
+    "true_broker_ready": false,
+    "real_money_execution": false,
+    "status": "paper_prelive_contract_ready"
+  },
+  "connect": {
+    "ok": true,
+    "status": "paper_prelive_only",
+    "session_id": "SIM-B4B30772",
+    "broker_mode": "paper_prelive_only",
+    "production_ready": false,
+    "true_broker_ready": false,
+    "real_money_execution": false,
+    "broker_bound": false,
+    "missing_for_true_broker": [
+      "real_sdk_binding",
+      "real_callback_wireup",
+      "broker_ledger_reconcile",
+      "credential_rotation"
+    ],
+    "connected_at": "2026-04-14 23:27:02"
+  },
+  "place_order": {
+    "ok": true,
+    "status": "FILLED",
+    "broker_order_id": "BRK-3E38B7D152",
+    "client_order_id": "PRELIVE-CONTRACT-SMOKE",
+    "note": "mock fill complete"
+  },
+  "order_status": {
+    "broker_order_id": "BRK-3E38B7D152",
+    "client_order_id": "PRELIVE-CONTRACT-SMOKE",
+    "order_id": "PRELIVE-CONTRACT-SMOKE",
+    "ticker": "2330.TW",
+    "side": "BUY",
+    "qty": 1,
+    "filled_qty": 1,
+    "remaining_qty": 0,
+    "submitted_price": 100.0,
+    "status": "FILLED",
+    "strategy_name": "contract_audit",
+    "industry": "未知",
+    "model_name": "",
+    "model_version": "",
+    "regime": "",
+    "created_at": "2026-04-14 23:27:02",
+    "updated_at": "2026-04-14 23:27:02",
+    "avg_fill_price": 100.0
+  },
+  "callbacks_count": 2,
+  "callbacks": [
+    {
+      "callback_id": "CB-BRK-3E38B7D152",
+      "broker": "REAL_STUB",
+      "account_id": "",
+      "event_type": "ACK",
+      "status": "SUBMITTED",
+      "broker_order_id": "BRK-3E38B7D152",
+      "client_order_id": "PRELIVE-CONTRACT-SMOKE",
+      "ticker_symbol": "2330.TW",
+      "side": "",
+      "filled_qty": 0,
+      "remaining_qty": 1,
+      "avg_fill_price": 0.0,
+      "fill_price": 0.0,
+      "fill_id": "",
+      "reject_code": "",
+      "reject_reason": "",
+      "event_time": "2026-04-14 23:27:02",
+      "strategy_name": "contract_audit",
+      "signal_id": "",
+      "lot_id": "RLOT2-2330TW-0000001",
+      "position_key": "2330.TW|LONG|contract_audit|",
+      "raw_payload": {
+        "broker_order_id": "BRK-3E38B7D152",
+        "client_order_id": "PRELIVE-CONTRACT-SMOKE",
+        "event_type": "ACK",
+        "status": "SUBMITTED",
+        "symbol": "2330.TW",
+        "filled_qty": 0,
+        "remaining_qty": 1,
+        "timestamp": "2026-04-14 23:27:02"
+      },
+      "lot_ids": [
+        "RLOT2-2330TW-0000001"
+      ]
+    },
+    {
+      "callback_id": "CB-BRK-3E38B7D152",
+      "broker": "REAL_STUB",
+      "account_id": "",
+      "event_type": "FILL",
+      "status": "FILLED",
+      "broker_order_id": "BRK-3E38B7D152",
+      "client_order_id": "PRELIVE-CONTRACT-SMOKE",
+      "ticker_symbol": "2330.TW",
+      "side": "",
+      "filled_qty": 1,
+      "remaining_qty": 0,
+      "avg_fill_price": 100.0,
+      "fill_price": 100.0,
+      "fill_id": "",
+      "reject_code": "",
+      "reject_reason": "",
+      "event_time": "2026-04-14 23:27:02",
+      "strategy_name": "",
+      "signal_id": "",
+      "lot_id": "",
+      "position_key": "",
+      "raw_payload": {
+        "broker_order_id": "BRK-3E38B7D152",
+        "client_order_id": "PRELIVE-CONTRACT-SMOKE",
+        "event_type": "FILL",
+        "status": "FILLED",
+        "symbol": "2330.TW",
+        "filled_qty": 1,
+        "remaining_qty": 0,
+        "timestamp": "2026-04-14 23:27:02",
+        "avg_fill_price": 100.0
+      }
+    }
+  ],
+  "cash": {
+    "cash_available": 2999899.86,
+    "market_value": 100.0,
+    "equity": 2999999.86,
+    "buying_power": 2999899.86,
+    "updated_at": "2026-04-14 23:27:02"
+  },
+  "status": "paper_prelive_contract_smoke_ok"
+}

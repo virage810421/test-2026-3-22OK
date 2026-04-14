@@ -593,8 +593,19 @@ try:
             if row.get(k) not in (None, ''):
                 row[k] = _tax_dt2(row.get(k))
         for k in ('wash_sale_window_start', 'wash_sale_window_end'):
-            # SQL DATE accepts Python date/datetime/string; keep string if parse fails.
-            pass
+            # SQL DATE accepts Python date/datetime/string; normalize when possible.
+            if row.get(k) not in (None, ''):
+                try:
+                    row[k] = _tax_dt2(row.get(k))
+                except Exception as exc:
+                    record_issue(
+                        'db_logger',
+                        'tax_lot_wash_sale_window_parse_failed',
+                        exc,
+                        severity='WARNING',
+                        fail_mode='fail_open',
+                        context={'field': k, 'value': str(row.get(k))[:80]},
+                    )
         row['raw_json'] = row.get('raw_json') or _tax_logger_json(event)
         columns = ['tax_event_id','tax_lot_id','lot_id','ticker_symbol','asset_class','jurisdiction','tax_regime','tax_treatment','report_type','direction_bucket','position_key','strategy_name','signal_id','exit_order_id','exit_fill_id','closed_qty','acquisition_date','disposal_date','entry_price','cost_basis_price','close_price','gross_proceeds','allocated_cost_basis','close_commission','close_tax','net_proceeds','realized_gross_pnl','realized_net_pnl','taxable_gain_loss','ordinary_income_amount','section1256_60pct_amount','section1256_40pct_amount','holding_period_days','holding_period_bucket','tax_year','cost_basis_method','currency','wash_sale_applicable','wash_sale_applied','wash_sale_adjustment','wash_sale_disallowed_loss','wash_sale_replacement_lot_ids','wash_sale_window_start','wash_sale_window_end','specific_id_tag','note','raw_json']
         _tax_merge(self, 'execution_tax_lot_closures', 'tax_event_id', row, columns)

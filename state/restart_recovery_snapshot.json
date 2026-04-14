@@ -1,0 +1,13 @@
+{
+  "saved_at": "2026-04-14 21:39:50",
+  "system_name": "正式交易主控版_v83_official_main",
+  "meta": {
+    "created_by": "prebroker_95_audit",
+    "paper_only": true
+  },
+  "cash": null,
+  "positions": [],
+  "open_orders": [],
+  "fills": [],
+  "broker_snapshot_available": false
+}

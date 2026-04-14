@@ -41,6 +41,13 @@ CORE_MODULES = [
     "fts_cross_sectional_percentile_service",
     "fts_event_calendar_service",
     "fts_decision_execution_bridge",
+    "fts_broker_contract_audit",
+    "fts_callback_ingestion_service",
+    "fts_reconciliation_runtime",
+    "fts_restart_recovery_service",
+    "fts_exit_model_artifact_bootstrap",
+    "fts_portfolio_backtester",
+    "fts_prebroker_95_audit",
     "fts_phase1_upgrade",
     "fts_phase2_mock_broker_stage",
     "fts_phase3_real_cutover_stage",
@@ -69,12 +76,21 @@ SINGLE_ENTRY_EXPECTED_FILES = [
     "launcher.py",
     "db_setup.py",
     "db_setup_research_plus.py",
-    "run_full_market_percentile_snapshot.py",
-    "run_precise_event_calendar_build.py",
-    "run_sync_feature_snapshots_to_sql.py",
+    "fts_admin_cli.py",
     "fts_training_data_builder.py",
     "fts_trainer_backend.py",
 ]
+
+# 舊 run_*.py 入口已由 fts_admin_cli.py 接管；healthcheck 不再把它們視為必須存在。
+ADMIN_CLI_REPLACED_RUNNERS = {
+    "run_full_market_percentile_snapshot.py": "full-market-percentile",
+    "run_precise_event_calendar_build.py": "event-calendar-build",
+    "run_sync_feature_snapshots_to_sql.py": "sync-feature-snapshots",
+    "run_project_healthcheck.py": "healthcheck",
+    "run_project_completion_audit.py": "completion-audit",
+    "run_training_stress_audit.py": "training-stress-audit",
+    "run_backfill_resilience_audit.py": "backfill-resilience-audit",
+}
 
 REQUIRED_DIRS = ["data", "runtime", "models", "state", "logs"]
 REQUIRED_RUNTIME_JSON = [
@@ -286,8 +302,25 @@ class ProjectHealthcheck:
         return payload
 
     def _single_entry_readiness(self) -> Dict[str, object]:
+        admin_cli_text = ""
+        admin_cli = self.project_root / "fts_admin_cli.py"
+        if admin_cli.exists():
+            try:
+                admin_cli_text = admin_cli.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                admin_cli_text = ""
+        admin_cli_replacements = {
+            runner: {
+                "runner_exists": (self.project_root / runner).exists(),
+                "admin_command": command,
+                "admin_command_exists": (f"'{command}'" in admin_cli_text or f'"{command}"' in admin_cli_text),
+                "status": "runner_present" if (self.project_root / runner).exists() else "admin_cli_replacement_only",
+            }
+            for runner, command in ADMIN_CLI_REPLACED_RUNNERS.items()
+        }
         return {
             "expected_files": {f: (self.project_root / f).exists() for f in SINGLE_ENTRY_EXPECTED_FILES},
+            "admin_cli_replaced_runners": admin_cli_replacements,
             "required_dirs": {d: (self.project_root / d).exists() for d in REQUIRED_DIRS},
         }
 

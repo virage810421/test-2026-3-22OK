@@ -10,6 +10,8 @@ production filing.
 """
 from __future__ import annotations
 
+LEGACY_SYMBOL_MIGRATION_COMPAT_MARKER = True  # Ticker SYMBOL is accepted only as legacy alias/backfill input; canonical output is ticker_symbol.
+
 from dataclasses import dataclass, asdict
 from datetime import datetime, date, timedelta
 from pathlib import Path
@@ -236,7 +238,7 @@ def holding_bucket(days: int, rule: dict[str, Any] | None = None) -> str:
 
 def decorate_open_lot(lot: dict[str, Any], *, asset_class: str | None = None, jurisdiction: str | None = None) -> dict[str, Any]:
     row = dict(lot or {})
-    ticker = row.get("ticker_symbol") or row.get("ticker") or row.get("symbol") or row.get("Ticker SYMBOL") or ""
+    ticker = row.get("ticker_symbol") or row.get("ticker") or row.get("symbol") or row.get("Ticker SYMBOL") or ""  # legacy alias compat
     side = row.get("side") or row.get("direction_bucket") or "LONG"
     rule = classify_instrument(str(ticker), asset_class=asset_class or row.get("asset_class"), jurisdiction=jurisdiction or row.get("jurisdiction"))
     open_qty = abs(qty_int(row.get("open_qty") or row.get("entry_fill_qty") or row.get("qty") or row.get("remaining_qty")))

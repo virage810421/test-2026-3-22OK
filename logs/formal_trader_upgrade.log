@@ -139,3 +139,28 @@
 [11:21:32] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
 [11:21:32] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
 [11:21:32] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[20:33:44] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[20:33:44] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[20:33:44] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[20:33:44] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[20:33:44] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[21:36:13] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[21:36:13] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[21:36:13] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[21:36:13] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[21:36:13] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[23:06:00] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[23:06:00] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[23:06:00] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[23:06:00] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[23:06:00] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[23:11:29] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[23:11:29] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[23:11:29] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[23:11:29] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[23:11:29] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[23:27:59] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[23:27:59] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[23:27:59] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[23:27:59] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[23:27:59] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json

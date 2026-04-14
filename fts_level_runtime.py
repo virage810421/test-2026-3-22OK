@@ -103,8 +103,16 @@ def get_level3_classes() -> dict[str, Any]:
     for public_name, (module_name, attr_name) in _SERVICE_MAP.items():
         try:
             loaded[public_name] = _load_class(module_name, attr_name)
-        except Exception:
+        except Exception as exc:
+            # Runtime loader is allowed to degrade, but the failure must be observable.
             loaded[public_name] = None
+            loaded[f"{public_name}__diagnostic"] = {
+                "loaded": False,
+                "module": module_name,
+                "attr": attr_name,
+                "error": repr(exc),
+                "policy": "level3_partial_ready_with_diagnostics",
+            }
     return loaded
 
 
@@ -114,8 +122,12 @@ def build_level3_services() -> tuple[dict[str, Any], dict[str, Any]]:
     meta: dict[str, Any] = {'services': {}, 'status': 'level3_partial_ready'}
     ok_count = 0
     for name, cls in classes.items():
+        if name.endswith('__diagnostic'):
+            public_name = name.replace('__diagnostic', '')
+            meta['services'][public_name] = cls
+            continue
         if cls is None:
-            meta['services'][name] = {'loaded': False}
+            meta['services'][name] = {'loaded': False, 'policy': 'level3_partial_ready_with_diagnostics'}
             continue
         try:
             services[name] = cls()

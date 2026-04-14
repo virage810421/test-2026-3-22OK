@@ -13,7 +13,7 @@ from typing import Any
 
 try:
     from fts_runtime_diagnostics import record_issue
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover - early boot diagnostic fallback
     def record_issue(*args, **kwargs):
         return {}
 
@@ -73,14 +73,14 @@ def _pick(row: dict[str, Any], *keys: str, default: Any = "") -> Any:
 def _int(value: Any) -> int:
     try:
         return int(float(value or 0))
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return 0
 
 
 def _float(value: Any) -> float:
     try:
         return float(value or 0.0)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return 0.0
 
 

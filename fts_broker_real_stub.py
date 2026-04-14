@@ -14,7 +14,8 @@ from fts_broker_callback_mapping import normalize_broker_callback
 
 try:
     from fts_execution_models import CallbackEventStore  # type: ignore
-except Exception:  # pragma: no cover - runtime diagnostics import fallback
+except ImportError as exc:  # pragma: no cover - optional runtime component
+    record_diagnostic('broker_adapter', 'callback_event_store_import_unavailable', exc, severity='warning', fail_closed=False)
     CallbackEventStore = None  # type: ignore
 
 
@@ -1030,7 +1031,15 @@ try:
         for lot in list(getattr(self, '_position_lots', []) or []):
             try:
                 rows.append(_rbstax_decorate_open_lot(lot))
-            except Exception:
+            except Exception as exc:
+                record_diagnostic(
+                    'broker_adapter',
+                    'rbs_tax_decorate_open_lot_failed',
+                    exc,
+                    severity='warning',
+                    fail_closed=False,
+                    context={'lot_id': str(lot.get('lot_id', '')) if isinstance(lot, dict) else ''},
+                )
                 rows.append(lot)
         self._position_lots = rows
 
@@ -1083,7 +1092,15 @@ try:
             try:
                 px = getattr(self, '_last_prices', {}).get(row.get('ticker') or row.get('symbol') or row.get('ticker_symbol'))
                 out.append(_rbstax_enrich_open_lot(row, market_price=px))
-            except Exception:
+            except Exception as exc:
+                record_diagnostic(
+                    'broker_adapter',
+                    'rbs_tax_enrich_open_lot_failed',
+                    exc,
+                    severity='warning',
+                    fail_closed=False,
+                    context={'lot_id': str(row.get('lot_id', '')) if isinstance(row, dict) else ''},
+                )
                 out.append(row)
         return out
 
@@ -1095,8 +1112,8 @@ try:
             closures, lots = _rbstax_apply_wash_sale(closures, lots)
             self._tax_lot_closures = closures
             self._position_lots = lots
-        except Exception:
-            pass
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'rbs_tax_export_wash_sale_failed', exc, severity='warning', fail_closed=False)
         snap['tax_lot_closures'] = closures
         snap['tax_lot_summary'] = _rbstax_summarize_lots(closures, lots)
         snap['tax_lot_accounting'] = {'engine': 'fts_tax_lot_accounting', 'broker': 'real_stub'}
@@ -1104,6 +1121,7 @@ try:
             self._tax_report_exports = _rbstax_export_reports(closures, lots)
             snap['tax_report_exports'] = self._tax_report_exports
         except Exception as exc:
+            record_diagnostic('broker_adapter', 'rbs_tax_report_export_failed', exc, severity='warning', fail_closed=False)
             snap['tax_report_export_error'] = repr(exc)
         return snap
 

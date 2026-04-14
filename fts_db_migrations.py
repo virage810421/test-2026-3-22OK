@@ -8,6 +8,7 @@ from typing import Any
 
 from fts_db_engine import DBConfig, DatabaseSession
 from fts_db_schema import SCHEMA_VERSION, iter_table_specs, TableSpec
+from fts_sql_chinese_column_views import ensure_chinese_column_views
 
 try:
     from fts_runtime_diagnostics import record_issue
@@ -64,7 +65,7 @@ class MigrationRunner:
     3. db_setup.py 只保留為相容 wrapper，不再維護第二套 CREATE TABLE。
     """
 
-    MODULE_VERSION = 'v20260414_single_schema_migration_mainline_v3_tax_lot_washsale'
+    MODULE_VERSION = 'v20260414_single_schema_migration_mainline_v4_chinese_column_views'
 
     def __init__(self, config: DBConfig | None = None):
         self.config = config or DBConfig()
@@ -97,13 +98,24 @@ class MigrationRunner:
                 f"DATABASE=master;"
                 f"Trusted_Connection={self.config.trusted_connection};"
             )
+            database_name = str(self.config.database or '').strip()
+            if not database_name:
+                raise ValueError('database name is empty')
+            # SQL Server identifiers cannot be passed as parameters.
+            # Avoid QUOTENAME inside dynamic SQL here because some ODBC / SQL Server
+            # combinations fail to prepare that expression. We safely bracket-escape
+            # the identifier in Python and only use a Unicode literal for DB_ID().
+            db_literal = "N'" + database_name.replace("'", "''") + "'"
+            db_identifier = '[' + database_name.replace(']', ']]') + ']'
+            create_sql = (
+                f"IF DB_ID({db_literal}) IS NULL\n"
+                "BEGIN\n"
+                f"    EXEC(N'CREATE DATABASE {db_identifier}');\n"
+                "END"
+            )
             with pyodbc.connect(master_conn, autocommit=True) as conn:
                 cur = conn.cursor()
-                cur.execute(
-                    "IF DB_ID(?) IS NULL EXEC('CREATE DATABASE ' + QUOTENAME(?))",
-                    self.config.database,
-                    self.config.database,
-                )
+                cur.execute(create_sql)
             return True
         except Exception as exc:
             record_issue('db_migrations', 'ensure_database_exists_failed', exc, severity='WARNING', fail_mode='fail_open', context={'database': self.config.database})
@@ -202,9 +214,11 @@ class MigrationRunner:
         altered: list[str] = []
         normalized: list[str] = []
         legacy_aliases: list[str] = []
+        chinese_views: list[str] = []
         with DatabaseSession(self.config) as db:
             self._ensure_migrations_table(db)
             normalized.extend(self._normalize_execution_ticker_columns(db))
+
             legacy_aliases.extend(self._normalize_legacy_symbol_alias_columns(db))
             for spec in iter_table_specs():
                 if not db.table_exists(spec.name):
@@ -215,7 +229,9 @@ class MigrationRunner:
                         db.execute(f"ALTER TABLE dbo.{spec.name} ADD {col.ddl()}")
                         altered.append(f'{spec.name}.{col.name}')
             normalized.extend(self._normalize_execution_ticker_columns(db))
+
             legacy_aliases.extend(self._normalize_legacy_symbol_alias_columns(db))
+            chinese_views.extend(ensure_chinese_column_views(db))
             self._record_version(db)
         payload = {
             'generated_at': now_str(),
@@ -229,6 +245,8 @@ class MigrationRunner:
             'normalized_columns': normalized,
             'legacy_symbol_alias_columns': legacy_aliases,
             'legacy_tables_keep_Ticker_SYMBOL': list(LEGACY_TICKER_ALIAS_TABLES),
+            'chinese_column_views': chinese_views,
+            'sql_chinese_column_strategy': 'non_destructive_views_keep_canonical_tables',
             'status': 'db_upgrade_ready',
         }
         self.runtime_path.parent.mkdir(parents=True, exist_ok=True)

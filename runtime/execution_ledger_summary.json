@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-14 11:21:32",
+  "generated_at": "2026-04-14 23:27:59",
   "status": "execution_ledger_ready",
   "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_events.jsonl",
   "lane_event_counts": {
-    "LONG": 35
+    "LONG": 45
   },
   "lane_order_counts": {
     "LONG": 2

@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-04-14 11:21:32",
+  "generated_at": "2026-04-14 23:27:59",
   "mode": "daily",
-  "module_version": "v86_level3_control_tower_split_ready",
+  "module_version": "v20260414_prebroker95_closure_bootstrap_cli",
   "outputs": {
     "project_healthcheck": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\project_healthcheck.json",
       "payload": {
         "project_root": "C:\\test\\test-2026-3-22OK",
         "summary": {
-          "python_files_total": 244,
+          "python_files_total": 235,
           "compile_failures": 0,
           "core_import_failures": 0,
           "tri_lane_import_failures": 0,
@@ -17,7 +17,8 @@
           "wrapper_linkage_failures": 0,
           "bridge_interface_failures": 0,
           "tri_lane_smoke_failures": 0,
-          "json_persistence_risk_failures": 0
+          "json_persistence_risk_failures": 0,
+          "core_exception_policy_failures": 0
         },
         "compile_results": [
           {
@@ -32,11 +33,6 @@
           },
           {
             "file": "_backup_monthly_fix\\fts_sql_table_name_map.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "_clean_old_doors_manifest.py",
             "ok": true,
             "error": ""
           },
@@ -346,27 +342,17 @@
             "error": ""
           },
           {
-            "file": "alert_manager.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "alpha_miner.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "apply_clean_old_doors.py",
-            "ok": true,
-            "error": ""
-          },
-          {
             "file": "auto_optimizer.py",
             "ok": true,
             "error": ""
           },
           {
             "file": "broker_base.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "cleanup_second_merge_retired_py_files.py",
             "ok": true,
             "error": ""
           },
@@ -401,17 +387,7 @@
             "error": ""
           },
           {
-            "file": "feature_selector.py",
-            "ok": true,
-            "error": ""
-          },
-          {
             "file": "formal_trading_system_v83_official_main.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "fts_ab_wave_upgrade.py",
             "ok": true,
             "error": ""
           },
@@ -456,7 +432,12 @@
             "error": ""
           },
           {
-            "file": "fts_broker_approval.py",
+            "file": "fts_broker_callback_mapping.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_broker_contract_audit.py",
             "ok": true,
             "error": ""
           },
@@ -476,7 +457,7 @@
             "error": ""
           },
           {
-            "file": "fts_broker_shadow_mutator.py",
+            "file": "fts_callback_ingestion_service.py",
             "ok": true,
             "error": ""
           },
@@ -531,11 +512,6 @@
             "error": ""
           },
           {
-            "file": "fts_daily_ops.py",
-            "ok": true,
-            "error": ""
-          },
-          {
             "file": "fts_dashboard.py",
             "ok": true,
             "error": ""
@@ -586,6 +562,11 @@
             "error": ""
           },
           {
+            "file": "fts_deprecated_drop_readiness.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_directional_artifact_bootstrap.py",
             "ok": true,
             "error": ""
@@ -611,7 +592,7 @@
             "error": ""
           },
           {
-            "file": "fts_execution.py",
+            "file": "fts_exception_policy.py",
             "ok": true,
             "error": ""
           },
@@ -637,6 +618,11 @@
           },
           {
             "file": "fts_execution_state_machine.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_exit_model_artifact_bootstrap.py",
             "ok": true,
             "error": ""
           },
@@ -776,11 +762,6 @@
             "error": ""
           },
           {
-            "file": "fts_merge_manifest.py",
-            "ok": true,
-            "error": ""
-          },
-          {
             "file": "fts_model_gate.py",
             "ok": true,
             "error": ""
@@ -801,6 +782,11 @@
             "error": ""
           },
           {
+            "file": "fts_monkey_patch_audit.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_operations_suite.py",
             "ok": true,
             "error": ""
@@ -816,27 +802,17 @@
             "error": ""
           },
           {
-            "file": "fts_phase1_upgrade.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "fts_phase2_mock_broker_stage.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "fts_phase3_real_cutover_stage.py",
-            "ok": true,
-            "error": ""
-          },
-          {
             "file": "fts_pipeline.py",
             "ok": true,
             "error": ""
           },
           {
-            "file": "fts_portfolio_gate.py",
+            "file": "fts_portfolio_backtester.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_prebroker_95_audit.py",
             "ok": true,
             "error": ""
           },
@@ -852,11 +828,6 @@
           },
           {
             "file": "fts_price_liquidity_snapshot_service.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "fts_progress.py",
             "ok": true,
             "error": ""
           },
@@ -891,6 +862,11 @@
             "error": ""
           },
           {
+            "file": "fts_reconciliation_runtime.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_recovery_engine.py",
             "ok": true,
             "error": ""
@@ -902,11 +878,6 @@
           },
           {
             "file": "fts_repair_workflow_engine.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "fts_research_gate.py",
             "ok": true,
             "error": ""
           },
@@ -926,7 +897,7 @@
             "error": ""
           },
           {
-            "file": "fts_retry_queue.py",
+            "file": "fts_restart_recovery_service.py",
             "ok": true,
             "error": ""
           },
@@ -946,7 +917,7 @@
             "error": ""
           },
           {
-            "file": "fts_runtime_cleanup.py",
+            "file": "fts_runtime_diagnostics.py",
             "ok": true,
             "error": ""
           },
@@ -1001,6 +972,11 @@
             "error": ""
           },
           {
+            "file": "fts_sql_chinese_column_views.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_sql_feature_snapshot_sync.py",
             "ok": true,
             "error": ""
@@ -1026,12 +1002,22 @@
             "error": ""
           },
           {
+            "file": "fts_symbol_contract.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_system_guard_service.py",
             "ok": true,
             "error": ""
           },
           {
             "file": "fts_target95_suite.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_tax_lot_accounting.py",
             "ok": true,
             "error": ""
           },
@@ -1087,11 +1073,6 @@
           },
           {
             "file": "fts_tri_lane_orchestrator.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "fts_upgrade_plan.py",
             "ok": true,
             "error": ""
           },
@@ -1191,37 +1172,7 @@
             "error": ""
           },
           {
-            "file": "run_backfill_resilience_audit.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "run_full_market_percentile_snapshot.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "run_precise_event_calendar_build.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "run_project_completion_audit.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "run_project_healthcheck.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "run_sync_feature_snapshots_to_sql.py",
-            "ok": true,
-            "error": ""
-          },
-          {
-            "file": "run_training_stress_audit.py",
+            "file": "run_formal_healthcheck_smoke.py",
             "ok": true,
             "error": ""
           },
@@ -1239,6 +1190,11 @@
             "file": "update_training_universe_daily_columns_to_zh.py",
             "ok": true,
             "error": ""
+          },
+          {
+            "file": "圖形化介面.py",
+            "ok": true,
+            "error": ""
           }
         ],
         "core_import_smoke": [
@@ -1246,91 +1202,119 @@
             "module": "formal_trading_system_v83_official_main",
             "ok": true,
             "error": "",
-            "seconds": 3.147,
+            "seconds": 2.101,
             "severity": "hard"
           },
           {
             "module": "fts_fundamentals_etl_mainline",
             "ok": true,
             "error": "",
-            "seconds": 1.716,
+            "seconds": 0.901,
             "severity": "hard"
           },
           {
             "module": "fts_training_governance_mainline",
             "ok": true,
             "error": "",
-            "seconds": 2.999,
+            "seconds": 1.916,
             "severity": "hard"
           },
           {
             "module": "fts_feature_service",
             "ok": true,
             "error": "",
-            "seconds": 1.008,
+            "seconds": 0.525,
             "severity": "hard"
           },
           {
             "module": "fts_screening_engine",
             "ok": true,
             "error": "",
-            "seconds": 2.1,
+            "seconds": 1.379,
             "severity": "hard"
           },
           {
             "module": "fts_cross_sectional_percentile_service",
             "ok": true,
             "error": "",
-            "seconds": 1.358,
+            "seconds": 1.395,
             "severity": "hard"
           },
           {
             "module": "fts_event_calendar_service",
             "ok": true,
             "error": "",
-            "seconds": 0.815,
+            "seconds": 0.625,
             "severity": "hard"
           },
           {
             "module": "fts_decision_execution_bridge",
             "ok": true,
             "error": "",
-            "seconds": 0.795,
+            "seconds": 0.562,
             "severity": "hard"
           },
           {
-            "module": "fts_phase1_upgrade",
+            "module": "fts_broker_contract_audit",
             "ok": true,
             "error": "",
-            "seconds": 2.949,
+            "seconds": 0.667,
             "severity": "hard"
           },
           {
-            "module": "fts_phase2_mock_broker_stage",
+            "module": "fts_callback_ingestion_service",
             "ok": true,
             "error": "",
-            "seconds": 1.056,
+            "seconds": 0.557,
             "severity": "hard"
           },
           {
-            "module": "fts_phase3_real_cutover_stage",
+            "module": "fts_reconciliation_runtime",
             "ok": true,
             "error": "",
-            "seconds": 1.051,
+            "seconds": 0.589,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_restart_recovery_service",
+            "ok": true,
+            "error": "",
+            "seconds": 0.607,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_exit_model_artifact_bootstrap",
+            "ok": true,
+            "error": "",
+            "seconds": 0.583,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_portfolio_backtester",
+            "ok": true,
+            "error": "",
+            "seconds": 0.561,
+            "severity": "hard"
+          },
+          {
+            "module": "fts_prebroker_95_audit",
+            "ok": true,
+            "error": "",
+            "seconds": 0.587,
             "severity": "hard"
           },
           {
             "module": "model_governance",
             "ok": true,
             "error": "",
-            "seconds": 0.141,
+            "seconds": 0.115,
             "severity": "hard"
           },
           {
             "module": "db_setup",
             "ok": true,
             "error": "",
-            "seconds": 0.082,
+            "seconds": 0.641,
             "severity": "hard"
           }
         ],
@@ -1339,84 +1323,84 @@
             "module": "fts_tri_lane_orchestrator",
             "ok": true,
             "error": "",
-            "seconds": 0.989,
+            "seconds": 0.82,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_promoter",
             "ok": true,
             "error": "",
-            "seconds": 0.887,
+            "seconds": 0.603,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_loader",
             "ok": true,
             "error": "",
-            "seconds": 0.135,
+            "seconds": 0.608,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_registry",
             "ok": true,
             "error": "",
-            "seconds": 0.141,
+            "seconds": 0.594,
             "severity": "hard"
           },
           {
             "module": "fts_execution_layer",
             "ok": true,
             "error": "",
-            "seconds": 1.019,
+            "seconds": 0.608,
             "severity": "hard"
           },
           {
             "module": "fts_execution_ledger",
             "ok": true,
             "error": "",
-            "seconds": 1.05,
+            "seconds": 0.794,
             "severity": "hard"
           },
           {
             "module": "fts_execution_state_machine",
             "ok": true,
             "error": "",
-            "seconds": 0.132,
+            "seconds": 0.091,
             "severity": "hard"
           },
           {
             "module": "fts_execution_models",
             "ok": true,
             "error": "",
-            "seconds": 0.962,
+            "seconds": 0.82,
             "severity": "hard"
           },
           {
             "module": "fts_reconciliation_engine",
             "ok": true,
             "error": "",
-            "seconds": 0.972,
+            "seconds": 0.774,
             "severity": "hard"
           },
           {
             "module": "fts_repair_workflow_engine",
             "ok": true,
             "error": "",
-            "seconds": 1.084,
+            "seconds": 0.763,
             "severity": "hard"
           },
           {
             "module": "fts_model_layer",
             "ok": true,
-            "error": "C:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator DecisionTreeClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(\nC:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator RandomForestClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(",
-            "seconds": 3.333,
+            "error": "",
+            "seconds": 1.925,
             "severity": "hard"
           },
           {
             "module": "live_paper_trading",
             "ok": true,
             "error": "",
-            "seconds": 4.246,
+            "seconds": 2.722,
             "severity": "hard"
           }
         ],
@@ -1426,7 +1410,6 @@
             "fts_sql_table_name_map"
           ],
           "_backup_monthly_fix\\fts_sql_table_name_map.py": [],
-          "_clean_old_doors_manifest.py": [],
           "_legacy_retired\\master_pipeline.py": [
             "fts_pipeline",
             "fts_utils"
@@ -1507,7 +1490,6 @@
           "absorbed_references\\advanced_chart1_original\\sector_classifier.py": [],
           "absorbed_references\\advanced_chart1_original\\strategies.py": [],
           "absorbed_references\\advanced_chart1_original\\system_guard.py": [
-            "alert_manager",
             "config",
             "performance"
           ],
@@ -1580,7 +1562,6 @@
           "advanced_chart1_runtime_variants\\sector_classifier.py": [],
           "advanced_chart1_runtime_variants\\strategies.py": [],
           "advanced_chart1_runtime_variants\\system_guard.py": [
-            "alert_manager",
             "config",
             "performance"
           ],
@@ -1593,14 +1574,6 @@
             "fts_utils",
             "param_storage"
           ],
-          "alert_manager.py": [],
-          "alpha_miner.py": [
-            "fts_config",
-            "fts_utils"
-          ],
-          "apply_clean_old_doors.py": [
-            "fts_legacy_facade_cleanup"
-          ],
           "auto_optimizer.py": [
             "advanced_optimizer",
             "config",
@@ -1609,9 +1582,19 @@
             "sector_classifier"
           ],
           "broker_base.py": [],
+          "cleanup_second_merge_retired_py_files.py": [],
           "config.py": [],
-          "db_logger.py": [],
-          "db_setup.py": [],
+          "db_logger.py": [
+            "fts_broker_callback_mapping",
+            "fts_runtime_diagnostics",
+            "fts_symbol_contract",
+            "fts_tax_lot_accounting"
+          ],
+          "db_setup.py": [
+            "fts_db_migrations",
+            "fts_db_schema",
+            "fts_utils"
+          ],
           "db_setup_research_plus.py": [],
           "event_backtester.py": [
             "config",
@@ -1620,43 +1603,34 @@
           "execution_engine.py": [
             "broker_base",
             "db_logger",
+            "fts_broker_callback_mapping",
             "fts_broker_core",
             "fts_data_quality_guard",
             "fts_level_runtime",
+            "fts_runtime_diagnostics",
+            "fts_symbol_contract",
             "paper_broker",
             "risk_gateway"
-          ],
-          "feature_selector.py": [
-            "fts_config",
-            "fts_research_lab",
-            "fts_utils"
           ],
           "formal_trading_system_v83_official_main.py": [
             "fts_control_tower"
           ],
-          "fts_ab_wave_upgrade.py": [
-            "fts_admin_suite",
-            "fts_chip_enrichment_service",
-            "fts_config",
-            "fts_decision_desk_builder",
-            "fts_feature_service",
-            "fts_market_climate_service",
-            "fts_market_data_service",
-            "fts_risk_gateway",
-            "fts_screening_engine",
-            "fts_sector_service",
-            "fts_system_guard_service",
-            "fts_tests",
-            "fts_utils",
-            "fts_watchlist_service"
-          ],
           "fts_admin_cli.py": [
+            "cleanup_second_merge_retired_py_files",
             "fts_backfill_resilience_audit",
+            "fts_broker_contract_audit",
+            "fts_callback_ingestion_service",
             "fts_cross_sectional_percentile_service",
+            "fts_deprecated_drop_readiness",
             "fts_event_calendar_service",
+            "fts_exit_model_artifact_bootstrap",
             "fts_legacy_facade_cleanup",
+            "fts_portfolio_backtester",
+            "fts_prebroker_95_audit",
             "fts_project_healthcheck",
             "fts_project_quality_suite",
+            "fts_reconciliation_runtime",
+            "fts_restart_recovery_service",
             "fts_sql_feature_snapshot_sync",
             "fts_training_quality_suite"
           ],
@@ -1699,11 +1673,17 @@
           ],
           "fts_broker_api_adapter.py": [
             "fts_config",
+            "fts_exception_policy",
             "fts_real_broker_adapter_blueprint",
             "fts_utils"
           ],
-          "fts_broker_approval.py": [
+          "fts_broker_callback_mapping.py": [
+            "fts_runtime_diagnostics"
+          ],
+          "fts_broker_contract_audit.py": [
+            "fts_broker_real_stub",
             "fts_config",
+            "fts_exception_policy",
             "fts_utils"
           ],
           "fts_broker_core.py": [
@@ -1714,16 +1694,25 @@
             "fts_utils",
             "paper_broker"
           ],
-          "fts_broker_interface.py": [],
+          "fts_broker_interface.py": [
+            "broker_base"
+          ],
           "fts_broker_real_stub.py": [
+            "fts_broker_callback_mapping",
             "fts_broker_interface",
             "fts_config",
+            "fts_exception_policy",
             "fts_execution_models",
             "fts_models",
+            "fts_tax_lot_accounting",
             "fts_utils"
           ],
-          "fts_broker_shadow_mutator.py": [
-            "fts_prelive_runtime"
+          "fts_callback_ingestion_service.py": [
+            "fts_broker_callback_mapping",
+            "fts_config",
+            "fts_exception_policy",
+            "fts_execution_ledger",
+            "fts_utils"
           ],
           "fts_chart_service.py": [
             "config"
@@ -1748,6 +1737,7 @@
           ],
           "fts_compat.py": [
             "fts_config",
+            "fts_runtime_diagnostics",
             "fts_utils"
           ],
           "fts_completion_gap_report.py": [
@@ -1769,6 +1759,7 @@
             "fts_prelive_runtime",
             "fts_project_healthcheck",
             "fts_project_quality_suite",
+            "fts_runtime_diagnostics",
             "fts_trainer_backend",
             "fts_training_data_builder",
             "fts_tri_lane_orchestrator",
@@ -1779,9 +1770,6 @@
             "fts_feature_service",
             "fts_market_data_service",
             "fts_utils"
-          ],
-          "fts_daily_ops.py": [
-            "fts_upgrade_runtime"
           ],
           "fts_dashboard.py": [
             "fts_config",
@@ -1796,6 +1784,8 @@
             "fts_config",
             "fts_db_engine",
             "fts_db_schema",
+            "fts_runtime_diagnostics",
+            "fts_sql_chinese_column_views",
             "fts_utils"
           ],
           "fts_db_orm.py": [],
@@ -1819,6 +1809,10 @@
             "fts_config",
             "fts_utils"
           ],
+          "fts_deprecated_drop_readiness.py": [
+            "fts_config",
+            "fts_db_engine"
+          ],
           "fts_directional_artifact_bootstrap.py": [
             "fts_prelive_runtime"
           ],
@@ -1839,18 +1833,17 @@
             "fts_config",
             "fts_utils"
           ],
-          "fts_execution.py": [
-            "fts_config",
-            "fts_models",
-            "fts_utils"
-          ],
+          "fts_exception_policy.py": [],
           "fts_execution_layer.py": [
             "config",
             "fts_config",
-            "fts_strategy_policy_layer"
+            "fts_exception_policy",
+            "fts_strategy_policy_layer",
+            "fts_symbol_contract"
           ],
           "fts_execution_ledger.py": [
             "fts_broker_core",
+            "fts_exception_policy",
             "fts_prelive_runtime"
           ],
           "fts_execution_models.py": [
@@ -1872,6 +1865,11 @@
           "fts_execution_state_machine.py": [
             "fts_prelive_runtime"
           ],
+          "fts_exit_model_artifact_bootstrap.py": [
+            "fts_config",
+            "fts_exception_policy",
+            "fts_utils"
+          ],
           "fts_feature_catalog.py": [],
           "fts_feature_observability.py": [
             "fts_config",
@@ -1884,6 +1882,7 @@
             "fts_event_calendar_service",
             "fts_feature_catalog",
             "fts_regime_service",
+            "fts_runtime_diagnostics",
             "fts_utils"
           ],
           "fts_feature_stack_audit.py": [
@@ -1916,14 +1915,15 @@
           "fts_legacy_master_pipeline_impl.py": [
             "fts_etl_daily_chip_service",
             "fts_model_layer",
+            "fts_runtime_diagnostics",
             "fts_service_api",
             "fts_sql_table_name_map",
+            "fts_system_guard_service",
             "fts_trainer_backend",
             "fts_training_data_builder",
             "fundamental_screener",
             "performance",
-            "portfolio_risk",
-            "system_guard"
+            "portfolio_risk"
           ],
           "fts_legacy_suite.py": [
             "fts_config",
@@ -1940,7 +1940,8 @@
             "fts_compat",
             "fts_config",
             "fts_feature_observability",
-            "fts_market_rules_tw"
+            "fts_market_rules_tw",
+            "fts_runtime_diagnostics"
           ],
           "fts_live_safety.py": [
             "fts_data_quality_guard",
@@ -1955,24 +1956,21 @@
             "fts_utils"
           ],
           "fts_live_watchlist_loader.py": [
-            "config",
-            "fts_prelive_runtime"
+            "fts_watchlist_service"
           ],
           "fts_live_watchlist_promoter.py": [
-            "config",
-            "fts_live_watchlist_registry",
-            "fts_prelive_runtime",
-            "fts_training_ticker_scoreboard"
+            "fts_watchlist_service"
           ],
           "fts_live_watchlist_registry.py": [
-            "fts_prelive_runtime"
+            "fts_watchlist_service"
           ],
           "fts_local_history_bootstrap.py": [
             "fts_config",
             "fts_utils"
           ],
           "fts_logger.py": [
-            "fts_models",
+            "db_logger",
+            "fts_db_migrations",
             "fts_utils"
           ],
           "fts_mainline_absorption_report.py": [
@@ -1996,20 +1994,21 @@
             "fts_utils"
           ],
           "fts_market_rules_tw.py": [],
-          "fts_merge_manifest.py": [],
           "fts_model_gate.py": [
             "fts_upgrade_runtime"
           ],
           "fts_model_layer.py": [
             "config",
             "fts_config",
-            "fts_feature_service"
+            "fts_feature_service",
+            "fts_runtime_diagnostics"
           ],
           "fts_models.py": [],
           "fts_module_fate_map.py": [
             "fts_config",
             "fts_utils"
           ],
+          "fts_monkey_patch_audit.py": [],
           "fts_operations_suite.py": [
             "fts_config",
             "fts_prelive_runtime",
@@ -2023,43 +2022,26 @@
           "fts_performance_attribution.py": [
             "fts_upgrade_runtime"
           ],
-          "fts_phase1_upgrade.py": [
-            "fts_config",
-            "fts_decision_execution_bridge",
-            "fts_live_safety",
-            "fts_tests",
-            "fts_trainer_promotion_policy",
-            "fts_training_orchestrator",
-            "fts_training_quality_suite",
-            "fts_utils"
-          ],
-          "fts_phase2_mock_broker_stage.py": [
-            "fts_admin_suite",
-            "fts_broker_real_stub",
-            "fts_config",
-            "fts_execution_models",
-            "fts_models",
-            "fts_operations_suite",
-            "fts_project_quality_suite",
-            "fts_reconciliation_engine",
-            "fts_retry_queue",
-            "fts_utils"
-          ],
-          "fts_phase3_real_cutover_stage.py": [
-            "fts_broker_api_adapter",
-            "fts_broker_core",
-            "fts_config",
-            "fts_live_suite",
-            "fts_operations_suite",
-            "fts_real_broker_adapter_blueprint",
-            "fts_utils"
-          ],
           "fts_pipeline.py": [
             "fts_config",
             "fts_utils"
           ],
-          "fts_portfolio_gate.py": [
-            "fts_sector_service",
+          "fts_portfolio_backtester.py": [
+            "config",
+            "event_backtester",
+            "fts_config",
+            "fts_exception_policy",
+            "fts_utils"
+          ],
+          "fts_prebroker_95_audit.py": [
+            "fts_broker_contract_audit",
+            "fts_callback_ingestion_service",
+            "fts_config",
+            "fts_exception_policy",
+            "fts_exit_model_artifact_bootstrap",
+            "fts_portfolio_backtester",
+            "fts_reconciliation_runtime",
+            "fts_restart_recovery_service",
             "fts_utils"
           ],
           "fts_prelive_runtime.py": [
@@ -2074,11 +2056,9 @@
             "fts_training_universe_common",
             "fts_utils"
           ],
-          "fts_progress.py": [
-            "fts_config",
-            "fts_target95_suite"
+          "fts_project_healthcheck.py": [
+            "fts_exception_policy"
           ],
-          "fts_project_healthcheck.py": [],
           "fts_project_hygiene.py": [],
           "fts_project_quality_suite.py": [
             "fts_config",
@@ -2091,14 +2071,19 @@
           ],
           "fts_real_broker_adapter_blueprint.py": [],
           "fts_reconciliation_engine.py": [
-            "fts_prelive_runtime",
-            "fts_repair_workflow_engine"
+            "fts_execution_runtime"
+          ],
+          "fts_reconciliation_runtime.py": [
+            "fts_config",
+            "fts_exception_policy",
+            "fts_utils"
           ],
           "fts_recovery_engine.py": [
-            "fts_upgrade_runtime"
+            "fts_execution_runtime"
           ],
           "fts_regime_service.py": [
             "fts_config",
+            "fts_runtime_diagnostics",
             "fts_utils"
           ],
           "fts_repair_workflow_engine.py": [
@@ -2107,10 +2092,6 @@
             "fts_execution_ledger",
             "fts_execution_state_machine",
             "fts_prelive_runtime"
-          ],
-          "fts_research_gate.py": [
-            "fts_config",
-            "fts_utils"
           ],
           "fts_research_lab.py": [
             "fts_config",
@@ -2125,8 +2106,9 @@
             "fts_config",
             "fts_utils"
           ],
-          "fts_retry_queue.py": [
+          "fts_restart_recovery_service.py": [
             "fts_config",
+            "fts_exception_policy",
             "fts_utils"
           ],
           "fts_revenue_momentum_snapshot_service.py": [
@@ -2142,7 +2124,9 @@
             "fts_sector_service",
             "fts_utils"
           ],
-          "fts_runtime_cleanup.py": [],
+          "fts_runtime_diagnostics.py": [
+            "fts_config"
+          ],
           "fts_runtime_ops.py": [
             "fts_config",
             "fts_target95_suite",
@@ -2189,6 +2173,10 @@
             "fts_utils"
           ],
           "fts_signal_primitives.py": [],
+          "fts_sql_chinese_column_views.py": [
+            "fts_db_schema",
+            "fts_runtime_diagnostics"
+          ],
           "fts_sql_feature_snapshot_sync.py": [
             "fts_config"
           ],
@@ -2208,13 +2196,22 @@
             "fts_config",
             "fts_utils"
           ],
+          "fts_symbol_contract.py": [
+            "fts_exception_policy"
+          ],
           "fts_system_guard_service.py": [
             "fts_config",
+            "fts_runtime_diagnostics",
             "fts_utils"
           ],
           "fts_target95_suite.py": [
             "fts_config",
             "fts_utils"
+          ],
+          "fts_tax_lot_accounting.py": [
+            "config",
+            "fts_config",
+            "fts_runtime_diagnostics"
           ],
           "fts_tests.py": [
             "fts_broker_real_stub",
@@ -2252,6 +2249,7 @@
           ],
           "fts_training_governance_mainline.py": [
             "fts_config",
+            "fts_exception_policy",
             "fts_trainer_backend",
             "fts_training_orchestrator",
             "fts_utils",
@@ -2294,9 +2292,6 @@
             "fts_execution_state_machine",
             "fts_prelive_runtime",
             "fts_watchlist_service"
-          ],
-          "fts_upgrade_plan.py": [
-            "fts_upgrade_runtime"
           ],
           "fts_upgrade_runtime.py": [
             "fts_config"
@@ -2361,12 +2356,14 @@
           "live_paper_trading.py": [
             "config",
             "db_logger",
+            "fts_exception_policy",
             "fts_execution_layer",
             "fts_execution_ledger",
             "fts_level_runtime",
             "fts_model_layer",
             "fts_service_api",
             "fts_strategy_policy_layer",
+            "fts_symbol_contract",
             "fts_watchlist_service",
             "sector_classifier"
           ],
@@ -2389,7 +2386,9 @@
             "param_storage"
           ],
           "paper_broker.py": [
-            "broker_base"
+            "broker_base",
+            "config",
+            "fts_tax_lot_accounting"
           ],
           "param_storage.py": [
             "fts_research_lab",
@@ -2406,34 +2405,16 @@
           "risk_gateway.py": [
             "broker_base"
           ],
-          "run_backfill_resilience_audit.py": [
-            "fts_backfill_resilience_audit"
-          ],
-          "run_full_market_percentile_snapshot.py": [
-            "fts_cross_sectional_percentile_service"
-          ],
-          "run_precise_event_calendar_build.py": [
-            "fts_event_calendar_service"
-          ],
-          "run_project_completion_audit.py": [
-            "fts_project_quality_suite"
-          ],
-          "run_project_healthcheck.py": [
-            "fts_project_healthcheck"
-          ],
-          "run_sync_feature_snapshots_to_sql.py": [
-            "fts_sql_feature_snapshot_sync"
-          ],
-          "run_training_stress_audit.py": [
-            "fts_training_quality_suite"
+          "run_formal_healthcheck_smoke.py": [
+            "fts_broker_callback_mapping",
+            "fts_tax_lot_accounting"
           ],
           "sector_classifier.py": [],
           "system_guard.py": [
-            "config",
-            "fts_sql_table_name_map",
-            "performance"
+            "fts_system_guard_service"
           ],
-          "update_training_universe_daily_columns_to_zh.py": []
+          "update_training_universe_daily_columns_to_zh.py": [],
+          "圖形化介面.py": []
         },
         "missing_local_imports_by_file": {},
         "wrapper_linkage": {
@@ -2515,11 +2496,53 @@
             "launcher.py": true,
             "db_setup.py": true,
             "db_setup_research_plus.py": true,
-            "run_full_market_percentile_snapshot.py": true,
-            "run_precise_event_calendar_build.py": true,
-            "run_sync_feature_snapshots_to_sql.py": true,
+            "fts_admin_cli.py": true,
             "fts_training_data_builder.py": true,
             "fts_trainer_backend.py": true
+          },
+          "admin_cli_replaced_runners": {
+            "run_full_market_percentile_snapshot.py": {
+              "runner_exists": false,
+              "admin_command": "full-market-percentile",
+              "admin_command_exists": true,
+              "status": "admin_cli_replacement_only"
+            },
+            "run_precise_event_calendar_build.py": {
+              "runner_exists": false,
+              "admin_command": "event-calendar-build",
+              "admin_command_exists": true,
+              "status": "admin_cli_replacement_only"
+            },
+            "run_sync_feature_snapshots_to_sql.py": {
+              "runner_exists": false,
+              "admin_command": "sync-feature-snapshots",
+              "admin_command_exists": true,
+              "status": "admin_cli_replacement_only"
+            },
+            "run_project_healthcheck.py": {
+              "runner_exists": false,
+              "admin_command": "healthcheck",
+              "admin_command_exists": true,
+              "status": "admin_cli_replacement_only"
+            },
+            "run_project_completion_audit.py": {
+              "runner_exists": false,
+              "admin_command": "completion-audit",
+              "admin_command_exists": true,
+              "status": "admin_cli_replacement_only"
+            },
+            "run_training_stress_audit.py": {
+              "runner_exists": false,
+              "admin_command": "training-stress-audit",
+              "admin_command_exists": true,
+              "status": "admin_cli_replacement_only"
+            },
+            "run_backfill_resilience_audit.py": {
+              "runner_exists": false,
+              "admin_command": "backfill-resilience-audit",
+              "admin_command_exists": true,
+              "status": "admin_cli_replacement_only"
+            }
           },
           "required_dirs": {
             "data": true,
@@ -2535,13 +2558,13 @@
             "db_setup_research_plus.py"
           ],
           "core_table_names": {
-            "fundamentals_clean": true,
-            "monthly_revenue_simple": true,
-            "daily_chip_data": true,
-            "execution_orders": true,
-            "execution_fills": true,
-            "execution_account_snapshot": true,
-            "execution_positions_snapshot": true,
+            "fundamentals_clean": false,
+            "monthly_revenue_simple": false,
+            "daily_chip_data": false,
+            "execution_orders": false,
+            "execution_fills": false,
+            "execution_account_snapshot": false,
+            "execution_positions_snapshot": false,
             "feature_cross_section_snapshot": true,
             "feature_event_calendar": true,
             "live_feature_mount": true,
@@ -2552,7 +2575,7 @@
             "chip_factors_daily": true,
             "training_universe_daily": true
           },
-          "all_core_tables_declared": true
+          "all_core_tables_declared": false
         },
         "runtime_presence": {
           "runtime_dir_exists": true,
@@ -2595,36 +2618,36 @@
         "tri_lane_smoke": {
           "tri_lane_orchestrator": {
             "ok": true,
-            "seconds": 1.064,
+            "seconds": 0.878,
             "stdout_tail": "2OK\\\\models\\\\selected_features_range.pkl', 'model_count': 3}, 'candidate_filter': {'status': 'ready', 'count': 3}, 'callback_pipeline': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json'}, 'state_machine': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\state\\\\directional_execution_state_machine.json', 'count': 0}, 'ledger': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\execution_ledger_summary.json', 'event_count': 0}, 'reconciliation': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', 'issue_count': 0}, 'repair_execution': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'action_count': 0}}}, 'tri_lane_execution_status': {'LONG': {'ready_stages': 9, 'fallback_stages': []}, 'SHORT': {'ready_stages': 9, 'fallback_stages': []}, 'RANGE': {'ready_stages': 9, 'fallback_stages': []}}, 'deep_full_split_complete': True})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "watchlist_promoter": {
             "ok": true,
-            "seconds": 0.897,
-            "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-14 11:21:16', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
+            "seconds": 0.614,
+            "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-14 23:27:32', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "watchlist_loader": {
             "ok": true,
-            "seconds": 0.863,
+            "seconds": 0.68,
             "stdout_tail": "approved', 'optimizer_penalty': 0.05, 'optimized_score': 1.1527848674857768}, {'ticker': '2002.TW', 'lane': 'RANGE', 'promotion_score': 1.2023287513734435, 'oot_ev': 0.0006741379310344, 'hit_rate': 0.0482758620689655, 'sector': '未知', 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'approval_reason': 'scoreboard_promotion', 'provisional': False, 'readiness_tier': 'approved', 'optimizer_penalty': 0.1, 'optimized_score': 1.1023287513734434}]}, 'lane_readiness': {'LONG': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'SHORT': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'RANGE': {'count': 3, 'approved_count': 3, 'provisional_count': 0, 'status': 'approved_only'}}, 'total_count': 7, 'provisional_item_count': 0, 'approved_item_count': 7, 'sector_counts': {'未知::LONG': 2, '未知::SHORT': 2, '未知::RANGE': 3}, 'net_exposure_proxy': {'LONG': 2, 'SHORT': 2, 'RANGE': 3}, 'min_counts': {'LONG': 2, 'SHORT': 2, 'RANGE': 2}})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "callback_event_store": {
             "ok": true,
-            "seconds": 0.978,
-            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-14 11:21:18', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
+            "seconds": 0.913,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-14 23:27:34', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "reconciliation_engine": {
             "ok": true,
-            "seconds": 0.976,
-            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-14 11:21:19', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-14 11:21:19', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
+            "seconds": 0.903,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-14 23:27:35', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-14 23:27:35', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
             "stderr_tail": "",
             "returncode": 0
           }
@@ -2636,10 +2659,6 @@
             "fts_execution_ledger.py",
             "fts_execution_models.py",
             "fts_execution_state_machine.py",
-            "fts_live_watchlist_loader.py",
-            "fts_live_watchlist_promoter.py",
-            "fts_live_watchlist_registry.py",
-            "fts_reconciliation_engine.py",
             "fts_repair_workflow_engine.py",
             "fts_tri_lane_orchestrator.py"
           ],
@@ -2665,13 +2684,956 @@
           "size": 30104491,
           "rows": 41813,
           "columns": 85
+        },
+        "exception_policy_audit": {
+          "summary": {
+            "files_total": 178,
+            "except_exception_total": 560,
+            "pass_total": 169,
+            "fallback_token_total": 252,
+            "core_unclassified_except": [],
+            "core_policy_ready": true
+          },
+          "by_file": {
+            "advanced_optimizer.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "broker_base.py": {
+              "core_file": false,
+              "except_exception": 7,
+              "pass": 3,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "cleanup_second_merge_retired_py_files.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "config.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 8,
+              "unclassified_core_except_lines": []
+            },
+            "db_logger.py": {
+              "core_file": false,
+              "except_exception": 14,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "db_setup.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "db_setup_research_plus.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "event_backtester.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "execution_engine.py": {
+              "core_file": false,
+              "except_exception": 45,
+              "pass": 5,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_admin_cli.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 3,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_admin_suite.py": {
+              "core_file": false,
+              "except_exception": 5,
+              "pass": 8,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_ai_manager.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_approved_artifact_loader.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_approved_pipeline.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_broker_api_adapter.py": {
+              "core_file": true,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_broker_callback_mapping.py": {
+              "core_file": true,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_broker_contract_audit.py": {
+              "core_file": true,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_broker_core.py": {
+              "core_file": true,
+              "except_exception": 0,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_broker_real_stub.py": {
+              "core_file": true,
+              "except_exception": 15,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_callback_ingestion_service.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_chart_service.py": {
+              "core_file": false,
+              "except_exception": 5,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_chip_enrichment_service.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_chip_factor_snapshot_service.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_company_quality_snapshot_service.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_compat.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 14,
+              "unclassified_core_except_lines": []
+            },
+            "fts_completion_gap_report.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_config.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 3,
+              "fallback": 2,
+              "unclassified_core_except_lines": []
+            },
+            "fts_control_tower.py": {
+              "core_file": true,
+              "except_exception": 6,
+              "pass": 2,
+              "fallback": 23,
+              "unclassified_core_except_lines": []
+            },
+            "fts_cross_sectional_percentile_service.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_dashboard.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_data_quality_guard.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_db_engine.py": {
+              "core_file": false,
+              "except_exception": 6,
+              "pass": 3,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_db_migrations.py": {
+              "core_file": false,
+              "except_exception": 8,
+              "pass": 1,
+              "fallback": 4,
+              "unclassified_core_except_lines": []
+            },
+            "fts_db_orm.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_decision_desk_builder.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 2,
+              "fallback": 17,
+              "unclassified_core_except_lines": []
+            },
+            "fts_decision_execution_bridge.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 9,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_decision_price_bridge_plus.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_deprecated_drop_readiness.py": {
+              "core_file": false,
+              "except_exception": 9,
+              "pass": 14,
+              "fallback": 34,
+              "unclassified_core_except_lines": []
+            },
+            "fts_directional_artifact_bootstrap.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_etl_daily_chip_service.py": {
+              "core_file": false,
+              "except_exception": 21,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_etl_monthly_revenue_service.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_event_calendar_service.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_exception_policy.py": {
+              "core_file": false,
+              "except_exception": 7,
+              "pass": 9,
+              "fallback": 12,
+              "unclassified_core_except_lines": []
+            },
+            "fts_execution_layer.py": {
+              "core_file": true,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_execution_ledger.py": {
+              "core_file": true,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_exit_model_artifact_bootstrap.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_feature_observability.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_feature_service.py": {
+              "core_file": false,
+              "except_exception": 15,
+              "pass": 2,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_feature_stack_audit.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_fundamentals_etl_mainline.py": {
+              "core_file": false,
+              "except_exception": 11,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_fundamentals_true_backfill.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_legacy_facade_cleanup.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_legacy_master_pipeline_impl.py": {
+              "core_file": false,
+              "except_exception": 13,
+              "pass": 0,
+              "fallback": 3,
+              "unclassified_core_except_lines": []
+            },
+            "fts_legacy_suite.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_level_runtime.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_level_selftests.py": {
+              "core_file": false,
+              "except_exception": 7,
+              "pass": 0,
+              "fallback": 2,
+              "unclassified_core_except_lines": []
+            },
+            "fts_live_readiness_gate.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 2,
+              "fallback": 6,
+              "unclassified_core_except_lines": []
+            },
+            "fts_live_safety.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 2,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_live_suite.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 4,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_local_history_bootstrap.py": {
+              "core_file": false,
+              "except_exception": 6,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_logger.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_mainline_linkage.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_market_climate_service.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_market_data_service.py": {
+              "core_file": false,
+              "except_exception": 6,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_market_rules_tw.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 8,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_model_layer.py": {
+              "core_file": true,
+              "except_exception": 14,
+              "pass": 0,
+              "fallback": 36,
+              "unclassified_core_except_lines": []
+            },
+            "fts_operations_suite.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_orchestrator.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_pipeline.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_portfolio_backtester.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_prebroker_95_audit.py": {
+              "core_file": false,
+              "except_exception": 6,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_prelive_runtime.py": {
+              "core_file": false,
+              "except_exception": 7,
+              "pass": 3,
+              "fallback": 4,
+              "unclassified_core_except_lines": []
+            },
+            "fts_price_gap_bridge.py": {
+              "core_file": false,
+              "except_exception": 6,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_price_liquidity_snapshot_service.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_project_healthcheck.py": {
+              "core_file": false,
+              "except_exception": 11,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_project_quality_suite.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_reconciliation_runtime.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_regime_service.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_research_lab.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_research_suite.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_resilience.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 19,
+              "unclassified_core_except_lines": []
+            },
+            "fts_restart_recovery_service.py": {
+              "core_file": false,
+              "except_exception": 5,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_revenue_momentum_snapshot_service.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_risk_gateway.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_runtime_diagnostics.py": {
+              "core_file": false,
+              "except_exception": 5,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_runtime_ops.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_runtime_ops_v59_patch.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_screening_detachment_audit.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_screening_engine.py": {
+              "core_file": false,
+              "except_exception": 6,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_screening_legacy_compat.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_sector_service.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_signal_gate.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 5,
+              "fallback": 5,
+              "unclassified_core_except_lines": []
+            },
+            "fts_signal_primitives.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_sql_chinese_column_views.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_sql_feature_snapshot_sync.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 2,
+              "unclassified_core_except_lines": []
+            },
+            "fts_stock_master_service.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 2,
+              "unclassified_core_except_lines": []
+            },
+            "fts_strategy_policy_layer.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_symbol_contract.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_system_guard_service.py": {
+              "core_file": true,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_tax_lot_accounting.py": {
+              "core_file": false,
+              "except_exception": 9,
+              "pass": 1,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "fts_tests.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 17,
+              "fallback": 2,
+              "unclassified_core_except_lines": []
+            },
+            "fts_trainer_backend.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 4,
+              "unclassified_core_except_lines": []
+            },
+            "fts_trainer_promotion_policy.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 7,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_training_data_builder.py": {
+              "core_file": false,
+              "except_exception": 6,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_training_governance_mainline.py": {
+              "core_file": true,
+              "except_exception": 6,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_training_orchestrator.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_training_ticker_scoreboard.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_training_universe_common.py": {
+              "core_file": false,
+              "except_exception": 7,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_training_universe_service.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_tri_lane_orchestrator.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 0,
+              "fallback": 7,
+              "unclassified_core_except_lines": []
+            },
+            "fts_upgrade_runtime.py": {
+              "core_file": false,
+              "except_exception": 7,
+              "pass": 3,
+              "fallback": 4,
+              "unclassified_core_except_lines": []
+            },
+            "fts_upgrade_suite.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_utils.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_watchlist_service.py": {
+              "core_file": false,
+              "except_exception": 8,
+              "pass": 6,
+              "fallback": 10,
+              "unclassified_core_except_lines": []
+            },
+            "fts_wave_suite.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 0,
+              "fallback": 5,
+              "unclassified_core_except_lines": []
+            },
+            "fundamental_screener.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 3,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "live_paper_trading.py": {
+              "core_file": true,
+              "except_exception": 36,
+              "pass": 4,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "market_language.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 0,
+              "fallback": 2,
+              "unclassified_core_except_lines": []
+            },
+            "model_governance.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "monitor_center.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "paper_broker.py": {
+              "core_file": false,
+              "except_exception": 19,
+              "pass": 4,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "param_storage.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "performance.py": {
+              "core_file": false,
+              "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "portfolio_risk.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "risk_gateway.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "run_formal_healthcheck_smoke.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "sector_classifier.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "update_training_universe_daily_columns_to_zh.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "_patch_manifest_設計不良修改5.py": {
+              "core_file": false,
+              "except_exception": 0,
+              "pass": 0,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "圖形化介面.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 1,
+              "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "archive\\versions\\formal_trading_system_v79.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 5,
+              "fallback": 13,
+              "unclassified_core_except_lines": []
+            },
+            "archive\\versions\\formal_trading_system_v80_prebroker_sealed.py": {
+              "core_file": false,
+              "except_exception": 13,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "archive\\versions\\formal_trading_system_v81_mainline_merged.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            }
+          }
         }
       }
     },
     "level2_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\level2_mainline_runtime.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "module_version": "v87_level2_service_detached",
         "status": "mainline_ready",
         "legacy_mode": "detached_from_level2",
@@ -2692,7 +3654,7 @@
             "mode": "inprocess",
             "returncode": null,
             "error": "",
-            "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 11:21。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+            "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：今天已成功執行過。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -2716,7 +3678,7 @@
             "mode": "inprocess",
             "returncode": null,
             "error": "",
-            "stdout_tail": "[11:21:32] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+            "stdout_tail": "[23:27:59] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -2739,8 +3701,8 @@
     "training_governance_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
-        "module_version": "v83_training_governance_mainline_hardened",
+        "generated_at": "2026-04-14 23:27:59",
+        "module_version": "v20260414_training_governance_truthful_live_metrics",
         "system_name": "正式交易主控版_v83_official_main",
         "orchestrator_status": "training_governed_v83",
         "training_readiness_pct": 85,
@@ -3104,7 +4066,7 @@
           }
         },
         "training_integrity": {
-          "generated_at": "2026-04-14 11:21:32",
+          "generated_at": "2026-04-14 23:27:59",
           "thresholds": {
             "min_oot_hit_rate": 0.5,
             "min_oot_profit_factor": 1.0,
@@ -3476,7 +4438,7 @@
           "status": "training_integrity_blocked"
         },
         "candidate_evaluation": {
-          "generated_at": "2026-04-14 11:21:32",
+          "generated_at": "2026-04-14 23:27:59",
           "system_name": "正式交易主控版_v83_official_main",
           "thresholds": {
             "min_win_rate": 0.5,
@@ -3509,27 +4471,25 @@
           "status": "candidate_blocked"
         },
         "live_health": {
-          "generated_at": "2026-04-14 11:21:32",
-          "thresholds": {
-            "min_live_win_rate": 0.42,
-            "max_consecutive_losses": 5,
-            "max_reject_rate": 0.2,
-            "max_fill_slippage_bps": 35,
-            "min_trades_required": 20
-          },
-          "live_metrics": {
-            "win_rate": 0.53,
-            "consecutive_losses": 1,
-            "reject_rate": 0.02,
-            "avg_slippage_bps": 9.0,
-            "trade_count": 1136
-          },
-          "trade_count": 1136,
-          "sample_gate_passed": true,
-          "warnings": [],
-          "rollback_recommended": false,
-          "triggers": [],
-          "status": "live_health_ok"
+          "status": "live_metrics_unavailable",
+          "approved": false,
+          "reason": "沒有真實 execution runtime / fills / orders；已禁止使用硬編 live_metrics。",
+          "metrics": {
+            "live_metrics_ready": false,
+            "live_metrics_source": "not_available",
+            "live_metrics_files": {
+              "fills": null,
+              "orders": null,
+              "callbacks": null
+            },
+            "win_rate": null,
+            "consecutive_losses": null,
+            "reject_rate": null,
+            "avg_slippage_bps": null,
+            "trade_count": 0,
+            "order_count": 0,
+            "callback_count": 0
+          }
         },
         "directional_services": {
           "regime_service": {},
@@ -3546,7 +4506,7 @@
     "model_registry": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_registry_runtime.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "models_dir": "C:\\test\\test-2026-3-22OK\\models",
         "candidates": [
@@ -3576,7 +4536,7 @@
             "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
             "is_file": true,
             "is_dir": false,
-            "size_bytes": 44352
+            "size_bytes": 46672
           },
           {
             "name": "model_long_區間盤整.pkl",
@@ -3677,6 +4637,13 @@
             "size_bytes": 87
           },
           {
+            "name": "selected_features_exit.pkl",
+            "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_exit.pkl",
+            "is_file": true,
+            "is_dir": false,
+            "size_bytes": 1093
+          },
+          {
             "name": "selected_features_long.pkl",
             "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_long.pkl",
             "is_file": true,
@@ -3712,7 +4679,7 @@
             "size_bytes": 0
           }
         ],
-        "candidate_count": 23,
+        "candidate_count": 24,
         "suspicious_small_artifacts": [
           {
             "name": "selected_features.pkl",
@@ -6430,12 +7397,12 @@
     "model_selection_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_selection_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_model_linkage": true,
         "governance": {
-          "generated_at": "2026-04-14 11:21:32",
-          "module_version": "v83_training_governance_mainline_hardened",
+          "generated_at": "2026-04-14 23:27:59",
+          "module_version": "v20260414_training_governance_truthful_live_metrics",
           "system_name": "正式交易主控版_v83_official_main",
           "orchestrator_status": "training_governed_v83",
           "training_readiness_pct": 85,
@@ -6799,7 +7766,7 @@
             }
           },
           "training_integrity": {
-            "generated_at": "2026-04-14 11:21:32",
+            "generated_at": "2026-04-14 23:27:59",
             "thresholds": {
               "min_oot_hit_rate": 0.5,
               "min_oot_profit_factor": 1.0,
@@ -7171,7 +8138,7 @@
             "status": "training_integrity_blocked"
           },
           "candidate_evaluation": {
-            "generated_at": "2026-04-14 11:21:32",
+            "generated_at": "2026-04-14 23:27:59",
             "system_name": "正式交易主控版_v83_official_main",
             "thresholds": {
               "min_win_rate": 0.5,
@@ -7204,27 +8171,25 @@
             "status": "candidate_blocked"
           },
           "live_health": {
-            "generated_at": "2026-04-14 11:21:32",
-            "thresholds": {
-              "min_live_win_rate": 0.42,
-              "max_consecutive_losses": 5,
-              "max_reject_rate": 0.2,
-              "max_fill_slippage_bps": 35,
-              "min_trades_required": 20
-            },
-            "live_metrics": {
-              "win_rate": 0.53,
-              "consecutive_losses": 1,
-              "reject_rate": 0.02,
-              "avg_slippage_bps": 9.0,
-              "trade_count": 1136
-            },
-            "trade_count": 1136,
-            "sample_gate_passed": true,
-            "warnings": [],
-            "rollback_recommended": false,
-            "triggers": [],
-            "status": "live_health_ok"
+            "status": "live_metrics_unavailable",
+            "approved": false,
+            "reason": "沒有真實 execution runtime / fills / orders；已禁止使用硬編 live_metrics。",
+            "metrics": {
+              "live_metrics_ready": false,
+              "live_metrics_source": "not_available",
+              "live_metrics_files": {
+                "fills": null,
+                "orders": null,
+                "callbacks": null
+              },
+              "win_rate": null,
+              "consecutive_losses": null,
+              "reject_rate": null,
+              "avg_slippage_bps": null,
+              "trade_count": 0,
+              "order_count": 0,
+              "callback_count": 0
+            }
           },
           "directional_services": {
             "regime_service": {},
@@ -7237,6 +8202,7 @@
           },
           "status": "training_governance_mainline_ready"
         },
+        "model_live_signal_gate": {},
         "failures": [],
         "warnings": [
           {
@@ -7262,6 +8228,23 @@
           "kill_switch_defined": true,
           "credentials_file_present": false,
           "price_snapshot_present": false,
+          "runtime_diagnostics_event_count": 0,
+          "runtime_diagnostics_hard_block_count": 0,
+          "runtime_diagnostics_hard_blocks_present": false,
+          "real_broker_red_lights": {
+            "api": false,
+            "callback": false,
+            "ledger": false,
+            "reconcile": false,
+            "kill_switch": true
+          },
+          "real_broker_red_light_failures": [
+            "api",
+            "callback",
+            "ledger",
+            "reconcile"
+          ],
+          "real_broker_five_lights_green": false,
           "training_artifacts_present": true,
           "directional_selected_features_present": true,
           "directional_lane_models_present": true,
@@ -7336,12 +8319,13 @@
         "score_split": {
           "research_paper_prelive_score": 5,
           "true_broker_score": 1,
+          "real_broker_five_lights_green_count": 1,
           "executable_score": 4
         },
         "feature_observability": {
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
           "payload": {
-            "generated_at": "2026-04-14 11:21:32",
+            "generated_at": "2026-04-14 23:27:59",
             "module_version": "v87_feature_observability_vetted_live",
             "strict_feature_parity": true,
             "force_shared_feature_universe": false,
@@ -7385,13 +8369,19 @@
             "status": "observable"
           }
         },
+        "runtime_diagnostics": {
+          "event_count": 0,
+          "hard_block_count": 0,
+          "counters": {},
+          "recent_events": []
+        },
         "status": "blocked"
       }
     },
     "launch_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\launch_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_execution": false,
         "failures": [
@@ -7418,7 +8408,7 @@
     "live_safety_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_safety_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -7443,7 +8433,7 @@
     "broker_approval_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_approval_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -7465,7 +8455,7 @@
     "submission_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\submission_contract_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_submission_contract": true,
         "failures": [],
@@ -7485,7 +8475,7 @@
     "validation_suite": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\validation_suite_report.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": {
           "launch_gate": false,
@@ -7510,7 +8500,7 @@
     "reconciliation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "status": "reconciled",
         "order_issue_count": 0,
         "issues": [],
@@ -7521,7 +8511,7 @@
         "repair_workflow": {
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
           "payload": {
-            "generated_at": "2026-04-14 11:21:32",
+            "generated_at": "2026-04-14 23:27:59",
             "status": "repair_workflow_executed",
             "executed_actions": [],
             "count": 0
@@ -7533,7 +8523,7 @@
     "recovery": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_plan.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "snapshot_found": true,
         "broker_snapshot_found": false,
@@ -7553,7 +8543,7 @@
     "recovery_validation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_validation.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": [
           {
@@ -7595,7 +8585,7 @@
     "live_release_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_release_gate.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "status": "live_release_blocked",
         "allow_pre_live_dryrun": false,
         "allow_live": false,
@@ -7612,7 +8602,7 @@
     "tri_lane_orchestration": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\tri_lane_orchestrator.json",
       "payload": {
-        "generated_at": "2026-04-14 11:21:32",
+        "generated_at": "2026-04-14 23:27:59",
         "status": "tri_lane_orchestration_ready",
         "lanes": {
           "LONG": {
@@ -7647,7 +8637,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 35
+              "event_count": 45
             },
             "reconciliation": {
               "status": "ready",
@@ -7784,7 +8774,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 35
+              "event_count": 45
             },
             "reconciliation": {
               "status": "ready",
@@ -7938,7 +8928,7 @@
         "ledger": {
           "status": "ready",
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-          "event_count": 35
+          "event_count": 45
         },
         "reconciliation": {
           "status": "ready",
@@ -8075,7 +9065,7 @@
         "ledger": {
           "status": "ready",
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-          "event_count": 35
+          "event_count": 45
         },
         "reconciliation": {
           "status": "ready",
@@ -8199,6 +9189,7 @@
   "readiness_split": {
     "research_paper_prelive_score": 5,
     "true_broker_score": 1,
+    "real_broker_five_lights_green_count": 1,
     "executable_score": 4
   },
   "operational_scope": {

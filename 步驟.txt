@@ -1,0 +1,69 @@
+初始電腦建議照這個順序按：
+
+第一次啟動順序
+資料庫升級 / 建立資料表
+建 SQL table、欄位、中文 view。
+深度健康檢查
+確認 .py、import、核心模組都正常。
+初始化 / 第一次啟動
+執行 bootstrap，補 runtime、本地 CSV、SQL 初始資料。
+同步特徵快照到 SQL
+把 feature snapshot 寫進 SQL。
+全市場百分位快照
+建 ranking / percentile 資料。
+舊欄位可刪除性檢查
+確認 schema / deprecated 狀態。
+實盤前 95% 總檢
+檢查 broker、callback、ledger、reconciliation、recovery、exit、backtest。
+對應指令
+python fts_db_migrations.py upgrade
+python fts_admin_cli.py healthcheck --deep
+python formal_trading_system_v83_official_main.py --bootstrap
+python fts_admin_cli.py sync-feature-snapshots
+python fts_admin_cli.py full-market-percentile
+python fts_admin_cli.py drop-readiness --check-db
+python fts_admin_cli.py prebroker-95-audit --run-backtest --bootstrap-exit
+
+之後日常只按：
+
+python formal_trading_system_v83_official_main.py
+
+要訓練再按：
+
+python formal_trading_system_v83_official_main.py --train
+
+
+APP 裡初始電腦就照這個順序按：
+
+資料庫升級 / 建立資料表
+深度健康檢查
+初始化 / 第一次啟動
+同步特徵快照到 SQL
+全市場百分位快照
+舊欄位可刪除性檢查
+實盤前 95% 總檢
+
+最簡化版：
+
+資料庫升級 / 建立資料表
+→ 深度健康檢查
+→ 初始化 / 第一次啟動
+→ 實盤前 95% 總檢
+
+之後日常使用：
+
+日常執行
+
+要訓練 AI：
+
+訓練模式
+
+要回測：
+
+投組回測 3 年
+
+要清理舊檔：
+
+第二輪舊檔清理預覽
+→ 深度健康檢查
+→ 第二輪舊檔清理套用

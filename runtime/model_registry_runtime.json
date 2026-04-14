@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-14 11:21:32",
+  "generated_at": "2026-04-14 23:27:59",
   "system_name": "正式交易主控版_v83_official_main",
   "models_dir": "C:\\test\\test-2026-3-22OK\\models",
   "candidates": [
@@ -29,7 +29,7 @@
       "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 44352
+      "size_bytes": 46672
     },
     {
       "name": "model_long_區間盤整.pkl",
@@ -130,6 +130,13 @@
       "size_bytes": 87
     },
     {
+      "name": "selected_features_exit.pkl",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_exit.pkl",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1093
+    },
+    {
       "name": "selected_features_long.pkl",
       "path": "C:\\test\\test-2026-3-22OK\\models\\selected_features_long.pkl",
       "is_file": true,
@@ -165,7 +172,7 @@
       "size_bytes": 0
     }
   ],
-  "candidate_count": 23,
+  "candidate_count": 24,
   "suspicious_small_artifacts": [
     {
       "name": "selected_features.pkl",
