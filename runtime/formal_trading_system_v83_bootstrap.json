@@ -1,8 +1,14 @@
 {
-  "generated_at": "2026-04-14 23:27:59",
+  "generated_at": "2026-04-15 13:34:26",
   "mode": "bootstrap",
   "module_version": "v20260414_prebroker95_closure_bootstrap_cli",
   "steps": [
+    {
+      "status": "ok",
+      "script": "kill_switch_state",
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\kill_switch_state.json",
+      "payload_status": "kill_switch_state_ready"
+    },
     {
       "status": "ok",
       "script": "fts_db_migrations.py",
@@ -10,7 +16,7 @@
       "args": [
         "upgrade"
       ],
-      "stdout_tail": "  \"chinese_column_views\": [\n    \"trade_history:created_view:交易紀錄_中文欄位\",\n    \"active_positions:created_view:目前持倉_中文欄位\",\n    \"daily_chip_data:created_view:法人籌碼日資料_中文欄位\",\n    \"execution_orders:created_view:執行委託單_中文欄位\",\n    \"execution_fills:created_view:執行成交明細_中文欄位\",\n    \"execution_account_snapshot:created_view:執行帳戶快照_中文欄位\",\n    \"execution_positions_snapshot:created_view:執行持倉快照_中文欄位\",\n    \"execution_position_lots:created_view:執行持倉批次_中文欄位\",\n    \"execution_broker_callbacks:created_view:券商回報事件_中文欄位\",\n    \"execution_reconciliation_report:created_view:執行對帳報告_中文欄位\",\n    \"execution_tax_lot_closures:created_view:稅務批次平倉明細_中文欄位\",\n    \"execution_tax_lot_summary:created_view:稅務批次年度彙總_中文欄位\",\n    \"fundamentals_clean:created_view:基本面清洗資料_中文欄位\",\n    \"monthly_revenue_simple:created_view:月營收資料_中文欄位\",\n    \"account_info:created_view:帳戶資訊_中文欄位\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
+      "stdout_tail": "    \"fundamentals_clean:synced_view:基本面清洗資料_中文欄位\",\n    \"integration_run_registry:synced_view:整合執行註冊表_中文欄位\",\n    \"live_feature_mount:synced_view:即時特徵掛載_中文欄位\",\n    \"monthly_revenue_simple:synced_view:月營收資料_中文欄位\",\n    \"price_liquidity_daily:synced_view:價格流動性日資料_中文欄位\",\n    \"revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位\",\n    \"risk_gateway_log:synced_view:風控閘門紀錄_中文欄位\",\n    \"schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位\",\n    \"stock_master:synced_view:股票主檔_中文欄位\",\n    \"system_guard_log:synced_view:系統防護紀錄_中文欄位\",\n    \"task_completion_registry:synced_view:任務完成註冊表_中文欄位\",\n    \"trade_history:synced_view:交易紀錄_中文欄位\",\n    \"training_feature_registry:synced_view:訓練特徵註冊表_中文欄位\",\n    \"training_universe_daily:synced_view:每日訓練股票池_中文欄位\",\n    \"基本面清洗:synced_view:基本面清洗_中文欄位\",\n    \"summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
       "stderr_tail": ""
     },
     {
@@ -21,7 +27,7 @@
         "--mode",
         "upgrade"
       ],
-      "stdout_tail": "  \"chinese_column_views\": [\n    \"trade_history:created_view:交易紀錄_中文欄位\",\n    \"active_positions:created_view:目前持倉_中文欄位\",\n    \"daily_chip_data:created_view:法人籌碼日資料_中文欄位\",\n    \"execution_orders:created_view:執行委託單_中文欄位\",\n    \"execution_fills:created_view:執行成交明細_中文欄位\",\n    \"execution_account_snapshot:created_view:執行帳戶快照_中文欄位\",\n    \"execution_positions_snapshot:created_view:執行持倉快照_中文欄位\",\n    \"execution_position_lots:created_view:執行持倉批次_中文欄位\",\n    \"execution_broker_callbacks:created_view:券商回報事件_中文欄位\",\n    \"execution_reconciliation_report:created_view:執行對帳報告_中文欄位\",\n    \"execution_tax_lot_closures:created_view:稅務批次平倉明細_中文欄位\",\n    \"execution_tax_lot_summary:created_view:稅務批次年度彙總_中文欄位\",\n    \"fundamentals_clean:created_view:基本面清洗資料_中文欄位\",\n    \"monthly_revenue_simple:created_view:月營收資料_中文欄位\",\n    \"account_info:created_view:帳戶資訊_中文欄位\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
+      "stdout_tail": "    \"fundamentals_clean:synced_view:基本面清洗資料_中文欄位\",\n    \"integration_run_registry:synced_view:整合執行註冊表_中文欄位\",\n    \"live_feature_mount:synced_view:即時特徵掛載_中文欄位\",\n    \"monthly_revenue_simple:synced_view:月營收資料_中文欄位\",\n    \"price_liquidity_daily:synced_view:價格流動性日資料_中文欄位\",\n    \"revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位\",\n    \"risk_gateway_log:synced_view:風控閘門紀錄_中文欄位\",\n    \"schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位\",\n    \"stock_master:synced_view:股票主檔_中文欄位\",\n    \"system_guard_log:synced_view:系統防護紀錄_中文欄位\",\n    \"task_completion_registry:synced_view:任務完成註冊表_中文欄位\",\n    \"trade_history:synced_view:交易紀錄_中文欄位\",\n    \"training_feature_registry:synced_view:訓練特徵註冊表_中文欄位\",\n    \"training_universe_daily:synced_view:每日訓練股票池_中文欄位\",\n    \"基本面清洗:synced_view:基本面清洗_中文欄位\",\n    \"summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
       "stderr_tail": ""
     },
     {
@@ -39,7 +45,7 @@
       "args": [
         "full-market-percentile"
       ],
-      "stdout_tail": "[23:26:47] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
+      "stdout_tail": "[13:33:15] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
       "stderr_tail": ""
     },
     {
@@ -49,8 +55,8 @@
       "args": [
         "event-calendar-build"
       ],
-      "stdout_tail": "[23:26:48] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
-      "stderr_tail": ""
+      "stdout_tail": "[13:33:16] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
+      "stderr_tail": "C:\\test\\test-2026-3-22OK\\fts_event_calendar_service.py:142: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.\n  df = pd.concat([self._revenue_events(), self._earnings_events(), self._dividend_events()], ignore_index=True)"
     },
     {
       "status": "ok",
@@ -111,6 +117,26 @@
       ],
       "stdout_tail": "{\n  \"status\": \"prebroker_95_not_ready\",\n  \"score\": 77.5,\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\prebroker_95_audit.json\",\n  \"blockers\": [\n    \"exit_ai_artifacts:exit_ai_model_unavailable\",\n    \"portfolio_backtest:portfolio_backtest_no_trades\"\n  ]\n}",
       "stderr_tail": ""
+    },
+    {
+      "status": "error",
+      "script": "fts_admin_cli.py",
+      "returncode": 2,
+      "args": [
+        "maturity-upgrade"
+      ],
+      "stdout_tail": "",
+      "stderr_tail": "usage: fts_admin_cli.py [-h]\n                        {backfill-resilience-audit,broker-contract-audit,callback-ingest,clean-old-doors,completion-audit,drop-readiness,event-calendar-build,exit-artifact-bootstrap,full-market-percentile,healthcheck,portfolio-backtest,prebroker-95-audit,reconciliation-runtime,restart-recovery,second-merge-cleanup,sync-feature-snapshots,training-stress-audit}\nfts_admin_cli.py: error: argument command: invalid choice: 'maturity-upgrade' (choose from backfill-resilience-audit, broker-contract-audit, callback-ingest, clean-old-doors, completion-audit, drop-readiness, event-calendar-build, exit-artifact-bootstrap, full-market-percentile, healthcheck, portfolio-backtest, prebroker-95-audit, reconciliation-runtime, restart-recovery, second-merge-cleanup, sync-feature-snapshots, training-stress-audit)"
+    },
+    {
+      "status": "error",
+      "script": "fts_admin_cli.py",
+      "returncode": 2,
+      "args": [
+        "patch-retirement-report"
+      ],
+      "stdout_tail": "",
+      "stderr_tail": "usage: fts_admin_cli.py [-h]\n                        {backfill-resilience-audit,broker-contract-audit,callback-ingest,clean-old-doors,completion-audit,drop-readiness,event-calendar-build,exit-artifact-bootstrap,full-market-percentile,healthcheck,portfolio-backtest,prebroker-95-audit,reconciliation-runtime,restart-recovery,second-merge-cleanup,sync-feature-snapshots,training-stress-audit}\nfts_admin_cli.py: error: argument command: invalid choice: 'patch-retirement-report' (choose from backfill-resilience-audit, broker-contract-audit, callback-ingest, clean-old-doors, completion-audit, drop-readiness, event-calendar-build, exit-artifact-bootstrap, full-market-percentile, healthcheck, portfolio-backtest, prebroker-95-audit, reconciliation-runtime, restart-recovery, second-merge-cleanup, sync-feature-snapshots, training-stress-audit)"
     }
   ],
   "daily_status": "control_tower_ready",

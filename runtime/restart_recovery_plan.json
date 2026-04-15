@@ -1,8 +1,10 @@
 {
-  "generated_at": "2026-04-14 23:27:02",
-  "status": "restart_recovery_ready",
-  "ready_to_resume_new_orders": true,
-  "blockers": [],
+  "generated_at": "2026-04-15 14:16:42",
+  "status": "restart_recovery_blocked",
+  "ready_to_resume_new_orders": false,
+  "blockers": [
+    "missing_broker_snapshot"
+  ],
   "actions": [
     "restore_local_cash",
     "restore_positions",
@@ -11,5 +13,25 @@
   ],
   "local_snapshot_path": "C:\\test\\test-2026-3-22OK\\state\\restart_recovery_snapshot.json",
   "local_snapshot_found": true,
-  "broker_snapshot_found": false
+  "broker_snapshot_found": false,
+  "execution_ledger_snapshot_found": true,
+  "execution_ledger_snapshot": {
+    "generated_at": "2026-04-15 13:34:26",
+    "lane_orders": {
+      "LONG": [
+        "HC1",
+        "C1"
+      ]
+    },
+    "lane_order_counts": {
+      "LONG": 2
+    },
+    "lane_mutation_counts": {},
+    "broker_side_ledger_shadow_path": "C:\\test\\test-2026-3-22OK\\state\\broker_side_ledger_shadow.json"
+  },
+  "reconciliation_found": true,
+  "reconciliation_status": "reconciled",
+  "cash": null,
+  "positions": [],
+  "fills": []
 }

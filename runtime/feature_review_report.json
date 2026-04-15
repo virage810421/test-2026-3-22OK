@@ -1,0 +1,4018 @@
+{
+  "generated_at": "2026-04-15 14:16:38",
+  "module_version": "v92_feature_review_train_live_parity_fail_closed",
+  "status": "feature_review_ready",
+  "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
+  "row_count": 59741,
+  "feature_count_scored": 213,
+  "approved_feature_count": 23,
+  "reject_feature_count": 190,
+  "noise_watchlist_count": 0,
+  "approval_policy": {
+    "min_coverage": 0.7,
+    "min_unique_count": 3,
+    "min_abs_corr_or_priority": 0.01,
+    "train_live_parity_enforced": true,
+    "priority_or_live_approved_can_pass_evidence_floor": true
+  },
+  "approved_features": [
+    "ADV20_Proxy",
+    "ATR_Pctl_252",
+    "ATR_Pct_Pctl",
+    "DollarVol20_Proxy",
+    "Turnover_Proxy",
+    "Gap_Pct",
+    "Overnight_Return",
+    "ATR14",
+    "Weighted_Sell_Score",
+    "Volume_Z20",
+    "RealizedVol_60",
+    "Score_Gap",
+    "MACD_Hist",
+    "Regime_TrendStrength_X_ScoreGap",
+    "ADX",
+    "Weighted_Buy_Score",
+    "Intraday_Return",
+    "RSI",
+    "Return_Z20",
+    "Volatility_X_SignalConflict",
+    "ATR_Pct",
+    "BB_Width",
+    "RealizedVol_20"
+  ],
+  "noise_watchlist": [],
+  "rejected_features": [
+    "Remaining_Return_To_Planned_Exit",
+    "Remaining_Return_To_Planned_Exit_Pct",
+    "Realized_Return_After_Cost",
+    "Realized_Return_After_Cost_Pct",
+    "Favorable_Move_Pct",
+    "Max_Favorable_Excursion",
+    "Adverse_Move_Pct",
+    "Max_Adverse_Excursion",
+    "ATR_Expansion_Start",
+    "Distance_To_Range_Top",
+    "Distance_To_Range_Bottom",
+    "Exit_Hazard_Score",
+    "Exit_Stop_Tighten_Suggested",
+    "Next_Regime_Prob_Bull",
+    "Score_Gap_Slope_5d",
+    "Score_Gap_Slope_3d",
+    "Range_Position_Pct",
+    "Buy_Score_Slope_5d",
+    "Sell_Score_Slope_5d",
+    "Next_Regime_Prob_Bear",
+    "Buy_Score_Slope_3d",
+    "Sell_Score_Slope_3d",
+    "RSI_Reclaim_Speed",
+    "MACD_Hist_Delta_3d",
+    "Breakout_Risk_Next3",
+    "Bear_Emerging_Score",
+    "Exit_Trend_Decay",
+    "Bull_Emerging_Score",
+    "Proba_Delta_3d",
+    "ADV20_Pctl",
+    "RealizedVol_20_Pctl",
+    "BB_Squeeze_Release",
+    "Target_Position_At_Label",
+    "Favorable_To_Date_Pct",
+    "Current_Close",
+    "Feature_Row_Index",
+    "Range_Center_Distance",
+    "Reversal_Risk_Next3",
+    "Next_Regime_Prob_Range",
+    "Entry_Readiness",
+    "Range_Exhaustion_Score",
+    "Exit_Chip_Weakening",
+    "Turnover_Pctl",
+    "Trend_Exhaustion_Score",
+    "Total_Ratio_Delta_3d",
+    "Foreign_Ratio_Delta_3d",
+    "Range_Mean_Reversion_Score",
+    "Trend_Confidence_Delta",
+    "Range_Width_Pct",
+    "Exit_Regime_Deterioration",
+    "Range_Confidence_Delta",
+    "Unrealized_Return",
+    "Unrealized_Return_Pct",
+    "Breakout_Readiness",
+    "ADX_Delta_3d",
+    "Volume_Z20_Delta",
+    "Range_Compression_Score",
+    "Adverse_To_Date_Pct",
+    "Total_Ratio",
+    "Foreign_Ratio",
+    "Trust_Ratio",
+    "Position_Age_Days",
+    "Position_Day",
+    "Absorption",
+    "Body_Pct",
+    "Chip_Total_Ratio_Rank",
+    "Confirm_Path_State_At_Label",
+    "Dist_MA20_Pct",
+    "Early_Path_State_At_Label",
+    "Entry_Price_Basis",
+    "Entry_State_At_Label",
+    "Exit_State_At_Label",
+    "Foreign_Continuous",
+    "Hold_Days",
+    "Hysteresis_Regime_Label",
+    "Is_Position_Day",
+    "Label_Exit_Type",
+    "Label_Reason",
+    "Lower_Shadow_Pct",
+    "MISS__ADV20_Pctl",
+    "MISS__ADX_Delta_3d",
+    "MISS__ATR_Expansion_Start",
+    "MISS__Adverse_To_Date_Pct",
+    "MISS__BB_Squeeze_Release",
+    "MISS__Bear_Emerging_Score",
+    "MISS__Breakout_Readiness",
+    "MISS__Breakout_Risk_Next3",
+    "MISS__Bull_Emerging_Score",
+    "MISS__Buy_Score_Slope_3d",
+    "MISS__Buy_Score_Slope_5d",
+    "MISS__Current_Close",
+    "MISS__Distance_To_Range_Bottom",
+    "MISS__Distance_To_Range_Top",
+    "MISS__Entry_Readiness",
+    "MISS__Exit_Chip_Weakening",
+    "MISS__Exit_Confirm_Label",
+    "MISS__Exit_Defend_Label",
+    "MISS__Exit_Hazard_Score",
+    "MISS__Exit_Reduce_Label",
+    "MISS__Exit_Regime_Deterioration",
+    "MISS__Exit_Stop_Tighten_Suggested",
+    "MISS__Exit_Trend_Decay",
+    "MISS__Favorable_To_Date_Pct",
+    "MISS__Feature_Row_Index",
+    "MISS__Foreign_Ratio_Delta_3d",
+    "MISS__Is_Position_Day",
+    "MISS__MACD_Hist_Delta_3d",
+    "MISS__Next_Regime_Prob_Bear",
+    "MISS__Next_Regime_Prob_Bull",
+    "MISS__Next_Regime_Prob_Range",
+    "MISS__Position_Age_Days",
+    "MISS__Position_Day",
+    "MISS__Proba_Delta_3d",
+    "MISS__RSI_Reclaim_Speed",
+    "MISS__Range_Bounce_Quality",
+    "MISS__Range_Center_Distance",
+    "MISS__Range_Compression_Score",
+    "MISS__Range_Confidence_Delta",
+    "MISS__Range_Exhaustion_Score",
+    "MISS__Range_Fade_Quality",
+    "MISS__Range_Mean_Reversion_Score",
+    "MISS__Range_Position_Pct",
+    "MISS__Range_Width_Pct",
+    "MISS__RealizedVol_20_Pctl",
+    "MISS__Realized_Return_After_Cost_Pct",
+    "MISS__Remaining_Return_To_Planned_Exit",
+    "MISS__Remaining_Return_To_Planned_Exit_Pct",
+    "MISS__Reversal_Risk_Next3",
+    "MISS__Score_Gap_Slope_3d",
+    "MISS__Score_Gap_Slope_5d",
+    "MISS__Sell_Score_Slope_3d",
+    "MISS__Sell_Score_Slope_5d",
+    "MISS__Setup_Ready_Label",
+    "MISS__Short_Below_MA20_FailedRetake",
+    "MISS__Short_Breakdown_Followthrough",
+    "MISS__Short_Distribution_Pressure",
+    "MISS__Short_Failed_Rebound",
+    "MISS__Short_GapDown_Continuation",
+    "MISS__Short_RS_Weakness",
+    "MISS__Short_Upper_Shadow_Pressure",
+    "MISS__Short_Weak_Bounce",
+    "MISS__Target_Position_At_Label",
+    "MISS__Total_Ratio_Delta_3d",
+    "MISS__Trend_Confidence_Delta",
+    "MISS__Trend_Exhaustion_Score",
+    "MISS__Trigger_Confirm_Label",
+    "MISS__Turnover_Pctl",
+    "MISS__Unrealized_Return",
+    "MISS__Unrealized_Return_Pct",
+    "MISS__Volume_Z20_Delta",
+    "MR_Long_Accumulation",
+    "MR_Long_Spring",
+    "MR_Short_Distribution",
+    "MR_Short_Trap",
+    "Range_Bounce_Quality",
+    "Range_Fade_Quality",
+    "Revenue_YoY_Rank",
+    "Short_Below_MA20_FailedRetake",
+    "Short_Breakdown_Followthrough",
+    "Short_Distribution_Pressure",
+    "Short_Failed_Rebound",
+    "Short_GapDown_Continuation",
+    "Short_RS_Weakness",
+    "Short_Upper_Shadow_Pressure",
+    "Short_Weak_Bounce",
+    "Signal_Conflict",
+    "Stop_Hit",
+    "Touched_SL",
+    "Touched_TP",
+    "Transition_Label",
+    "Trust_Continuous",
+    "Upper_Shadow_Pct",
+    "Vol_Squeeze",
+    "Volume_Ratio",
+    "buy_c2",
+    "buy_c3",
+    "buy_c4",
+    "buy_c5",
+    "buy_c6",
+    "buy_c7",
+    "buy_c8",
+    "buy_c9",
+    "sell_c2",
+    "sell_c3",
+    "sell_c4",
+    "sell_c5",
+    "sell_c6",
+    "sell_c7",
+    "sell_c8",
+    "sell_c9"
+  ],
+  "feature_rows": [
+    {
+      "feature": "ADV20_Proxy",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 41829,
+      "zero_ratio": 0.0035,
+      "corr_to_target": 0.030236,
+      "abs_corr_to_target": 0.030236,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "ATR_Pctl_252",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 7185,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.024762,
+      "abs_corr_to_target": 0.024762,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "ATR_Pct_Pctl",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 7430,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.023865,
+      "abs_corr_to_target": 0.023865,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "DollarVol20_Proxy",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 41917,
+      "zero_ratio": 0.0035,
+      "corr_to_target": 0.020826,
+      "abs_corr_to_target": 0.020826,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Turnover_Proxy",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 41848,
+      "zero_ratio": 0.0014,
+      "corr_to_target": 0.018749,
+      "abs_corr_to_target": 0.018749,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Gap_Pct",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 15502,
+      "zero_ratio": 0.2272,
+      "corr_to_target": 0.017454,
+      "abs_corr_to_target": 0.017454,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Overnight_Return",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 15502,
+      "zero_ratio": 0.2272,
+      "corr_to_target": 0.017454,
+      "abs_corr_to_target": 0.017454,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "ATR14",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 22966,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.01707,
+      "abs_corr_to_target": 0.01707,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Weighted_Sell_Score",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 22,
+      "zero_ratio": 0.1774,
+      "corr_to_target": -0.014221,
+      "abs_corr_to_target": 0.014221,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Volume_Z20",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 42404,
+      "zero_ratio": 0.0035,
+      "corr_to_target": -0.013536,
+      "abs_corr_to_target": 0.013536,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "RealizedVol_60",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 40961,
+      "zero_ratio": 0.0111,
+      "corr_to_target": 0.012764,
+      "abs_corr_to_target": 0.012764,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Score_Gap",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 36,
+      "zero_ratio": 0.0061,
+      "corr_to_target": 0.011834,
+      "abs_corr_to_target": 0.011834,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "MACD_Hist",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 42419,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.011506,
+      "abs_corr_to_target": 0.011506,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Regime_TrendStrength_X_ScoreGap",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 41796,
+      "zero_ratio": 0.0063,
+      "corr_to_target": 0.010357,
+      "abs_corr_to_target": 0.010357,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "ADX",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 42046,
+      "zero_ratio": 0.0003,
+      "corr_to_target": -0.009771,
+      "abs_corr_to_target": 0.009771,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Weighted_Buy_Score",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 23,
+      "zero_ratio": 0.2217,
+      "corr_to_target": 0.009105,
+      "abs_corr_to_target": 0.009105,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Intraday_Return",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 20225,
+      "zero_ratio": 0.0997,
+      "corr_to_target": -0.008824,
+      "abs_corr_to_target": 0.008824,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "RSI",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 30773,
+      "zero_ratio": 0.0012,
+      "corr_to_target": 0.005829,
+      "abs_corr_to_target": 0.005829,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Return_Z20",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 41845,
+      "zero_ratio": 0.0035,
+      "corr_to_target": -0.00536,
+      "abs_corr_to_target": 0.00536,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Volatility_X_SignalConflict",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 1814,
+      "zero_ratio": 0.8336,
+      "corr_to_target": -0.004606,
+      "abs_corr_to_target": 0.004606,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "ATR_Pct",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 39611,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.00452,
+      "abs_corr_to_target": 0.00452,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "BB_Width",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 41402,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.000856,
+      "abs_corr_to_target": 0.000856,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "RealizedVol_20",
+      "status": "approved",
+      "coverage": 1.0,
+      "unique_count": 41121,
+      "zero_ratio": 0.0035,
+      "corr_to_target": 3.6e-05,
+      "abs_corr_to_target": 3.6e-05,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Remaining_Return_To_Planned_Exit",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 7837,
+      "zero_ratio": 0.0001,
+      "corr_to_target": 1.0,
+      "abs_corr_to_target": 1.0,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Remaining_Return_To_Planned_Exit_Pct",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 7838,
+      "zero_ratio": 0.0001,
+      "corr_to_target": 1.0,
+      "abs_corr_to_target": 1.0,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Realized_Return_After_Cost",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 21139,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.999984,
+      "abs_corr_to_target": 0.999984,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Realized_Return_After_Cost_Pct",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2635,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.729197,
+      "abs_corr_to_target": 0.729197,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Favorable_Move_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 13296,
+      "zero_ratio": 0.0739,
+      "corr_to_target": 0.565296,
+      "abs_corr_to_target": 0.565296,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Max_Favorable_Excursion",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 13296,
+      "zero_ratio": 0.0739,
+      "corr_to_target": 0.565296,
+      "abs_corr_to_target": 0.565296,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Adverse_Move_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 13295,
+      "zero_ratio": 0.0611,
+      "corr_to_target": -0.509572,
+      "abs_corr_to_target": 0.509572,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Max_Adverse_Excursion",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 13295,
+      "zero_ratio": 0.0611,
+      "corr_to_target": -0.509572,
+      "abs_corr_to_target": 0.509572,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "ATR_Expansion_Start",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 4073,
+      "zero_ratio": 0.4909,
+      "corr_to_target": -0.053166,
+      "abs_corr_to_target": 0.053166,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Distance_To_Range_Top",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 6127,
+      "zero_ratio": 0.033,
+      "corr_to_target": -0.051428,
+      "abs_corr_to_target": 0.051428,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Distance_To_Range_Bottom",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 6267,
+      "zero_ratio": 0.0308,
+      "corr_to_target": 0.049959,
+      "abs_corr_to_target": 0.049959,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Exit_Hazard_Score",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7499,
+      "zero_ratio": 0.0001,
+      "corr_to_target": -0.044731,
+      "abs_corr_to_target": 0.044731,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Exit_Stop_Tighten_Suggested",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7477,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.044731,
+      "abs_corr_to_target": 0.044731,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Next_Regime_Prob_Bull",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7285,
+      "zero_ratio": 0.0931,
+      "corr_to_target": 0.042014,
+      "abs_corr_to_target": 0.042014,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Score_Gap_Slope_5d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 58,
+      "zero_ratio": 0.1371,
+      "corr_to_target": 0.041813,
+      "abs_corr_to_target": 0.041813,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Score_Gap_Slope_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 55,
+      "zero_ratio": 0.1996,
+      "corr_to_target": 0.041316,
+      "abs_corr_to_target": 0.041316,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Position_Pct",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 5180,
+      "zero_ratio": 0.0195,
+      "corr_to_target": 0.040121,
+      "abs_corr_to_target": 0.040121,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Buy_Score_Slope_5d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 12,
+      "zero_ratio": 0.1941,
+      "corr_to_target": 0.037558,
+      "abs_corr_to_target": 0.037558,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Sell_Score_Slope_5d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 12,
+      "zero_ratio": 0.1931,
+      "corr_to_target": -0.037091,
+      "abs_corr_to_target": 0.037091,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Next_Regime_Prob_Bear",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 6869,
+      "zero_ratio": 0.1438,
+      "corr_to_target": -0.036163,
+      "abs_corr_to_target": 0.036163,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Buy_Score_Slope_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 11,
+      "zero_ratio": 0.2484,
+      "corr_to_target": 0.035888,
+      "abs_corr_to_target": 0.035888,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Sell_Score_Slope_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 11,
+      "zero_ratio": 0.2516,
+      "corr_to_target": -0.035848,
+      "abs_corr_to_target": 0.035848,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "RSI_Reclaim_Speed",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7175,
+      "zero_ratio": 0.0056,
+      "corr_to_target": 0.031482,
+      "abs_corr_to_target": 0.031482,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "MACD_Hist_Delta_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 8165,
+      "zero_ratio": 0.0012,
+      "corr_to_target": 0.031472,
+      "abs_corr_to_target": 0.031472,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Breakout_Risk_Next3",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7375,
+      "zero_ratio": 0.0666,
+      "corr_to_target": -0.029103,
+      "abs_corr_to_target": 0.029103,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Bear_Emerging_Score",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 4748,
+      "zero_ratio": 0.1438,
+      "corr_to_target": -0.028489,
+      "abs_corr_to_target": 0.028489,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Exit_Trend_Decay",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7127,
+      "zero_ratio": 0.1157,
+      "corr_to_target": -0.027877,
+      "abs_corr_to_target": 0.027877,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Bull_Emerging_Score",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 4728,
+      "zero_ratio": 0.0931,
+      "corr_to_target": 0.026183,
+      "abs_corr_to_target": 0.026183,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Proba_Delta_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 37,
+      "zero_ratio": 0.0896,
+      "corr_to_target": -0.023839,
+      "abs_corr_to_target": 0.023839,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "ADV20_Pctl",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2077,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.022039,
+      "abs_corr_to_target": 0.022039,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "RealizedVol_20_Pctl",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2093,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.020294,
+      "abs_corr_to_target": 0.020294,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "BB_Squeeze_Release",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 3216,
+      "zero_ratio": 0.6466,
+      "corr_to_target": -0.019682,
+      "abs_corr_to_target": 0.019682,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Target_Position_At_Label",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 3,
+      "zero_ratio": 0.997,
+      "corr_to_target": -0.019456,
+      "abs_corr_to_target": 0.019456,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Favorable_To_Date_Pct",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 4470,
+      "zero_ratio": 0.0803,
+      "corr_to_target": 0.015681,
+      "abs_corr_to_target": 0.015681,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Current_Close",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 2579,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.014613,
+      "abs_corr_to_target": 0.014613,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Feature_Row_Index",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 725,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.012646,
+      "abs_corr_to_target": 0.012646,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Range_Center_Distance",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 6753,
+      "zero_ratio": 0.0215,
+      "corr_to_target": -0.012451,
+      "abs_corr_to_target": 0.012451,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Reversal_Risk_Next3",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 5959,
+      "zero_ratio": 0.2082,
+      "corr_to_target": -0.010986,
+      "abs_corr_to_target": 0.010986,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Next_Regime_Prob_Range",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7724,
+      "zero_ratio": 0.0533,
+      "corr_to_target": -0.010908,
+      "abs_corr_to_target": 0.010908,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Entry_Readiness",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 8003,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.010637,
+      "abs_corr_to_target": 0.010637,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Exhaustion_Score",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7598,
+      "zero_ratio": 0.0431,
+      "corr_to_target": -0.010529,
+      "abs_corr_to_target": 0.010529,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Exit_Chip_Weakening",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 19,
+      "zero_ratio": 0.9984,
+      "corr_to_target": -0.01047,
+      "abs_corr_to_target": 0.01047,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Turnover_Pctl",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2202,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.010101,
+      "abs_corr_to_target": 0.010101,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Trend_Exhaustion_Score",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7857,
+      "zero_ratio": 0.0012,
+      "corr_to_target": 0.005613,
+      "abs_corr_to_target": 0.005613,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Total_Ratio_Delta_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 38,
+      "zero_ratio": 0.9963,
+      "corr_to_target": -0.004741,
+      "abs_corr_to_target": 0.004741,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Foreign_Ratio_Delta_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 38,
+      "zero_ratio": 0.9963,
+      "corr_to_target": -0.004274,
+      "abs_corr_to_target": 0.004274,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Mean_Reversion_Score",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7699,
+      "zero_ratio": 0.0412,
+      "corr_to_target": -0.004061,
+      "abs_corr_to_target": 0.004061,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Trend_Confidence_Delta",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7750,
+      "zero_ratio": 0.0359,
+      "corr_to_target": -0.003508,
+      "abs_corr_to_target": 0.003508,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Width_Pct",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7018,
+      "zero_ratio": 0.0,
+      "corr_to_target": -0.003464,
+      "abs_corr_to_target": 0.003464,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Exit_Regime_Deterioration",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 4775,
+      "zero_ratio": 0.4077,
+      "corr_to_target": -0.003327,
+      "abs_corr_to_target": 0.003327,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Confidence_Delta",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7788,
+      "zero_ratio": 0.0361,
+      "corr_to_target": 0.003171,
+      "abs_corr_to_target": 0.003171,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Unrealized_Return",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 9045,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.002631,
+      "abs_corr_to_target": 0.002631,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Unrealized_Return_Pct",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 9047,
+      "zero_ratio": 0.0,
+      "corr_to_target": 0.002631,
+      "abs_corr_to_target": 0.002631,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Breakout_Readiness",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7647,
+      "zero_ratio": 0.0533,
+      "corr_to_target": -0.001957,
+      "abs_corr_to_target": 0.001957,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "ADX_Delta_3d",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 8158,
+      "zero_ratio": 0.0012,
+      "corr_to_target": 0.001884,
+      "abs_corr_to_target": 0.001884,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Volume_Z20_Delta",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 8152,
+      "zero_ratio": 0.0023,
+      "corr_to_target": 0.001516,
+      "abs_corr_to_target": 0.001516,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Compression_Score",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 7672,
+      "zero_ratio": 0.0533,
+      "corr_to_target": 0.001282,
+      "abs_corr_to_target": 0.001282,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Adverse_To_Date_Pct",
+      "status": "reject",
+      "coverage": 0.2501,
+      "unique_count": 4645,
+      "zero_ratio": 0.0481,
+      "corr_to_target": 0.000842,
+      "abs_corr_to_target": 0.000842,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Total_Ratio",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 38,
+      "zero_ratio": 0.9989,
+      "corr_to_target": 0.000796,
+      "abs_corr_to_target": 0.000796,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Foreign_Ratio",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 38,
+      "zero_ratio": 0.9989,
+      "corr_to_target": 0.000731,
+      "abs_corr_to_target": 0.000731,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Trust_Ratio",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 37,
+      "zero_ratio": 0.9989,
+      "corr_to_target": 0.000548,
+      "abs_corr_to_target": 0.000548,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Position_Age_Days",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 6,
+      "zero_ratio": 0.1667,
+      "corr_to_target": 0.000537,
+      "abs_corr_to_target": 0.000537,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Position_Day",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 6,
+      "zero_ratio": 0.1667,
+      "corr_to_target": 0.000537,
+      "abs_corr_to_target": 0.000537,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Absorption",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9999,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Body_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Chip_Total_Ratio_Rank",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 0.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "low_unique_count"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Confirm_Path_State_At_Label",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Dist_MA20_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Early_Path_State_At_Label",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Entry_Price_Basis",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Entry_State_At_Label",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Exit_State_At_Label",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Foreign_Continuous",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Hold_Days",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 0.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Hysteresis_Regime_Label",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Is_Position_Day",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2,
+      "zero_ratio": 0.1667,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Label_Exit_Type",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Label_Reason",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Lower_Shadow_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__ADV20_Pctl",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__ADX_Delta_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__ATR_Expansion_Start",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Adverse_To_Date_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__BB_Squeeze_Release",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Bear_Emerging_Score",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Breakout_Readiness",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Breakout_Risk_Next3",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Bull_Emerging_Score",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Buy_Score_Slope_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Buy_Score_Slope_5d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Current_Close",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Distance_To_Range_Bottom",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Distance_To_Range_Top",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Entry_Readiness",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Chip_Weakening",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Confirm_Label",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Defend_Label",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Hazard_Score",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Reduce_Label",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Regime_Deterioration",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Stop_Tighten_Suggested",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Exit_Trend_Decay",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Favorable_To_Date_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Feature_Row_Index",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Foreign_Ratio_Delta_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Is_Position_Day",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__MACD_Hist_Delta_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Next_Regime_Prob_Bear",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Next_Regime_Prob_Bull",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Next_Regime_Prob_Range",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Position_Age_Days",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Position_Day",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Proba_Delta_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__RSI_Reclaim_Speed",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Bounce_Quality",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Center_Distance",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Compression_Score",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Confidence_Delta",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Exhaustion_Score",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Fade_Quality",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Mean_Reversion_Score",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Position_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Range_Width_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__RealizedVol_20_Pctl",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Realized_Return_After_Cost_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Remaining_Return_To_Planned_Exit",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Remaining_Return_To_Planned_Exit_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Reversal_Risk_Next3",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Score_Gap_Slope_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Score_Gap_Slope_5d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Sell_Score_Slope_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Sell_Score_Slope_5d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Setup_Ready_Label",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_Below_MA20_FailedRetake",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_Breakdown_Followthrough",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_Distribution_Pressure",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_Failed_Rebound",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_GapDown_Continuation",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_RS_Weakness",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_Upper_Shadow_Pressure",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Short_Weak_Bounce",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Target_Position_At_Label",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Total_Ratio_Delta_3d",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Trend_Confidence_Delta",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Trend_Exhaustion_Score",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Trigger_Confirm_Label",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Turnover_Pctl",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Unrealized_Return",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Unrealized_Return_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.2501,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MISS__Volume_Z20_Delta",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.3001,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "MR_Long_Accumulation",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9995,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "MR_Long_Spring",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.944,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "MR_Short_Distribution",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9996,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "MR_Short_Trap",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9261,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Bounce_Quality",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Range_Fade_Quality",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Revenue_YoY_Rank",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 0.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "low_unique_count"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_Below_MA20_FailedRetake",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2,
+      "zero_ratio": 0.6967,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_Breakdown_Followthrough",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2,
+      "zero_ratio": 0.8676,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_Distribution_Pressure",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2,
+      "zero_ratio": 0.9988,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_Failed_Rebound",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_GapDown_Continuation",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2,
+      "zero_ratio": 0.8076,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_RS_Weakness",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_Upper_Shadow_Pressure",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Short_Weak_Bounce",
+      "status": "reject",
+      "coverage": 0.3001,
+      "unique_count": 2,
+      "zero_ratio": 0.6154,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Signal_Conflict",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.8336,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Stop_Hit",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.6668,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Touched_SL",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.6668,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Touched_TP",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9523,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Transition_Label",
+      "status": "reject",
+      "coverage": 0.0,
+      "unique_count": 0,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": true,
+      "reject_reasons": [
+        "coverage_below_floor",
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Trust_Continuous",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Upper_Shadow_Pct",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "Vol_Squeeze",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.4513,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "Volume_Ratio",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 1,
+      "zero_ratio": 1.0,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": true,
+      "live_approved": true,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero"
+      ],
+      "warn_reasons": []
+    },
+    {
+      "feature": "buy_c2",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.5159,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "buy_c3",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.6793,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "buy_c4",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.4988,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "buy_c5",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9537,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "buy_c6",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.5125,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "buy_c7",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9993,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "buy_c8",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.5858,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "buy_c9",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9993,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c2",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.5124,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c3",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.6793,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c4",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.5012,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c5",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9417,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c6",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.4877,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c7",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9995,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c8",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.5849,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    },
+    {
+      "feature": "sell_c9",
+      "status": "reject",
+      "coverage": 1.0,
+      "unique_count": 2,
+      "zero_ratio": 0.9996,
+      "corr_to_target": null,
+      "abs_corr_to_target": null,
+      "cataloged": false,
+      "live_approved": false,
+      "priority_feature": false,
+      "reject_reasons": [
+        "low_unique_count",
+        "almost_all_zero",
+        "not_live_approved_train_live_parity"
+      ],
+      "warn_reasons": [
+        "not_in_feature_catalog"
+      ]
+    }
+  ],
+  "hard_blocks": []
+}

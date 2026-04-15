@@ -10,7 +10,7 @@
         "approved_pool_type": "LONG",
         "model_scope": "LONG",
         "range_confidence": 0.0,
-        "updated_at": "2026-04-15 00:06:20"
+        "updated_at": "2026-04-15 13:34:07"
       },
       "C1": {
         "order_id": "C1",
@@ -304,6 +304,41 @@
     },
     {
       "at": "2026-04-15 00:06:20",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-15 09:33:55",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-15 09:34:41",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-15 09:53:00",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-15 10:47:07",
+      "order_id": "HC1",
+      "lane": "LONG",
+      "status": "FILLED",
+      "event_type": "FILL"
+    },
+    {
+      "at": "2026-04-15 13:34:07",
       "order_id": "HC1",
       "lane": "LONG",
       "status": "FILLED",

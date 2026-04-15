@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-15 00:06:46",
+  "generated_at": "2026-04-15 13:34:26",
   "system_name": "正式交易主控版_v83_official_main",
   "go_for_model_linkage": true,
   "governance": {
-    "generated_at": "2026-04-15 00:06:46",
+    "generated_at": "2026-04-15 13:34:26",
     "module_version": "v20260414_training_governance_truthful_live_metrics",
     "system_name": "正式交易主控版_v83_official_main",
     "orchestrator_status": "training_governed_v83",
@@ -368,7 +368,7 @@
       }
     },
     "training_integrity": {
-      "generated_at": "2026-04-15 00:06:46",
+      "generated_at": "2026-04-15 13:34:26",
       "thresholds": {
         "min_oot_hit_rate": 0.5,
         "min_oot_profit_factor": 1.0,
@@ -740,7 +740,7 @@
       "status": "training_integrity_blocked"
     },
     "candidate_evaluation": {
-      "generated_at": "2026-04-15 00:06:46",
+      "generated_at": "2026-04-15 13:34:26",
       "system_name": "正式交易主控版_v83_official_main",
       "thresholds": {
         "min_win_rate": 0.5,
@@ -802,7 +802,13 @@
       "sample_split_guard_ok": true,
       "feature_selection_train_only": true
     },
-    "status": "training_governance_mainline_ready"
+    "blocked_reasons": [
+      "training_integrity_blocked",
+      "candidate_not_ready",
+      "live_metrics_unavailable",
+      "training_readiness_incomplete"
+    ],
+    "status": "training_governance_mainline_blocked"
   },
   "model_live_signal_gate": {},
   "failures": [],

@@ -169,3 +169,23 @@
 [00:06:46] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
 [00:06:46] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
 [00:06:46] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[09:34:59] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[09:34:59] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[09:34:59] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[09:34:59] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[09:34:59] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[09:53:15] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[09:53:15] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[09:53:15] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[09:53:15] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[09:53:15] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[10:47:24] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[10:47:24] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[10:47:24] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[10:47:24] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[10:47:24] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json
+[13:34:26] 🧬 已輸出 model registry：C:\test\test-2026-3-22OK\runtime\model_registry_runtime.json
+[13:34:26] 🧪 Model Gate | go_for_model_linkage=True | failures=0 | warnings=1
+[13:34:26] 🛡️ Live Safety Gate | paper_live_safe=False | failures=1 | warnings=0 | blocked_orders=0
+[13:34:26] 🧪 已輸出 validation suite report：C:\test\test-2026-3-22OK\runtime\validation_suite_report.json
+[13:34:26] ♻️ 已輸出 recovery validation：C:\test\test-2026-3-22OK\runtime\recovery_validation.json

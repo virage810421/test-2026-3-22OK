@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-04-15 14:16:42",
+  "module_version": "v92_true_broker_five_red_lights_gate",
+  "status": "blocked_for_real_broker",
+  "lights": {
+    "api": false,
+    "callback": false,
+    "ledger": false,
+    "reconcile": true,
+    "kill_switch": true
+  },
+  "red_lights": [
+    "api",
+    "callback",
+    "ledger"
+  ],
+  "green_count": 2,
+  "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
+  "evidence": {
+    "adapter_enabled": false,
+    "provider_name": "fill_me_after_account_opened",
+    "base_url_present": false,
+    "auth_api_key_present": false,
+    "auth_account_id_present": false,
+    "probe_ready_for_live_connect": false,
+    "callback_files": [],
+    "ledger_files": [],
+    "reconciliation_status": "reconciled",
+    "kill_switch_state_present": true
+  },
+  "production_rule": "LIVE/真券商必須五燈全綠；沒有真實券商 API/callback/ledger/reconcile 實證時不可補分。"
+}

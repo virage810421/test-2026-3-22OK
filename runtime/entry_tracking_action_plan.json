@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-04-15 14:16:39",
+  "status": "entry_tracking_action_plan_ready",
+  "actions": [],
+  "policy": {
+    "block_expired_prepare_or_pilot": true,
+    "cap_pilot_entry_qty_to_one_third": true
+  }
+}

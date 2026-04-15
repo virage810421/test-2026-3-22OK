@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 00:06:46",
+  "generated_at": "2026-04-15 13:34:26",
   "mode": "daily",
   "module_version": "v20260414_prebroker95_closure_bootstrap_cli",
   "outputs": {
@@ -8,7 +8,7 @@
       "payload": {
         "project_root": "C:\\test\\test-2026-3-22OK",
         "summary": {
-          "python_files_total": 236,
+          "python_files_total": 246,
           "compile_failures": 0,
           "core_import_failures": 0,
           "tri_lane_import_failures": 0,
@@ -18,7 +18,7 @@
           "bridge_interface_failures": 0,
           "tri_lane_smoke_failures": 0,
           "json_persistence_risk_failures": 0,
-          "core_exception_policy_failures": 0
+          "core_exception_policy_failures": 1
         },
         "compile_results": [
           {
@@ -53,6 +53,16 @@
           },
           {
             "file": "_patch_manifest_v89_formal_hardening.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "_patch_manifest_v92_maturity_gap_closed_loop.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "_patch_manifest_v93_schema_view_autosync.py",
             "ok": true,
             "error": ""
           },
@@ -577,6 +587,11 @@
             "error": ""
           },
           {
+            "file": "fts_entry_tracking_service.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_etl_daily_chip_service.py",
             "ok": true,
             "error": ""
@@ -598,6 +613,11 @@
           },
           {
             "file": "fts_exception_policy.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_execution_journal_service.py",
             "ok": true,
             "error": ""
           },
@@ -638,6 +658,11 @@
           },
           {
             "file": "fts_feature_observability.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_feature_review_service.py",
             "ok": true,
             "error": ""
           },
@@ -767,12 +792,27 @@
             "error": ""
           },
           {
+            "file": "fts_maturity_upgrade_suite.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_model_gate.py",
             "ok": true,
             "error": ""
           },
           {
+            "file": "fts_model_governance_enhancement.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_model_layer.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_model_live_signal_gate.py",
             "ok": true,
             "error": ""
           },
@@ -813,6 +853,11 @@
           },
           {
             "file": "fts_portfolio_backtester.py",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "file": "fts_position_lifecycle_service.py",
             "ok": true,
             "error": ""
           },
@@ -1082,6 +1127,11 @@
             "error": ""
           },
           {
+            "file": "fts_true_broker_readiness_gate.py",
+            "ok": true,
+            "error": ""
+          },
+          {
             "file": "fts_upgrade_runtime.py",
             "ok": true,
             "error": ""
@@ -1207,119 +1257,119 @@
             "module": "formal_trading_system_v83_official_main",
             "ok": true,
             "error": "",
-            "seconds": 2.081,
+            "seconds": 3.083,
             "severity": "hard"
           },
           {
             "module": "fts_fundamentals_etl_mainline",
             "ok": true,
             "error": "",
-            "seconds": 0.773,
+            "seconds": 1.294,
             "severity": "hard"
           },
           {
             "module": "fts_training_governance_mainline",
             "ok": true,
             "error": "",
-            "seconds": 1.97,
+            "seconds": 2.867,
             "severity": "hard"
           },
           {
             "module": "fts_feature_service",
             "ok": true,
             "error": "",
-            "seconds": 0.408,
+            "seconds": 0.847,
             "severity": "hard"
           },
           {
             "module": "fts_screening_engine",
             "ok": true,
             "error": "",
-            "seconds": 1.099,
+            "seconds": 1.776,
             "severity": "hard"
           },
           {
             "module": "fts_cross_sectional_percentile_service",
             "ok": true,
             "error": "",
-            "seconds": 0.825,
+            "seconds": 1.406,
             "severity": "hard"
           },
           {
             "module": "fts_event_calendar_service",
             "ok": true,
             "error": "",
-            "seconds": 0.405,
+            "seconds": 0.829,
             "severity": "hard"
           },
           {
             "module": "fts_decision_execution_bridge",
             "ok": true,
             "error": "",
-            "seconds": 0.413,
+            "seconds": 0.809,
             "severity": "hard"
           },
           {
             "module": "fts_broker_contract_audit",
             "ok": true,
             "error": "",
-            "seconds": 0.407,
+            "seconds": 1.137,
             "severity": "hard"
           },
           {
             "module": "fts_callback_ingestion_service",
             "ok": true,
             "error": "",
-            "seconds": 0.41,
+            "seconds": 0.867,
             "severity": "hard"
           },
           {
             "module": "fts_reconciliation_runtime",
             "ok": true,
             "error": "",
-            "seconds": 0.435,
+            "seconds": 0.875,
             "severity": "hard"
           },
           {
             "module": "fts_restart_recovery_service",
             "ok": true,
             "error": "",
-            "seconds": 0.394,
+            "seconds": 0.822,
             "severity": "hard"
           },
           {
             "module": "fts_exit_model_artifact_bootstrap",
             "ok": true,
             "error": "",
-            "seconds": 0.46,
+            "seconds": 0.848,
             "severity": "hard"
           },
           {
             "module": "fts_portfolio_backtester",
             "ok": true,
             "error": "",
-            "seconds": 0.423,
+            "seconds": 0.856,
             "severity": "hard"
           },
           {
             "module": "fts_prebroker_95_audit",
             "ok": true,
             "error": "",
-            "seconds": 0.424,
+            "seconds": 0.936,
             "severity": "hard"
           },
           {
             "module": "model_governance",
             "ok": true,
             "error": "",
-            "seconds": 0.074,
+            "seconds": 0.157,
             "severity": "hard"
           },
           {
             "module": "db_setup",
             "ok": true,
             "error": "",
-            "seconds": 0.576,
+            "seconds": 1.213,
             "severity": "hard"
           }
         ],
@@ -1328,84 +1378,84 @@
             "module": "fts_tri_lane_orchestrator",
             "ok": true,
             "error": "",
-            "seconds": 0.574,
+            "seconds": 0.992,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_promoter",
             "ok": true,
             "error": "",
-            "seconds": 0.405,
+            "seconds": 0.865,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_loader",
             "ok": true,
             "error": "",
-            "seconds": 0.407,
+            "seconds": 1.053,
             "severity": "hard"
           },
           {
             "module": "fts_live_watchlist_registry",
             "ok": true,
             "error": "",
-            "seconds": 0.403,
+            "seconds": 0.865,
             "severity": "hard"
           },
           {
             "module": "fts_execution_layer",
             "ok": true,
             "error": "",
-            "seconds": 0.413,
+            "seconds": 0.913,
             "severity": "hard"
           },
           {
             "module": "fts_execution_ledger",
             "ok": true,
             "error": "",
-            "seconds": 0.558,
+            "seconds": 1.176,
             "severity": "hard"
           },
           {
             "module": "fts_execution_state_machine",
             "ok": true,
             "error": "",
-            "seconds": 0.068,
+            "seconds": 0.149,
             "severity": "hard"
           },
           {
             "module": "fts_execution_models",
             "ok": true,
             "error": "",
-            "seconds": 0.596,
+            "seconds": 1.052,
             "severity": "hard"
           },
           {
             "module": "fts_reconciliation_engine",
             "ok": true,
             "error": "",
-            "seconds": 0.563,
+            "seconds": 1.009,
             "severity": "hard"
           },
           {
             "module": "fts_repair_workflow_engine",
             "ok": true,
             "error": "",
-            "seconds": 0.546,
+            "seconds": 1.036,
             "severity": "hard"
           },
           {
             "module": "fts_model_layer",
             "ok": true,
-            "error": "",
-            "seconds": 1.595,
+            "error": "C:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator DecisionTreeClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(\nC:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator RandomForestClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(",
+            "seconds": 2.902,
             "severity": "hard"
           },
           {
             "module": "live_paper_trading",
             "ok": true,
             "error": "",
-            "seconds": 2.16,
+            "seconds": 3.598,
             "severity": "hard"
           }
         ],
@@ -1427,6 +1477,8 @@
             "fts_strategy_policy_layer"
           ],
           "_patch_manifest_v89_formal_hardening.py": [],
+          "_patch_manifest_v92_maturity_gap_closed_loop.py": [],
+          "_patch_manifest_v93_schema_view_autosync.py": [],
           "_patch_manifest_架構收尾.py": [],
           "_patch_manifest_設計不良修改5.py": [],
           "absorbed_references\\advanced_chart1_original\\advanced_chart.py": [
@@ -1619,7 +1671,8 @@
             "risk_gateway"
           ],
           "formal_trading_system_v83_official_main.py": [
-            "fts_control_tower"
+            "fts_control_tower",
+            "fts_kill_switch"
           ],
           "fts_admin_cli.py": [
             "cleanup_second_merge_retired_py_files",
@@ -1754,11 +1807,14 @@
             "fts_admin_suite",
             "fts_broker_core",
             "fts_config",
+            "fts_execution_journal_service",
             "fts_execution_runtime",
             "fts_gatekeeper",
+            "fts_kill_switch",
             "fts_live_readiness_gate",
             "fts_live_safety",
             "fts_live_suite",
+            "fts_maturity_upgrade_suite",
             "fts_model_gate",
             "fts_operations_suite",
             "fts_pipeline",
@@ -1823,6 +1879,10 @@
             "config",
             "fts_prelive_runtime"
           ],
+          "fts_entry_tracking_service.py": [
+            "fts_config",
+            "fts_execution_journal_service"
+          ],
           "fts_etl_daily_chip_service.py": [
             "config",
             "fts_etl_monthly_revenue_service",
@@ -1841,6 +1901,9 @@
             "fts_utils"
           ],
           "fts_exception_policy.py": [],
+          "fts_execution_journal_service.py": [
+            "fts_config"
+          ],
           "fts_execution_layer.py": [
             "config",
             "fts_config",
@@ -1882,6 +1945,11 @@
             "fts_config",
             "fts_feature_catalog",
             "fts_utils"
+          ],
+          "fts_feature_review_service.py": [
+            "config",
+            "fts_config",
+            "fts_feature_catalog"
           ],
           "fts_feature_service.py": [
             "fts_config",
@@ -2001,14 +2069,24 @@
             "fts_utils"
           ],
           "fts_market_rules_tw.py": [],
+          "fts_maturity_upgrade_suite.py": [
+            "fts_config"
+          ],
           "fts_model_gate.py": [
             "fts_upgrade_runtime"
+          ],
+          "fts_model_governance_enhancement.py": [
+            "config",
+            "fts_config"
           ],
           "fts_model_layer.py": [
             "config",
             "fts_config",
             "fts_feature_service",
             "fts_runtime_diagnostics"
+          ],
+          "fts_model_live_signal_gate.py": [
+            "fts_config"
           ],
           "fts_models.py": [],
           "fts_module_fate_map.py": [
@@ -2039,6 +2117,10 @@
             "fts_config",
             "fts_exception_policy",
             "fts_utils"
+          ],
+          "fts_position_lifecycle_service.py": [
+            "fts_config",
+            "fts_execution_journal_service"
           ],
           "fts_prebroker_95_audit.py": [
             "fts_broker_contract_audit",
@@ -2241,6 +2323,7 @@
             "config",
             "fts_data_quality_guard",
             "fts_feature_catalog",
+            "fts_feature_review_service",
             "model_governance"
           ],
           "fts_trainer_promotion_policy.py": [
@@ -2299,6 +2382,9 @@
             "fts_execution_state_machine",
             "fts_prelive_runtime",
             "fts_watchlist_service"
+          ],
+          "fts_true_broker_readiness_gate.py": [
+            "fts_config"
           ],
           "fts_upgrade_runtime.py": [
             "fts_config"
@@ -2395,6 +2481,7 @@
           "paper_broker.py": [
             "broker_base",
             "config",
+            "fts_execution_journal_service",
             "fts_tax_lot_accounting"
           ],
           "param_storage.py": [
@@ -2625,36 +2712,36 @@
         "tri_lane_smoke": {
           "tri_lane_orchestrator": {
             "ok": true,
-            "seconds": 0.703,
+            "seconds": 1.051,
             "stdout_tail": "2OK\\\\models\\\\selected_features_range.pkl', 'model_count': 3}, 'candidate_filter': {'status': 'ready', 'count': 3}, 'callback_pipeline': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json'}, 'state_machine': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\state\\\\directional_execution_state_machine.json', 'count': 0}, 'ledger': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\execution_ledger_summary.json', 'event_count': 0}, 'reconciliation': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', 'issue_count': 0}, 'repair_execution': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'action_count': 0}}}, 'tri_lane_execution_status': {'LONG': {'ready_stages': 9, 'fallback_stages': []}, 'SHORT': {'ready_stages': 9, 'fallback_stages': []}, 'RANGE': {'ready_stages': 9, 'fallback_stages': []}}, 'deep_full_split_complete': True})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "watchlist_promoter": {
             "ok": true,
-            "seconds": 0.477,
-            "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-15 00:06:19', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
+            "seconds": 0.848,
+            "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-15 13:34:05', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "watchlist_loader": {
             "ok": true,
-            "seconds": 0.483,
+            "seconds": 0.867,
             "stdout_tail": "approved', 'optimizer_penalty': 0.05, 'optimized_score': 1.1527848674857768}, {'ticker': '2002.TW', 'lane': 'RANGE', 'promotion_score': 1.2023287513734435, 'oot_ev': 0.0006741379310344, 'hit_rate': 0.0482758620689655, 'sector': '未知', 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'approval_reason': 'scoreboard_promotion', 'provisional': False, 'readiness_tier': 'approved', 'optimizer_penalty': 0.1, 'optimized_score': 1.1023287513734434}]}, 'lane_readiness': {'LONG': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'SHORT': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'RANGE': {'count': 3, 'approved_count': 3, 'provisional_count': 0, 'status': 'approved_only'}}, 'total_count': 7, 'provisional_item_count': 0, 'approved_item_count': 7, 'sector_counts': {'未知::LONG': 2, '未知::SHORT': 2, '未知::RANGE': 3}, 'net_exposure_proxy': {'LONG': 2, 'SHORT': 2, 'RANGE': 3}, 'min_counts': {'LONG': 2, 'SHORT': 2, 'RANGE': 2}})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "callback_event_store": {
             "ok": true,
-            "seconds": 0.617,
-            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-15 00:06:20', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
+            "seconds": 1.099,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-15 13:34:07', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
             "stderr_tail": "",
             "returncode": 0
           },
           "reconciliation_engine": {
             "ok": true,
-            "seconds": 0.566,
-            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-15 00:06:21', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-15 00:06:21', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
+            "seconds": 1.312,
+            "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-15 13:34:08', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-15 13:34:08', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
             "stderr_tail": "",
             "returncode": 0
           }
@@ -2694,12 +2781,36 @@
         },
         "exception_policy_audit": {
           "summary": {
-            "files_total": 179,
-            "except_exception_total": 564,
-            "pass_total": 171,
-            "fallback_token_total": 253,
-            "core_unclassified_except": [],
-            "core_policy_ready": true
+            "files_total": 189,
+            "except_exception_total": 617,
+            "pass_total": 193,
+            "fallback_token_total": 260,
+            "core_unclassified_except": [
+              {
+                "file": "fts_control_tower.py",
+                "lines": [
+                  68,
+                  92,
+                  100,
+                  108
+                ],
+                "count": 4
+              },
+              {
+                "file": "fts_execution_journal_service.py",
+                "lines": [
+                  29,
+                  78,
+                  52,
+                  119,
+                  230,
+                  96,
+                  142
+                ],
+                "count": 7
+              }
+            ],
+            "core_policy_ready": false
           },
           "by_file": {
             "advanced_optimizer.py": {
@@ -2763,6 +2874,13 @@
               "except_exception": 45,
               "pass": 5,
               "fallback": 1,
+              "unclassified_core_except_lines": []
+            },
+            "formal_trading_system_v83_official_main.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 1,
+              "fallback": 0,
               "unclassified_core_except_lines": []
             },
             "fts_admin_cli.py": {
@@ -2893,10 +3011,15 @@
             },
             "fts_control_tower.py": {
               "core_file": true,
-              "except_exception": 6,
-              "pass": 2,
+              "except_exception": 17,
+              "pass": 9,
               "fallback": 23,
-              "unclassified_core_except_lines": []
+              "unclassified_core_except_lines": [
+                68,
+                92,
+                100,
+                108
+              ]
             },
             "fts_cross_sectional_percentile_service.py": {
               "core_file": false,
@@ -2928,7 +3051,7 @@
             },
             "fts_db_migrations.py": {
               "core_file": false,
-              "except_exception": 8,
+              "except_exception": 13,
               "pass": 1,
               "fallback": 4,
               "unclassified_core_except_lines": []
@@ -2975,6 +3098,13 @@
               "fallback": 0,
               "unclassified_core_except_lines": []
             },
+            "fts_entry_tracking_service.py": {
+              "core_file": false,
+              "except_exception": 4,
+              "pass": 2,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
             "fts_etl_daily_chip_service.py": {
               "core_file": false,
               "except_exception": 21,
@@ -3003,6 +3133,21 @@
               "fallback": 12,
               "unclassified_core_except_lines": []
             },
+            "fts_execution_journal_service.py": {
+              "core_file": true,
+              "except_exception": 7,
+              "pass": 6,
+              "fallback": 7,
+              "unclassified_core_except_lines": [
+                29,
+                78,
+                52,
+                119,
+                230,
+                96,
+                142
+              ]
+            },
             "fts_execution_layer.py": {
               "core_file": true,
               "except_exception": 4,
@@ -3028,6 +3173,13 @@
               "core_file": false,
               "except_exception": 1,
               "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_feature_review_service.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 3,
               "fallback": 0,
               "unclassified_core_except_lines": []
             },
@@ -3157,11 +3309,32 @@
               "fallback": 0,
               "unclassified_core_except_lines": []
             },
+            "fts_maturity_upgrade_suite.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_model_governance_enhancement.py": {
+              "core_file": false,
+              "except_exception": 5,
+              "pass": 1,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
             "fts_model_layer.py": {
               "core_file": true,
               "except_exception": 14,
               "pass": 0,
               "fallback": 38,
+              "unclassified_core_except_lines": []
+            },
+            "fts_model_live_signal_gate.py": {
+              "core_file": false,
+              "except_exception": 1,
+              "pass": 0,
+              "fallback": 0,
               "unclassified_core_except_lines": []
             },
             "fts_operations_suite.py": {
@@ -3188,6 +3361,13 @@
             "fts_portfolio_backtester.py": {
               "core_file": false,
               "except_exception": 3,
+              "pass": 0,
+              "fallback": 0,
+              "unclassified_core_except_lines": []
+            },
+            "fts_position_lifecycle_service.py": {
+              "core_file": false,
+              "except_exception": 6,
               "pass": 0,
               "fallback": 0,
               "unclassified_core_except_lines": []
@@ -3271,7 +3451,7 @@
             },
             "fts_restart_recovery_service.py": {
               "core_file": false,
-              "except_exception": 5,
+              "except_exception": 6,
               "pass": 0,
               "fallback": 0,
               "unclassified_core_except_lines": []
@@ -3411,8 +3591,8 @@
             },
             "fts_trainer_backend.py": {
               "core_file": false,
-              "except_exception": 1,
-              "pass": 0,
+              "except_exception": 5,
+              "pass": 1,
               "fallback": 2,
               "unclassified_core_except_lines": []
             },
@@ -3425,7 +3605,7 @@
             },
             "fts_training_data_builder.py": {
               "core_file": false,
-              "except_exception": 6,
+              "except_exception": 7,
               "pass": 0,
               "fallback": 0,
               "unclassified_core_except_lines": []
@@ -3470,6 +3650,13 @@
               "except_exception": 0,
               "pass": 0,
               "fallback": 7,
+              "unclassified_core_except_lines": []
+            },
+            "fts_true_broker_readiness_gate.py": {
+              "core_file": false,
+              "except_exception": 2,
+              "pass": 0,
+              "fallback": 0,
               "unclassified_core_except_lines": []
             },
             "fts_upgrade_runtime.py": {
@@ -3544,8 +3731,8 @@
             },
             "paper_broker.py": {
               "core_file": false,
-              "except_exception": 19,
-              "pass": 4,
+              "except_exception": 21,
+              "pass": 5,
               "fallback": 0,
               "unclassified_core_except_lines": []
             },
@@ -3647,7 +3834,7 @@
     "level2_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\level2_mainline_runtime.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:45",
+        "generated_at": "2026-04-15 13:34:23",
         "module_version": "v87_level2_service_detached",
         "status": "mainline_ready",
         "legacy_mode": "detached_from_level2",
@@ -3668,7 +3855,7 @@
             "mode": "inprocess",
             "returncode": null,
             "error": "",
-            "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 00:06。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+            "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 13:34。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -3692,7 +3879,7 @@
             "mode": "inprocess",
             "returncode": null,
             "error": "",
-            "stdout_tail": "[00:06:45] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+            "stdout_tail": "[13:34:23] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
             "stderr_tail": "",
             "seconds": 0.0,
             "skipped": false
@@ -3712,10 +3899,1638 @@
         }
       }
     },
+    "maturity_upgrade_suite": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\maturity_upgrade_suite.json",
+      "payload": {
+        "generated_at": "2026-04-15 13:34:25",
+        "module_version": "v92_maturity_gap_closed_loop_suite",
+        "status": "maturity_upgrade_ready",
+        "items": [
+          {
+            "label": "feature_review",
+            "status": "ok",
+            "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_review_report.json",
+            "payload": {
+              "generated_at": "2026-04-15 13:34:23",
+              "module_version": "v92_feature_review_train_live_parity_fail_closed",
+              "status": "feature_review_ready",
+              "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
+              "row_count": 41813,
+              "feature_count_scored": 70,
+              "approved_feature_count": 23,
+              "reject_feature_count": 47,
+              "noise_watchlist_count": 0,
+              "approval_policy": {
+                "min_coverage": 0.7,
+                "min_unique_count": 3,
+                "min_abs_corr_or_priority": 0.01,
+                "train_live_parity_enforced": true,
+                "priority_or_live_approved_can_pass_evidence_floor": true
+              },
+              "approved_features": [
+                "ATR_Pctl_252",
+                "ATR_Pct_Pctl",
+                "MACD_Hist",
+                "Gap_Pct",
+                "Overnight_Return",
+                "ATR_Pct",
+                "ADV20_Proxy",
+                "Volume_Z20",
+                "RealizedVol_20",
+                "Weighted_Sell_Score",
+                "Intraday_Return",
+                "Score_Gap",
+                "Volatility_X_SignalConflict",
+                "Regime_TrendStrength_X_ScoreGap",
+                "DollarVol20_Proxy",
+                "Weighted_Buy_Score",
+                "Turnover_Proxy",
+                "Return_Z20",
+                "BB_Width",
+                "ADX",
+                "RSI",
+                "ATR14",
+                "RealizedVol_60"
+              ],
+              "noise_watchlist": [],
+              "rejected_features": [
+                "Realized_Return_After_Cost",
+                "Favorable_Move_Pct",
+                "Max_Favorable_Excursion",
+                "Adverse_Move_Pct",
+                "Max_Adverse_Excursion",
+                "Absorption",
+                "Body_Pct",
+                "Chip_Total_Ratio_Rank",
+                "Dist_MA20_Pct",
+                "Entry_Price_Basis",
+                "Foreign_Continuous",
+                "Foreign_Ratio",
+                "Hold_Days",
+                "Label_Exit_Type",
+                "Label_Reason",
+                "Lower_Shadow_Pct",
+                "MR_Long_Accumulation",
+                "MR_Long_Spring",
+                "MR_Short_Distribution",
+                "MR_Short_Trap",
+                "Revenue_YoY_Rank",
+                "Signal_Conflict",
+                "Stop_Hit",
+                "Total_Ratio",
+                "Touched_SL",
+                "Touched_TP",
+                "Trust_Continuous",
+                "Trust_Ratio",
+                "Upper_Shadow_Pct",
+                "Vol_Squeeze",
+                "Volume_Ratio",
+                "buy_c2",
+                "buy_c3",
+                "buy_c4",
+                "buy_c5",
+                "buy_c6",
+                "buy_c7",
+                "buy_c8",
+                "buy_c9",
+                "sell_c2",
+                "sell_c3",
+                "sell_c4",
+                "sell_c5",
+                "sell_c6",
+                "sell_c7",
+                "sell_c8",
+                "sell_c9"
+              ],
+              "feature_rows": [
+                {
+                  "feature": "ATR_Pctl_252",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 7119,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": -0.03062,
+                  "abs_corr_to_target": 0.03062,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "ATR_Pct_Pctl",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 7344,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": -0.029717,
+                  "abs_corr_to_target": 0.029717,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "MACD_Hist",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41807,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": 0.023344,
+                  "abs_corr_to_target": 0.023344,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Gap_Pct",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 15396,
+                  "zero_ratio": 0.2649,
+                  "corr_to_target": 0.02272,
+                  "abs_corr_to_target": 0.02272,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Overnight_Return",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 15396,
+                  "zero_ratio": 0.2649,
+                  "corr_to_target": 0.02272,
+                  "abs_corr_to_target": 0.02272,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "ATR_Pct",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 39396,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": -0.0192,
+                  "abs_corr_to_target": 0.0192,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "ADV20_Proxy",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41590,
+                  "zero_ratio": 0.0039,
+                  "corr_to_target": 0.018555,
+                  "abs_corr_to_target": 0.018555,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Volume_Z20",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41649,
+                  "zero_ratio": 0.0039,
+                  "corr_to_target": -0.016361,
+                  "abs_corr_to_target": 0.016361,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "RealizedVol_20",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 40867,
+                  "zero_ratio": 0.0039,
+                  "corr_to_target": -0.015081,
+                  "abs_corr_to_target": 0.015081,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Weighted_Sell_Score",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 14,
+                  "zero_ratio": 0.1842,
+                  "corr_to_target": -0.013681,
+                  "abs_corr_to_target": 0.013681,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Intraday_Return",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 20110,
+                  "zero_ratio": 0.1136,
+                  "corr_to_target": -0.012108,
+                  "abs_corr_to_target": 0.012108,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Score_Gap",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 22,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": 0.011332,
+                  "abs_corr_to_target": 0.011332,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Volatility_X_SignalConflict",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 1758,
+                  "zero_ratio": 0.8528,
+                  "corr_to_target": -0.011066,
+                  "abs_corr_to_target": 0.011066,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Regime_TrendStrength_X_ScoreGap",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41632,
+                  "zero_ratio": 0.0004,
+                  "corr_to_target": 0.009843,
+                  "abs_corr_to_target": 0.009843,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "DollarVol20_Proxy",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41644,
+                  "zero_ratio": 0.0039,
+                  "corr_to_target": 0.00892,
+                  "abs_corr_to_target": 0.00892,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Weighted_Buy_Score",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 14,
+                  "zero_ratio": 0.2423,
+                  "corr_to_target": 0.00869,
+                  "abs_corr_to_target": 0.00869,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Turnover_Proxy",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41592,
+                  "zero_ratio": 0.002,
+                  "corr_to_target": 0.007947,
+                  "abs_corr_to_target": 0.007947,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Return_Z20",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41476,
+                  "zero_ratio": 0.0039,
+                  "corr_to_target": -0.006813,
+                  "abs_corr_to_target": 0.006813,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "BB_Width",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 40927,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": -0.004562,
+                  "abs_corr_to_target": 0.004562,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "ADX",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 41592,
+                  "zero_ratio": 0.0004,
+                  "corr_to_target": -0.003216,
+                  "abs_corr_to_target": 0.003216,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "RSI",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 30633,
+                  "zero_ratio": 0.0016,
+                  "corr_to_target": 0.002832,
+                  "abs_corr_to_target": 0.002832,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "ATR14",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 22869,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": -0.000102,
+                  "abs_corr_to_target": 0.000102,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "RealizedVol_60",
+                  "status": "approved",
+                  "coverage": 1.0,
+                  "unique_count": 40694,
+                  "zero_ratio": 0.011,
+                  "corr_to_target": -3.7e-05,
+                  "abs_corr_to_target": 3.7e-05,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Realized_Return_After_Cost",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 18507,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": 1.0,
+                  "abs_corr_to_target": 1.0,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Favorable_Move_Pct",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 13131,
+                  "zero_ratio": 0.0821,
+                  "corr_to_target": 0.702693,
+                  "abs_corr_to_target": 0.702693,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Max_Favorable_Excursion",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 13131,
+                  "zero_ratio": 0.0821,
+                  "corr_to_target": 0.702693,
+                  "abs_corr_to_target": 0.702693,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Adverse_Move_Pct",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 13153,
+                  "zero_ratio": 0.0732,
+                  "corr_to_target": -0.660606,
+                  "abs_corr_to_target": 0.660606,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Max_Adverse_Excursion",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 13153,
+                  "zero_ratio": 0.0732,
+                  "corr_to_target": -0.660606,
+                  "abs_corr_to_target": 0.660606,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Absorption",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Body_Pct",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Chip_Total_Ratio_Rank",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [
+                    "low_unique_count"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Dist_MA20_Pct",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Entry_Price_Basis",
+                  "status": "reject",
+                  "coverage": 0.0,
+                  "unique_count": 0,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "coverage_below_floor",
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Foreign_Continuous",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Foreign_Ratio",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Hold_Days",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Label_Exit_Type",
+                  "status": "reject",
+                  "coverage": 0.0,
+                  "unique_count": 0,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "coverage_below_floor",
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Label_Reason",
+                  "status": "reject",
+                  "coverage": 0.0,
+                  "unique_count": 0,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "coverage_below_floor",
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Lower_Shadow_Pct",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "MR_Long_Accumulation",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "MR_Long_Spring",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.9369,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "MR_Short_Distribution",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "MR_Short_Trap",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.9242,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Revenue_YoY_Rank",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 0.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": true,
+                  "reject_reasons": [
+                    "low_unique_count"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Signal_Conflict",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.8528,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Stop_Hit",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.7004,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Total_Ratio",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Touched_SL",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.7004,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Touched_TP",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.958,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Trust_Continuous",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Trust_Ratio",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Upper_Shadow_Pct",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "Vol_Squeeze",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.4887,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "Volume_Ratio",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": true,
+                  "live_approved": true,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero"
+                  ],
+                  "warn_reasons": []
+                },
+                {
+                  "feature": "buy_c2",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.5364,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "buy_c3",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.6832,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "buy_c4",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.4872,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "buy_c5",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.9511,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "buy_c6",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.5314,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "buy_c7",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "buy_c8",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.5946,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "buy_c9",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c2",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.4938,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c3",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.6832,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c4",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.5128,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c5",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.9438,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c6",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.4688,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c7",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c8",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 2,
+                  "zero_ratio": 0.5613,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                },
+                {
+                  "feature": "sell_c9",
+                  "status": "reject",
+                  "coverage": 1.0,
+                  "unique_count": 1,
+                  "zero_ratio": 1.0,
+                  "corr_to_target": null,
+                  "abs_corr_to_target": null,
+                  "cataloged": false,
+                  "live_approved": false,
+                  "priority_feature": false,
+                  "reject_reasons": [
+                    "low_unique_count",
+                    "almost_all_zero",
+                    "not_live_approved_train_live_parity"
+                  ],
+                  "warn_reasons": [
+                    "not_in_feature_catalog"
+                  ]
+                }
+              ],
+              "hard_blocks": []
+            }
+          },
+          {
+            "label": "entry_tracking",
+            "status": "ok",
+            "path": "C:\\test\\test-2026-3-22OK\\runtime\\entry_tracking_journal.json",
+            "payload": {
+              "generated_at": "2026-04-15 13:34:24",
+              "module_version": "v92_entry_tracking_closed_loop_gate",
+              "status": "entry_tracking_ready",
+              "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
+              "action_plan_json": "C:\\test\\test-2026-3-22OK\\runtime\\entry_tracking_action_plan.json",
+              "policy": {
+                "max_prepare_days": 5,
+                "max_pilot_days": 4,
+                "max_missing_days": 2
+              },
+              "positions": {},
+              "events": [],
+              "summary": {
+                "tracked_count": 0,
+                "new_updates": 0,
+                "action_plan_count": 0,
+                "prepare_count": 0,
+                "pilot_count": 0,
+                "full_entry_count": 0,
+                "expired_count": 0
+              }
+            }
+          },
+          {
+            "label": "position_lifecycle",
+            "status": "ok",
+            "path": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle.json",
+            "payload": {
+              "generated_at": "2026-04-15 13:34:24",
+              "module_version": "v92_position_lifecycle_closed_loop",
+              "status": "no_active_positions",
+              "message": "尚無 active_positions.csv；生命週期服務已就緒，等有持倉後會開始逐日記錄。",
+              "action_plan_json": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle_action_plan.json",
+              "positions": {},
+              "wrong_exit_statistics": {
+                "status": "no_history_yet",
+                "wrong_exit_proxy_count": 0
+              },
+              "summary": {
+                "position_count": 0,
+                "exit_count": 0,
+                "reduce_count": 0,
+                "defend_count": 0,
+                "action_plan_count": 0
+              }
+            }
+          },
+          {
+            "label": "model_governance_enhancement",
+            "status": "ok",
+            "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_governance_enhancement.json",
+            "payload": {
+              "generated_at": "2026-04-15 13:34:25",
+              "module_version": "v92_walkforward_oos_drift_retention_governance",
+              "status": "model_governance_enhanced_ready",
+              "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
+              "walk_forward": {
+                "ret_mean": -0.02920581241743725,
+                "hit_rate_mean": 0.18467635402906207,
+                "pf_mean": 1.0257391303405246,
+                "coverage_mean": 0.4145310435931308,
+                "effective_splits": 5,
+                "score": -1.8948421114032004
+              },
+              "out_of_time": {
+                "hit_rate": 0.22535211267605634,
+                "avg_return": -0.18784366197183097,
+                "pred_accuracy": 0.5132042253521126,
+                "profit_factor": 0.8064291455711963,
+                "coverage": 0.5079225352112676
+              },
+              "promotion": {
+                "status": "restored_pretrain",
+                "version": "pretrain_20260413_005833",
+                "reason": "promotion_floor_not_met"
+              },
+              "live_signal_gate": {},
+              "drift_monitor": {
+                "status": "drift_scored",
+                "high_drift_count": 0,
+                "top_drift_features": []
+              },
+              "model_retention": {
+                "model_file_count": 17,
+                "stale_model_count": 0,
+                "stale_models": [],
+                "auto_retire_enabled": false,
+                "retired_moves": []
+              },
+              "hard_blocks": [],
+              "warnings": [
+                "live_signal_gate_not_allowed",
+                "current_candidate_not_promoted"
+              ],
+              "required_before_live": [
+                "trainer_backend_report exists",
+                "walk_forward_effective_splits >= floor",
+                "out_of_time report present",
+                "model_live_signal_gate allow_live_signal true for live",
+                "stale model files reviewed or retired",
+                "drift monitor reviewed when high_drift_count > 0"
+              ]
+            }
+          },
+          {
+            "label": "execution_journal",
+            "status": "ok",
+            "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_journal_summary.json",
+            "payload": {
+              "generated_at": "2026-04-15 13:34:25",
+              "module_version": "v92_execution_journal_closed_loop",
+              "status": "execution_journal_ready",
+              "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
+              "journal_jsonl": "C:\\test\\test-2026-3-22OK\\runtime\\execution_journal.jsonl",
+              "total_event_count_estimate": 3,
+              "new_event_count": 0,
+              "new_order_candidate_count": 0,
+              "new_blocked_count": 0,
+              "new_exit_reduce_defend_count": 0,
+              "closed_loop_policy": {
+                "decision_rows_journaled": true,
+                "blocked_rows_journaled": true,
+                "control_tower_gate_events_expected": true,
+                "paper_broker_order_and_fill_events_expected": true
+              },
+              "latest_events": []
+            }
+          },
+          {
+            "label": "restart_recovery",
+            "status": "ok",
+            "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+            "payload": {
+              "generated_at": "2026-04-15 13:34:25",
+              "status": "restart_recovery_blocked",
+              "ready_to_resume_new_orders": false,
+              "blockers": [
+                "missing_broker_snapshot"
+              ],
+              "actions": [
+                "restore_local_cash",
+                "restore_positions",
+                "restore_open_orders",
+                "replay_recent_fills"
+              ],
+              "local_snapshot_path": "C:\\test\\test-2026-3-22OK\\state\\restart_recovery_snapshot.json",
+              "local_snapshot_found": true,
+              "broker_snapshot_found": false,
+              "execution_ledger_snapshot_found": true,
+              "execution_ledger_snapshot": {
+                "generated_at": "2026-04-15 13:34:07",
+                "lane_orders": {
+                  "LONG": [
+                    "HC1",
+                    "C1"
+                  ]
+                },
+                "lane_order_counts": {
+                  "LONG": 2
+                },
+                "lane_mutation_counts": {},
+                "broker_side_ledger_shadow_path": "C:\\test\\test-2026-3-22OK\\state\\broker_side_ledger_shadow.json"
+              },
+              "reconciliation_found": true,
+              "reconciliation_status": "reconciled",
+              "cash": null,
+              "positions": [],
+              "fills": []
+            }
+          },
+          {
+            "label": "true_broker_readiness_gate",
+            "status": "ok",
+            "path": "C:\\test\\test-2026-3-22OK\\runtime\\true_broker_readiness_gate.json",
+            "payload": {
+              "generated_at": "2026-04-15 13:34:25",
+              "module_version": "v92_true_broker_five_red_lights_gate",
+              "status": "blocked_for_real_broker",
+              "lights": {
+                "api": false,
+                "callback": false,
+                "ledger": false,
+                "reconcile": true,
+                "kill_switch": true
+              },
+              "red_lights": [
+                "api",
+                "callback",
+                "ledger"
+              ],
+              "green_count": 2,
+              "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
+              "evidence": {
+                "adapter_enabled": false,
+                "provider_name": "fill_me_after_account_opened",
+                "base_url_present": false,
+                "auth_api_key_present": false,
+                "auth_account_id_present": false,
+                "probe_ready_for_live_connect": false,
+                "callback_files": [],
+                "ledger_files": [],
+                "reconciliation_status": "reconciled",
+                "kill_switch_state_present": true
+              },
+              "production_rule": "LIVE/真券商必須五燈全綠；沒有真實券商 API/callback/ledger/reconcile 實證時不可補分。"
+            }
+          }
+        ],
+        "hard_error_count": 0,
+        "blocked_items": [
+          {
+            "label": "true_broker_readiness_gate",
+            "payload_status": "blocked_for_real_broker",
+            "hard_blocks": [
+              "api",
+              "callback",
+              "ledger"
+            ]
+          }
+        ],
+        "closed_loop_mapping": {
+          "feature_engineering": "feature_review fail-closed + train/live parity policy",
+          "prepare_pilot_full_entry": "entry_tracking action_plan + control tower gate",
+          "exit_reduce_defend": "position_lifecycle action_plan + generated SELL for EXIT/REDUCE",
+          "ai_training_governance": "trainer report + walk-forward/OOS/drift/retention; rerun after TRAIN",
+          "paper_prelive": "execution_journal + restart_recovery plan",
+          "real_broker_readiness": "true_broker_readiness_gate keeps five red lights until actual API/callback/ledger/reconcile/kill-switch evidence"
+        },
+        "invoked_by": "daily_control_outputs_pre_gate"
+      }
+    },
+    "entry_tracking_gate": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\entry_tracking_journal.json",
+      "payload": {
+        "status": "entry_tracking_gate_ready",
+        "input_order_count": 0,
+        "passed_order_count": 0,
+        "blocked_order_count": 0,
+        "pilot_qty_capped_count": 0,
+        "blocked_orders": [],
+        "capped_orders": [],
+        "journaled_gate_events": true,
+        "policy": {
+          "block_expired_prepare_or_pilot": true,
+          "cap_pilot_entry_qty_to_one_third": true
+        }
+      }
+    },
+    "position_lifecycle_gate": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle.json",
+      "payload": {
+        "status": "position_lifecycle_gate_ready",
+        "input_order_count": 0,
+        "output_order_count": 0,
+        "generated_exit_or_reduce_order_count": 0,
+        "generated_orders": [],
+        "journaled_gate_events": true,
+        "policy": {
+          "exit_generates_full_sell": true,
+          "reduce_generates_half_sell": true,
+          "defend_is_journal_only": true
+        }
+      }
+    },
+    "decision_output_evidence": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\decision_output_evidence.json",
+      "payload": {
+        "generated_at": "2026-04-15 13:34:25",
+        "status": "decision_output_ready",
+        "decision_row_count": 3,
+        "normalized_order_count": 0,
+        "tickers": [],
+        "decision_preview": [
+          {
+            "ticker": "2330.TW",
+            "action": "SELL",
+            "stage": "",
+            "PREPARE": false,
+            "PILOT": false,
+            "FULL": false,
+            "score": 0.5392,
+            "reason": "",
+            "timestamp": "2026-04-15 13:34:25"
+          },
+          {
+            "ticker": "2471.TW",
+            "action": "SELL",
+            "stage": "",
+            "PREPARE": false,
+            "PILOT": false,
+            "FULL": false,
+            "score": 0.4881,
+            "reason": "",
+            "timestamp": "2026-04-15 13:34:25"
+          },
+          {
+            "ticker": "2467.TW",
+            "action": "SELL",
+            "stage": "",
+            "PREPARE": false,
+            "PILOT": false,
+            "FULL": false,
+            "score": 0.524,
+            "reason": "",
+            "timestamp": "2026-04-15 13:34:25"
+          }
+        ],
+        "source_candidates": [
+          "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
+          "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output.csv",
+          "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+          "C:\\test\\test-2026-3-22OK\\data\\daily_decision_desk.csv"
+        ]
+      }
+    },
+    "decision_execution_formal_gate": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\decision_execution_formal_gate.json",
+      "payload": {
+        "status": "decision_execution_gate_ready"
+      }
+    },
     "training_governance_mainline": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\training_governance_mainline.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "module_version": "v20260414_training_governance_truthful_live_metrics",
         "system_name": "正式交易主控版_v83_official_main",
         "orchestrator_status": "training_governed_v83",
@@ -4080,7 +5895,7 @@
           }
         },
         "training_integrity": {
-          "generated_at": "2026-04-15 00:06:46",
+          "generated_at": "2026-04-15 13:34:26",
           "thresholds": {
             "min_oot_hit_rate": 0.5,
             "min_oot_profit_factor": 1.0,
@@ -4452,7 +6267,7 @@
           "status": "training_integrity_blocked"
         },
         "candidate_evaluation": {
-          "generated_at": "2026-04-15 00:06:46",
+          "generated_at": "2026-04-15 13:34:26",
           "system_name": "正式交易主控版_v83_official_main",
           "thresholds": {
             "min_win_rate": 0.5,
@@ -4514,13 +6329,19 @@
           "sample_split_guard_ok": true,
           "feature_selection_train_only": true
         },
-        "status": "training_governance_mainline_ready"
+        "blocked_reasons": [
+          "training_integrity_blocked",
+          "candidate_not_ready",
+          "live_metrics_unavailable",
+          "training_readiness_incomplete"
+        ],
+        "status": "training_governance_mainline_blocked"
       }
     },
     "model_registry": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_registry_runtime.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "models_dir": "C:\\test\\test-2026-3-22OK\\models",
         "candidates": [
@@ -4530,6 +6351,13 @@
             "is_file": false,
             "is_dir": true,
             "size_bytes": 0
+          },
+          {
+            "name": "approved_features_review.json",
+            "path": "C:\\test\\test-2026-3-22OK\\models\\approved_features_review.json",
+            "is_file": true,
+            "is_dir": false,
+            "size_bytes": 1879
           },
           {
             "name": "best",
@@ -4550,7 +6378,7 @@
             "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
             "is_file": true,
             "is_dir": false,
-            "size_bytes": 47345
+            "size_bytes": 49201
           },
           {
             "name": "model_long_區間盤整.pkl",
@@ -4693,7 +6521,7 @@
             "size_bytes": 0
           }
         ],
-        "candidate_count": 24,
+        "candidate_count": 25,
         "suspicious_small_artifacts": [
           {
             "name": "selected_features.pkl",
@@ -7411,11 +9239,11 @@
     "model_selection_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_selection_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_model_linkage": true,
         "governance": {
-          "generated_at": "2026-04-15 00:06:46",
+          "generated_at": "2026-04-15 13:34:26",
           "module_version": "v20260414_training_governance_truthful_live_metrics",
           "system_name": "正式交易主控版_v83_official_main",
           "orchestrator_status": "training_governed_v83",
@@ -7780,7 +9608,7 @@
             }
           },
           "training_integrity": {
-            "generated_at": "2026-04-15 00:06:46",
+            "generated_at": "2026-04-15 13:34:26",
             "thresholds": {
               "min_oot_hit_rate": 0.5,
               "min_oot_profit_factor": 1.0,
@@ -8152,7 +9980,7 @@
             "status": "training_integrity_blocked"
           },
           "candidate_evaluation": {
-            "generated_at": "2026-04-15 00:06:46",
+            "generated_at": "2026-04-15 13:34:26",
             "system_name": "正式交易主控版_v83_official_main",
             "thresholds": {
               "min_win_rate": 0.5,
@@ -8214,7 +10042,13 @@
             "sample_split_guard_ok": true,
             "feature_selection_train_only": true
           },
-          "status": "training_governance_mainline_ready"
+          "blocked_reasons": [
+            "training_integrity_blocked",
+            "candidate_not_ready",
+            "live_metrics_unavailable",
+            "training_readiness_incomplete"
+          ],
+          "status": "training_governance_mainline_blocked"
         },
         "model_live_signal_gate": {},
         "failures": [],
@@ -8340,7 +10174,7 @@
         "feature_observability": {
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_observability.json",
           "payload": {
-            "generated_at": "2026-04-15 00:06:45",
+            "generated_at": "2026-04-15 13:34:25",
             "module_version": "v87_feature_observability_vetted_live",
             "strict_feature_parity": true,
             "force_shared_feature_universe": false,
@@ -8396,7 +10230,7 @@
     "launch_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\launch_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_execution": false,
         "failures": [
@@ -8423,7 +10257,7 @@
     "live_safety_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_safety_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -8448,7 +10282,7 @@
     "broker_approval_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_approval_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "mode": "PAPER",
         "broker_type": "paper",
@@ -8470,7 +10304,7 @@
     "submission_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\submission_contract_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "go_for_submission_contract": true,
         "failures": [],
@@ -8490,7 +10324,7 @@
     "validation_suite": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\validation_suite_report.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": {
           "launch_gate": false,
@@ -8515,7 +10349,7 @@
     "reconciliation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\reconciliation_engine.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "status": "reconciled",
         "order_issue_count": 0,
         "issues": [],
@@ -8526,19 +10360,37 @@
         "repair_workflow": {
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\repair_workflow_execution.json",
           "payload": {
-            "generated_at": "2026-04-15 00:06:46",
+            "generated_at": "2026-04-15 13:34:26",
             "status": "repair_workflow_executed",
             "executed_actions": [],
             "count": 0
           }
         },
-        "directional_repair_actions": []
+        "directional_repair_actions": [],
+        "input_sources": {
+          "local_orders": null,
+          "broker_orders": null,
+          "local_fills": null,
+          "broker_fills": null,
+          "local_positions": null,
+          "broker_positions": null,
+          "local_cash": "C:\\test\\test-2026-3-22OK\\state\\engine_state.json",
+          "broker_cash": "C:\\test\\test-2026-3-22OK\\state\\engine_state.json"
+        },
+        "input_counts": {
+          "local_orders": 0,
+          "broker_orders": 0,
+          "local_fills": 0,
+          "broker_fills": 0,
+          "local_positions": 0,
+          "broker_positions": 0
+        }
       }
     },
     "recovery": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_plan.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "snapshot_found": true,
         "broker_snapshot_found": false,
@@ -8558,7 +10410,7 @@
     "recovery_validation": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\recovery_validation.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "system_name": "正式交易主控版_v83_official_main",
         "checks": [
           {
@@ -8600,7 +10452,7 @@
     "live_release_gate": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\live_release_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "status": "live_release_blocked",
         "allow_pre_live_dryrun": false,
         "allow_live": false,
@@ -8617,7 +10469,7 @@
     "tri_lane_orchestration": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\tri_lane_orchestrator.json",
       "payload": {
-        "generated_at": "2026-04-15 00:06:46",
+        "generated_at": "2026-04-15 13:34:26",
         "status": "tri_lane_orchestration_ready",
         "lanes": {
           "LONG": {
@@ -8652,7 +10504,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 47
+              "event_count": 52
             },
             "reconciliation": {
               "status": "ready",
@@ -8789,7 +10641,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 47
+              "event_count": 52
             },
             "reconciliation": {
               "status": "ready",
@@ -8943,7 +10795,7 @@
         "ledger": {
           "status": "ready",
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-          "event_count": 47
+          "event_count": 52
         },
         "reconciliation": {
           "status": "ready",
@@ -9080,7 +10932,7 @@
         "ledger": {
           "status": "ready",
           "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-          "event_count": 47
+          "event_count": 52
         },
         "reconciliation": {
           "status": "ready",
@@ -9199,7 +11051,26 @@
       }
     },
     "decision_rows": 3,
-    "normalized_orders": 0
+    "normalized_orders": 0,
+    "kill_switch_state": {
+      "path": "C:\\test\\test-2026-3-22OK\\runtime\\kill_switch_state.json",
+      "payload": {
+        "status": "kill_switch_state_ready",
+        "state": {
+          "generated_at": "2026-04-15 13:19:30",
+          "system": {
+            "armed": false,
+            "reason": ""
+          },
+          "account": {
+            "armed": false,
+            "reason": ""
+          },
+          "strategies": {},
+          "symbols": {}
+        }
+      }
+    }
   },
   "readiness_split": {
     "research_paper_prelive_score": 5,

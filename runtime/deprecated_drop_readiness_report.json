@@ -1,18 +1,18 @@
 {
-  "generated_at": "2026-04-14T23:33:48",
+  "generated_at": "2026-04-15T09:38:01",
   "tool": "fts_deprecated_drop_readiness.py",
   "tool_version": "v20260414_deprecated_drop_readiness_audit_archive_aware",
   "project_root": "C:\\test\\test-2026-3-22OK",
   "status": "not_ready_core_findings",
   "summary": {
-    "py_files": 204,
+    "py_files": 205,
     "archived_py_files_skipped": 34,
     "include_archived": false,
-    "findings_total": 34,
+    "findings_total": 35,
     "severity_counts": {
       "medium": 16,
       "high": 17,
-      "low": 1
+      "low": 2
     },
     "drop_readiness_counts": {
       "READY_TO_RETIRE": 1,
@@ -22,11 +22,11 @@
       "KEEP_COMPAT_NOT_DROP": 2,
       "NOT_READY_FOR_GLOBAL_FAIL_CLOSED": 1
     },
-    "legacy_Ticker_SYMBOL_refs": 313,
+    "legacy_Ticker_SYMBOL_refs": 315,
     "canonical_ticker_symbol_refs": 228,
-    "except_exception_count": 633,
+    "except_exception_count": 637,
     "pass_count": 68,
-    "fallback_count": 242,
+    "fallback_count": 243,
     "db_probe_status": "checked"
   },
   "drop_candidates": [
@@ -65,11 +65,11 @@
     },
     {
       "target": "code:execution_Ticker_SYMBOL_references",
-      "current_status": "78 refs, 17 unapproved",
+      "current_status": "79 refs, 18 unapproved",
       "drop_readiness": "NOT_READY",
       "evidence": [
-        "total_execution_context_refs=78",
-        "unapproved_refs=17",
+        "total_execution_context_refs=79",
+        "unapproved_refs=18",
         "advanced_chart1_runtime_variants\\execution_engine.py:52",
         "advanced_chart1_runtime_variants\\execution_engine.py:115",
         "advanced_chart1_runtime_variants\\execution_engine.py:122",
@@ -86,7 +86,8 @@
         "advanced_chart1_runtime_variants\\live_paper_trading.py:408",
         "advanced_chart1_runtime_variants\\live_paper_trading.py:466",
         "advanced_chart1_runtime_variants\\live_paper_trading.py:507",
-        "fts_reconciliation_runtime.py:26"
+        "fts_reconciliation_runtime.py:26",
+        "fts_sql_chinese_column_views.py:101"
       ],
       "blockers": [
         "核心/execution 檔案仍有未標示 alias/backfill/compat 的 Ticker SYMBOL 使用。"
@@ -177,10 +178,10 @@
     },
     {
       "target": "policy:global_exception_fail_closed",
-      "current_status": "except_exception=633, pass=68, fallback=242, high_findings=17",
+      "current_status": "except_exception=637, pass=68, fallback=243, high_findings=17",
       "drop_readiness": "NOT_READY_FOR_GLOBAL_FAIL_CLOSED",
       "evidence": [
-        "py_files=204",
+        "py_files=205",
         "core_runtime_files=28"
       ],
       "blockers": [
@@ -466,19 +467,27 @@
       "line": 26,
       "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
       "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
+    },
+    {
+      "severity": "low",
+      "category": "legacy_symbol_in_execution_context",
+      "file": "fts_sql_chinese_column_views.py",
+      "line": 101,
+      "message": "core/execution 相關檔案仍直接出現 Ticker SYMBOL，需確認是否只是 alias 相容。",
+      "recommendation": "正式 execution contract 應輸出/寫入 ticker_symbol；Ticker SYMBOL 只允許在 normalize/backfill/legacy alias 區塊出現。"
     }
   ],
   "static_counters": {
     "archived_py_files_skipped": 34,
-    "py_files": 204,
-    "file_class.general": 143,
-    "except_exception": 633,
+    "py_files": 205,
+    "file_class.general": 144,
+    "except_exception": 637,
     "bare_except": 9,
     "pass": 68,
-    "fallback": 242,
-    "legacy_Ticker_SYMBOL": 313,
+    "fallback": 243,
+    "legacy_Ticker_SYMBOL": 315,
     "canonical_ticker_symbol": 228,
-    "todo": 99,
+    "todo": 100,
     "file_class.etl_research_or_legacy": 33,
     "file_class.core_runtime": 28
   },
@@ -511,6 +520,7 @@
     "advanced_chart1_runtime_variants\\screening.py": 3,
     "fts_event_calendar_service.py": 3,
     "fts_symbol_contract.py": 3,
+    "fts_training_data_builder.py": 3,
     "advanced_chart1_runtime_variants\\sector_classifier.py": 2,
     "fts_data_quality_guard.py": 2,
     "fts_decision_desk_builder.py": 2,
@@ -519,7 +529,6 @@
     "fts_fundamentals_true_backfill.py": 2,
     "fts_research_suite.py": 2,
     "fts_tax_lot_accounting.py": 2,
-    "fts_training_data_builder.py": 2,
     "fts_training_ticker_scoreboard.py": 2,
     "sector_classifier.py": 2,
     "advanced_chart1_runtime_variants\\master_pipeline.py": 1,

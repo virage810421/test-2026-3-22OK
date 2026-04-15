@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-04-15 13:34:25",
+  "status": "decision_execution_gate_ready",
+  "raw_order_count": 0,
+  "final_order_count": 0,
+  "entry_tracking_gate": {
+    "status": "entry_tracking_gate_ready",
+    "input_order_count": 0,
+    "passed_order_count": 0,
+    "blocked_order_count": 0,
+    "pilot_qty_capped_count": 0,
+    "blocked_orders": [],
+    "capped_orders": [],
+    "journaled_gate_events": true,
+    "policy": {
+      "block_expired_prepare_or_pilot": true,
+      "cap_pilot_entry_qty_to_one_third": true
+    }
+  },
+  "position_lifecycle_gate": {
+    "status": "position_lifecycle_gate_ready",
+    "input_order_count": 0,
+    "output_order_count": 0,
+    "generated_exit_or_reduce_order_count": 0,
+    "generated_orders": [],
+    "journaled_gate_events": true,
+    "policy": {
+      "exit_generates_full_sell": true,
+      "reduce_generates_half_sell": true,
+      "defend_is_journal_only": true
+    }
+  },
+  "decision_output_evidence_path": "C:\\test\\test-2026-3-22OK\\runtime\\decision_output_evidence.json"
+}

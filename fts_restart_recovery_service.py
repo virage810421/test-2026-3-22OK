@@ -22,6 +22,13 @@ class RestartRecoveryService:
         self.snapshot_path = PATHS.state_dir / 'restart_recovery_snapshot.json'
         self.plan_path = PATHS.runtime_dir / 'restart_recovery_plan.json'
 
+    @staticmethod
+    def _load_runtime_json(path: Path) -> dict[str, Any]:
+        try:
+            return json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+        except Exception:
+            return {}
+
     def create_snapshot_from_broker(self, broker_obj: Any | None = None, *, meta: dict[str, Any] | None = None) -> tuple[str, dict[str, Any]]:
         payload: dict[str, Any] = {'saved_at': now_str(), 'system_name': CONFIG.system_name, 'meta': meta or {}}
         if broker_obj is None:
@@ -93,6 +100,8 @@ class RestartRecoveryService:
             actions.extend(['fetch_broker_open_orders', 'fetch_broker_positions', 'fetch_broker_cash', 'run_reconciliation_before_new_orders'])
         if local and local.get('snapshot_errors'):
             blockers.extend([f"snapshot_error_{x}" for x in local.get('snapshot_errors', [])])
+        ledger_snapshot = self._load_runtime_json(PATHS.runtime_dir / 'execution_ledger_snapshot.json')
+        recon_payload = self._load_runtime_json(PATHS.runtime_dir / 'reconciliation_engine.json')
         payload = {
             'generated_at': now_str(),
             'status': 'restart_recovery_ready' if not blockers else 'restart_recovery_blocked',
@@ -102,6 +111,13 @@ class RestartRecoveryService:
             'local_snapshot_path': str(self.snapshot_path),
             'local_snapshot_found': bool(local),
             'broker_snapshot_found': bool(broker_snapshot),
+            'execution_ledger_snapshot_found': bool(ledger_snapshot),
+            'execution_ledger_snapshot': ledger_snapshot,
+            'reconciliation_found': bool(recon_payload),
+            'reconciliation_status': recon_payload.get('status') if isinstance(recon_payload, dict) else None,
+            'cash': (local or {}).get('cash'),
+            'positions': (local or {}).get('positions', []),
+            'fills': (local or {}).get('fills', []),
         }
         self.plan_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str), encoding='utf-8')
         return str(self.plan_path), payload

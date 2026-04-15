@@ -26,7 +26,22 @@ except Exception:  # pragma: no cover - diagnostics must not block migration
     def record_issue(*args: Any, **kwargs: Any) -> dict[str, Any]:
         return {}
 
-MANAGED_VIEW_MARKER = 'FTS_CHINESE_COLUMN_VIEW_MANAGED_V2'
+MANAGED_VIEW_MARKER = 'FTS_CHINESE_COLUMN_VIEW_MANAGED_V3'
+
+# 舊名/誤建/備份表不建立中文 View，避免誤把非正式表當成主線使用。
+SKIP_VIEW_TABLE_NAMES = {
+    'damendals_clean',
+    'damental_clean',
+    'fundamental_clean',
+    'fundamental_data',
+    'fundamentals_data',
+}
+SKIP_VIEW_TABLE_PREFIXES = (
+    'zzz_legacy_',
+    'zz_legacy_',
+    'backup_',
+    'bak_',
+)
 
 # 常用 table -> 中文 view 名。沒有列在這裡的 table 仍會自動建立：<table>_中文欄位。
 TABLE_VIEW_NAME_MAP: dict[str, str] = {
@@ -296,6 +311,14 @@ def _schema_spec_table_names() -> set[str]:
     return names
 
 
+def _should_skip_view_for_table(table_name: str) -> bool:
+    name = str(table_name or '')
+    lower = name.lower()
+    if lower in SKIP_VIEW_TABLE_NAMES:
+        return True
+    return any(lower.startswith(prefix) for prefix in SKIP_VIEW_TABLE_PREFIXES)
+
+
 def _list_user_tables(db: Any) -> list[str]:
     rows = _fetch_rows(db, """
         SELECT t.name
@@ -305,7 +328,7 @@ def _list_user_tables(db: Any) -> list[str]:
           AND t.is_ms_shipped = 0
         ORDER BY t.name
     """)
-    return [str(_row_value(r, 0)) for r in rows if _row_value(r, 0)]
+    return [str(_row_value(r, 0)) for r in rows if _row_value(r, 0) and not _should_skip_view_for_table(str(_row_value(r, 0)))]
 
 
 def _list_columns(db: Any, table_name: str) -> list[str]:

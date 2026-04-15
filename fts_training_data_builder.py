@@ -384,9 +384,29 @@ def generate_ml_dataset(tickers=None):
             ticker_reports.append(ticker_report)
             continue
 
+    existing_before = 0
+    dedupe_key = ['Ticker SYMBOL', 'Date', 'Sample_Type', 'Position_Day', 'Setup_Tag']
+    existing_df = pd.DataFrame()
+    if dataset_path.exists():
+        try:
+            existing_df = pd.read_csv(dataset_path)
+            existing_before = int(len(existing_df))
+        except Exception:
+            existing_df = pd.DataFrame()
+
     df_out = pd.DataFrame(rows)
     if df_out.empty:
         df_out = pd.DataFrame(columns=base_columns)
+    if not existing_df.empty:
+        keep_cols = list(dict.fromkeys(list(existing_df.columns) + list(df_out.columns)))
+        existing_df = existing_df.reindex(columns=keep_cols)
+        df_out = df_out.reindex(columns=keep_cols)
+        df_out = pd.concat([existing_df, df_out], ignore_index=True)
+        use_keys = [c for c in dedupe_key if c in df_out.columns]
+        if use_keys:
+            df_out = df_out.drop_duplicates(subset=use_keys, keep='last').reset_index(drop=True)
+        else:
+            df_out = df_out.drop_duplicates(keep='last').reset_index(drop=True)
     df_out, quality_report = sanitize_generated_training_df(df_out)
     if df_out.empty and not list(df_out.columns):
         df_out = pd.DataFrame(columns=base_columns)
@@ -414,14 +434,18 @@ def generate_ml_dataset(tickers=None):
         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'dataset_path': str(dataset_path),
         'status': 'ok' if len(df_out) > 0 else 'empty_dataset',
+        'build_mode': 'incremental_merge',
         'tickers_requested': len(tickers),
+        'existing_rows_before': existing_before,
         'rows_generated': int(len(df_out)),
+        'rows_new_before_dedupe': int(len(rows)),
         'quality_report': quality_report,
         'ticker_reports': ticker_reports[:200],
         'selected_feature_count': int(len(selected_features)),
         'advanced_feature_columns_present': [c for c in advanced_cols if c in df_out.columns],
         'advanced_feature_column_count': int(sum(1 for c in advanced_cols if c in df_out.columns)),
         'feature_manifest_path': str(_features.feature_manifest_path),
+        'incremental_dedupe_key': dedupe_key,
     }
     _write_runtime(payload)
     print(f"🧪 training data builder status: {payload['status']} | rows={payload['rows_generated']}")

@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-04-15 13:34:25",
+  "status": "decision_output_ready",
+  "decision_row_count": 3,
+  "normalized_order_count": 0,
+  "tickers": [],
+  "decision_preview": [
+    {
+      "ticker": "2330.TW",
+      "action": "SELL",
+      "stage": "",
+      "PREPARE": false,
+      "PILOT": false,
+      "FULL": false,
+      "score": 0.5392,
+      "reason": "",
+      "timestamp": "2026-04-15 13:34:25"
+    },
+    {
+      "ticker": "2471.TW",
+      "action": "SELL",
+      "stage": "",
+      "PREPARE": false,
+      "PILOT": false,
+      "FULL": false,
+      "score": 0.4881,
+      "reason": "",
+      "timestamp": "2026-04-15 13:34:25"
+    },
+    {
+      "ticker": "2467.TW",
+      "action": "SELL",
+      "stage": "",
+      "PREPARE": false,
+      "PILOT": false,
+      "FULL": false,
+      "score": 0.524,
+      "reason": "",
+      "timestamp": "2026-04-15 13:34:25"
+    }
+  ],
+  "source_candidates": [
+    "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
+    "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output.csv",
+    "C:\\test\\test-2026-3-22OK\\daily_decision_desk.csv",
+    "C:\\test\\test-2026-3-22OK\\data\\daily_decision_desk.csv"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-04-15 14:16:42",
+  "module_version": "v92_execution_journal_closed_loop",
+  "status": "execution_journal_ready",
+  "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
+  "journal_jsonl": "C:\\test\\test-2026-3-22OK\\runtime\\execution_journal.jsonl",
+  "total_event_count_estimate": 3,
+  "new_event_count": 0,
+  "new_order_candidate_count": 0,
+  "new_blocked_count": 0,
+  "new_exit_reduce_defend_count": 0,
+  "closed_loop_policy": {
+    "decision_rows_journaled": true,
+    "blocked_rows_journaled": true,
+    "control_tower_gate_events_expected": true,
+    "paper_broker_order_and_fill_events_expected": true
+  },
+  "latest_events": []
+}

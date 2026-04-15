@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +55,17 @@ LEGACY_TICKER_ALIAS_TABLES = (
     'trade_history',
 )
 
+# fundamentals_clean 是基本面正式主表。這些名稱是舊版或誤建常見別名，
+# migration 會把資料安全收斂到 dbo.fundamentals_clean，避免 Table/View 雙軌。
+CANONICAL_FUNDAMENTALS_TABLE = 'fundamentals_clean'
+LEGACY_FUNDAMENTALS_ALIAS_TABLES = (
+    'damendals_clean',
+    'damental_clean',
+    'fundamental_clean',
+    'fundamental_data',
+    'fundamentals_data',
+)
+
 
 class MigrationRunner:
     """
@@ -65,7 +77,7 @@ class MigrationRunner:
     3. db_setup.py 只保留為相容 wrapper，不再維護第二套 CREATE TABLE。
     """
 
-    MODULE_VERSION = 'v20260414_single_schema_migration_mainline_v4_chinese_column_views'
+    MODULE_VERSION = 'v20260415_v5_autosync_canonical_fundamentals_views'
 
     def __init__(self, config: DBConfig | None = None):
         self.config = config or DBConfig()
@@ -208,6 +220,136 @@ class MigrationRunner:
                 actions.append(f'{table}:legacy_alias_failed:{type(exc).__name__}:{exc}')
         return actions
 
+    def _safe_table_count(self, db: DatabaseSession, table_name: str) -> int | None:
+        try:
+            return int(db.scalar(f"SELECT COUNT(1) FROM dbo.{self._quote_ident(table_name)}") or 0)
+        except Exception as exc:
+            record_issue('db_migrations', 'table_count_failed', exc, severity='WARNING', fail_mode='fail_open', context={'table': table_name})
+            return None
+
+    def _table_columns(self, db: DatabaseSession, table_name: str) -> list[str]:
+        try:
+            rows = db.execute("""
+                SELECT c.name
+                FROM sys.columns AS c
+                JOIN sys.tables AS t ON t.object_id = c.object_id
+                JOIN sys.schemas AS s ON s.schema_id = t.schema_id
+                WHERE s.name = N'dbo' AND t.name = ?
+                ORDER BY c.column_id
+            """, [table_name]).fetchall()
+            return [str(r[0]) for r in rows if r and r[0]]
+        except Exception as exc:
+            record_issue('db_migrations', 'list_table_columns_failed', exc, severity='WARNING', fail_mode='fail_open', context={'table': table_name})
+            return []
+
+    @staticmethod
+    def _quote_ident(name: str) -> str:
+        return '[' + str(name).replace(']', ']]') + ']'
+
+    def _copy_legacy_fundamentals_rows(self, db: DatabaseSession, alias_table: str) -> dict[str, Any]:
+        """
+        將誤建/舊名基本面表的資料收斂到 fundamentals_clean。
+        - 只複製兩邊都存在的欄位。
+        - 若有 [Ticker SYMBOL] + [資料年月日]，用這組鍵避免重複。
+        - 若沒有足夠 key，只在 fundamentals_clean 空表時全量搬入，避免重複灌資料。
+        """
+        canonical = CANONICAL_FUNDAMENTALS_TABLE
+        alias_cols = self._table_columns(db, alias_table)
+        canonical_cols = self._table_columns(db, canonical)
+        common_cols = [c for c in alias_cols if c in set(canonical_cols)]
+        if not common_cols:
+            return {'alias_table': alias_table, 'copied': False, 'reason': 'no_common_columns'}
+
+        alias_count = self._safe_table_count(db, alias_table)
+        canonical_count = self._safe_table_count(db, canonical)
+        qcols = ', '.join(self._quote_ident(c) for c in common_cols)
+        alias_q = self._quote_ident(alias_table)
+        canonical_q = self._quote_ident(canonical)
+
+        try:
+            if {'Ticker SYMBOL', '資料年月日'}.issubset(set(common_cols)):
+                sql = f"""
+                INSERT INTO dbo.{canonical_q} ({qcols})
+                SELECT {qcols}
+                FROM dbo.{alias_q} AS src
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM dbo.{canonical_q} AS tgt
+                    WHERE ISNULL(tgt.[Ticker SYMBOL], '') = ISNULL(src.[Ticker SYMBOL], '')
+                      AND ISNULL(CONVERT(VARCHAR(10), tgt.[資料年月日], 120), '') = ISNULL(CONVERT(VARCHAR(10), src.[資料年月日], 120), '')
+                )
+                """
+                db.execute(sql)
+                return {
+                    'alias_table': alias_table,
+                    'copied': True,
+                    'mode': 'insert_missing_by_ticker_date',
+                    'alias_row_count_before': alias_count,
+                    'canonical_row_count_before': canonical_count,
+                    'common_columns': common_cols,
+                }
+            if canonical_count == 0:
+                db.execute(f"INSERT INTO dbo.{canonical_q} ({qcols}) SELECT {qcols} FROM dbo.{alias_q}")
+                return {
+                    'alias_table': alias_table,
+                    'copied': True,
+                    'mode': 'canonical_empty_full_copy_common_columns',
+                    'alias_row_count_before': alias_count,
+                    'canonical_row_count_before': canonical_count,
+                    'common_columns': common_cols,
+                }
+            return {
+                'alias_table': alias_table,
+                'copied': False,
+                'reason': 'missing_key_columns_and_canonical_not_empty',
+                'alias_row_count_before': alias_count,
+                'canonical_row_count_before': canonical_count,
+                'common_columns': common_cols,
+            }
+        except Exception as exc:
+            record_issue('db_migrations', 'copy_legacy_fundamentals_rows_failed', exc, severity='ERROR', fail_mode='fail_closed', context={'alias_table': alias_table})
+            return {'alias_table': alias_table, 'copied': False, 'reason': f'{type(exc).__name__}: {exc}', 'common_columns': common_cols}
+
+    def _quarantine_legacy_fundamentals_alias(self, db: DatabaseSession, alias_table: str) -> dict[str, Any]:
+        """
+        不 drop 誤建表；改名成 zzz_legacy_* 備份，讓正式主線只看 fundamentals_clean。
+        """
+        if not db.table_exists(alias_table):
+            return {'alias_table': alias_table, 'quarantined': False, 'reason': 'alias_missing'}
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_name = f'zzz_legacy_{alias_table}_{ts}'[:120]
+        try:
+            db.execute(f"EXEC sp_rename 'dbo.{alias_table}', '{backup_name}', 'OBJECT'")
+            return {'alias_table': alias_table, 'quarantined': True, 'backup_table': backup_name}
+        except Exception as exc:
+            record_issue('db_migrations', 'quarantine_legacy_fundamentals_alias_failed', exc, severity='WARNING', fail_mode='fail_open', context={'alias_table': alias_table, 'backup_table': backup_name})
+            return {'alias_table': alias_table, 'quarantined': False, 'reason': f'{type(exc).__name__}: {exc}', 'backup_table': backup_name}
+
+    def _normalize_canonical_fundamentals_table(self, db: DatabaseSession) -> list[dict[str, Any]]:
+        """
+        正式基本面主表只保留 dbo.fundamentals_clean 作為 active table。
+        舊名/誤建表的資料會先安全搬到 fundamentals_clean，再改名成 zzz_legacy_* 備份。
+        """
+        actions: list[dict[str, Any]] = []
+        if not db.table_exists(CANONICAL_FUNDAMENTALS_TABLE):
+            for alias in LEGACY_FUNDAMENTALS_ALIAS_TABLES:
+                if db.table_exists(alias):
+                    try:
+                        db.execute(f"EXEC sp_rename 'dbo.{alias}', '{CANONICAL_FUNDAMENTALS_TABLE}', 'OBJECT'")
+                        actions.append({'alias_table': alias, 'action': 'renamed_to_canonical', 'canonical_table': CANONICAL_FUNDAMENTALS_TABLE})
+                        return actions
+                    except Exception as exc:
+                        record_issue('db_migrations', 'rename_fundamentals_alias_to_canonical_failed', exc, severity='WARNING', fail_mode='fail_open', context={'alias_table': alias})
+                        actions.append({'alias_table': alias, 'action': 'rename_to_canonical_failed', 'error': f'{type(exc).__name__}: {exc}'})
+        for alias in LEGACY_FUNDAMENTALS_ALIAS_TABLES:
+            if alias == CANONICAL_FUNDAMENTALS_TABLE or not db.table_exists(alias):
+                continue
+            copy_report = self._copy_legacy_fundamentals_rows(db, alias)
+            quarantine_report = self._quarantine_legacy_fundamentals_alias(db, alias)
+            actions.append({'alias_table': alias, 'action': 'consolidated_to_fundamentals_clean', 'copy': copy_report, 'quarantine': quarantine_report})
+        if not actions:
+            actions.append({'canonical_table': CANONICAL_FUNDAMENTALS_TABLE, 'action': 'canonical_ready_no_alias_found'})
+        return actions
+
     def upgrade(self) -> tuple[Path, dict[str, Any]]:
         self._ensure_database_exists()
         created: list[str] = []
@@ -215,6 +357,7 @@ class MigrationRunner:
         normalized: list[str] = []
         legacy_aliases: list[str] = []
         chinese_views: list[str] = []
+        canonical_tables: list[dict[str, Any]] = []
         with DatabaseSession(self.config) as db:
             self._ensure_migrations_table(db)
             normalized.extend(self._normalize_execution_ticker_columns(db))
@@ -228,6 +371,9 @@ class MigrationRunner:
                     if not db.column_exists(spec.name, col.name):
                         db.execute(f"ALTER TABLE dbo.{spec.name} ADD {col.ddl()}")
                         altered.append(f'{spec.name}.{col.name}')
+            # fundamentals_clean 是正式基本面主表；舊名/誤建表先收斂再建中文 View。
+            canonical_tables.extend(self._normalize_canonical_fundamentals_table(db))
+
             normalized.extend(self._normalize_execution_ticker_columns(db))
 
             legacy_aliases.extend(self._normalize_legacy_symbol_alias_columns(db))
@@ -245,6 +391,9 @@ class MigrationRunner:
             'normalized_columns': normalized,
             'legacy_symbol_alias_columns': legacy_aliases,
             'legacy_tables_keep_Ticker_SYMBOL': list(LEGACY_TICKER_ALIAS_TABLES),
+            'canonical_table_consolidation': canonical_tables,
+            'canonical_fundamentals_table': CANONICAL_FUNDAMENTALS_TABLE,
+            'legacy_fundamentals_alias_tables': list(LEGACY_FUNDAMENTALS_ALIAS_TABLES),
             'chinese_column_views': chinese_views,
             'sql_chinese_column_strategy': 'non_destructive_views_keep_canonical_tables',
             'status': 'db_upgrade_ready',

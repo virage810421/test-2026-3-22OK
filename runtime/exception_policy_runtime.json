@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-15T00:06:47",
+  "updated_at": "2026-04-15T13:42:39",
   "events": [
     {
       "ts": "2026-04-14T20:56:55",
@@ -1180,10 +1180,640 @@
       "exception_type": "ImportError",
       "message": "cannot import name 'BrokerShadowLedgerMutator' from partially initialized module 'fts_broker_core' (most likely due to a circular import) (C:\\test\\test-2026-3-22OK\\fts_broker_core.py)",
       "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:15",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:37",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:41",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:42",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:43",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:44",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:51",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:52",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:54",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:55",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:33:59",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:04",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:23",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:28",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:29",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:30",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:31",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:37",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:38",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:41",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:34:42",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:35:00",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:38:02",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:12",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'RealBrokerStub' from 'fts_broker_real_stub' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_real_stub.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:15",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'RealBrokerStub' from 'fts_broker_real_stub' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_real_stub.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:19",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:41",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:46",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:47",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:48",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:49",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:56",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:52:57",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:53:00",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T09:53:01",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:32:41",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:20",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'RealBrokerStub' from 'fts_broker_real_stub' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_real_stub.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:23",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'RealBrokerStub' from 'fts_broker_real_stub' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_real_stub.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:29",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:48",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:53",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:54",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:55",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:46:56",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:47:03",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:47:04",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:47:07",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:47:08",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T10:54:33",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:19:27",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:21",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'RealBrokerStub' from 'fts_broker_real_stub' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_real_stub.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:24",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'RealBrokerStub' from 'fts_broker_real_stub' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_real_stub.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:28",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:48",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:53",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:54",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:55",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:33:57",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:34:03",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:34:04",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:34:07",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'CallbackEventStore' from 'fts_execution_models' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_models.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:34:08",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'ExecutionLedger' from 'fts_execution_ledger' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_execution_ledger.py' if it has the same name as a library you intended to import)",
+      "context": {}
+    },
+    {
+      "ts": "2026-04-15T13:42:39",
+      "component": "broker_adapter",
+      "operation": "callback_event_store_import_unavailable",
+      "severity": "warning",
+      "policy": "fail_open_with_diagnostics",
+      "exception_type": "ImportError",
+      "message": "cannot import name 'BrokerShadowLedgerMutator' from 'fts_broker_core' (consider renaming 'C:\\\\test\\\\test-2026-3-22OK\\\\fts_broker_core.py' if it has the same name as a library you intended to import)",
+      "context": {}
     }
   ],
   "summary": {
-    "total_events": 118,
+    "total_events": 181,
     "fail_closed_events": 0,
     "last_component": "broker_adapter",
     "last_operation": "callback_event_store_import_unavailable"

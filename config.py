@@ -179,20 +179,21 @@ def _load_optional_tickers_from_csvs() -> list[str]:
     return out
 
 
-
+#我為了測試關掉不可以刪除這一段
+# def get_dynamic_watch_list():
+#     merged = []
+#     universe_sources = [WATCH_LIST, TRAINING_POOL, BREAK_TEST_POOL, _load_optional_tickers_from_csvs()]
+#     max_names = max(int(os.getenv('FTS_MAX_DYNAMIC_TICKERS', '60') or 60), len(WATCH_LIST), len(TRAINING_POOL))
+#     for pool in universe_sources:
+#         for ticker in pool:
+#             ticker = _normalize_ticker(ticker)
+#             if ticker and ticker not in merged:
+#                 merged.append(ticker)
+#             if len(merged) >= max_names:
+#                 return merged
+#     return merged
 def get_dynamic_watch_list():
-    merged = []
-    universe_sources = [WATCH_LIST, TRAINING_POOL, BREAK_TEST_POOL, _load_optional_tickers_from_csvs()]
-    max_names = max(int(os.getenv('FTS_MAX_DYNAMIC_TICKERS', '60') or 60), len(WATCH_LIST), len(TRAINING_POOL))
-    for pool in universe_sources:
-        for ticker in pool:
-            ticker = _normalize_ticker(ticker)
-            if ticker and ticker not in merged:
-                merged.append(ticker)
-            if len(merged) >= max_names:
-                return merged
-    return merged
-
+    return [_normalize_ticker(t) for t in TRAINING_POOL if _normalize_ticker(t)]
 
 def get_dynamic_training_universe():
     return get_dynamic_watch_list()

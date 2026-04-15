@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-04-15 13:19:30",
+  "system": {
+    "armed": false,
+    "reason": ""
+  },
+  "account": {
+    "armed": false,
+    "reason": ""
+  },
+  "strategies": {},
+  "symbols": {}
+}

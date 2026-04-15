@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-14 23:41:54",
-  "module_version": "v20260414_single_schema_migration_mainline_v4_chinese_column_views",
+  "generated_at": "2026-04-15 13:19:36",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
   "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
   "schema_source_of_truth": "fts_db_schema.py",
   "migration_entrypoint": "fts_db_migrations.py",
@@ -29,6 +29,20 @@
     "active_positions",
     "trade_history"
   ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
   "chinese_column_views": [
     "view:事件日曆_中文欄位:dropped_before_sync",
     "view:交易紀錄_中文欄位:dropped_before_sync",
@@ -44,6 +58,7 @@
     "view:執行成交明細_中文欄位:dropped_before_sync",
     "view:執行持倉快照_中文欄位:dropped_before_sync",
     "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗_中文欄位:dropped_before_sync",
     "view:基本面清洗資料_中文欄位:dropped_before_sync",
     "view:帳戶資訊_中文欄位:dropped_before_sync",
     "view:整合執行註冊表_中文欄位:dropped_before_sync",

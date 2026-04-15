@@ -133,6 +133,19 @@ def _validate_target_return_frame(df: pd.DataFrame) -> tuple[pd.DataFrame | None
     return cleaned, report
 
 
+
+def _emit_blocked_training_report(payload: dict[str, Any], *, reason: str = '', category: str = '') -> tuple[Path, dict[str, Any]]:
+    payload = dict(payload)
+    if reason and not payload.get('reason'):
+        payload['reason'] = reason
+    if category and not payload.get('blocked_reason_category'):
+        payload['blocked_reason_category'] = category
+    RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
+    RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason=payload.get('reason') or payload.get('blocked_reason_category') or 'training_blocked')
+    return RUNTIME_PATH, payload
+
+
 def _write_model_live_signal_gate(report: dict[str, Any], promotion_ready: bool, promoted: bool, reason: str = '') -> dict[str, Any]:
     gate = {
         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -244,6 +257,47 @@ def _directional_model_pkl(lane: str, regime: str) -> Path:
     return Path('models') / f'model_{str(lane).lower()}_{regime}.pkl'
 
 
+def _delete_if_exists(path: Path) -> dict[str, Any]:
+    info = {'path': str(path), 'existed': bool(path.exists()), 'removed': False}
+    if path.exists():
+        try:
+            path.unlink()
+            info['removed'] = True
+        except Exception as exc:
+            info['error'] = repr(exc)
+    return info
+
+
+def _purge_stale_lane_artifacts(lane: str, reason: str) -> dict[str, Any]:
+    """Remove stale directional artifacts for a lane that did not train cleanly.
+
+    This prevents an old selected_features_long.pkl / model_long_*.pkl from
+    making readiness think a fresh independent lane model is available.
+    """
+    lane = str(lane).upper()
+    removed = [_delete_if_exists(_directional_feature_pkl(lane))]
+    for regime in REGIMES:
+        removed.append(_delete_if_exists(_directional_model_pkl(lane, regime)))
+    report = {
+        'lane': lane,
+        'reason': reason,
+        'removed': removed,
+        'removed_count': sum(1 for x in removed if x.get('removed')),
+    }
+    Path('runtime').mkdir(parents=True, exist_ok=True)
+    audit_path = Path('runtime') / 'stale_lane_artifact_cleanup.json'
+    history = []
+    if audit_path.exists():
+        try:
+            old = json.loads(audit_path.read_text(encoding='utf-8'))
+            history = list(old.get('history', [])) if isinstance(old, dict) else []
+        except Exception:
+            history = []
+    history.append({**report, 'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+    audit_path.write_text(json.dumps({'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'history': history[-200:]}, ensure_ascii=False, indent=2), encoding='utf-8')
+    return report
+
+
 def _evaluate_alpha(signal: pd.Series, future_return: pd.Series) -> dict[str, float] | None:
     df = pd.DataFrame({'signal': pd.to_numeric(signal, errors='coerce'), 'ret': pd.to_numeric(future_return, errors='coerce')}).dropna()
     if len(df) < 40:
@@ -267,6 +321,76 @@ def _evaluate_alpha(signal: pd.Series, future_return: pd.Series) -> dict[str, fl
         'score': score,
         'corr_abs': corr,
         'active_ratio': active_ratio,
+    }
+
+
+
+def _run_feature_review_gate_before_training() -> dict[str, Any]:
+    try:
+        from fts_feature_review_service import FeatureReviewService
+        path, payload = FeatureReviewService().build()
+        return {'status': 'ok', 'path': str(path), 'payload_status': payload.get('status') if isinstance(payload, dict) else None}
+    except Exception as exc:
+        return {'status': 'error', 'error': repr(exc)}
+
+
+def _load_feature_review_policy() -> dict[str, Any]:
+    for path in [Path('models')/'approved_features_review.json', Path('runtime')/'feature_review_report.json']:
+        if path.exists():
+            try:
+                data=json.loads(path.read_text(encoding='utf-8'))
+                if isinstance(data, dict): data['_policy_path']=str(path); return data
+            except Exception: pass
+    return {'_policy_path':'','approved_features':[],'rejected_features':[],'noise_watchlist':[]}
+
+
+def _apply_feature_review_policy(all_features: list[str], df: pd.DataFrame) -> tuple[list[str], dict[str, Any]]:
+    policy = _load_feature_review_policy()
+    enforce = bool(PARAMS.get('MODEL_ENFORCE_FEATURE_REVIEW', True))
+    approved = {str(x) for x in policy.get('approved_features', []) if str(x)}
+    rejected = {str(x) for x in policy.get('rejected_features', []) if str(x)}
+    watch = {str(x) for x in policy.get('noise_watchlist', []) if str(x)}
+    before = list(dict.fromkeys(all_features))
+    policy_status = str(policy.get('status') or '')
+    if not enforce:
+        return before, {'status': 'feature_review_not_enforced', 'policy_path': policy.get('_policy_path', ''), 'input_count': len(before), 'output_count': len(before)}
+    # v92：若特徵審核沒有正式完成，正式訓練 fail-closed，避免又回到噪音特徵全收。
+    if policy.get('fail_closed') or policy_status.startswith(('blocked', 'waiting')) or not policy.get('_policy_path'):
+        return [], {
+            'status': 'feature_review_fail_closed',
+            'policy_status': policy_status or 'missing_policy',
+            'policy_path': policy.get('_policy_path', ''),
+            'input_count': len(before),
+            'output_count': 0,
+            'approved_count': len(approved),
+            'rejected_count': len(rejected),
+            'noise_watchlist_count': len(watch),
+            'hard_blocks_noise_features': True,
+            'reason': 'feature_review_not_ready_or_training_data_missing',
+        }
+    if approved:
+        allowed = approved - rejected - watch
+        after = [f for f in before if f in allowed]
+        mode = 'approved_features_only'
+    else:
+        banned = rejected | watch
+        after = [f for f in before if f not in banned]
+        mode = 'reject_and_noise_exclusion_only'
+    after = [f for f in after if f in df.columns and f not in META_DROP_COLS]
+    return after, {
+        'status': 'feature_review_enforced',
+        'mode': mode,
+        'policy_status': policy_status,
+        'policy_path': policy.get('_policy_path', ''),
+        'input_count': len(before),
+        'output_count': len(after),
+        'approved_count': len(approved),
+        'rejected_count': len(rejected),
+        'noise_watchlist_count': len(watch),
+        'dropped_by_review_count': len(before) - len(after),
+        'dropped_by_review_preview': [f for f in before if f not in set(after)][:80],
+        'hard_blocks_noise_features': True,
+        'train_live_parity_enforced': bool(policy.get('train_live_parity_enforced', False)),
     }
 
 
@@ -480,8 +604,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not dataset_path.exists():
         payload = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'dataset_missing', 'dataset_path': str(dataset_path)}
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return RUNTIME_PATH, payload
+        return _emit_blocked_training_report(payload, reason='training_dataset_missing', category='missing_market_data')
 
     pretrain_version = create_version_tag('pretrain')
     snapshot_current_models(pretrain_version, note='重訓前自動備份（任務收尾版）')
@@ -494,8 +617,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
                 'dataset_path': str(dataset_path),
                 'reason': 'csv_file_is_zero_bytes',
             }
-            RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-            return RUNTIME_PATH, payload
+            return _emit_blocked_training_report(payload, reason='csv_file_is_zero_bytes', category='missing_market_data')
         df = pd.read_csv(dataset_path)
     except EmptyDataError:
         payload = {
@@ -504,8 +626,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
             'dataset_path': str(dataset_path),
             'reason': 'no_columns_to_parse_from_file',
         }
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return RUNTIME_PATH, payload
+        return _emit_blocked_training_report(payload, reason='no_columns_to_parse_from_file', category='missing_market_data')
 
     if df.empty or len(df.columns) == 0:
         payload = {
@@ -514,14 +635,17 @@ def train_models() -> tuple[Path, dict[str, Any]]:
             'dataset_path': str(dataset_path),
             'reason': 'parsed_dataframe_is_empty',
         }
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return RUNTIME_PATH, payload
+        return _emit_blocked_training_report(payload, reason='parsed_dataframe_is_empty', category='missing_market_data')
 
     df, quality_report = validate_training_frame(df, min_rows=max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))))
     if quality_report.get('status') == 'blocked':
         payload = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'blocked_by_data_quality', 'dataset_path': str(dataset_path), 'quality_report': quality_report}
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return RUNTIME_PATH, payload
+        q_reason = str((quality_report or {}).get('reason') or (quality_report or {}).get('status_detail') or '')
+        if 'label' in q_reason.lower():
+            return _emit_blocked_training_report(payload, reason=q_reason or 'label_missing', category='missing_label')
+        if 'row' in q_reason.lower() or 'sample' in q_reason.lower():
+            return _emit_blocked_training_report(payload, reason=q_reason or 'insufficient_rows', category='insufficient_samples')
+        return _emit_blocked_training_report(payload, reason=q_reason or 'data_quality_blocked', category='missing_market_data')
     if 'Date' in df.columns:
         df = df.sort_values('Date').reset_index(drop=True)
     df, target_return_report = _validate_target_return_frame(df)
@@ -532,9 +656,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
             'dataset_path': str(dataset_path),
             'target_return_report': target_return_report,
         }
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason=target_return_report.get('reason', 'target_return_blocked'))
-        return RUNTIME_PATH, payload
+        return _emit_blocked_training_report(payload, reason=target_return_report.get('reason', 'target_return_blocked'), category='invalid_target_return')
     if len(df) < max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))):
         payload = {
             'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -543,9 +665,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
             'target_return_report': target_return_report,
             'rows_after_target_return_clean': int(len(df)),
         }
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason='target_return_clean_rows_below_floor')
-        return RUNTIME_PATH, payload
+        return _emit_blocked_training_report(payload, reason='target_return_clean_rows_below_floor', category='insufficient_samples')
     df['Label_Y'] = pd.to_numeric(df['Label_Y'], errors='coerce').fillna(0).astype(int)
     raw_df_for_exit = df.copy()
     entry_df, position_day_df, sample_type_report = _split_entry_and_position_day_frames(df)
@@ -559,11 +679,15 @@ def train_models() -> tuple[Path, dict[str, Any]]:
             'sample_type_report': sample_type_report,
             'rows_after_entry_filter': int(len(df)),
         }
-        RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        _write_model_live_signal_gate(payload, promotion_ready=False, promoted=False, reason='entry_signal_rows_below_floor')
-        return RUNTIME_PATH, payload
+        return _emit_blocked_training_report(payload, reason='entry_signal_rows_below_floor', category='insufficient_samples')
 
+    feature_review_build = _run_feature_review_gate_before_training()
     all_features, _ = _build_feature_columns(df)
+    all_features, feature_review_gate = _apply_feature_review_policy(all_features, df)
+    min_feature_floor = int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8))
+    if len(all_features) < min_feature_floor:
+        payload = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'blocked_by_feature_review_gate', 'dataset_path': str(dataset_path), 'feature_review_build': feature_review_build, 'feature_review_gate': feature_review_gate, 'min_feature_floor': min_feature_floor}
+        return _emit_blocked_training_report(payload, reason='feature_review_gate_selected_too_few_features', category='insufficient_features_after_review')
     df = _materialize_interactions(df, all_features)
     train_df, oot_df = _chronological_split(df, oot_ratio=float(PARAMS.get('OOT_RATIO', 0.20)))
     selected_features, ranked_features = _select_features_train_only(train_df, all_features)
@@ -611,6 +735,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     report = {
         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'status': 'trained' if model is not None else 'blocked',
+        'blocked_reason_category': '' if model is not None else 'insufficient_samples',
         'dataset_path': str(dataset_path),
         'rows_total': int(len(df)),
         'rows_train': int(len(train_df)),
@@ -629,6 +754,8 @@ def train_models() -> tuple[Path, dict[str, Any]]:
         'warnings': warnings,
         'target_return_report': target_return_report,
         'sample_type_report': sample_type_report,
+        'feature_review_build': feature_review_build,
+        'feature_review_gate': feature_review_gate,
     }
 
     os.makedirs('models', exist_ok=True)
@@ -716,6 +843,13 @@ def train_models() -> tuple[Path, dict[str, Any]]:
                 'path': str(model_path),
             }
         lane_report['saved_model_count'] = lane_save_count
+        if bool(PARAMS.get('DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS', True)) and (
+            lane_save_count <= 0 or lane_report.get('selection_source') != 'lane_train_only'
+        ):
+            lane_report['stale_artifact_cleanup'] = _purge_stale_lane_artifacts(
+                lane,
+                reason='independent_lane_training_failed_or_not_selected',
+            )
         lane_artifacts[lane] = lane_report
 
     exit_training_df = position_day_df.copy() if not position_day_df.empty else pd.DataFrame()

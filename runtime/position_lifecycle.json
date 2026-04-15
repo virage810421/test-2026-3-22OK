@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-04-15 14:16:39",
+  "module_version": "v92_position_lifecycle_closed_loop",
+  "status": "no_active_positions",
+  "message": "尚無 active_positions.csv；生命週期服務已就緒，等有持倉後會開始逐日記錄。",
+  "action_plan_json": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle_action_plan.json",
+  "positions": {},
+  "wrong_exit_statistics": {
+    "status": "no_history_yet",
+    "wrong_exit_proxy_count": 0
+  },
+  "summary": {
+    "position_count": 0,
+    "exit_count": 0,
+    "reduce_count": 0,
+    "defend_count": 0,
+    "action_plan_count": 0
+  }
+}

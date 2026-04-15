@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-04-15 14:16:39",
+  "module_version": "v92_entry_tracking_closed_loop_gate",
+  "status": "entry_tracking_ready",
+  "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
+  "action_plan_json": "C:\\test\\test-2026-3-22OK\\runtime\\entry_tracking_action_plan.json",
+  "policy": {
+    "max_prepare_days": 5,
+    "max_pilot_days": 4,
+    "max_missing_days": 2
+  },
+  "positions": {},
+  "events": [],
+  "summary": {
+    "tracked_count": 0,
+    "new_updates": 0,
+    "action_plan_count": 0,
+    "prepare_count": 0,
+    "pilot_count": 0,
+    "full_entry_count": 0,
+    "expired_count": 0
+  }
+}

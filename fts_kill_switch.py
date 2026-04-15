@@ -22,6 +22,12 @@ class KillSwitchManager:
             'symbols': {},
         }
 
+    def ensure_default_state(self) -> dict[str, Any]:
+        payload = self._load()
+        if not self.path.exists():
+            self.save(payload)
+        return payload
+
     def save(self, payload: dict[str, Any]) -> dict[str, Any]:
         payload['generated_at'] = now_str()
         write_json(self.path, payload)

@@ -6,6 +6,12 @@ from typing import Dict, List, Optional, Any
 
 from broker_base import BrokerBase, FillEvent, OrderRecord, OrderRequest, OrderSide, OrderStatus, OrderType
 
+try:
+    from fts_execution_journal_service import append_execution_journal_event
+except Exception:  # pragma: no cover
+    def append_execution_journal_event(*args, **kwargs):
+        return {'ok': False, 'reason': 'journal_import_failed'}
+
 
 def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
@@ -86,20 +92,24 @@ class PaperBroker(BrokerBase):
         fill = FillEvent(order_id=order.order_id, symbol=order.symbol, side=order.side, fill_qty=int(qty), fill_price=float(px), fill_time=_now(), commission=commission, tax=tax, slippage=round(abs(px - (order.limit_price or self.last_prices.get(order.symbol, px))), 4), strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
         self.pending_fills.append(fill)
         self.fill_history.append(fill)
+        append_execution_journal_event('PAPER_BROKER_FILL', source='paper_broker', ticker=order.symbol, order_id=order.order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), filled_qty=int(qty), fill_price=float(px), status='FILLED', strategy_name=order.strategy_name, signal_id=order.signal_id, commission=float(commission), tax=float(tax), note=order.note)
 
     def place_order(self, order: OrderRequest) -> OrderRecord:
         record = self._make_order_record(order)
         self.open_orders[record.order_id] = record
+        append_execution_journal_event('PAPER_BROKER_ORDER_SUBMITTED', source='paper_broker', ticker=order.symbol, order_id=record.order_id, client_order_id=record.client_order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), qty=int(order.quantity), reference_price=float(order.limit_price or self.last_prices.get(order.symbol, 0.0) or 0.0), status='SUBMITTED', strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
         if order.side in (OrderSide.SHORT, OrderSide.COVER) and not self.allow_short:
             record.status = OrderStatus.REJECTED
             record.reject_reason = 'short_not_allowed'
             record.update_time = _now()
+            append_execution_journal_event('PAPER_BROKER_ORDER_REJECTED', source='paper_broker', ticker=order.symbol, order_id=record.order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), qty=int(order.quantity), status='REJECTED', reject_reason=record.reject_reason, strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
             return record
         ref_price = self._resolve_reference_price(order)
         if ref_price <= 0:
             record.status = OrderStatus.REJECTED
             record.reject_reason = 'invalid_reference_price'
             record.update_time = _now()
+            append_execution_journal_event('PAPER_BROKER_ORDER_REJECTED', source='paper_broker', ticker=order.symbol, order_id=record.order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), qty=int(order.quantity), status='REJECTED', reject_reason=record.reject_reason, strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
             return record
         quantity = int(order.quantity)
         fill_qty = quantity
@@ -119,11 +129,13 @@ class PaperBroker(BrokerBase):
                 record.status = OrderStatus.REJECTED
                 record.reject_reason = 'insufficient_cash'
                 record.update_time = _now()
+                append_execution_journal_event('PAPER_BROKER_ORDER_REJECTED', source='paper_broker', ticker=order.symbol, order_id=record.order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), qty=int(order.quantity), status='REJECTED', reject_reason=record.reject_reason, strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
                 return record
             if order.side == OrderSide.COVER and pos >= 0:
                 record.status = OrderStatus.REJECTED
                 record.reject_reason = 'no_short_position'
                 record.update_time = _now()
+                append_execution_journal_event('PAPER_BROKER_ORDER_REJECTED', source='paper_broker', ticker=order.symbol, order_id=record.order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), qty=int(order.quantity), status='REJECTED', reject_reason=record.reject_reason, strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
                 return record
             self.cash -= total_cost
             self.positions[order.symbol] = pos + fill_qty
@@ -132,6 +144,7 @@ class PaperBroker(BrokerBase):
                 record.status = OrderStatus.REJECTED
                 record.reject_reason = 'insufficient_position'
                 record.update_time = _now()
+                append_execution_journal_event('PAPER_BROKER_ORDER_REJECTED', source='paper_broker', ticker=order.symbol, order_id=record.order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), qty=int(order.quantity), status='REJECTED', reject_reason=record.reject_reason, strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
                 return record
             self.cash += gross - commission - tax
             self.positions[order.symbol] = pos - fill_qty
@@ -142,6 +155,7 @@ class PaperBroker(BrokerBase):
         record.avg_fill_price = fill_price
         record.update_time = _now()
         self._append_fill(record, fill_qty, fill_price, commission, tax)
+        append_execution_journal_event('PAPER_BROKER_ORDER_STATUS', source='paper_broker', ticker=order.symbol, order_id=record.order_id, side=order.side.value if hasattr(order.side, 'value') else str(order.side), qty=int(order.quantity), filled_qty=int(fill_qty), fill_price=float(fill_price), status=record.status.value if hasattr(record.status, 'value') else str(record.status), strategy_name=order.strategy_name, signal_id=order.signal_id, note=order.note)
         return record
 
 
@@ -269,6 +283,7 @@ class PaperBroker(BrokerBase):
                 'time': _now(),
             }
             self.stop_trigger_history.append(dict(event))
+            append_execution_journal_event('PAPER_BROKER_PROTECTIVE_STOP_TRIGGERED', source='paper_broker', ticker=symbol, order_id=str(order_id), side=fill_side.value if hasattr(fill_side, 'value') else str(fill_side), qty=int(qty), fill_price=float(fill_price), status='TRIGGERED_FILLED', reference_price=float(trigger_ref), note=str(stop_rec.get('note', '') or ''))
             events.append(event)
         return events
 
@@ -352,11 +367,13 @@ class PaperBroker(BrokerBase):
                 return False
             rec.status = OrderStatus.CANCELLED
             rec.update_time = _now()
+            append_execution_journal_event('PAPER_BROKER_ORDER_CANCELLED', source='paper_broker', ticker=rec.symbol, order_id=rec.order_id, side=rec.side.value if hasattr(rec.side, 'value') else str(rec.side), qty=int(rec.quantity), status='CANCELLED', strategy_name=rec.strategy_name, signal_id=rec.signal_id, note=rec.note)
             return True
         stop_rec = self.protective_stops.get(order_id)
         if stop_rec is not None:
             stop_rec['status'] = 'CANCELLED'
             stop_rec['update_time'] = _now()
+            append_execution_journal_event('PAPER_BROKER_STOP_CANCELLED', source='paper_broker', ticker=stop_rec.get('symbol'), order_id=order_id, side=stop_rec.get('side'), qty=int(stop_rec.get('quantity', 0) or 0), status='CANCELLED', note=stop_rec.get('note', ''))
             return True
         return False
 
@@ -375,6 +392,11 @@ class PaperBroker(BrokerBase):
     def poll_fills(self) -> List[FillEvent]:
         fills = list(self.pending_fills)
         self.pending_fills.clear()
+        for f in fills:
+            try:
+                append_execution_journal_event('PAPER_BROKER_CALLBACK', source='paper_broker', ticker=getattr(f, 'symbol', ''), order_id=getattr(f, 'order_id', ''), side=(getattr(getattr(f, 'side', ''), 'value', getattr(f, 'side', ''))), filled_qty=int(getattr(f, 'fill_qty', 0) or 0), fill_price=float(getattr(f, 'fill_price', 0.0) or 0.0), status='CALLBACK_FILLED', note='poll_fills_callback')
+            except Exception:
+                pass
         return fills
 
 # =============================================================================

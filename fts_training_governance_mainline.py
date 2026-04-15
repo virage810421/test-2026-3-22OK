@@ -48,7 +48,7 @@ class TrainingGovernanceMainline:
             try:
                 data = json.loads(path.read_text(encoding='utf-8'))
             except Exception as exc:
-                record_diagnostic('training_governance', 'read_runtime_json_candidate', exc, severity='warning', fail_closed=False, context={'path': str(p)})
+                record_diagnostic('training_governance', 'read_runtime_json_candidate', exc, severity='warning', fail_closed=False, context={'path': str(path)})
                 continue
             if isinstance(data, list):
                 rows = [x for x in data if isinstance(x, dict)]
@@ -135,7 +135,7 @@ class TrainingGovernanceMainline:
             try:
                 slip_values.append(abs(float(val)))
             except Exception as exc:
-                record_diagnostic('training_governance', 'read_runtime_json_candidate', exc, severity='warning', fail_closed=False, context={'path': str(p)})
+                record_diagnostic('training_governance', 'read_runtime_json_candidate', exc, severity='warning', fail_closed=False, context={'path': str(path)})
                 continue
         avg_slippage_bps = (sum(slip_values) / len(slip_values)) if slip_values else None
 
@@ -224,6 +224,19 @@ class TrainingGovernanceMainline:
         directional_regime = self._load_json(self.regime_service_path)
         directional_alpha = self._load_json(self.alpha_miner_path)
 
+        blocked_reasons: list[str] = []
+        if not report:
+            blocked_reasons.append('trainer_backend_report_missing')
+        if str(training_integrity.get('status') or '') != 'training_integrity_ok':
+            blocked_reasons.append(str(training_integrity.get('status') or 'training_integrity_blocked'))
+        if not bool(candidate_eval.get('candidate_ready')):
+            blocked_reasons.append('candidate_not_ready')
+        if str(live_health.get('status') or '') == 'live_metrics_unavailable':
+            blocked_reasons.append('live_metrics_unavailable')
+        if int(orchestrator.get('training_readiness_pct') or 0) < 100:
+            blocked_reasons.append('training_readiness_incomplete')
+        overall_status = 'training_governance_mainline_ready' if not blocked_reasons else 'training_governance_mainline_blocked'
+
         payload = {
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
@@ -243,7 +256,8 @@ class TrainingGovernanceMainline:
                 'sample_split_guard_ok': bool(report.get('leakage_guards', {}).get('out_of_time_holdout')),
                 'feature_selection_train_only': bool(report.get('leakage_guards', {}).get('feature_selection_train_only')),
             },
-            'status': 'training_governance_mainline_ready',
+            'blocked_reasons': blocked_reasons,
+            'status': overall_status,
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f'🧠 training governance 主線盤點完成：{self.runtime_path}')

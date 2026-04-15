@@ -1,442 +1,324 @@
 {
-  "generated_at": "2026-04-13 15:16:46",
+  "generated_at": "2026-04-15 14:14:54",
   "dataset_path": "data\\ml_training_data.csv",
   "status": "ok",
-  "tickers_requested": 60,
-  "rows_generated": 41813,
+  "build_mode": "incremental_merge",
+  "tickers_requested": 16,
+  "existing_rows_before": 41813,
+  "rows_generated": 59741,
+  "rows_new_before_dedupe": 17928,
   "quality_report": {
-    "generated_at": "2026-04-13 15:16:44",
+    "generated_at": "2026-04-15 14:14:48",
     "dataset_name": "ml_training_generated",
-    "rows": 41813,
-    "columns": 85,
+    "rows": 59741,
+    "columns": 236,
     "missing_required_columns": [],
     "required_columns_with_null_rate": {},
-    "columns_with_null_rate": {},
+    "columns_with_null_rate": {
+      "Realized_Return_After_Cost_Pct": 0.6999,
+      "Setup_Ready_Label": 0.6999,
+      "Trigger_Confirm_Label": 0.6999,
+      "Entry_State_At_Label": 0.6999,
+      "Early_Path_State_At_Label": 0.6999,
+      "Confirm_Path_State_At_Label": 0.6999,
+      "Exit_Defend_Label": 0.6999,
+      "Exit_Reduce_Label": 0.6999,
+      "Exit_Confirm_Label": 0.6999,
+      "Exit_State_At_Label": 0.6999,
+      "Target_Position_At_Label": 0.6999,
+      "Sample_Type": 0.6999,
+      "Is_Position_Day": 0.6999,
+      "Position_Day": 0.6999,
+      "Position_Age_Days": 0.6999,
+      "Turnover_Pctl": 0.6999,
+      "ADV20_Pctl": 0.6999,
+      "RealizedVol_20_Pctl": 0.6999,
+      "Short_Failed_Rebound": 0.6999,
+      "Short_Weak_Bounce": 0.6999,
+      "Short_Distribution_Pressure": 0.6999,
+      "Short_Breakdown_Followthrough": 0.6999,
+      "Short_Upper_Shadow_Pressure": 0.6999,
+      "Short_GapDown_Continuation": 0.6999,
+      "Short_Below_MA20_FailedRetake": 0.6999,
+      "Short_RS_Weakness": 0.6999,
+      "Range_Position_Pct": 0.6999,
+      "Distance_To_Range_Top": 0.6999,
+      "Distance_To_Range_Bottom": 0.6999,
+      "Range_Mean_Reversion_Score": 0.6999,
+      "Range_Exhaustion_Score": 0.6999,
+      "Range_Width_Pct": 0.6999,
+      "Range_Center_Distance": 0.6999,
+      "Range_Bounce_Quality": 0.6999,
+      "Range_Fade_Quality": 0.6999,
+      "Breakout_Risk_Next3": 0.6999,
+      "Reversal_Risk_Next3": 0.6999,
+      "Exit_Trend_Decay": 0.6999,
+      "Exit_Chip_Weakening": 0.6999,
+      "Exit_Regime_Deterioration": 0.6999,
+      "Exit_Hazard_Score": 0.6999,
+      "Exit_Stop_Tighten_Suggested": 0.6999,
+      "Trend_Confidence_Delta": 0.6999,
+      "Range_Confidence_Delta": 0.6999,
+      "Proba_Delta_3d": 0.6999,
+      "Buy_Score_Slope_3d": 0.6999,
+      "Buy_Score_Slope_5d": 0.6999,
+      "Sell_Score_Slope_3d": 0.6999,
+      "Sell_Score_Slope_5d": 0.6999,
+      "Score_Gap_Slope_3d": 0.6999,
+      "Score_Gap_Slope_5d": 0.6999,
+      "ADX_Delta_3d": 0.6999,
+      "MACD_Hist_Delta_3d": 0.6999,
+      "RSI_Reclaim_Speed": 0.6999,
+      "BB_Squeeze_Release": 0.6999,
+      "ATR_Expansion_Start": 0.6999,
+      "Volume_Z20_Delta": 0.6999,
+      "Foreign_Ratio_Delta_3d": 0.6999,
+      "Total_Ratio_Delta_3d": 0.6999,
+      "Bull_Emerging_Score": 0.6999,
+      "Bear_Emerging_Score": 0.6999,
+      "Range_Compression_Score": 0.6999,
+      "Breakout_Readiness": 0.6999,
+      "Trend_Exhaustion_Score": 0.6999,
+      "Entry_Readiness": 0.6999,
+      "Transition_Label": 0.6999,
+      "Next_Regime_Prob_Bull": 0.6999,
+      "Next_Regime_Prob_Bear": 0.6999,
+      "Next_Regime_Prob_Range": 0.6999,
+      "Hysteresis_Regime_Label": 0.6999,
+      "Feature_Row_Index": 0.7499,
+      "Position_Date": 0.7499,
+      "Current_Close": 0.7499,
+      "Unrealized_Return": 0.7499,
+      "Unrealized_Return_Pct": 0.7499,
+      "Remaining_Return_To_Planned_Exit": 0.7499,
+      "Remaining_Return_To_Planned_Exit_Pct": 0.7499,
+      "Adverse_To_Date_Pct": 0.7499,
+      "Favorable_To_Date_Pct": 0.7499
+    },
     "status": "ok",
-    "missing_flag_columns_added": []
+    "missing_flag_columns_added": [
+      "Realized_Return_After_Cost_Pct",
+      "Setup_Ready_Label",
+      "Trigger_Confirm_Label",
+      "Exit_Defend_Label",
+      "Exit_Reduce_Label",
+      "Exit_Confirm_Label",
+      "Target_Position_At_Label",
+      "Is_Position_Day",
+      "Position_Day",
+      "Position_Age_Days",
+      "Turnover_Pctl",
+      "ADV20_Pctl",
+      "RealizedVol_20_Pctl",
+      "Short_Failed_Rebound",
+      "Short_Weak_Bounce",
+      "Short_Distribution_Pressure",
+      "Short_Breakdown_Followthrough",
+      "Short_Upper_Shadow_Pressure",
+      "Short_GapDown_Continuation",
+      "Short_Below_MA20_FailedRetake",
+      "Short_RS_Weakness",
+      "Range_Position_Pct",
+      "Distance_To_Range_Top",
+      "Distance_To_Range_Bottom",
+      "Range_Mean_Reversion_Score",
+      "Range_Exhaustion_Score",
+      "Range_Width_Pct",
+      "Range_Center_Distance",
+      "Range_Bounce_Quality",
+      "Range_Fade_Quality",
+      "Breakout_Risk_Next3",
+      "Reversal_Risk_Next3",
+      "Exit_Trend_Decay",
+      "Exit_Chip_Weakening",
+      "Exit_Regime_Deterioration",
+      "Exit_Hazard_Score",
+      "Exit_Stop_Tighten_Suggested",
+      "Trend_Confidence_Delta",
+      "Range_Confidence_Delta",
+      "Proba_Delta_3d",
+      "Buy_Score_Slope_3d",
+      "Buy_Score_Slope_5d",
+      "Sell_Score_Slope_3d",
+      "Sell_Score_Slope_5d",
+      "Score_Gap_Slope_3d",
+      "Score_Gap_Slope_5d",
+      "ADX_Delta_3d",
+      "MACD_Hist_Delta_3d",
+      "RSI_Reclaim_Speed",
+      "BB_Squeeze_Release",
+      "ATR_Expansion_Start",
+      "Volume_Z20_Delta",
+      "Foreign_Ratio_Delta_3d",
+      "Total_Ratio_Delta_3d",
+      "Bull_Emerging_Score",
+      "Bear_Emerging_Score",
+      "Range_Compression_Score",
+      "Breakout_Readiness",
+      "Trend_Exhaustion_Score",
+      "Entry_Readiness",
+      "Next_Regime_Prob_Bull",
+      "Next_Regime_Prob_Bear",
+      "Next_Regime_Prob_Range",
+      "Feature_Row_Index",
+      "Current_Close",
+      "Unrealized_Return",
+      "Unrealized_Return_Pct",
+      "Remaining_Return_To_Planned_Exit",
+      "Remaining_Return_To_Planned_Exit_Pct",
+      "Adverse_To_Date_Pct",
+      "Favorable_To_Date_Pct"
+    ]
   },
   "ticker_reports": [
     {
       "ticker": "2330.TW",
-      "rows_added": 703,
+      "rows_added": 1314,
       "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
+      "download_rows": 726,
+      "computed_rows": 726
     },
     {
       "ticker": "2317.TW",
-      "rows_added": 716,
+      "rows_added": 1056,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2454.TW",
-      "rows_added": 716,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "2881.TW",
-      "rows_added": 701,
+      "rows_added": 1662,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2603.TW",
-      "rows_added": 711,
+      "rows_added": 1044,
+      "status": "ok",
+      "download_rows": 728,
+      "computed_rows": 728
+    },
+    {
+      "ticker": "2881.TW",
+      "rows_added": 1176,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "3231.TW",
-      "rows_added": 711,
+      "rows_added": 1020,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "1519.TW",
-      "rows_added": 713,
+      "rows_added": 1350,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2002.TW",
-      "rows_added": 711,
+      "rows_added": 996,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2303.TW",
-      "rows_added": 704,
+      "rows_added": 1032,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2308.TW",
-      "rows_added": 698,
+      "rows_added": 1182,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2382.TW",
-      "rows_added": 709,
+      "rows_added": 984,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2408.TW",
-      "rows_added": 712,
+      "rows_added": 852,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2882.TW",
-      "rows_added": 702,
+      "rows_added": 1026,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "2891.TW",
-      "rows_added": 704,
+      "rows_added": 924,
       "status": "ok",
       "download_rows": 728,
       "computed_rows": 728
     },
     {
       "ticker": "3711.TW",
-      "rows_added": 706,
+      "rows_added": 1194,
       "status": "ok",
       "download_rows": 726,
       "computed_rows": 726
     },
     {
       "ticker": "6505.TW",
-      "rows_added": 710,
+      "rows_added": 1116,
       "status": "ok",
       "download_rows": 726,
       "computed_rows": 726
-    },
-    {
-      "ticker": "1101.TW",
-      "rows_added": 718,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1102.TW",
-      "rows_added": 704,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1103.TW",
-      "rows_added": 706,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1104.TW",
-      "rows_added": 708,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1108.TW",
-      "rows_added": 711,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1109.TW",
-      "rows_added": 712,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1110.TW",
-      "rows_added": 703,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1201.TW",
-      "rows_added": 705,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1203.TW",
-      "rows_added": 710,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1210.TW",
-      "rows_added": 715,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1215.TW",
-      "rows_added": 713,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1216.TW",
-      "rows_added": 705,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1217.TW",
-      "rows_added": 705,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1218.TW",
-      "rows_added": 717,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1219.TW",
-      "rows_added": 705,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1220.TW",
-      "rows_added": 716,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1225.TW",
-      "rows_added": 0,
-      "status": "error",
-      "download_rows": 728,
-      "error": "TypeError: boolean value of NA is ambiguous"
-    },
-    {
-      "ticker": "1227.TW",
-      "rows_added": 709,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1229.TW",
-      "rows_added": 704,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1231.TW",
-      "rows_added": 708,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1232.TW",
-      "rows_added": 716,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1233.TW",
-      "rows_added": 695,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1234.TW",
-      "rows_added": 695,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1235.TW",
-      "rows_added": 714,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1236.TW",
-      "rows_added": 718,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1256.TW",
-      "rows_added": 707,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1301.TW",
-      "rows_added": 711,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1303.TW",
-      "rows_added": 698,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1304.TW",
-      "rows_added": 711,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1305.TW",
-      "rows_added": 711,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1307.TW",
-      "rows_added": 710,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1308.TW",
-      "rows_added": 709,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1309.TW",
-      "rows_added": 719,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1310.TW",
-      "rows_added": 711,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1312.TW",
-      "rows_added": 711,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1313.TW",
-      "rows_added": 709,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1314.TW",
-      "rows_added": 706,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1315.TW",
-      "rows_added": 708,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1316.TW",
-      "rows_added": 715,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1319.TW",
-      "rows_added": 699,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1321.TW",
-      "rows_added": 707,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1323.TW",
-      "rows_added": 714,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1324.TW",
-      "rows_added": 710,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1325.TW",
-      "rows_added": 708,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
     }
   ],
   "selected_feature_count": 4,
-  "feature_manifest_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_feature_manifest.json"
+  "advanced_feature_columns_present": [
+    "Score_Gap_Slope_3d",
+    "ADX_Delta_3d",
+    "MACD_Hist_Delta_3d",
+    "RSI_Reclaim_Speed",
+    "BB_Squeeze_Release",
+    "ATR_Expansion_Start",
+    "Volume_Z20_Delta",
+    "Foreign_Ratio_Delta_3d",
+    "Total_Ratio_Delta_3d",
+    "Bull_Emerging_Score",
+    "Bear_Emerging_Score",
+    "Range_Compression_Score",
+    "Breakout_Readiness",
+    "Trend_Exhaustion_Score",
+    "Entry_Readiness",
+    "Breakout_Risk_Next3",
+    "Reversal_Risk_Next3",
+    "Exit_Hazard_Score",
+    "Proba_Delta_3d",
+    "Trend_Confidence_Delta",
+    "Range_Confidence_Delta",
+    "Next_Regime_Prob_Bull",
+    "Next_Regime_Prob_Bear",
+    "Next_Regime_Prob_Range",
+    "Transition_Label"
+  ],
+  "advanced_feature_column_count": 25,
+  "feature_manifest_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_feature_manifest.json",
+  "incremental_dedupe_key": [
+    "Ticker SYMBOL",
+    "Date",
+    "Sample_Type",
+    "Position_Day",
+    "Setup_Tag"
+  ]
 }

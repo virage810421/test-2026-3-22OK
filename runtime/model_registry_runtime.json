@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 00:06:46",
+  "generated_at": "2026-04-15 13:34:26",
   "system_name": "正式交易主控版_v83_official_main",
   "models_dir": "C:\\test\\test-2026-3-22OK\\models",
   "candidates": [
@@ -9,6 +9,13 @@
       "is_file": false,
       "is_dir": true,
       "size_bytes": 0
+    },
+    {
+      "name": "approved_features_review.json",
+      "path": "C:\\test\\test-2026-3-22OK\\models\\approved_features_review.json",
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1879
     },
     {
       "name": "best",
@@ -29,7 +36,7 @@
       "path": "C:\\test\\test-2026-3-22OK\\models\\governance_events.jsonl",
       "is_file": true,
       "is_dir": false,
-      "size_bytes": 47345
+      "size_bytes": 49201
     },
     {
       "name": "model_long_區間盤整.pkl",
@@ -172,7 +179,7 @@
       "size_bytes": 0
     }
   ],
-  "candidate_count": 24,
+  "candidate_count": 25,
   "suspicious_small_artifacts": [
     {
       "name": "selected_features.pkl",

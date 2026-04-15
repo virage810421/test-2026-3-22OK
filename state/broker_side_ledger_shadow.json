@@ -18,7 +18,7 @@
         "last_fill_symbol": "2330.TW",
         "last_mutation_type": "callback_fill",
         "last_mutation_reason": "callback_fill",
-        "updated_at": "2026-04-15 00:06:20"
+        "updated_at": "2026-04-15 13:34:07"
       }
     },
     "SHORT": {},
@@ -411,6 +411,61 @@
     },
     {
       "at": "2026-04-15 00:06:20",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-15 09:33:55",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-15 09:34:41",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-15 09:53:00",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-15 10:47:07",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-15 13:34:07",
       "lane": "LONG",
       "order_id": "HC1",
       "mutation_type": "callback_fill",

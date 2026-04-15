@@ -1,0 +1,105 @@
+{
+  "generated_at": "2026-04-15 14:16:42",
+  "module_version": "v92_walkforward_oos_drift_retention_governance",
+  "status": "model_governance_enhanced_ready",
+  "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
+  "walk_forward": {
+    "ret_mean": -0.0012426066425581777,
+    "hit_rate_mean": 0.19079189686924494,
+    "pf_mean": 0.787328639467551,
+    "coverage_mean": 0.4467771639042358,
+    "effective_splits": 5,
+    "score": 0.6630679752117332
+  },
+  "out_of_time": {
+    "hit_rate": 0.1978794642857143,
+    "avg_return": -0.0030521357901785707,
+    "pred_accuracy": 0.5225446428571429,
+    "profit_factor": 0.579087206783616,
+    "coverage": 0.5026785714285714
+  },
+  "promotion": {
+    "status": "restored_pretrain",
+    "version": "pretrain_20260415_141459",
+    "reason": "promotion_floor_not_met",
+    "failures": [
+      "oot_profit_factor_below_floor",
+      "oot_hit_rate_below_floor",
+      "walk_forward_return_below_floor"
+    ]
+  },
+  "live_signal_gate": {
+    "generated_at": "2026-04-15 14:16:37",
+    "allow_live_signal": false,
+    "promotion_ready": false,
+    "promoted_current_candidate": false,
+    "block_live_on_unpromoted": true,
+    "reason": "promotion_not_cleared",
+    "promotion": {
+      "status": "restored_pretrain",
+      "version": "pretrain_20260415_141459",
+      "reason": "promotion_floor_not_met",
+      "failures": [
+        "oot_profit_factor_below_floor",
+        "oot_hit_rate_below_floor",
+        "walk_forward_return_below_floor"
+      ]
+    },
+    "out_of_time": {
+      "hit_rate": 0.1978794642857143,
+      "avg_return": -0.0030521357901785707,
+      "pred_accuracy": 0.5225446428571429,
+      "profit_factor": 0.579087206783616,
+      "coverage": 0.5026785714285714
+    },
+    "walk_forward_summary": {
+      "ret_mean": -0.0012426066425581777,
+      "hit_rate_mean": 0.19079189686924494,
+      "pf_mean": 0.787328639467551,
+      "coverage_mean": 0.4467771639042358,
+      "effective_splits": 5,
+      "score": 0.6630679752117332
+    },
+    "overall_score": 2.2526682706229018,
+    "status": "live_signal_blocked"
+  },
+  "drift_monitor": {
+    "status": "drift_scored",
+    "high_drift_count": 2,
+    "top_drift_features": [
+      {
+        "feature": "Reversal_Risk_Next3",
+        "mean_shift_z": 31.7816,
+        "old_mean": 0.366279,
+        "recent_mean": 17.605181
+      },
+      {
+        "feature": "Feature_Row_Index",
+        "mean_shift_z": 2.4587,
+        "old_mean": 262.176249,
+        "recent_mean": 618.692491
+      }
+    ]
+  },
+  "model_retention": {
+    "model_file_count": 20,
+    "stale_model_count": 0,
+    "stale_models": [],
+    "auto_retire_enabled": false,
+    "retired_moves": []
+  },
+  "hard_blocks": [],
+  "warnings": [
+    "live_signal_gate_not_allowed",
+    "current_candidate_not_promoted",
+    "high_feature_drift_detected_review_before_live"
+  ],
+  "required_before_live": [
+    "trainer_backend_report exists",
+    "walk_forward_effective_splits >= floor",
+    "out_of_time report present",
+    "model_live_signal_gate allow_live_signal true for live",
+    "stale model files reviewed or retired",
+    "drift monitor reviewed when high_drift_count > 0"
+  ]
+}
