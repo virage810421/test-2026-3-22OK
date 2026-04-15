@@ -26,6 +26,20 @@ class ModelLiveSignalGate:
         except Exception:
             return {}
 
+    def _suggest_remediation(self, payload: dict[str, Any]) -> list[str]:
+        out = []
+        promotion = payload.get('promotion', {}) if isinstance(payload.get('promotion'), dict) else {}
+        failures = list(promotion.get('failures', []) or [])
+        if 'oot_profit_factor_below_floor' in failures:
+            out.append('先重建乾淨訓練集，再提升 OOT profit factor。')
+        if 'oot_hit_rate_below_floor' in failures:
+            out.append('優先改善樣本外 hit rate，再考慮放行。')
+        if 'walk_forward_return_below_floor' in failures:
+            out.append('先降低過擬合，改善 walk-forward 平均報酬。')
+        if not out and not payload.get('allow_live_signal', False):
+            out.append('先檢查 promotion failures 與 trainer backend report。')
+        return out
+
     def build(self) -> tuple[Path, dict[str, Any]]:
         existing = self._read_json(self.path)
         backend = self._read_json(self.backend_path)
@@ -53,8 +67,12 @@ class ModelLiveSignalGate:
                 'promoted_current_candidate': bool(promoted),
                 'reason': str(blocked_reason),
                 'promotion': promotion,
+                'out_of_time': backend.get('out_of_time', {}),
+                'walk_forward_summary': backend.get('walk_forward_summary', {}),
+                'overall_score': float(backend.get('overall_score', 0.0) or 0.0),
                 'status': 'live_signal_allowed' if bool(promotion_ready and promoted) else 'live_signal_blocked',
             }
+        payload['remediation'] = self._suggest_remediation(payload)
         self.path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         return self.path, payload
 

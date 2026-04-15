@@ -44,6 +44,7 @@ from fts_trainer_backend import train_models
 from fts_maturity_upgrade_suite import MaturityUpgradeSuite
 from fts_execution_journal_service import append_execution_journal_event
 from fts_kill_switch import KillSwitchManager
+from fts_promoted_model_guard import PromotedModelGuard
 
 RUNTIME_DIR = PATHS.runtime_dir
 
@@ -488,6 +489,43 @@ class _AcceptedSignal:
         self.reference_price = float(order.get('reference_price', 0.0) or 0.0)
 
 
+
+def _write_approved_execution_artifacts(orders: list[dict[str, Any]], model_guard_payload: dict[str, Any], launch_gate_payload: dict[str, Any], live_safety_payload: dict[str, Any], readiness_payload: dict[str, Any], live_release_payload: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
+    from config import PARAMS as _USER_PARAMS
+    approved_path = PATHS.data_dir / str(_USER_PARAMS.get('CONTROL_TOWER_APPROVED_ORDER_FILE', 'approved_executable_orders.csv'))
+    rows = []
+    paper_allowed = bool(launch_gate_payload.get('go_for_execution', False) and live_safety_payload.get('paper_live_safe', False))
+    promoted_ok = bool(model_guard_payload.get('can_bind_live_promoted_model', False))
+    live_release_allowed = bool(live_release_payload.get('allow_live', False))
+    live_ready = bool(readiness_payload.get('live_ready', False))
+    for order in list(orders or []):
+        row = dict(order)
+        row['control_tower_approved'] = True
+        row['approved_for_execution'] = bool(paper_allowed)
+        row['paper_execution_allowed'] = bool(paper_allowed)
+        row['live_execution_allowed'] = bool(paper_allowed and promoted_ok and live_release_allowed and live_ready)
+        row['promoted_model_required'] = True
+        row['promoted_model_ok'] = bool(promoted_ok)
+        row['live_release_allowed'] = bool(live_release_allowed)
+        row['execution_scope'] = 'LIVE' if row['live_execution_allowed'] else ('PAPER' if row['paper_execution_allowed'] else 'BLOCKED')
+        rows.append(row)
+    pd.DataFrame(rows).to_csv(approved_path, index=False, encoding='utf-8-sig')
+    manifest = {
+        'generated_at': now_str(),
+        'status': 'execution_release_manifest_ready',
+        'approved_orders_path': str(approved_path),
+        'approved_order_count': len(rows),
+        'paper_execution_unlocked': bool(paper_allowed),
+        'live_execution_unlocked': bool(paper_allowed and promoted_ok and live_release_allowed and live_ready),
+        'promoted_model_required': True,
+        'promoted_model_ok': bool(promoted_ok),
+        'model_guard_status': model_guard_payload.get('status'),
+        'live_release_status': live_release_payload.get('status'),
+        'readiness_status': readiness_payload.get('status'),
+    }
+    manifest_path = _write_json('execution_release_manifest.json', manifest)
+    return str(approved_path), manifest_path, manifest
+
 def _build_control_outputs() -> dict[str, Any]:
     health_path, health_payload = ProjectHealthcheck(PATHS.base_dir).build_report(deep=False)
     level2_path, level2_payload = run_level2_mainline()
@@ -551,6 +589,10 @@ def _build_control_outputs() -> dict[str, Any]:
         LiveReleaseGate(), 'evaluate', governance=governance_payload, safety=live_safety_payload, recon=recon_payload if isinstance(recon_payload, dict) else {},
         recovery=recovery_validation_payload, approval=latest_approval, broker_contract={'defined': True}, fallback_path=PATHS.runtime_dir / 'live_release_gate.json'
     )
+    promoted_model_guard_path, promoted_model_guard_payload = _call_builder_result(PromotedModelGuard(), 'build', fallback_path=PATHS.runtime_dir / 'promoted_model_guard.json')
+    approved_orders_path, execution_release_manifest_path, execution_release_manifest_payload = _write_approved_execution_artifacts(
+        orders, promoted_model_guard_payload, launch_gate_payload, live_safety_payload, readiness_payload, live_release_payload
+    )
     tri_lane_path, tri_lane_payload = _call_builder_result(TriLaneOrchestrator(), 'build', fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json')
 
     return {
@@ -574,6 +616,9 @@ def _build_control_outputs() -> dict[str, Any]:
         'recovery': {'path': str(recovery_path), 'payload': recovery_payload},
         'recovery_validation': {'path': str(recovery_validation_path), 'payload': recovery_validation_payload},
         'live_release_gate': {'path': str(live_release_path), 'payload': live_release_payload},
+        'promoted_model_guard': {'path': str(promoted_model_guard_path), 'payload': promoted_model_guard_payload},
+        'approved_execution_orders': {'path': str(approved_orders_path), 'payload': {'count': len(orders), 'status': 'approved_execution_orders_ready'}},
+        'execution_release_manifest': {'path': str(execution_release_manifest_path), 'payload': execution_release_manifest_payload},
         'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload},
         'tri_lane_stage_status': tri_lane_payload.get('lanes', {}) if isinstance(tri_lane_payload, dict) else {},
         'tri_lane_stage_runs': tri_lane_payload.get('tri_lane_stage_runs', {}) if isinstance(tri_lane_payload, dict) else {},

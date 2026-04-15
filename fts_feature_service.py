@@ -69,6 +69,7 @@ def get_runtime_diagnostics_safe() -> dict:
         return {}
 
 from fts_feature_catalog import FEATURE_BUCKETS, PRIORITY_NEW_FEATURES_20, FEATURE_SPECS, LIVE_SAFE_FEATURES, APPROVED_LIVE_DIRECTIONAL_FEATURES, is_feature_live_approved, get_training_feature_groups, get_live_feature_groups
+from fts_promoted_model_guard import resolve_runtime_model_dir
 
 
 class FeatureService:
@@ -77,7 +78,7 @@ class FeatureService:
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'feature_service.json'
         self.live_mount_path = PATHS.runtime_dir / 'live_feature_mount.json'
-        model_dir = getattr(PATHS, 'models_dir', getattr(PATHS, 'model_dir', Path('models')))
+        model_dir = resolve_runtime_model_dir()
         self.selected_features_path = Path(model_dir) / 'selected_features.pkl'
         self.directional_selected_feature_paths = {
             'LONG': Path(model_dir) / 'selected_features_long.pkl',

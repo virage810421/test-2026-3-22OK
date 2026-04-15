@@ -2778,9 +2778,115 @@
       },
       "note": "任務收尾版訓練完成快照",
       "status": "snapshot"
+    },
+    {
+      "version": "pretrain_20260415_204857",
+      "timestamp": "2026-04-15 20:48:57",
+      "files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "artifacts": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 87,
+          "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": true,
+          "size_bytes": 2177417,
+          "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 1293737,
+          "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 1641577,
+          "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+        }
+      ],
+      "metrics": {},
+      "note": "重訓前自動備份（任務收尾版）",
+      "status": "snapshot"
+    },
+    {
+      "version": "trained_20260415_204920",
+      "timestamp": "2026-04-15 20:49:20",
+      "files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "artifacts": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 373,
+          "sha256": "2a6be3c7fe914301377b4d38433346313700f763436a7b5f43efadfe67591b2a"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": true,
+          "size_bytes": 1293225,
+          "sha256": "6ec6060db1af2cd01a83e6b782eaa5dca09e6a4652382b43ed43a2692736623c"
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 1482185,
+          "sha256": "c01bb4b5ee4c6206f44c8e0b41acf0c7cc05db36c6fafb5eecd681d381004b9f"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 1122665,
+          "sha256": "4df616bc41cde2742da36f8822a06b20c6ed44d3820f47d43efd171d16f5799d"
+        }
+      ],
+      "metrics": {
+        "overall_score": 2.558,
+        "out_of_time": {
+          "hit_rate": 0.17252931323283083,
+          "avg_return": -0.0006918777219430485,
+          "pred_accuracy": 0.5678391959798995,
+          "profit_factor": 0.9019173852171419,
+          "coverage": 0.36515912897822445
+        },
+        "walk_forward": {
+          "ret_mean": -0.0020586633165829145,
+          "hit_rate_mean": 0.16532663316582913,
+          "pf_mean": 0.7808267770682483,
+          "coverage_mean": 0.37386934673366834,
+          "effective_splits": 5,
+          "score": 0.5749604454099568
+        },
+        "feature_count": 15,
+        "directional_lane_feature_counts": {
+          "LONG": 8,
+          "SHORT": 11,
+          "RANGE": 8
+        },
+        "directional_lane_model_counts": {
+          "LONG": 1,
+          "SHORT": 2,
+          "RANGE": 1
+        }
+      },
+      "note": "任務收尾版訓練完成快照",
+      "status": "snapshot"
     }
   ],
-  "current_version": "pretrain_20260415_141459",
+  "current_version": "pretrain_20260415_204857",
   "best_version": "trained_20260411_003519",
   "last_candidate_version": null,
   "last_shadow_version": null,

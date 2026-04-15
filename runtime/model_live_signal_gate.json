@@ -1,13 +1,14 @@
 {
-  "generated_at": "2026-04-15 14:16:37",
+  "generated_at": "2026-04-15 20:49:23",
+  "module_version": "v96_model_live_signal_gate_with_remediation",
   "allow_live_signal": false,
   "promotion_ready": false,
   "promoted_current_candidate": false,
   "block_live_on_unpromoted": true,
-  "reason": "promotion_not_cleared",
+  "reason": "promotion_floor_not_met",
   "promotion": {
     "status": "restored_pretrain",
-    "version": "pretrain_20260415_141459",
+    "version": "pretrain_20260415_204857",
     "reason": "promotion_floor_not_met",
     "failures": [
       "oot_profit_factor_below_floor",
@@ -16,21 +17,26 @@
     ]
   },
   "out_of_time": {
-    "hit_rate": 0.1978794642857143,
-    "avg_return": -0.0030521357901785707,
-    "pred_accuracy": 0.5225446428571429,
-    "profit_factor": 0.579087206783616,
-    "coverage": 0.5026785714285714
+    "hit_rate": 0.17252931323283083,
+    "avg_return": -0.0006918777219430485,
+    "pred_accuracy": 0.5678391959798995,
+    "profit_factor": 0.9019173852171419,
+    "coverage": 0.36515912897822445
   },
   "walk_forward_summary": {
-    "ret_mean": -0.0012426066425581777,
-    "hit_rate_mean": 0.19079189686924494,
-    "pf_mean": 0.787328639467551,
-    "coverage_mean": 0.4467771639042358,
+    "ret_mean": -0.0020586633165829145,
+    "hit_rate_mean": 0.16532663316582913,
+    "pf_mean": 0.7808267770682483,
+    "coverage_mean": 0.37386934673366834,
     "effective_splits": 5,
-    "score": 0.6630679752117332
+    "score": 0.5749604454099568
   },
-  "overall_score": 2.2526682706229018,
-  "status": "live_signal_blocked",
-  "module_version": "v94_model_live_signal_gate_builder"
+  "overall_score": 2.5580227453511455,
+  "remediation": [
+    "先重建乾淨訓練集，再提升樣本外 profit factor。",
+    "檢查 label / target-return 定義與特徵口徑，提升樣本外命中率。",
+    "縮小訓練池並重做 walk-forward，先確認平均報酬轉正。",
+    "目前候選模型未達 promotion floor；不要直接放寬 live gate。"
+  ],
+  "status": "live_signal_blocked"
 }

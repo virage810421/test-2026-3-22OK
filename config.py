@@ -310,6 +310,12 @@ PARAMS.setdefault("ALLOW_LEGACY_FACADE_IN_LIVE", False)
 PARAMS.setdefault("BRIDGE_GUARD_FAIL_CLOSED", True)
 PARAMS.setdefault("PREFER_SQLALCHEMY_DB", True)
 
+PARAMS.setdefault("LIVE_ONLY_USE_PROMOTED_MODEL", True)
+PARAMS.setdefault("LIVE_REQUIRE_PROMOTED_MODEL", True)
+PARAMS.setdefault("EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS", True)
+PARAMS.setdefault("CONTROL_TOWER_APPROVED_ORDER_FILE", "approved_executable_orders.csv")
+PARAMS.setdefault("LIVE_REQUIRE_CONTROL_TOWER_RELEASE", True)
+
 
 
 # ---- legacy confirmation influence guard ----

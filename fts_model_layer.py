@@ -18,6 +18,7 @@ except Exception:  # runtime diagnostics  # pragma: no cover
         return None
 
 from config import PARAMS
+from fts_promoted_model_guard import resolve_runtime_model_dir, read_promoted_model_guard
 try:
     from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # runtime diagnostics  # pragma: no cover
@@ -34,6 +35,14 @@ except Exception:  # runtime diagnostics  # pragma: no cover
 RUNTIME_PATH = Path(getattr(PATHS, 'runtime_dir', Path('runtime'))) / 'model_layer_status.json'
 MODEL_DIR = Path(getattr(PATHS, 'models_dir', getattr(PATHS, 'model_dir', Path('models'))))
 SELECTED_PATH = MODEL_DIR / 'selected_features.pkl'
+
+
+def _active_model_dir() -> Path:
+    try:
+        resolved = resolve_runtime_model_dir()
+        return resolved if resolved.exists() else resolved
+    except Exception:
+        return MODEL_DIR
 
 AI_MODELS: dict[str, Any] = {}
 SELECTED_FEATURES: list[str] = []
@@ -110,15 +119,17 @@ def _load_artifacts() -> None:
     AI_MODELS = {}
     DIRECTIONAL_MODELS = {'LONG': {}, 'SHORT': {}, 'RANGE': {}}
     DIRECTIONAL_FEATURES = {'LONG': [], 'SHORT': [], 'RANGE': []}
-    if SELECTED_PATH.exists():
+    artifact_root = _active_model_dir()
+    selected_path = artifact_root / 'selected_features.pkl'
+    if selected_path.exists():
         try:
-            SELECTED_FEATURES = [str(x) for x in joblib.load(SELECTED_PATH) if str(x).strip()]
+            SELECTED_FEATURES = [str(x) for x in joblib.load(selected_path) if str(x).strip()]
             SELECTED_FEATURES = list(dict.fromkeys(SELECTED_FEATURES))
         except Exception as exc:  # runtime diagnostics
             record_issue('model_layer', 'load_selected_features', exc, severity='ERROR', fail_mode='fail_closed')
             SELECTED_FEATURES = []
     for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
-        p = MODEL_DIR / f'model_{regime}.pkl'
+        p = artifact_root / f'model_{regime}.pkl'
         if p.exists():
             try:
                 AI_MODELS[regime] = joblib.load(p)
@@ -126,7 +137,7 @@ def _load_artifacts() -> None:
                 record_issue('model_layer', 'exit_artifact_candidate_scan_failed', exc, severity='ERROR', fail_mode='fail_closed')
     if ENABLE_DIRECTIONAL:
         for scope in ['LONG', 'SHORT', 'RANGE']:
-            sf = MODEL_DIR / f'selected_features_{scope.lower()}.pkl'
+            sf = artifact_root / f'selected_features_{scope.lower()}.pkl'
             if sf.exists():
                 try:
                     DIRECTIONAL_FEATURES[scope] = [str(x) for x in joblib.load(sf) if str(x).strip()]
@@ -134,7 +145,7 @@ def _load_artifacts() -> None:
                     record_issue('model_layer', 'load_directional_selected_features', exc, severity='ERROR', fail_mode='fail_closed')
                     DIRECTIONAL_FEATURES[scope] = []
             for regime in ['趨勢多頭', '區間盤整', '趨勢空頭']:
-                p = MODEL_DIR / f'model_{scope.lower()}_{regime}.pkl'
+                p = artifact_root / f'model_{scope.lower()}_{regime}.pkl'
                 if p.exists():
                     try:
                         DIRECTIONAL_MODELS[scope][regime] = joblib.load(p)
@@ -163,6 +174,8 @@ def selected_features_ready(scope: str = 'SHARED') -> bool:
 def _refresh_model_runtime_base() -> Path:
     _load_artifacts()
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
+    artifact_root = _active_model_dir()
+    promoted_guard = read_promoted_model_guard()
     payload = {
         'selected_features_present': bool(SELECTED_FEATURES),
         'selected_feature_count': len(SELECTED_FEATURES),
@@ -178,6 +191,8 @@ def _refresh_model_runtime_base() -> Path:
         'directional_feature_counts': {k: len(v) for k, v in DIRECTIONAL_FEATURES.items()},
         'status': 'model_layer_ready' if selected_features_ready('SHARED') else 'model_layer_degraded',
         'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK),
+        'artifact_root': str(artifact_root),
+        'promoted_model_guard': promoted_guard,
     }
     RUNTIME_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     return RUNTIME_PATH

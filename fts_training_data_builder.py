@@ -389,7 +389,7 @@ def generate_ml_dataset(tickers=None):
     existing_df = pd.DataFrame()
     if dataset_path.exists():
         try:
-            existing_df = pd.read_csv(dataset_path)
+            existing_df = pd.read_csv(dataset_path, low_memory=False)
             existing_before = int(len(existing_df))
         except Exception:
             existing_df = pd.DataFrame()

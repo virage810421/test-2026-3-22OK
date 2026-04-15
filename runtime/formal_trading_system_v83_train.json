@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 14:16:43",
+  "generated_at": "2026-04-15 20:49:24",
   "mode": "train",
   "module_version": "v87_clean_old_doors_mainline_train",
   "outputs": {
@@ -13,7 +13,7 @@
       {
         "stage": "training_data_builder",
         "status": "ok",
-        "rows": 59741,
+        "rows": 17928,
         "entrypoint": "fts_training_data_builder.generate_ml_dataset"
       },
       {
@@ -71,7 +71,7 @@
     "tri_lane_orchestration": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\tri_lane_orchestrator.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:43",
+        "generated_at": "2026-04-15 20:49:24",
         "status": "tri_lane_orchestration_ready",
         "lanes": {
           "LONG": {
@@ -106,7 +106,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 52
+              "event_count": 54
             },
             "reconciliation": {
               "status": "ready",
@@ -243,7 +243,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 52
+              "event_count": 54
             },
             "reconciliation": {
               "status": "ready",

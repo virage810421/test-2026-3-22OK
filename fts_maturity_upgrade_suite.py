@@ -49,21 +49,43 @@ class MaturityUpgradeSuite:
             payload = x.get('payload') or {}
             if isinstance(payload, dict) and str(payload.get('status', '')).startswith(('blocked', 'waiting')):
                 blocked.append({'label': x.get('label'), 'payload_status': payload.get('status'), 'hard_blocks': payload.get('hard_blocks') or payload.get('production_blocks') or payload.get('red_lights')})
+        completed_sections = []
+        pending_sections = []
+        mapping = {
+            'feature_engineering': 'feature_review fail-closed + train/live parity policy',
+            'prepare_pilot_full_entry': 'entry_tracking action_plan + control tower gate',
+            'exit_reduce_defend': 'position_lifecycle action_plan + generated SELL for EXIT/REDUCE',
+            'ai_training_governance': 'trainer report + walk-forward/OOS/drift/retention; rerun after TRAIN',
+            'paper_prelive': 'execution_journal + restart_recovery plan',
+            'real_broker_readiness': 'true_broker_readiness_gate keeps five red lights until actual API/callback/ledger/reconcile/kill-switch evidence',
+        }
+        for key, desc in mapping.items():
+            if key == 'feature_engineering':
+                label = 'feature_review'
+            elif key == 'prepare_pilot_full_entry':
+                label = 'entry_tracking'
+            elif key == 'exit_reduce_defend':
+                label = 'position_lifecycle'
+            elif key == 'ai_training_governance':
+                label = 'model_governance_enhancement'
+            elif key == 'paper_prelive':
+                label = 'restart_recovery'
+            else:
+                label = 'true_broker_readiness_gate'
+            item = next((x for x in items if x.get('label') == label), {})
+            item_status = str((item.get('payload') or {}).get('status') or item.get('status') or '')
+            target = completed_sections if item_status and not item_status.startswith(('blocked', 'waiting', 'error')) else pending_sections
+            target.append({'section': key, 'detail': desc, 'item_status': item_status or 'unknown'})
         payload = {
             'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'module_version': self.MODULE_VERSION,
-            'status': 'maturity_upgrade_ready' if not hard_errors else 'maturity_upgrade_partial',
+            'status': 'maturity_upgrade_ready' if not hard_errors and not blocked else ('maturity_upgrade_partial' if (hard_errors or blocked) else 'maturity_upgrade_unknown'),
             'items': items,
             'hard_error_count': len(hard_errors),
             'blocked_items': blocked,
-            'closed_loop_mapping': {
-                'feature_engineering': 'feature_review fail-closed + train/live parity policy',
-                'prepare_pilot_full_entry': 'entry_tracking action_plan + control tower gate',
-                'exit_reduce_defend': 'position_lifecycle action_plan + generated SELL for EXIT/REDUCE',
-                'ai_training_governance': 'trainer report + walk-forward/OOS/drift/retention; rerun after TRAIN',
-                'paper_prelive': 'execution_journal + restart_recovery plan',
-                'real_broker_readiness': 'true_broker_readiness_gate keeps five red lights until actual API/callback/ledger/reconcile/kill-switch evidence',
-            },
+            'closed_loop_mapping': mapping,
+            'completed_sections': completed_sections,
+            'pending_sections': pending_sections,
         }
         self.path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         return self.path, payload

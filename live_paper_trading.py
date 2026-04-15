@@ -6,12 +6,15 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", message=".*pandas only supports SQLAlchemy.*")
 
 from datetime import datetime
+import json
 import os
+from pathlib import Path
 import requests
 import pandas as pd
 import pyodbc
 
 from config import PARAMS
+from fts_config import PATHS, CONFIG
 from fts_service_api import smart_download, apply_slippage, calculate_pnl, inspect_stock, add_chip_data
 from fts_service_api import get_active_strategy
 from fts_strategy_policy_layer import get_strategy_policy
@@ -27,6 +30,7 @@ except Exception as exc:
     record_diagnostic('live_paper_trading', 'import_db_logger', exc, severity='error', fail_closed=True)
     SQLServerExecutionLogger = None
 from fts_watchlist_service import LiveWatchlistLoader
+from fts_promoted_model_guard import PromotedModelGuard
 try:
     from fts_level_runtime import build_level3_services
     _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()
@@ -203,6 +207,71 @@ def _safe_int(x, default=0):
         return default
 
 
+
+
+
+def _read_json_safe(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+        return data if isinstance(data, dict) else {}
+    except Exception as exc:
+        _diag('read_json_safe', exc, severity='warning', fail_closed=False, context={'path': str(path)})
+        return {}
+
+
+
+
+def _as_bool(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    try:
+        if pd.isna(value):
+            return False
+    except Exception:
+        pass
+    s = str(value).strip().lower()
+    if s in {'1', 'true', 'yes', 'y', 'on'}:
+        return True
+    if s in {'0', 'false', 'no', 'n', 'off', ''}:
+        return False
+    return bool(value)
+
+def _is_true_live_context() -> bool:
+    mode = str(getattr(CONFIG, 'mode', 'PAPER') or 'PAPER').upper()
+    broker = str(getattr(CONFIG, 'broker_type', 'paper') or 'paper').lower()
+    manual = bool(getattr(CONFIG, 'live_manual_arm', False))
+    return mode == 'LIVE' or broker in {'real', 'live', 'broker'} or manual
+
+
+def _ensure_promoted_model_guard() -> dict:
+    try:
+        _, payload = PromotedModelGuard().build()
+        return payload if isinstance(payload, dict) else {}
+    except Exception as exc:
+        _diag('promoted_model_guard_build', exc, severity='error', fail_closed=True)
+        return {}
+
+
+def _load_control_tower_approved_orders() -> pd.DataFrame:
+    file_name = str(PARAMS.get('CONTROL_TOWER_APPROVED_ORDER_FILE', 'approved_executable_orders.csv'))
+    candidates = [
+        PATHS.data_dir / file_name,
+        PATHS.base_dir / file_name,
+    ]
+    for path in candidates:
+        if path.exists():
+            try:
+                return pd.read_csv(path, encoding='utf-8-sig')
+            except Exception:
+                try:
+                    return pd.read_csv(path)
+                except Exception as exc:
+                    _diag('load_control_tower_approved_orders', exc, severity='warning', fail_closed=False, context={'path': str(path)})
+    return pd.DataFrame()
 
 def _table_has_column(cursor, table_name: str, column_name: str) -> bool:
     try:
@@ -661,6 +730,15 @@ def run_eod_broker():
         print(f'🛑 readiness gate 失敗，fail-closed：{daily_msg}')
         cursor.close(); conn.close(); return
 
+    promoted_guard = _ensure_promoted_model_guard()
+    execution_release_manifest = _read_json_safe(PATHS.runtime_dir / 'execution_release_manifest.json')
+    if _is_true_live_context() and _as_bool(PARAMS.get('LIVE_REQUIRE_PROMOTED_MODEL', True)) and not _as_bool(promoted_guard.get('can_bind_live_promoted_model', False)):
+        print('🛑 true live blocked：目前不是 promoted model 綁定狀態，禁止實倉使用未確認模型。')
+        cursor.close(); conn.close(); return
+    if _is_true_live_context() and _as_bool(PARAMS.get('LIVE_REQUIRE_CONTROL_TOWER_RELEASE', True)) and not _as_bool(execution_release_manifest.get('live_execution_unlocked', False)):
+        print('🛑 true live blocked：control tower 尚未核發 live execution release。')
+        cursor.close(); conn.close(); return
+
     current_cash = get_available_cash(cursor)
     active_df = _read_active_positions(conn)
     stop_payload_df = _load_stop_replace_payloads() if bool(PARAMS.get('EXIT_SQL_STOP_SYNC_ENABLE', True)) else pd.DataFrame()
@@ -775,23 +853,30 @@ def run_eod_broker():
     # ==========================================
     # ⚔️ 階段二：執行建倉任務
     # ==========================================
-    try:
-        decisions = pd.read_csv("daily_decision_desk.csv")
-    except Exception as exc:
-        _diag('read_daily_decision_desk', exc, severity='warning', fail_closed=False)
-        decisions = pd.DataFrame()
-    if decisions.empty:
+    decisions = _load_control_tower_approved_orders() if _as_bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True)) else pd.DataFrame()
+    if decisions.empty and not _as_bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True)):
+        try:
+            decisions = pd.read_csv("daily_decision_desk.csv")
+        except Exception as exc:
+            _diag('read_daily_decision_desk', exc, severity='warning', fail_closed=False)
+            decisions = pd.DataFrame()
+    if decisions.empty and not _as_bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True)):
         try:
             builder = _LEVEL3_SERVICES.get("DecisionExecutionBridge")
             if builder is not None:
                 out_path, _ = builder.build()
                 decisions = pd.read_csv(out_path, encoding="utf-8-sig")
-                if "Ticker SYMBOL" in decisions.columns and "Ticker" not in decisions.columns:
-                    decisions["Ticker"] = decisions["Ticker SYMBOL"]
-                if "Action" in decisions.columns and "Direction" not in decisions.columns:
-                    decisions["Direction"] = decisions["Action"].map({"BUY": "做多(Long)", "SELL": "做空(Short)", "SHORT": "做空(Short)", "COVER": "做多(Long)"}).fillna("做多(Long)")
         except Exception as exc:
             _diag('decision_execution_bridge_build', exc, severity='error', fail_closed=True)
+    if decisions.empty and _as_bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True)):
+        print('🛑 無 control tower 已核准 executable orders，單一路徑 fail-closed。')
+        cursor.close(); conn.close(); return
+    if "Ticker SYMBOL" in decisions.columns and "Ticker" not in decisions.columns:
+        decisions["Ticker"] = decisions["Ticker SYMBOL"]
+    if "action" in decisions.columns and "Action" not in decisions.columns:
+        decisions["Action"] = decisions["action"]
+    if "Action" in decisions.columns and "Direction" not in decisions.columns:
+        decisions["Direction"] = decisions["Action"].map({"BUY": "做多(Long)", "SELL": "做空(Short)", "SHORT": "做空(Short)", "COVER": "做多(Long)"}).fillna("做多(Long)")
 
     decisions = _sync_symbol_aliases_df(decisions)
 
@@ -802,6 +887,18 @@ def run_eod_broker():
             if str(row.get('Exit_Action', '') or '').strip().upper() in {'REDUCE', 'EXIT', 'TIGHTEN_STOP', 'MOVE_TO_BREAK_EVEN'} or str(row.get('Exit_State', '') or '').strip().upper() in {'WATCH_EXIT', 'DEFEND', 'REDUCE', 'EXIT'}:
                 continue
             ticker = _decision_ticker(row, default='Unknown')
+            if _as_bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True)) and not _as_bool(row.get('control_tower_approved', False)):
+                daily_log.append(f"⛔ 略過 {ticker}: 非 control tower 核准訂單")
+                continue
+            if _as_bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True)) and not _as_bool(row.get('approved_for_execution', False)):
+                daily_log.append(f"⛔ 略過 {ticker}: approved_for_execution=False")
+                continue
+            if _is_true_live_context() and not _as_bool(row.get('live_execution_allowed', False)):
+                daily_log.append(f"⛔ 略過 {ticker}: live_execution_allowed=False")
+                continue
+            if (not _is_true_live_context()) and ('paper_execution_allowed' in row) and not _as_bool(row.get('paper_execution_allowed', False)):
+                daily_log.append(f"⛔ 略過 {ticker}: paper_execution_allowed=False")
+                continue
             trade_direction = row.get("Direction", "做多(Long)")
             candidate_lane = _infer_candidate_lane(row)
             row['Candidate_Long'] = int(candidate_lane == 'LONG')

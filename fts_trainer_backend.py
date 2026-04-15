@@ -938,6 +938,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     report['promotion_failures'] = promotion_failures
     report['promotion_ready'] = promotion_ready
     report['model_live_signal_gate'] = _write_model_live_signal_gate(report, promotion_ready=promotion_ready, promoted=promoted_current_candidate)
+    report['selected_feature_authority'] = _write_selected_feature_authority(report)
     RUNTIME_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     return RUNTIME_PATH, report
 
