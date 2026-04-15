@@ -1,4 +1,0 @@
-﻿Ticker,Action,Reference_Price,Kelly_Pos,風險金額,Strategy,Regime,Score
-2330.TW,BUY,150.0,0.08,50000,demo_alpha,趨勢多頭,0.86
-2317.TW,BUY,110.0,0.06,35000,demo_alpha,區間盤整,0.71
-2454.TW,BUY,220.0,0.02,8000,demo_momentum,趨勢多頭,0.79

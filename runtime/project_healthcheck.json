@@ -1,7 +1,7 @@
 {
   "project_root": "C:\\test\\test-2026-3-22OK",
   "summary": {
-    "python_files_total": 246,
+    "python_files_total": 247,
     "compile_failures": 0,
     "core_import_failures": 0,
     "tri_lane_import_failures": 0,
@@ -1085,6 +1085,11 @@
       "error": ""
     },
     {
+      "file": "fts_training_data_builder_updated.py",
+      "ok": true,
+      "error": ""
+    },
+    {
       "file": "fts_training_governance_mainline.py",
       "ok": true,
       "error": ""
@@ -1250,119 +1255,119 @@
       "module": "formal_trading_system_v83_official_main",
       "ok": true,
       "error": "",
-      "seconds": 3.083,
+      "seconds": 3.031,
       "severity": "hard"
     },
     {
       "module": "fts_fundamentals_etl_mainline",
       "ok": true,
       "error": "",
-      "seconds": 1.294,
+      "seconds": 1.476,
       "severity": "hard"
     },
     {
       "module": "fts_training_governance_mainline",
       "ok": true,
       "error": "",
-      "seconds": 2.867,
+      "seconds": 3.143,
       "severity": "hard"
     },
     {
       "module": "fts_feature_service",
       "ok": true,
       "error": "",
-      "seconds": 0.847,
+      "seconds": 0.921,
       "severity": "hard"
     },
     {
       "module": "fts_screening_engine",
       "ok": true,
       "error": "",
-      "seconds": 1.776,
+      "seconds": 1.986,
       "severity": "hard"
     },
     {
       "module": "fts_cross_sectional_percentile_service",
       "ok": true,
       "error": "",
-      "seconds": 1.406,
+      "seconds": 1.404,
       "severity": "hard"
     },
     {
       "module": "fts_event_calendar_service",
       "ok": true,
       "error": "",
-      "seconds": 0.829,
+      "seconds": 0.867,
       "severity": "hard"
     },
     {
       "module": "fts_decision_execution_bridge",
       "ok": true,
       "error": "",
-      "seconds": 0.809,
+      "seconds": 0.849,
       "severity": "hard"
     },
     {
       "module": "fts_broker_contract_audit",
       "ok": true,
       "error": "",
-      "seconds": 1.137,
+      "seconds": 0.848,
       "severity": "hard"
     },
     {
       "module": "fts_callback_ingestion_service",
       "ok": true,
       "error": "",
-      "seconds": 0.867,
+      "seconds": 0.833,
       "severity": "hard"
     },
     {
       "module": "fts_reconciliation_runtime",
       "ok": true,
       "error": "",
-      "seconds": 0.875,
+      "seconds": 0.857,
       "severity": "hard"
     },
     {
       "module": "fts_restart_recovery_service",
       "ok": true,
       "error": "",
-      "seconds": 0.822,
+      "seconds": 0.845,
       "severity": "hard"
     },
     {
       "module": "fts_exit_model_artifact_bootstrap",
       "ok": true,
       "error": "",
-      "seconds": 0.848,
+      "seconds": 0.951,
       "severity": "hard"
     },
     {
       "module": "fts_portfolio_backtester",
       "ok": true,
       "error": "",
-      "seconds": 0.856,
+      "seconds": 0.903,
       "severity": "hard"
     },
     {
       "module": "fts_prebroker_95_audit",
       "ok": true,
       "error": "",
-      "seconds": 0.936,
+      "seconds": 0.893,
       "severity": "hard"
     },
     {
       "module": "model_governance",
       "ok": true,
       "error": "",
-      "seconds": 0.157,
+      "seconds": 0.146,
       "severity": "hard"
     },
     {
       "module": "db_setup",
       "ok": true,
       "error": "",
-      "seconds": 1.213,
+      "seconds": 1.244,
       "severity": "hard"
     }
   ],
@@ -1371,63 +1376,63 @@
       "module": "fts_tri_lane_orchestrator",
       "ok": true,
       "error": "",
-      "seconds": 0.992,
+      "seconds": 1.096,
       "severity": "hard"
     },
     {
       "module": "fts_live_watchlist_promoter",
       "ok": true,
       "error": "",
-      "seconds": 0.865,
+      "seconds": 0.808,
       "severity": "hard"
     },
     {
       "module": "fts_live_watchlist_loader",
       "ok": true,
       "error": "",
-      "seconds": 1.053,
+      "seconds": 0.796,
       "severity": "hard"
     },
     {
       "module": "fts_live_watchlist_registry",
       "ok": true,
       "error": "",
-      "seconds": 0.865,
+      "seconds": 0.798,
       "severity": "hard"
     },
     {
       "module": "fts_execution_layer",
       "ok": true,
       "error": "",
-      "seconds": 0.913,
+      "seconds": 0.829,
       "severity": "hard"
     },
     {
       "module": "fts_execution_ledger",
       "ok": true,
       "error": "",
-      "seconds": 1.176,
+      "seconds": 0.988,
       "severity": "hard"
     },
     {
       "module": "fts_execution_state_machine",
       "ok": true,
       "error": "",
-      "seconds": 0.149,
+      "seconds": 0.132,
       "severity": "hard"
     },
     {
       "module": "fts_execution_models",
       "ok": true,
       "error": "",
-      "seconds": 1.052,
+      "seconds": 0.989,
       "severity": "hard"
     },
     {
       "module": "fts_reconciliation_engine",
       "ok": true,
       "error": "",
-      "seconds": 1.009,
+      "seconds": 1.01,
       "severity": "hard"
     },
     {
@@ -1441,14 +1446,14 @@
       "module": "fts_model_layer",
       "ok": true,
       "error": "C:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator DecisionTreeClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(\nC:\\Users\\FM_pc\\anaconda3\\Lib\\site-packages\\sklearn\\base.py:442: InconsistentVersionWarning: Trying to unpickle estimator RandomForestClassifier from version 1.8.0 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations\n  warnings.warn(",
-      "seconds": 2.902,
+      "seconds": 3.199,
       "severity": "hard"
     },
     {
       "module": "live_paper_trading",
       "ok": true,
       "error": "",
-      "seconds": 3.598,
+      "seconds": 4.515,
       "severity": "hard"
     }
   ],
@@ -2330,6 +2335,14 @@
       "fts_market_data_service",
       "fts_screening_engine"
     ],
+    "fts_training_data_builder_updated.py": [
+      "config",
+      "fts_chip_enrichment_service",
+      "fts_data_quality_guard",
+      "fts_feature_service",
+      "fts_market_data_service",
+      "fts_screening_engine"
+    ],
     "fts_training_governance_mainline.py": [
       "fts_config",
       "fts_exception_policy",
@@ -2705,36 +2718,36 @@
   "tri_lane_smoke": {
     "tri_lane_orchestrator": {
       "ok": true,
-      "seconds": 1.051,
+      "seconds": 1.137,
       "stdout_tail": "2OK\\\\models\\\\selected_features_range.pkl', 'model_count': 3}, 'candidate_filter': {'status': 'ready', 'count': 3}, 'callback_pipeline': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json'}, 'state_machine': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\state\\\\directional_execution_state_machine.json', 'count': 0}, 'ledger': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\execution_ledger_summary.json', 'event_count': 0}, 'reconciliation': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', 'issue_count': 0}, 'repair_execution': {'status': 'ready', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'action_count': 0}}}, 'tri_lane_execution_status': {'LONG': {'ready_stages': 9, 'fallback_stages': []}, 'SHORT': {'ready_stages': 9, 'fallback_stages': []}, 'RANGE': {'ready_stages': 9, 'fallback_stages': []}}, 'deep_full_split_complete': True})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "watchlist_promoter": {
       "ok": true,
-      "seconds": 0.848,
-      "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-15 13:34:05', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
+      "seconds": 0.93,
+      "stdout_tail": "\\\\live_watchlist_promoter.json', {'generated_at': '2026-04-15 16:23:33', 'status': 'directional_watchlists_promoted', 'lanes': {'LONG': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_long.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_long.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'SHORT': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_short.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_short.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}, 'RANGE': {'candidate_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\candidate_live_watchlist_range.json', 'approved_path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\approved_live_watchlist_range.json', 'count': 8, 'provisional_count': 0, 'approved_count': 8, 'readiness_status': 'approved_only'}}})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "watchlist_loader": {
       "ok": true,
-      "seconds": 0.867,
+      "seconds": 0.82,
       "stdout_tail": "approved', 'optimizer_penalty': 0.05, 'optimized_score': 1.1527848674857768}, {'ticker': '2002.TW', 'lane': 'RANGE', 'promotion_score': 1.2023287513734435, 'oot_ev': 0.0006741379310344, 'hit_rate': 0.0482758620689655, 'sector': '未知', 'liquidity_score': 1.0, 'feature_coverage': 1.0, 'approval_reason': 'scoreboard_promotion', 'provisional': False, 'readiness_tier': 'approved', 'optimizer_penalty': 0.1, 'optimized_score': 1.1023287513734434}]}, 'lane_readiness': {'LONG': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'SHORT': {'count': 2, 'approved_count': 2, 'provisional_count': 0, 'status': 'approved_only'}, 'RANGE': {'count': 3, 'approved_count': 3, 'provisional_count': 0, 'status': 'approved_only'}}, 'total_count': 7, 'provisional_item_count': 0, 'approved_item_count': 7, 'sector_counts': {'未知::LONG': 2, '未知::SHORT': 2, '未知::RANGE': 3}, 'net_exposure_proxy': {'LONG': 2, 'SHORT': 2, 'RANGE': 3}, 'min_counts': {'LONG': 2, 'SHORT': 2, 'RANGE': 2}})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "callback_event_store": {
       "ok": true,
-      "seconds": 1.099,
-      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-15 13:34:07', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
+      "seconds": 1.067,
+      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_event_store_summary.json', {'generated_at': '2026-04-15 16:23:34', 'status': 'callback_event_recorded', 'last_event_valid': True, 'last_event_type': 'FILL', 'last_event_status': 'FILLED', 'last_lane': 'LONG', 'state_machine_status': 'state_transition_recorded', 'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\callback_events.jsonl'})\n",
       "stderr_tail": "",
       "returncode": 0
     },
     "reconciliation_engine": {
       "ok": true,
-      "seconds": 1.312,
-      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-15 13:34:08', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-15 13:34:08', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
+      "seconds": 1.036,
+      "stdout_tail": "('C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\reconciliation_engine.json', {'generated_at': '2026-04-15 16:23:36', 'status': 'reconciled', 'order_issue_count': 0, 'issues': [], 'lane_issue_breakdown': {}, 'cash_diff': 0.0, 'directional_order_mix': {}, 'directional_fill_mix': {}, 'repair_workflow': {'path': 'C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\repair_workflow_execution.json', 'payload': {'generated_at': '2026-04-15 16:23:36', 'status': 'repair_workflow_executed', 'executed_actions': [], 'count': 0}}, 'directional_repair_actions': []})\n",
       "stderr_tail": "",
       "returncode": 0
     }
@@ -2768,14 +2781,14 @@
   "training_dataset_audit": {
     "exists": true,
     "status": "ok",
-    "size": 30104491,
-    "rows": 41813,
-    "columns": 85
+    "size": 69620018,
+    "rows": 59741,
+    "columns": 236
   },
   "exception_policy_audit": {
     "summary": {
-      "files_total": 189,
-      "except_exception_total": 617,
+      "files_total": 190,
+      "except_exception_total": 624,
       "pass_total": 193,
       "fallback_token_total": 260,
       "core_unclassified_except": [
@@ -3597,6 +3610,13 @@
         "unclassified_core_except_lines": []
       },
       "fts_training_data_builder.py": {
+        "core_file": false,
+        "except_exception": 7,
+        "pass": 0,
+        "fallback": 0,
+        "unclassified_core_except_lines": []
+      },
+      "fts_training_data_builder_updated.py": {
         "core_file": false,
         "except_exception": 7,
         "pass": 0,

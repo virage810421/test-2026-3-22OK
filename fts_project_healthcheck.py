@@ -445,7 +445,7 @@ class ProjectHealthcheck:
             return {'exists': True, 'status': 'zero_bytes', 'size': size}
         try:
             import pandas as pd
-            df = pd.read_csv(dataset_path)
+            df = pd.read_csv(dataset_path, low_memory=False)
             return {
                 'exists': True,
                 'status': 'ok' if (not df.empty and len(df.columns) > 0) else 'empty_dataframe',

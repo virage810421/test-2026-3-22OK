@@ -110,21 +110,37 @@ def _runtime_cash_value(*candidates: Path) -> tuple[str | None, float | None]:
     return None, None
 
 
-def _write_decision_output_evidence(decision_df: pd.DataFrame, orders: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
+def _write_decision_output_evidence(decision_df: pd.DataFrame, raw_orders: list[dict[str, Any]], final_orders: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
     decision_preview: list[dict[str, Any]] = []
+    action_counts: dict[str, int] = {}
+    stage_counts = {'PREPARE': 0, 'PILOT': 0, 'FULL': 0}
     if decision_df is not None and not decision_df.empty:
         for _, row in decision_df.head(50).iterrows():
-            action = str(row.get('Action') or row.get('Decision') or row.get('Signal') or '').strip()
+            action = str(row.get('Action') or row.get('Decision') or row.get('Signal') or '').strip().upper()
             stage = str(row.get('Entry_State') or row.get('Entry_Action') or row.get('Early_Path_State') or row.get('Confirm_Path_State') or '').strip()
             score = row.get('Score', row.get('System_Score', row.get('Signal_Score', None)))
             reason = str(row.get('Reason') or row.get('觸發條件明細') or row.get('Golden_Type') or row.get('Setup_Tag') or '').strip()
+            if not reason and action == 'SELL':
+                reason = 'sell_signal_without_executable_entry'
+            if not stage and action in {'BUY', 'LONG'}:
+                stage = 'UNSPECIFIED_ENTRY'
+            prepare = 'PREPARE' in stage.upper() or '布局' in stage
+            pilot = 'PILOT' in stage.upper() or '試單' in stage
+            full = 'FULL' in stage.upper() or '確認' in stage
+            if prepare:
+                stage_counts['PREPARE'] += 1
+            if pilot:
+                stage_counts['PILOT'] += 1
+            if full:
+                stage_counts['FULL'] += 1
+            action_counts[action or 'UNKNOWN'] = action_counts.get(action or 'UNKNOWN', 0) + 1
             decision_preview.append({
                 'ticker': str(row.get('Ticker') or row.get('Ticker SYMBOL') or '').strip(),
                 'action': action,
                 'stage': stage,
-                'PREPARE': 'PREPARE' in stage.upper() or '布局' in stage,
-                'PILOT': 'PILOT' in stage.upper() or '試單' in stage,
-                'FULL': 'FULL' in stage.upper() or '確認' in stage,
+                'PREPARE': prepare,
+                'PILOT': pilot,
+                'FULL': full,
                 'score': score,
                 'reason': reason,
                 'timestamp': now_str(),
@@ -133,8 +149,12 @@ def _write_decision_output_evidence(decision_df: pd.DataFrame, orders: list[dict
         'generated_at': now_str(),
         'status': 'decision_output_ready' if not decision_df.empty else 'decision_output_missing',
         'decision_row_count': int(len(decision_df)),
-        'normalized_order_count': int(len(orders)),
-        'tickers': sorted({str(o.get('ticker') or '').upper() for o in orders if o.get('ticker')})[:200],
+        'raw_order_count': int(len(raw_orders)),
+        'normalized_order_count': int(len(final_orders)),
+        'tickers': sorted({str(o.get('ticker') or '').upper() for o in final_orders if o.get('ticker')})[:200],
+        'action_counts': action_counts,
+        'stage_counts': stage_counts,
+        'has_entry_stage_signal': bool(stage_counts['PREPARE'] or stage_counts['PILOT'] or stage_counts['FULL']),
         'decision_preview': decision_preview,
         'source_candidates': [str(p) for p in [
             PATHS.data_dir / 'normalized_decision_output_enriched.csv',
@@ -476,7 +496,7 @@ def _build_control_outputs() -> dict[str, Any]:
     raw_orders = _normalize_orders(decision_df)
     orders_after_entry_gate, entry_tracking_gate = _apply_entry_tracking_gate(raw_orders)
     orders, position_lifecycle_gate = _apply_position_lifecycle_gate(orders_after_entry_gate)
-    decision_evidence_path, decision_evidence_payload = _write_decision_output_evidence(decision_df, orders)
+    decision_evidence_path, decision_evidence_payload = _write_decision_output_evidence(decision_df, raw_orders, orders)
     decision_execution_gate_path = _write_json('decision_execution_formal_gate.json', {'generated_at': now_str(), 'status': 'decision_execution_gate_ready', 'raw_order_count': len(raw_orders), 'final_order_count': len(orders), 'entry_tracking_gate': entry_tracking_gate, 'position_lifecycle_gate': position_lifecycle_gate, 'decision_output_evidence_path': decision_evidence_path})
     accepted_signals = [_AcceptedSignal(o) for o in orders]
 

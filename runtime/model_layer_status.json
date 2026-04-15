@@ -3,9 +3,9 @@
   "selected_feature_count": 4,
   "selected_features_ready": false,
   "effective_directional_feature_counts": {
-    "LONG": 4,
-    "SHORT": 4,
-    "RANGE": 4
+    "LONG": 9,
+    "SHORT": 8,
+    "RANGE": 9
   },
   "selected_features_min_required": 6,
   "loaded_regimes": [
@@ -23,9 +23,9 @@
   "directional_require_independent_lane_models": true,
   "allow_shared_fallback_per_lane": false,
   "directional_feature_counts": {
-    "LONG": 4,
-    "SHORT": 4,
-    "RANGE": 4
+    "LONG": 9,
+    "SHORT": 8,
+    "RANGE": 9
   },
   "status": "model_layer_degraded",
   "allow_heuristic_model_fallback": false,
@@ -40,21 +40,17 @@
     "REDUCE",
     "CONFIRM"
   ],
-  "exit_models_loaded": [],
-  "exit_models_missing": [
+  "exit_models_loaded": [
+    "CONFIRM",
     "DEFEND",
-    "REDUCE",
-    "CONFIRM"
+    "REDUCE"
   ],
-  "exit_selected_feature_count": 72,
+  "exit_models_missing": [],
+  "exit_selected_feature_count": 24,
   "exit_selected_features_ready": true,
-  "exit_artifacts_complete": false,
-  "exit_model_source": "exit_ai_model_unavailable",
-  "exit_load_errors": {
-    "DEFEND": "missing",
-    "REDUCE": "missing",
-    "CONFIRM": "missing"
-  },
+  "exit_artifacts_complete": true,
+  "exit_model_source": "exit_ai_model",
+  "exit_load_errors": {},
   "exit_required_model_files": {
     "DEFEND": "C:\\test\\test-2026-3-22OK\\models\\exit_model_defend.pkl",
     "REDUCE": "C:\\test\\test-2026-3-22OK\\models\\exit_model_reduce.pkl",

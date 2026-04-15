@@ -1,22 +1,23 @@
 {
-  "generated_at": "2026-04-15 13:34:26",
+  "generated_at": "2026-04-15 16:24:03",
   "system_name": "正式交易主控版_v83_official_main",
   "checks": {
     "launch_gate": false,
-    "model_gate": true,
+    "model_gate": false,
     "live_safety_gate": false,
     "broker_approval_gate": false,
     "submission_gate": true
   },
   "failed_checks": [
     "launch_gate",
+    "model_gate",
     "live_safety_gate",
     "broker_approval_gate"
   ],
   "all_passed": false,
   "summary": {
     "total_checks": 5,
-    "passed_checks": 2,
-    "failed_checks": 3
+    "passed_checks": 1,
+    "failed_checks": 4
   }
 }

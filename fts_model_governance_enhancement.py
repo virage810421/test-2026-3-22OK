@@ -36,7 +36,7 @@ class ModelGovernanceEnhancement:
         for p in [PATHS.data_dir / 'ml_training_data.csv', PATHS.data_dir / 'training_dataset.csv', PATHS.runtime_dir / 'ml_training_data.csv']:
             if p.exists():
                 try:
-                    df = pd.read_csv(p)
+                    df = pd.read_csv(p, low_memory=False)
                     if not df.empty:
                         return p, df
                 except Exception:

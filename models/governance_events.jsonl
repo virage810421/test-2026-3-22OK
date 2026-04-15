@@ -214,3 +214,7 @@
 {"time": "2026-04-15 14:16:37", "event": "restore", "version": "pretrain_20260415_141459", "restored": ["selected_features.pkl", "model_趨勢多頭.pkl", "model_區間盤整.pkl", "model_趨勢空頭.pkl"]}
 {"time": "2026-04-15 14:16:43", "event": "training_integrity_eval", "status": "training_integrity_ok", "failures": [], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
 {"time": "2026-04-15 14:16:43", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": []}
+{"time": "2026-04-15 16:03:36", "event": "training_integrity_eval", "status": "training_integrity_ok", "failures": [], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-15 16:03:36", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": []}
+{"time": "2026-04-15 16:24:03", "event": "training_integrity_eval", "status": "training_integrity_ok", "failures": [], "warnings": ["oot_hit_rate_soft", "oot_profit_factor_soft"]}
+{"time": "2026-04-15 16:24:03", "event": "evaluate_candidate", "status": "candidate_blocked", "failures": ["win_rate_below_threshold", "profit_factor_below_threshold", "walk_forward_not_strong_enough"], "warnings": []}

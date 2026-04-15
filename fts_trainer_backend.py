@@ -618,7 +618,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
                 'reason': 'csv_file_is_zero_bytes',
             }
             return _emit_blocked_training_report(payload, reason='csv_file_is_zero_bytes', category='missing_market_data')
-        df = pd.read_csv(dataset_path)
+        df = pd.read_csv(dataset_path, low_memory=False)
     except EmptyDataError:
         payload = {
             'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),

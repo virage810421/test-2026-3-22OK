@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 14:16:42",
+  "generated_at": "2026-04-15 16:24:01",
   "module_version": "v92_maturity_gap_closed_loop_suite",
   "status": "maturity_upgrade_ready",
   "items": [
@@ -8,7 +8,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_review_report.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:38",
+        "generated_at": "2026-04-15 16:23:56",
         "module_version": "v92_feature_review_train_live_parity_fail_closed",
         "status": "feature_review_ready",
         "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
@@ -4031,7 +4031,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\entry_tracking_journal.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:39",
+        "generated_at": "2026-04-15 16:23:57",
         "module_version": "v92_entry_tracking_closed_loop_gate",
         "status": "entry_tracking_ready",
         "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
@@ -4059,7 +4059,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:39",
+        "generated_at": "2026-04-15 16:23:57",
         "module_version": "v92_position_lifecycle_closed_loop",
         "status": "no_active_positions",
         "message": "尚無 active_positions.csv；生命週期服務已就緒，等有持倉後會開始逐日記錄。",
@@ -4083,7 +4083,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_governance_enhancement.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:42",
+        "generated_at": "2026-04-15 16:24:01",
         "module_version": "v92_walkforward_oos_drift_retention_governance",
         "status": "model_governance_enhanced_ready",
         "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
@@ -4145,7 +4145,8 @@
             "score": 0.6630679752117332
           },
           "overall_score": 2.2526682706229018,
-          "status": "live_signal_blocked"
+          "status": "live_signal_blocked",
+          "module_version": "v94_model_live_signal_gate_builder"
         },
         "drift_monitor": {
           "status": "drift_scored",
@@ -4193,7 +4194,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_journal_summary.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:42",
+        "generated_at": "2026-04-15 16:24:01",
         "module_version": "v92_execution_journal_closed_loop",
         "status": "execution_journal_ready",
         "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
@@ -4217,7 +4218,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:42",
+        "generated_at": "2026-04-15 16:24:01",
         "status": "restart_recovery_blocked",
         "ready_to_resume_new_orders": false,
         "blockers": [
@@ -4234,7 +4235,7 @@
         "broker_snapshot_found": false,
         "execution_ledger_snapshot_found": true,
         "execution_ledger_snapshot": {
-          "generated_at": "2026-04-15 13:34:26",
+          "generated_at": "2026-04-15 16:23:34",
           "lane_orders": {
             "LONG": [
               "HC1",
@@ -4259,7 +4260,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\true_broker_readiness_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 14:16:42",
+        "generated_at": "2026-04-15 16:24:01",
         "module_version": "v92_true_broker_five_red_lights_gate",
         "status": "blocked_for_real_broker",
         "lights": {

@@ -52,7 +52,7 @@ class FeatureReviewService:
             if not path.exists():
                 continue
             try:
-                df = pd.read_csv(path)
+                df = pd.read_csv(path, low_memory=False)
                 if not df.empty:
                     return path, df
             except Exception:

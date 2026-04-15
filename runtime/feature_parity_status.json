@@ -1,10 +1,11 @@
 {
-  "generated_at": "2026-04-15 14:14:46",
+  "generated_at": "2026-04-15 20:11:15",
   "module_version": "v86_feature_service_live_vetted_directional",
   "strict_feature_parity": true,
   "selected_features_present": true,
-  "fallback_all_features_blocked": true,
-  "selected_feature_count": 4,
-  "selected_feature_min_required": 6,
-  "status": "selected_features_missing"
+  "selected_feature_count": 15,
+  "mounted_feature_count": 15,
+  "missing_feature_count": 0,
+  "missing_features_sample": [],
+  "status": "feature_parity_locked"
 }

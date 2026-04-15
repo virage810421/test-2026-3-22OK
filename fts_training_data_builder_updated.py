@@ -49,6 +49,7 @@ def get_dynamic_watchlist():
                 return []
 
 
+
 def _safe_float(v: Any, default: float = 0.0) -> float:
     try:
         if pd.isna(v):
@@ -58,6 +59,7 @@ def _safe_float(v: Any, default: float = 0.0) -> float:
         return default
 
 
+
 def _signal_flags(setup_tag: str):
     tag = str(setup_tag).strip()
     is_short = ('空' in tag) or ('SHORT' in tag.upper())
@@ -65,10 +67,12 @@ def _signal_flags(setup_tag: str):
     return is_long, is_short
 
 
+
 def _round_trip_cost() -> float:
     fee_rate = float(PARAMS.get('FEE_RATE', 0.001425)) * float(PARAMS.get('FEE_DISCOUNT', 1.0))
     tax_rate = float(PARAMS.get('TAX_RATE', 0.003))
     return float((2 * fee_rate) + tax_rate)
+
 
 
 def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: int, setup_tag: str) -> dict[str, Any] | None:
@@ -182,6 +186,7 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
     }
 
 
+
 def _build_position_day_label_records(
     computed_df: pd.DataFrame,
     i: int,
@@ -275,6 +280,7 @@ def _build_position_day_label_records(
     return out
 
 
+
 def generate_ml_dataset(tickers=None):
     tickers = tickers or get_dynamic_watchlist() or ['2330.TW', '2317.TW', '2454.TW']
     os.makedirs('data', exist_ok=True)
@@ -348,7 +354,6 @@ def generate_ml_dataset(tickers=None):
                 rows.append(sample)
                 added += 1
 
-                # v89: formal exit training uses position-day samples.
                 for pos_label in _build_position_day_label_records(computed_df, i, hold_days, setup_tag, label_block):
                     pos_idx = int(pos_label.get('Feature_Row_Index', i))
                     if pos_idx < 0 or pos_idx >= len(computed_df):
@@ -411,7 +416,9 @@ def generate_ml_dataset(tickers=None):
     if df_out.empty and not list(df_out.columns):
         df_out = pd.DataFrame(columns=base_columns)
     df_out.to_csv(dataset_path, index=False, encoding='utf-8-sig')
-    # 訓練資料報告應使用 training 口徑；另外保留 live 口徑方便診斷 parity 差異。
+
+    # 修正重點：training data builder 用 training 口徑讀 selected features，
+    # 並同時保留 live 口徑，避免只看到 4 個而誤判。
     training_selected_features = _features.load_selected_features(mode='training', include_directional=True)
     live_selected_features = _features.load_selected_features(mode='live', include_directional=True)
 
@@ -421,12 +428,14 @@ def generate_ml_dataset(tickers=None):
             dataset_columns=df_out.columns.tolist(),
             selected_features=training_selected_features,
         )
+
     if not df_out.empty:
         _features.write_feature_manifest(
             sample_row=df_out.iloc[0].to_dict(),
             dataset_columns=df_out.columns.tolist(),
             selected_features=training_selected_features,
         )
+
     advanced_cols = [
         'Score_Gap_Slope_3d','ADX_Delta_3d','MACD_Hist_Delta_3d','RSI_Reclaim_Speed','BB_Squeeze_Release',
         'ATR_Expansion_Start','Volume_Z20_Delta','Foreign_Ratio_Delta_3d','Total_Ratio_Delta_3d','Bull_Emerging_Score',
@@ -445,12 +454,16 @@ def generate_ml_dataset(tickers=None):
         'rows_new_before_dedupe': int(len(rows)),
         'quality_report': quality_report,
         'ticker_reports': ticker_reports[:200],
-        # 保留舊欄位，但改成 training 口徑，避免被 live filter 誤導。
+
+        # 舊欄位保留，改代表 training 口徑
         'selected_feature_count': int(len(training_selected_features)),
+
+        # 新增：拆開 training / live 兩種口徑
         'training_selected_feature_count': int(len(training_selected_features)),
         'training_selected_features_sample': list(training_selected_features[:30]),
         'live_selected_feature_count': int(len(live_selected_features)),
         'live_selected_features_sample': list(live_selected_features[:30]),
+
         'advanced_feature_columns_present': [c for c in advanced_cols if c in df_out.columns],
         'advanced_feature_column_count': int(sum(1 for c in advanced_cols if c in df_out.columns)),
         'feature_manifest_path': str(_features.feature_manifest_path),

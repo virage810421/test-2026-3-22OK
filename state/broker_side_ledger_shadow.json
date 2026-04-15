@@ -18,7 +18,7 @@
         "last_fill_symbol": "2330.TW",
         "last_mutation_type": "callback_fill",
         "last_mutation_reason": "callback_fill",
-        "updated_at": "2026-04-15 13:34:07"
+        "updated_at": "2026-04-15 16:23:34"
       }
     },
     "SHORT": {},
@@ -466,6 +466,28 @@
     },
     {
       "at": "2026-04-15 13:34:07",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-15 16:03:11",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-15 16:23:34",
       "lane": "LONG",
       "order_id": "HC1",
       "mutation_type": "callback_fill",
