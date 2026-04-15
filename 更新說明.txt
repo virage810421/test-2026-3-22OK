@@ -1,0 +1,43 @@
+更新重點
+1. config.py
+- 恢復動態 universe 合併邏輯，保留環境變數 FTS_TRAINING_POOL_ONLY 可切回只跑 TRAINING_POOL。
+- 放寬訓練與進場預設門檻：MODEL_MIN_REGIME_SAMPLES / MODEL_MIN_SELECTED_FEATURES / OOT floors / PREENTRY/CONFIRM。
+- 新增 decision desk 與 signal gate 的 paper/prelive 軟化開關。
+
+2. fts_decision_desk_builder.py
+- 主動補 decision desk，不再只吃空的 daily_decision_desk.csv。
+- 支援從 prerisk decision 載入。
+- 進場階段改成會參考 Signal_Confidence / Score_Gap / Score，不再只看缺失的 PreEntry_Score。
+- 嘗試從 manual_price_snapshot_overrides.csv / last_price_snapshot.csv / market data cache 補 Reference_Price。
+- 在 paper/prelive 情境下可自動補 Target_Qty=1000（可由 config 調整）。
+
+3. fts_execution_layer.py
+- signal_gate 改讀 Signal_Confidence，不再只吃中文欄位。
+- EV 比較改用 max(Realized_EV, Strategy_EV_SQL/Expected_Return)。
+- Kelly=0 在 pilot/full entry 時可用 synthetic kelly，改成警告而不是一刀擋死。
+- Pilot risk / EV floors 改成較實務化。
+
+4. fts_signal_gate.py
+- 不再因為 provisional paper execution 尚未補齊就先 hard block。
+- expected_return 會吃 Strategy_EV_SQL。
+
+5. fts_control_tower.py
+- 補上原本缺失的 _apply_entry_tracking_gate / _apply_position_lifecycle_gate。
+- daily 主線現在會先 build decision desk，再讀 normalized output。
+- order normalization 不再把缺 Action 的 row 預設當 BUY。
+- SELL/COVER 不再要求 entry stage。
+- restart recovery 改接 RestartRecoveryService。
+
+6. fts_trainer_backend.py
+- feature review 若是 blocked_no_approved_features，可走 soft fallback（由 config 控制），避免正式訓練永遠卡死。
+
+7. execution_engine.py
+- 若設定要求 control tower approved orders，現在會只吃 approved_executable_orders.csv，不再讓旁路 CSV 直接繞過主線。
+
+已驗證
+- 以上 7 支 .py 已通過 py_compile。
+- 在補入 data/last_price_snapshot.csv 的情境下，decision desk 可把 2330.TW 轉成可執行 BUY/PILOT_ENTRY/1000 股。
+
+仍需你環境提供的資料
+- 若沒有 last_price_snapshot.csv / manual_price_snapshot_overrides.csv / kline cache / 可用 market data，仍可能因 Reference_Price 缺失而不出單。
+- 真券商 adapter / callback / ledger / reconcile 本輪未處理。

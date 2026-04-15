@@ -28,33 +28,106 @@ class ReconciliationEngine:
     def __init__(self):
         self.path = PATHS.runtime_dir / 'reconciliation_engine.json'
 
+    @staticmethod
+    def _position_key(row: dict[str, Any]) -> str:
+        return normalize_key(row.get('ticker') or row.get('Ticker') or row.get('Ticker SYMBOL') or row.get('symbol') or '')
+
+    @staticmethod
+    def _shares(row: dict[str, Any]) -> int:
+        for key in ('shares', 'qty', 'quantity', 'position_qty', '進場股數', '持股數'):
+            value = row.get(key)
+            if value in (None, ''):
+                continue
+            try:
+                return int(float(value))
+            except Exception:
+                continue
+        return 0
+
     def reconcile(self, local_orders, broker_orders, local_fills, broker_fills, local_positions, broker_positions, local_cash, broker_cash):
         local_map = {_key(r): r for r in (local_orders or []) if _key(r)}
         broker_map = {_key(r): r for r in (broker_orders or []) if _key(r)}
+        local_fill_map = {_key(r): r for r in (local_fills or []) if _key(r)}
+        broker_fill_map = {_key(r): r for r in (broker_fills or []) if _key(r)}
+        local_pos_map = {self._position_key(r): r for r in (local_positions or []) if self._position_key(r)}
+        broker_pos_map = {self._position_key(r): r for r in (broker_positions or []) if self._position_key(r)}
         issues = []
         lane_issue_breakdown = defaultdict(int)
+
+        def add_issue(issue_type: str, row: dict[str, Any] | None = None, **extra: Any) -> None:
+            lane = _lane(row or {})
+            issue = {'type': issue_type, 'lane': lane}
+            if row is not None:
+                oid = _key(row)
+                if oid:
+                    issue['order_id'] = oid
+            issue.update(extra)
+            issues.append(issue)
+            lane_issue_breakdown[lane] += 1
+
         for oid, row in local_map.items():
             if oid not in broker_map:
-                lane = _lane(row)
-                issues.append({'order_id': oid, 'lane': lane, 'type': 'missing_at_broker'})
-                lane_issue_breakdown[lane] += 1
+                add_issue('missing_at_broker', row)
                 continue
-            if normalize_key(str(row.get('status', ''))) != normalize_key(str(broker_map[oid].get('status', ''))):
-                lane = _lane(row)
-                issues.append({'order_id': oid, 'lane': lane, 'type': 'status_mismatch'})
-                lane_issue_breakdown[lane] += 1
+            broker_row = broker_map[oid]
+            if normalize_key(str(row.get('status', ''))) != normalize_key(str(broker_row.get('status', ''))):
+                add_issue('status_mismatch', row, local_status=row.get('status'), broker_status=broker_row.get('status'))
+
         for oid, row in broker_map.items():
             if oid not in local_map:
-                lane = _lane(row)
-                issues.append({'order_id': oid, 'lane': lane, 'type': 'orphan_broker_order'})
-                lane_issue_breakdown[lane] += 1
+                add_issue('orphan_broker_order', row)
+
+        for oid, row in local_fill_map.items():
+            if oid not in broker_fill_map:
+                add_issue('missing_fill_at_broker', row)
+        for oid, row in broker_fill_map.items():
+            if oid not in local_fill_map:
+                add_issue('orphan_broker_fill', row)
+
+        position_issues = []
+        for key, row in local_pos_map.items():
+            if key not in broker_pos_map:
+                position_issues.append({'ticker': key, 'type': 'missing_position_at_broker', 'local_shares': self._shares(row), 'broker_shares': 0})
+                add_issue('missing_position_at_broker', row, ticker=key, local_shares=self._shares(row), broker_shares=0)
+                continue
+            local_shares = self._shares(row)
+            broker_shares = self._shares(broker_pos_map[key])
+            if local_shares != broker_shares:
+                position_issues.append({'ticker': key, 'type': 'position_qty_mismatch', 'local_shares': local_shares, 'broker_shares': broker_shares})
+                add_issue('position_qty_mismatch', row, ticker=key, local_shares=local_shares, broker_shares=broker_shares)
+        for key, row in broker_pos_map.items():
+            if key not in local_pos_map:
+                position_issues.append({'ticker': key, 'type': 'orphan_broker_position', 'local_shares': 0, 'broker_shares': self._shares(row)})
+                add_issue('orphan_broker_position', row, ticker=key, local_shares=0, broker_shares=self._shares(row))
+
+        cash_diff = float((broker_cash or 0) - (local_cash or 0))
+        cash_ok = abs(cash_diff) <= 1e-6
+        order_ok = not any(x['type'] in {'missing_at_broker', 'status_mismatch', 'orphan_broker_order'} for x in issues)
+        fill_ok = not any(x['type'] in {'missing_fill_at_broker', 'orphan_broker_fill'} for x in issues)
+        position_ok = len(position_issues) == 0
+        all_green = bool(order_ok and fill_ok and position_ok and cash_ok)
+        status = 'reconciled' if all_green else ('reconciliation_partial' if (local_map or broker_map or local_pos_map or broker_pos_map or local_fill_map or broker_fill_map) else 'reconciliation_waiting_for_inputs')
         payload = {
             'generated_at': now_str(),
-            'status': 'reconciled',
-            'order_issue_count': len(issues),
+            'status': status,
+            'all_green': all_green,
+            'summary': {
+                'all_green': all_green,
+                'order_ok': order_ok,
+                'fill_ok': fill_ok,
+                'position_ok': position_ok,
+                'cash_ok': cash_ok,
+            },
+            'order_issue_count': sum(1 for x in issues if x['type'] in {'missing_at_broker', 'status_mismatch', 'orphan_broker_order'}),
+            'fill_issue_count': sum(1 for x in issues if x['type'] in {'missing_fill_at_broker', 'orphan_broker_fill'}),
+            'position_issue_count': len(position_issues),
+            'issue_count': len(issues),
             'issues': issues,
+            'position_issues': position_issues,
             'lane_issue_breakdown': dict(lane_issue_breakdown),
-            'cash_diff': float((broker_cash or 0) - (local_cash or 0)),
+            'cash_local': float(local_cash or 0),
+            'cash_broker': float(broker_cash or 0),
+            'cash_diff': cash_diff,
             'directional_order_mix': dict((lane, c) for lane, c in lane_issue_breakdown.items()),
             'directional_fill_mix': {},
         }

@@ -343,6 +343,37 @@ def _build_stop_payload_map(stop_df: pd.DataFrame) -> dict[str, dict]:
     return mp
 
 
+
+
+def _load_position_lifecycle_action_plan() -> dict[str, dict]:
+    candidates = [
+        PATHS.runtime_dir / 'position_lifecycle_action_plan.json',
+        PATHS.base_dir / 'runtime' / 'position_lifecycle_action_plan.json',
+    ]
+    for path in candidates:
+        data = _read_json_safe(path)
+        actions = data.get('actions', []) if isinstance(data, dict) else []
+        if isinstance(actions, list):
+            out = {}
+            for item in actions:
+                if isinstance(item, dict):
+                    ticker = str(item.get('ticker') or item.get('Ticker') or '').strip()
+                    if ticker:
+                        out[ticker] = item
+            if out:
+                return out
+    return {}
+
+
+def _download_last_close(ticker: str) -> float:
+    try:
+        df = smart_download(ticker, period='10d')
+        if df is not None and not df.empty and 'Close' in df.columns:
+            return _safe_float(df['Close'].iloc[-1], 0.0)
+    except Exception as exc:
+        _diag('download_last_close', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
+    return 0.0
+
 def _sync_stop_plan_to_sql(cursor, pos, stop_row: dict) -> None:
     if not bool(PARAMS.get('EXIT_SQL_STOP_SYNC_ENABLE', True)):
         return
@@ -738,6 +769,9 @@ def run_eod_broker():
     if _is_true_live_context() and _as_bool(PARAMS.get('LIVE_REQUIRE_CONTROL_TOWER_RELEASE', True)) and not _as_bool(execution_release_manifest.get('live_execution_unlocked', False)):
         print('🛑 true live blocked：control tower 尚未核發 live execution release。')
         cursor.close(); conn.close(); return
+    if _is_true_live_context() and _as_bool(PARAMS.get('LIVE_REQUIRE_TRUE_BROKER_READINESS', True)) and not _as_bool(execution_release_manifest.get('true_broker_ready', False)):
+        print('🛑 true live blocked：true broker readiness 尚未全綠。')
+        cursor.close(); conn.close(); return
 
     current_cash = get_available_cash(cursor)
     active_df = _read_active_positions(conn)
@@ -747,101 +781,50 @@ def run_eod_broker():
     stock_value = _safe_float(active_df["投入資金"].sum(), 0.0) if not active_df.empty and "投入資金" in active_df.columns else 0.0
     daily_log = []
 
+
+
     # ==========================================
-    # 🛡️ 階段一：掃描持倉
+    # 🛡️ 階段一：掃描持倉（單一路徑：position lifecycle + stop payload）
     # ==========================================
+    lifecycle_action_map = _load_position_lifecycle_action_plan()
     if not active_df.empty:
         for _, pos in active_df.iterrows():
             ticker = _pos_ticker(pos)
-            direction = pos["方向"]
-            entry_price = float(pos["進場價"])
-            shares = int(pos["進場股數"])
-            setup_tag = pos.get("進場陣型", "傳統訊號")
-
-            raw_tp = pos.get("停利階段", 0)
-            tp_stage = int(raw_tp) if pd.notna(raw_tp) else 0
-
-            is_long = ("Long" in str(direction)) or ("多" in str(direction))
-
-            df = smart_download(ticker, period="3mo")
-            if df.empty:
+            shares = _safe_int(pos.get('進場股數', 0), 0)
+            if not ticker or shares <= 0:
                 continue
-
-            df = add_chip_data(df, ticker)
-
-            result = inspect_stock(ticker, preloaded_df=df, p=PARAMS)
-            if not result or "計算後資料" not in result:
+            curr_price = _download_last_close(ticker)
+            if curr_price <= 0:
+                daily_log.append(f"⚠️ 略過 {ticker}: lifecycle exit 無最新價格")
                 continue
-
-            computed_df = result["計算後資料"]
-            latest_row = computed_df.iloc[-1]
-            curr_price = float(latest_row["Close"])
 
             stop_row = stop_payload_map.get(ticker)
             if stop_row:
                 _sync_stop_plan_to_sql(cursor, pos, stop_row)
-                current_cash, stop_handled = _maybe_apply_protective_stop(cursor, pos, curr_price, stop_row, current_cash, daily_log)
+                current_cash, stop_handled = _maybe_apply_protective_stop(cursor, pos, curr_price, stop_row, current_cash, daily_log, execution_logger=execution_logger)
                 if stop_handled:
                     continue
 
-            volatility_pct = (latest_row.get("BB_std", 0) * 1.5) / curr_price if curr_price > 0 else 0.05
-            trend_is_with_me = (
-                (is_long and latest_row["Close"] > latest_row.get("BBI", 0))
-                or ((not is_long) and latest_row["Close"] < latest_row.get("BBI", 0))
-            )
-            adx_is_strong = latest_row.get("ADX14", 0) > PARAMS.get("ADX_TREND_THRESHOLD", 20)
+            action = lifecycle_action_map.get(ticker, {})
+            recommendation = str(action.get('recommendation') or action.get('action') or pos.get('Exit_Action') or '').strip().upper()
+            if recommendation in {'TIGHTEN_STOP_AND_REPLACE_PROTECTIVE_ORDER', 'DEFEND'}:
+                daily_log.append(f"🛡️ {ticker}: lifecycle 防守模式，已交由 protective stop 工作流管理")
+                continue
+            if recommendation not in {'EXIT', 'REDUCE', 'SELL'}:
+                continue
 
-            active_strategy = get_active_strategy(setup_tag, regime=latest_row.get('Regime', '未知'))
-            dynamic_sl, dynamic_tp, ignore_tp = active_strategy.get_exit_rules(
-                PARAMS, volatility_pct, trend_is_with_me, adx_is_strong, 0
-            )
+            action_qty = _safe_int(action.get('qty', 0), 0)
+            sell_shares = shares if recommendation in {'EXIT', 'SELL'} else max(1, min(shares, action_qty or shares // 2 or 1))
+            direction = str(pos.get('方向', '') or '')
+            is_long = ('Long' in direction) or ('多' in direction)
+            slippage = PARAMS.get('MARKET_SLIPPAGE', 0.001)
+            trade_dir_int = 1 if is_long else -1
+            actual_exit_price = apply_slippage(curr_price, -trade_dir_int, slippage)
+            reason = str(action.get('attribution') or action.get('reason') or pos.get('Exit_Action') or recommendation)
+            msg = '📕 lifecycle EXIT' if recommendation in {'EXIT', 'SELL'} else '📙 lifecycle REDUCE'
+            current_cash = _execute_sql_position_exit(cursor, pos, sell_shares, actual_exit_price, current_cash, daily_log, msg, reason, execution_logger=execution_logger)
 
-            entry_dt = pd.to_datetime(pos["進場時間"]).normalize()
-            post_entry_df = df.loc[df.index >= entry_dt].copy()
-            if post_entry_df.empty:
-                post_entry_df = df.copy()
-
-            if is_long:
-                max_price = post_entry_df["High"].max() if not post_entry_df.empty else curr_price
-                final_stop = max(entry_price * (1 - dynamic_sl), max_price * (1 - dynamic_sl))
-                tp_stage_1 = entry_price * (1 + dynamic_tp * 0.5)
-                tp_final = entry_price * (1 + dynamic_tp)
-                is_stop = curr_price <= final_stop
-                is_tp_half = curr_price >= tp_stage_1 and tp_stage == 0
-                is_tp_full = curr_price >= tp_final and not ignore_tp
-            else:
-                min_price = post_entry_df["Low"].min() if not post_entry_df.empty else curr_price
-                final_stop = min(entry_price * (1 + dynamic_sl), min_price * (1 + dynamic_sl))
-                tp_stage_1 = entry_price * (1 - dynamic_tp * 0.5)
-                tp_final = entry_price * (1 - dynamic_tp)
-                is_stop = curr_price >= final_stop
-                is_tp_half = curr_price <= tp_stage_1 and tp_stage == 0
-                is_tp_full = curr_price <= tp_final and not ignore_tp
-
-            exit_msg = ""
-            sell_shares = 0
-
-            if is_stop:
-                exit_msg, sell_shares = "🛑 觸發防守線", shares
-            elif is_tp_full:
-                exit_msg, sell_shares = "🎯 達標最終停利", shares
-            elif is_tp_half:
-                if trend_is_with_me and adx_is_strong:
-                    cursor.execute(
-                        f"UPDATE active_positions SET [停利階段] = 1 WHERE {_position_identity_clause(cursor)}",
-                        (ticker, pos["進場時間"]),
-                    )
-                    daily_log.append(f"🌊 {ticker} 達第一階段，趨勢強抱緊！")
-                else:
-                    exit_msg, sell_shares = "💰 達第一階段，減碼50%", max(1, shares // 2)
-
-            if sell_shares > 0:
-                trade_dir_int = 1 if is_long else -1
-                slippage = PARAMS.get("MARKET_SLIPPAGE", 0.001)
-                actual_exit_price = apply_slippage(curr_price, -trade_dir_int, slippage)
-                current_cash = _execute_sql_position_exit(cursor, pos, sell_shares, actual_exit_price, current_cash, daily_log, exit_msg, exit_msg, execution_logger=execution_logger)
-
-    conn.commit()
+        conn.commit()
     _sync_execution_sql_runtime_tables(conn, current_cash, execution_logger=execution_logger, note='after_exit_phase')
 
     # 重新讀一次持倉狀態，避免平倉後還沿用舊曝險

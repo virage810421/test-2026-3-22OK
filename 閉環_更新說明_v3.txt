@@ -1,0 +1,32 @@
+本次更新：閉環補強 v3
+
+已更新檔案：
+- fts_control_tower.py
+- fts_live_suite.py
+- fts_project_quality_suite.py
+- fts_position_lifecycle_service.py
+- live_paper_trading.py
+- config.py
+
+這次補上的閉環重點：
+1) control tower 不再預設把缺少明確動作的訊號當成 BUY。
+2) control tower 正式改接 RestartRecoveryService。
+3) control tower 正式接入 TrueBrokerReadinessGate。
+4) live_release_gate 把 true_broker_ready 納入 allow_live 硬鎖。
+5) execution_release_manifest / approved_executable_orders 會寫入 true_broker_ready。
+6) position_lifecycle_service 會正式輸出 stop_replace_payloads.csv，讓 DEFEND -> protective stop 成為正式閉環。
+7) live_paper_trading 的出場段改成單一路徑：position_lifecycle_action_plan + stop_replace_payloads，不再以 inspect_stock + 動態停利停損作為主裁判。
+8) recovery_validation 改讀 restart_recovery_snapshot / restart_recovery_plan，不再只看舊 engine_state。
+
+仍未完全閉環的地方：
+A. fts_real_broker_adapter_blueprint.py 仍是 blueprint，不是真券商正式 adapter。
+B. fts_broker_real_stub.py 仍是 stub，callback / replace / reconcile 尚未由真券商證據閉環。
+C. execution_engine.py 仍保留另一條執行路徑，尚未完全物理收編成只剩 control tower / live_paper 單一路徑。
+D. live_paper_trading.py 仍保留 inspect_stock 用於 directional augmentation；這不是主出場路徑，但仍屬旁路邏輯殘留。
+E. 專案內 legacy / patch manifest / retired wrapper 檔仍存在，屬於檔案層面的未收尾，不是主線放行鏈未接上。
+
+本次已驗證：
+- py_compile 通過：6 支更新檔
+- smoke test：
+  - live_release_gate 在 true_broker_ready=False 時會 blocked
+  - position_lifecycle_service 可輸出 stop_replace_payloads.csv

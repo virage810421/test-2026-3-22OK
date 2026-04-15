@@ -1,90 +1,58 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-"""Consolidated module generated from 4 smaller files.
-Original public classes/functions are preserved in this module.
-"""
-
-
-# ==============================================================================
-# Merged from: fts_live_suite.py
-# ==============================================================================
-# -*- coding: utf-8 -*-
 import json
+from typing import Any
+
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
+from fts_prelive_runtime import write_json, load_json
+from fts_operations_suite import OperatorApprovalRegistry
+
 
 class LiveAdapterStubBuilder:
     def __init__(self):
-        self.path = PATHS.runtime_dir / "live_adapter_stub.json"
+        self.path = PATHS.runtime_dir / 'live_adapter_stub.json'
 
     def build(self):
         payload = {
-            "generated_at": now_str(),
-            "system_name": CONFIG.system_name,
-            "stub_methods": [
-                "connect",
-                "place_order",
-                "cancel_order",
-                "get_order_status",
-                "get_positions",
-                "get_cash",
-                "disconnect",
-            ],
-            "safety_rules": [
-                "default_disabled",
-                "requires_live_approval_workflow",
-                "requires_operator_confirmation",
-                "requires_callback_monitoring",
-            ],
-            "status": "stub_defined_not_enabled"
+            'generated_at': now_str(),
+            'system_name': CONFIG.system_name,
+            'stub_methods': ['connect', 'place_order', 'cancel_order', 'get_order_status', 'get_positions', 'get_cash', 'disconnect'],
+            'safety_rules': ['default_disabled', 'requires_live_approval_workflow', 'requires_operator_confirmation', 'requires_callback_monitoring'],
+            'status': 'stub_defined_not_enabled',
         }
-        with open(self.path, "w", encoding="utf-8") as f:
+        with open(self.path, 'w', encoding='utf-8') as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
-        log(f"🧱 已輸出 live adapter stub：{self.path}")
+        log(f'🧱 已輸出 live adapter stub：{self.path}')
         return self.path, payload
 
-
-# ==============================================================================
-# Merged from: fts_live_suite.py
-# ==============================================================================
-# -*- coding: utf-8 -*-
-import json
-from fts_config import PATHS, CONFIG
-from fts_utils import now_str, log
 
 class LiveApprovalWorkflowBuilder:
     def __init__(self):
-        self.path = PATHS.runtime_dir / "live_approval_workflow.json"
+        self.path = PATHS.runtime_dir / 'live_approval_workflow.json'
 
     def build(self):
         payload = {
-            "generated_at": now_str(),
-            "system_name": CONFIG.system_name,
-            "workflow": [
-                {"step": 1, "name": "launch_gate_pass"},
-                {"step": 2, "name": "live_safety_gate_pass"},
-                {"step": 3, "name": "broker_approval_gate_pass"},
-                {"step": 4, "name": "submission_contract_gate_pass"},
-                {"step": 5, "name": "operator_confirmation_reserved"},
-                {"step": 6, "name": "live_adapter_submission_reserved"},
-                {"step": 7, "name": "callback_monitoring_reserved"},
+            'generated_at': now_str(),
+            'system_name': CONFIG.system_name,
+            'workflow': [
+                {'step': 1, 'name': 'launch_gate_pass'},
+                {'step': 2, 'name': 'live_safety_gate_pass'},
+                {'step': 3, 'name': 'broker_approval_gate_pass'},
+                {'step': 4, 'name': 'submission_contract_gate_pass'},
+                {'step': 5, 'name': 'operator_confirmation_reserved'},
+                {'step': 6, 'name': 'live_adapter_submission_reserved'},
+                {'step': 7, 'name': 'callback_monitoring_reserved'},
+                {'step': 8, 'name': 'reconciliation_green_required'},
+                {'step': 9, 'name': 'true_broker_ready_required'},
             ],
-            "status": "workflow_defined_not_live_enabled"
+            'status': 'workflow_defined_not_live_enabled',
         }
-        with open(self.path, "w", encoding="utf-8") as f:
+        with open(self.path, 'w', encoding='utf-8') as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
-        log(f"✅ 已輸出 live approval workflow：{self.path}")
+        log(f'✅ 已輸出 live approval workflow：{self.path}')
         return self.path, payload
-
-
-# ==============================================================================
-# Merged from: fts_live_suite.py
-# ==============================================================================
-# -*- coding: utf-8 -*-
-from typing import Any
-
-from fts_prelive_runtime import PATHS, now_str, write_json
 
 
 class LiveCutoverPlanBuilder:
@@ -115,28 +83,21 @@ class LiveCutoverPlanBuilder:
         return str(path), payload
 
 
-# ==============================================================================
-# Merged from: fts_live_suite.py
-# ==============================================================================
-# -*- coding: utf-8 -*-
-from typing import Any
-
-from fts_prelive_runtime import PATHS, now_str, load_json, write_json
-from fts_operations_suite import OperatorApprovalRegistry
-
-
 class LiveReleaseGate:
     def __init__(self):
         self.approval = OperatorApprovalRegistry()
 
-    def evaluate(self) -> tuple[str, dict[str, Any]]:
-        governance = load_json(PATHS.runtime_dir / 'trainer_promotion_decision.json', {}) or {}
-        safety = load_json(PATHS.runtime_dir / 'live_safety_gate.json', {}) or {}
-        recon = load_json(PATHS.runtime_dir / 'reconciliation_engine.json', {}) or {}
-        recovery = load_json(PATHS.runtime_dir / 'recovery_validation.json', {}) or {}
-        broker_contract = load_json(PATHS.runtime_dir / 'broker_requirements_contract.json', {}) or {}
-        approval = self.approval.latest_for('live_cutover')
-        recon_green = bool(recon.get('all_green', recon.get('summary', {}).get('all_green', False)))
+    def evaluate(self, governance: dict[str, Any] | None = None, safety: dict[str, Any] | None = None, recon: dict[str, Any] | None = None,
+                 recovery: dict[str, Any] | None = None, approval: dict[str, Any] | None = None,
+                 broker_contract: dict[str, Any] | None = None, true_broker: dict[str, Any] | None = None) -> tuple[str, dict[str, Any]]:
+        governance = governance or load_json(PATHS.runtime_dir / 'trainer_promotion_decision.json', {}) or {}
+        safety = safety or load_json(PATHS.runtime_dir / 'live_safety_gate.json', {}) or {}
+        recon = recon or load_json(PATHS.runtime_dir / 'reconciliation_engine.json', {}) or {}
+        recovery = recovery or load_json(PATHS.runtime_dir / 'recovery_validation.json', {}) or {}
+        broker_contract = broker_contract or load_json(PATHS.runtime_dir / 'broker_requirements_contract.json', {}) or {}
+        true_broker = true_broker or load_json(PATHS.runtime_dir / 'true_broker_readiness_gate.json', {}) or {}
+        approval = approval or self.approval.latest_for('live_cutover')
+        recon_green = bool(recon.get('all_green', recon.get('summary', {}).get('all_green', False))) or bool(recon.get('status') in {'reconciled', 'ok'} and int(recon.get('order_issue_count', 0) or 0) == 0)
         recovery_ready = bool(recovery.get('ready_for_resume', recovery.get('all_green', False)))
         checks = {
             'promotion_clear': bool(governance.get('go_for_shadow', governance.get('go_for_promote', False))),
@@ -145,6 +106,7 @@ class LiveReleaseGate:
             'recovery_ready': recovery_ready,
             'broker_contract_defined': bool(broker_contract),
             'operator_approved': bool(approval.get('approved', False)),
+            'true_broker_ready': bool(true_broker.get('status') == 'true_broker_ready' or true_broker.get('allow_live', False)),
         }
         allow_pre_live = checks['reconciliation_green'] and checks['recovery_ready'] and checks['broker_contract_defined']
         allow_live = all(checks.values())

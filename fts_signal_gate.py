@@ -28,7 +28,10 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
     warnings: list[str] = []
     diagnostics = list(row.get('_signal_gate_diagnostics', []) or [])
 
-    expected_return = safe_float(row.get('Expected_Return', row.get('Heuristic_EV', row.get('Live_EV', row.get('Realized_EV', 0.0)))), 0.0)
+    expected_return = max(
+        safe_float(row.get('Expected_Return', row.get('Heuristic_EV', row.get('Live_EV', row.get('Realized_EV', 0.0)))), 0.0),
+        safe_float(row.get('Strategy_EV_SQL', row.get('Realized_EV', 0.0)), 0.0),
+    )
     ev_source = str(row.get('EV_Source', 'unknown'))
     ev_sample_size = int(safe_float(row.get('歷史訊號樣本數', row.get('Sample_Size', 0)), 0.0))
     health = str(row.get('Health', 'KEEP')).upper()
@@ -55,8 +58,14 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         blockers.append('fallback_build_unusable')
     if not desk_usable and 'decision_desk_unusable' not in blockers:
         blockers.append('decision_desk_unusable')
+    entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()
+    action = str(row.get('Action', 'HOLD')).upper()
+    provisional_executable = action in {'BUY', 'SHORT'} and entry_state in {'PILOT_ENTRY', 'FULL_ENTRY'} and bool(PARAMS.get('FALLBACK_DECISION_ALLOW_PAPER_EXECUTION', True))
     if not execution_eligible and 'execution_not_eligible' not in blockers:
-        blockers.append('execution_not_eligible')
+        if provisional_executable:
+            warnings.append('execution_not_eligible_yet')
+        else:
+            blockers.append('execution_not_eligible')
 
     live_min_ev = float(PARAMS.get('LIVE_MIN_EXPECTED_RETURN', -0.0015))
     ev_min_sample = int(PARAMS.get('LIVE_EV_MIN_SAMPLE_FOR_HARD_BLOCK', PARAMS.get('MIN_SIGNAL_SAMPLE_SIZE', 8)))

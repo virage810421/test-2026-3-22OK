@@ -55,16 +55,17 @@ PARAMS = {
 
     "MIN_SIGNAL_SAMPLE_SIZE": 8,
     "ML_LABEL_HOLD_DAYS": 5,
-    "MODEL_MIN_REGIME_SAMPLES": 50,
+    "MODEL_MIN_REGIME_SAMPLES": 36,
     "MODEL_SEED_FEATURE_LIMIT": 12,
     "WF_SPLITS": 5,
     "MODEL_N_ESTIMATORS": 200,
     "MODEL_MAX_DEPTH": 7,
+    "MODEL_MIN_TRAIN_ROWS": 60,
 
-    "MODEL_MIN_SELECTED_FEATURES": 8,
+    "MODEL_MIN_SELECTED_FEATURES": 6,
     "MODEL_MAX_SELECTED_FEATURES": 18,
-    "MODEL_MIN_OOT_PF": 1.15,
-    "MODEL_MIN_OOT_HIT_RATE": 0.52,
+    "MODEL_MIN_OOT_PF": 1.02,
+    "MODEL_MIN_OOT_HIT_RATE": 0.50,
     "MODEL_MIN_PROMOTION_SCORE": 2.0,
     "MODEL_ALLOW_KEEP_TRAINED_IF_NOT_PROMOTED": False,
     "MODEL_REQUIRE_TARGET_RETURN": True,
@@ -193,7 +194,18 @@ def _load_optional_tickers_from_csvs() -> list[str]:
 #                 return merged
 #     return merged
 def get_dynamic_watch_list():
-    return [_normalize_ticker(t) for t in TRAINING_POOL if _normalize_ticker(t)]
+    training_only = os.getenv('FTS_TRAINING_POOL_ONLY', '').strip().lower() in {'1', 'true', 'yes', 'y', 'on'}
+    merged = []
+    universe_sources = [TRAINING_POOL] if training_only else [WATCH_LIST, TRAINING_POOL, BREAK_TEST_POOL, _load_optional_tickers_from_csvs()]
+    max_names = max(int(os.getenv('FTS_MAX_DYNAMIC_TICKERS', '60') or 60), len(WATCH_LIST), len(TRAINING_POOL))
+    for pool in universe_sources:
+        for ticker in pool:
+            ticker = _normalize_ticker(ticker)
+            if ticker and ticker not in merged:
+                merged.append(ticker)
+            if len(merged) >= max_names:
+                return merged
+    return merged
 
 def get_dynamic_training_universe():
     return get_dynamic_watch_list()
@@ -274,7 +286,7 @@ PARAMS.setdefault("TARGET_RETURN_LEGACY_PERCENT_AUTOFIX", True)
 PARAMS.setdefault("TARGET_RETURN_ABS_MAX_DECIMAL", 0.80)
 PARAMS.setdefault("TARGET_RETURN_BLOCK_IF_IMPLAUSIBLE", True)
 PARAMS.setdefault("DIRECTIONAL_REQUIRE_INDEPENDENT_LANE_MODELS", True)
-PARAMS.setdefault("DIRECTIONAL_MIN_LANE_SAMPLES", max(80, int(PARAMS.get("MODEL_MIN_REGIME_SAMPLES", 50))))
+PARAMS.setdefault("DIRECTIONAL_MIN_LANE_SAMPLES", max(60, int(PARAMS.get("MODEL_MIN_REGIME_SAMPLES", 36))))
 PARAMS.setdefault("DIRECTIONAL_MIN_LANE_FEATURES", max(4, int(PARAMS.get("MODEL_MIN_SELECTED_FEATURES", 8)) // 2))
 PARAMS.setdefault("EXIT_MODEL_REQUIRE_POSITION_DAY_SAMPLES", True)
 PARAMS.setdefault("EXIT_MODEL_MIN_POSITION_DAY_ROWS", 80)
@@ -315,6 +327,11 @@ PARAMS.setdefault("LIVE_REQUIRE_PROMOTED_MODEL", True)
 PARAMS.setdefault("EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS", True)
 PARAMS.setdefault("CONTROL_TOWER_APPROVED_ORDER_FILE", "approved_executable_orders.csv")
 PARAMS.setdefault("LIVE_REQUIRE_CONTROL_TOWER_RELEASE", True)
+PARAMS.setdefault("LIVE_REQUIRE_TRUE_BROKER_READINESS", True)
+PARAMS.setdefault("LIVE_REQUIRE_RESTART_RECOVERY_READY", True)
+PARAMS.setdefault("EXIT_SQL_STOP_SYNC_ENABLE", True)
+PARAMS.setdefault("EXIT_SQL_STOP_SOURCE_FILE", "stop_replace_payloads.csv")
+PARAMS.setdefault("LEGACY_EXIT_LOGIC_FALLBACK", False)
 
 
 
@@ -432,3 +449,31 @@ BROKER_CALLBACK_MAPPING_PROFILE = "GENERIC_V1"
 TAX_RULES_EXTERNAL_JSON_ENABLED = True
 TAX_RULES_JSON_PATH = "config/tax_rules.json"
 SMOKE_TEST_OUTPUT_PATH = "runtime/formal_healthcheck_smoke_report.json"
+
+
+PARAMS.setdefault("CONTROL_TOWER_BUILD_DECISION_DESK", True)
+PARAMS.setdefault("CONTROL_TOWER_LOAD_PRERISK_IF_DECISION_EMPTY", True)
+PARAMS.setdefault("FALLBACK_DECISION_ALLOW_PAPER_EXECUTION", True)
+PARAMS.setdefault("FALLBACK_DECISION_DEFAULT_TARGET_QTY", 1000)
+PARAMS.setdefault("SIGNAL_GATE_ALLOW_SYNTHETIC_KELLY", True)
+PARAMS.setdefault("SIGNAL_GATE_TREAT_KELLY_ZERO_AS_WARNING", True)
+PARAMS.setdefault("TRAINING_ALLOW_SOFT_FEATURE_REVIEW_FALLBACK", True)
+PARAMS.setdefault("PREENTRY_PILOT_THRESHOLD", 0.52)
+PARAMS.setdefault("CONFIRM_FULL_THRESHOLD", 0.60)
+PARAMS.setdefault("ENTRY_READINESS_PREPARE_MIN", 0.40)
+PARAMS.setdefault("PILOT_MIN_PROBA_BUFFER", 0.06)
+PARAMS.setdefault("PILOT_MIN_CONF_BUFFER", 0.08)
+PARAMS.setdefault("PILOT_MAX_BREAKOUT_RISK", 0.88)
+PARAMS.setdefault("FULL_MAX_BREAKOUT_RISK", 0.80)
+PARAMS.setdefault("PILOT_MIN_OOT_EV", -0.01)
+PARAMS.setdefault("PAPER_DEFAULT_TARGET_QTY", int(PARAMS.get("FALLBACK_DECISION_DEFAULT_TARGET_QTY", 1000)))
+PARAMS.setdefault("LONG_MIN_PROBA", 0.50)
+PARAMS.setdefault("SHORT_MIN_PROBA", 0.52)
+PARAMS.setdefault("RANGE_MIN_PROBA", 0.50)
+PARAMS.setdefault("DIRECTIONAL_MIN_LANE_SAMPLES", max(60, int(PARAMS.get("MODEL_MIN_REGIME_SAMPLES", 36))))
+PARAMS.setdefault("EXIT_MODEL_MIN_POSITION_DAY_ROWS", 60)
+
+PARAMS.setdefault("FULL_ENTRY_MIN_AI_PROBA", 0.52)
+PARAMS.setdefault("FULL_ENTRY_MIN_SCORE_GAP", 2.0)
+PARAMS.setdefault("PILOT_MIN_CONF_BUFFER", 0.06)
+PARAMS.setdefault("CONTROL_TOWER_BRIDGE_PRERISK_CONTRACT", True)

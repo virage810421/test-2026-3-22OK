@@ -9,7 +9,7 @@ from typing import Any
 import pandas as pd
 
 from fts_config import PATHS
-from fts_utils import now_str, log
+from fts_utils import now_str, log, safe_float
 
 try:
     import yfinance as yf  # type: ignore
@@ -18,7 +18,7 @@ except Exception:  # pragma: no cover
 
 
 class MarketDataService:
-    MODULE_VERSION = 'v84_market_data_service_incremental_research_safe'
+    MODULE_VERSION = 'v101_market_data_service_auto_price_compatible'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'market_data_service.json'
@@ -27,7 +27,7 @@ class MarketDataService:
 
     @staticmethod
     def normalize_ticker_symbol(ticker: str, default_suffix: str = '.TW') -> str:
-        ticker = str(ticker or '').strip()
+        ticker = str(ticker or '').strip().upper()
         if not ticker:
             return ticker
         if ticker.endswith('.TW') or ticker.endswith('.TWO'):
@@ -108,7 +108,8 @@ class MarketDataService:
         try:
             new_df = yf.download(ticker, start=start_date.isoformat(), progress=False, auto_adjust=False)
             new_df = new_df.xs(ticker, axis=1, level=1).copy() if isinstance(new_df.columns, pd.MultiIndex) else new_df.copy()
-            new_df.dropna(subset=['Close'], inplace=True)
+            if 'Close' in new_df.columns:
+                new_df.dropna(subset=['Close'], inplace=True)
             if new_df.empty:
                 return existing
             new_df.index = pd.to_datetime(new_df.index).normalize()
@@ -126,6 +127,92 @@ class MarketDataService:
             if not df.empty:
                 result[str(ticker)] = df
         return result
+
+
+    def _load_snapshot_candidates(self, ticker: str) -> tuple[float, str]:
+        ticker = self.normalize_ticker_symbol(ticker)
+        candidates = [
+            PATHS.data_dir / 'manual_price_snapshot_overrides.csv',
+            PATHS.base_dir / 'manual_price_snapshot_overrides.csv',
+            PATHS.data_dir / 'last_price_snapshot.csv',
+            PATHS.base_dir / 'last_price_snapshot.csv',
+            PATHS.base_dir / 'daily_price_snapshot.csv',
+        ]
+        for path in candidates:
+            if not path.exists():
+                continue
+            try:
+                df = pd.read_csv(path, encoding='utf-8-sig')
+            except Exception:
+                try:
+                    df = pd.read_csv(path)
+                except Exception:
+                    continue
+            tcol = next((c for c in ('Ticker', 'Ticker SYMBOL', 'ticker', 'symbol') if c in df.columns), None)
+            pcol = next((c for c in ('Reference_Price', 'Close', 'Adj Close', 'Last', 'Price') if c in df.columns), None)
+            if not tcol or not pcol:
+                continue
+            try:
+                rows = df[df[tcol].astype(str).str.strip().str.upper() == ticker]
+            except Exception:
+                continue
+            if rows.empty:
+                continue
+            price = safe_float(rows.iloc[-1].get(pcol), 0.0)
+            if price > 0:
+                return price, f'snapshot:{path.name}'
+        return 0.0, ''
+
+    def _load_cache_price(self, ticker: str) -> tuple[float, str]:
+        ticker = self.normalize_ticker_symbol(ticker)
+        patterns = [
+            self.cache_dir / f'{ticker}_*.csv',
+            self.cache_dir / f'{ticker.replace("/", "_")}_*.csv',
+            self.cache_dir / f'{ticker}.csv',
+        ]
+        seen: list[Path] = []
+        for pattern in patterns:
+            for path in sorted(self.cache_dir.glob(pattern.name), reverse=True):
+                if path not in seen:
+                    seen.append(path)
+        for path in seen:
+            try:
+                df = pd.read_csv(path, encoding='utf-8-sig')
+            except Exception:
+                try:
+                    df = pd.read_csv(path)
+                except Exception:
+                    continue
+            for pcol in ('Close', 'Adj Close', 'Reference_Price', 'Last', 'Price'):
+                if pcol in df.columns:
+                    series = pd.to_numeric(df[pcol], errors='coerce').dropna()
+                    if not series.empty:
+                        price = safe_float(series.iloc[-1], 0.0)
+                        if price > 0:
+                            return price, f'cache:{path.name}'
+        return 0.0, ''
+
+    def get_latest_reference_price(self, ticker: str, allow_online: bool = True, period: str = '3mo') -> tuple[float, str]:
+        ticker = self.normalize_ticker_symbol(ticker)
+        if not ticker:
+            return 0.0, 'missing_ticker'
+        price, source = self._load_snapshot_candidates(ticker)
+        if price > 0:
+            return price, source
+        price, source = self._load_cache_price(ticker)
+        if price > 0:
+            return price, source
+        if allow_online:
+            df = self.smart_download(ticker, period=period)
+            if df is not None and not df.empty:
+                for pcol in ('Close', 'Adj Close'):
+                    if pcol in df.columns:
+                        series = pd.to_numeric(df[pcol], errors='coerce').dropna()
+                        if not series.empty:
+                            price = safe_float(series.iloc[-1], 0.0)
+                            if price > 0:
+                                return price, f'online:{ticker}'
+        return 0.0, 'price_unavailable'
 
     def build_summary(self) -> tuple[Path, dict[str, Any]]:
         payload = {

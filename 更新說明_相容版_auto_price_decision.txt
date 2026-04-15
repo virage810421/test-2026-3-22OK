@@ -1,0 +1,32 @@
+相容版 auto price decision 更新檔
+
+這包只吸收「自動補價 / 自動 decision build」能力，不覆蓋你目前較新的閉環硬鎖主線。
+
+更新檔：
+- fts_price_snapshot_auto_builder.py  （新增）
+- fts_market_data_service.py
+- fts_decision_desk_builder.py
+- fts_decision_price_bridge_plus.py
+- fts_control_tower.py
+
+相容原則：
+- 保留你現在版本的 control tower 主要閉環鏈
+- 加入 auto decision pipeline：先 build desk，再補價格，再輸出 enriched decision
+- 不動 config.py，避免把你目前較新的 universe / readiness / closure 設定蓋掉
+
+新流程：
+1. control tower 先跑 decision_desk_builder
+2. 再跑 decision_price_bridge_plus
+3. AutoPriceSnapshotBuilder 依序找：
+   manual_price_snapshot_overrides.csv -> last_price_snapshot.csv -> kline_cache -> yfinance
+4. 輸出：
+   data/last_price_snapshot.csv
+   data/normalized_decision_output.csv
+   data/normalized_decision_output_enriched.csv
+   runtime/auto_decision_pipeline.json
+   runtime/price_snapshot_auto_builder.json
+   runtime/decision_price_bridge_plus.json
+
+注意：
+- 這是相容版，不會回退你現在 control_tower 的 true broker / recovery / release 鏈。
+- 若環境沒有網路，yfinance 補價會失敗，但仍會先吃本地 snapshot / cache。

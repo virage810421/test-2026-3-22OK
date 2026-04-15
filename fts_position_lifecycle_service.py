@@ -24,6 +24,8 @@ class PositionLifecycleService:
         self.path = PATHS.runtime_dir / 'position_lifecycle.json'
         self.csv_path = PATHS.runtime_dir / 'position_lifecycle_snapshot.csv'
         self.action_plan_path = PATHS.runtime_dir / 'position_lifecycle_action_plan.json'
+        self.stop_payload_csv_path = PATHS.data_dir / 'stop_replace_payloads.csv'
+        self.stop_payload_runtime_path = PATHS.runtime_dir / 'stop_replace_payloads.csv'
         self.history_path = PATHS.runtime_dir / 'position_lifecycle_history.jsonl'
 
     def _read_csv_first(self, candidates: list[Path]) -> tuple[Path | None, pd.DataFrame]:
@@ -128,12 +130,16 @@ class PositionLifecycleService:
         if positions_df.empty:
             empty_plan = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'position_lifecycle_action_plan_ready', 'actions': []}
             self.action_plan_path.write_text(json.dumps(empty_plan, ensure_ascii=False, indent=2), encoding='utf-8')
+            pd.DataFrame([]).to_csv(self.stop_payload_csv_path, index=False, encoding='utf-8-sig')
+            pd.DataFrame([]).to_csv(self.stop_payload_runtime_path, index=False, encoding='utf-8-sig')
             payload = {
                 'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'module_version': self.MODULE_VERSION,
                 'status': 'no_active_positions',
                 'message': '尚無 active_positions.csv；生命週期服務已就緒，等有持倉後會開始逐日記錄。',
                 'action_plan_json': str(self.action_plan_path),
+            'stop_replace_payload_csv': str(self.stop_payload_csv_path),
+            'stop_replace_payload_runtime_csv': str(self.stop_payload_runtime_path),
                 'positions': {},
                 'wrong_exit_statistics': self._wrong_exit_stats({}),
                 'summary': {'position_count': 0, 'exit_count': 0, 'reduce_count': 0, 'defend_count': 0, 'action_plan_count': 0},
@@ -157,9 +163,9 @@ class PositionLifecycleService:
             ticker = self._ticker(row)
             if not ticker:
                 continue
-            entry = self._num(row, ['Entry_Price', 'entry_price', 'AvgCost', 'avg_cost', '成本', '均價'], 0.0)
-            qty = int(max(0, round(self._num(row, ['Qty', 'qty', 'Quantity', 'shares', '股數'], 0.0))))
-            close = self._num(row, ['Current_Close', 'Close', 'Last', 'Reference_Price', '市價'], 0.0)
+            entry = self._num(row, ['Entry_Price', 'entry_price', 'AvgCost', 'avg_cost', '進場價', '成本', '均價'], 0.0)
+            qty = int(max(0, round(self._num(row, ['Qty', 'qty', 'Quantity', 'shares', '進場股數', '股數'], 0.0))))
+            close = self._num(row, ['Current_Close', 'Close', 'Last', 'Reference_Price', '目前股價', '市價'], 0.0)
             entry_date = self._parse_date(row.get('Entry_Date') or row.get('entry_date') or row.get('建倉日期'))
             drow = decisions_by_ticker.get(ticker)
             if drow is not None and close <= 0:
@@ -229,16 +235,37 @@ class PositionLifecycleService:
                     fh.write(json.dumps(r, ensure_ascii=False) + '\n')
 
         action_plan = []
+        stop_replace_rows = []
         for r in out_rows:
             rec = str(r.get('recommendation') or '').upper()
             if rec in {'EXIT', 'REDUCE', 'DEFEND'}:
                 qty = int(r.get('qty') or 0)
                 action_qty = qty if rec == 'EXIT' else (max(1, qty // 2) if rec == 'REDUCE' else 0)
                 defend_action = 'TIGHTEN_STOP_AND_REPLACE_PROTECTIVE_ORDER' if rec == 'DEFEND' else ''
-                action = {'ticker': r.get('ticker'), 'recommendation': rec, 'action': ('SELL' if rec in {'EXIT', 'REDUCE'} else defend_action), 'qty': action_qty, 'reference_price': r.get('current_close'), 'attribution': r.get('exit_attribution'), 'source': 'position_lifecycle_service', 'tighten_stop': rec == 'DEFEND', 'replace_protective_order': rec == 'DEFEND', 'reduce_risk': rec in {'REDUCE', 'DEFEND'}}
+                action = {'ticker': r.get('ticker'), 'recommendation': rec, 'action': ('SELL' if rec in {'EXIT', 'REDUCE'} else defend_action), 'qty': action_qty, 'reference_price': r.get('current_close'), 'attribution': r.get('exit_attribution'), 'source': 'position_lifecycle_service', 'tighten_stop': rec == 'DEFEND', 'replace_protective_order': rec == 'DEFEND', 'reduce_risk': rec in {'REDUCE', 'DEFEND'}, 'trailing_stop_price': r.get('trailing_stop_price')}
                 action_plan.append(action)
+                if rec == 'DEFEND' and float(r.get('trailing_stop_price') or 0) > 0 and qty > 0:
+                    position_side = 'SHORT' if ('空' in str(decisions_by_ticker.get(str(r.get('ticker') or '').upper(), {}).get('Direction', '')) or 'SHORT' in str(decisions_by_ticker.get(str(r.get('ticker') or '').upper(), {}).get('Direction', '')).upper()) else 'LONG'
+                    stop_replace_rows.append({
+                        'Ticker': r.get('ticker'),
+                        'Position_Side': position_side,
+                        'Current_Position_Qty': qty,
+                        'Desired_Stop_Price': float(r.get('trailing_stop_price') or 0),
+                        'Target_Position_Multiplier': round(float(getattr(CONFIG, 'EXIT_DEFEND_POSITION_MULTIPLIER', 0.60) or 0.60), 4),
+                        'Exit_State': 'DEFEND',
+                        'Exit_Action': 'TIGHTEN_STOP',
+                        'Should_Replace_Stop': True,
+                        'Stop_Workflow_Mode': 'UPSERT_PROTECTIVE_STOP',
+                        'Reference_Price': r.get('current_close'),
+                        'Client_Order_ID': f"STOP-{r.get('ticker')}-{today.replace('-', '')}",
+                        'Broker_Stop_Order_ID': '',
+                        'Note': str(r.get('exit_attribution') or 'position_lifecycle_defend'),
+                    })
                 append_execution_journal_event('POSITION_LIFECYCLE_ACTION_PLANNED', source='position_lifecycle_service', ticker=r.get('ticker'), status=rec, action=action['action'], qty=action_qty, reference_price=r.get('current_close'), reason=r.get('exit_attribution'))
         self.action_plan_path.write_text(json.dumps({'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'status': 'position_lifecycle_action_plan_ready', 'actions': action_plan}, ensure_ascii=False, indent=2), encoding='utf-8')
+        stop_df = pd.DataFrame(stop_replace_rows)
+        stop_df.to_csv(self.stop_payload_csv_path, index=False, encoding='utf-8-sig')
+        stop_df.to_csv(self.stop_payload_runtime_path, index=False, encoding='utf-8-sig')
         wrong_exit_statistics = self._wrong_exit_stats(positions)
         payload = {
             'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -247,6 +274,8 @@ class PositionLifecycleService:
             'source': str(source),
             'snapshot_csv': str(self.csv_path),
             'action_plan_json': str(self.action_plan_path),
+            'stop_replace_payload_csv': str(self.stop_payload_csv_path),
+            'stop_replace_payload_runtime_csv': str(self.stop_payload_runtime_path),
             'history_jsonl': str(self.history_path),
             'positions': positions,
             'wrong_exit_statistics': wrong_exit_statistics,

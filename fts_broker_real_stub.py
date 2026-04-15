@@ -1145,3 +1145,41 @@ class FormalRealBrokerStub(_PatchedRealBrokerStubBase):
     CALLBACK_MAPPING_LAYER = "fts_broker_callback_mapping.BrokerCallbackMapper"
 
 RealBrokerStub = FormalRealBrokerStub
+
+
+# ---- v84 live-closure helper patch ----
+def _rbs_get_open_orders(self):
+    getter = getattr(self, 'get_open_orders_dicts', None)
+    if callable(getter):
+        return getter() or []
+    rows = []
+    for row in getattr(self, '_orders', {}).values():
+        if str(row.get('status', '')).upper() in {'SUBMITTED', 'PARTIALLY_FILLED', 'NEW', 'PENDING_SUBMIT'}:
+            rows.append(dict(row))
+    return rows
+
+
+def _rbs_export_broker_snapshot(self):
+    try:
+        cash = self.get_cash()
+    except Exception:
+        cash = {}
+    return {
+        'generated_at': now_str(),
+        'broker_kind': 'real_stub',
+        'orders': _rbs_get_open_orders(self),
+        'fills': self.get_fill_history_dicts() if callable(getattr(self, 'get_fill_history_dicts', None)) else list(getattr(self, '_fills', []) or []),
+        'positions': self.get_positions_detailed() if callable(getattr(self, 'get_positions_detailed', None)) else self.get_positions_rows(),
+        'cash': cash,
+        'callbacks_pending': len(getattr(self, '_callbacks', []) or []),
+    }
+
+
+try:
+    RealBrokerStub.get_open_orders = _rbs_get_open_orders
+    RealBrokerStub.export_broker_snapshot = _rbs_export_broker_snapshot
+    if 'FormalRealBrokerStub' in globals():
+        FormalRealBrokerStub.get_open_orders = _rbs_get_open_orders
+        FormalRealBrokerStub.export_broker_snapshot = _rbs_export_broker_snapshot
+except Exception as exc:
+    record_diagnostic('broker_adapter', 'broker_stub_live_closure_patch_failed', exc, severity='warning', fail_closed=False)

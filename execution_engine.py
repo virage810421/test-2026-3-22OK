@@ -188,6 +188,18 @@ class ExecutionEngine:
         print("========================================================")
 
     def _load_or_build_orders(self, decision_csv_path: str) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
+        approved_only = bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True))
+        approved_name = str(PARAMS.get('CONTROL_TOWER_APPROVED_ORDER_FILE', 'approved_executable_orders.csv'))
+        approved_candidates = [os.path.join('data', approved_name), approved_name]
+        requested_name = os.path.basename(str(decision_csv_path or ''))
+        if approved_only and requested_name != approved_name:
+            for candidate in approved_candidates:
+                if os.path.exists(candidate):
+                    decision_csv_path = candidate
+                    requested_name = approved_name
+                    break
+        if approved_only and requested_name != approved_name:
+            return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': False, 'reason': 'control_tower_approved_orders_required'}, pd.DataFrame()
         if os.path.exists(decision_csv_path):
             try:
                 df = ensure_dataframe_symbol_contract(pd.read_csv(decision_csv_path))
@@ -197,7 +209,7 @@ class ExecutionEngine:
             df = pd.DataFrame()
         if not df.empty:
             stop_df = self._load_stop_replace_df(None)
-            return self._normalize_execution_df(df), {'source': decision_csv_path, 'bridge_used': False}, stop_df
+            return self._normalize_execution_df(df), {'source': decision_csv_path, 'bridge_used': False, 'approved_only': approved_only}, stop_df
         bridge = self.level3_services.get('DecisionExecutionBridge')
         if bridge is None:
             return pd.DataFrame(), {'source': decision_csv_path, 'bridge_used': False, 'reason': 'missing_bridge'}, pd.DataFrame()

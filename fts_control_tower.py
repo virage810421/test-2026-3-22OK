@@ -33,18 +33,23 @@ from fts_project_quality_suite import ValidationSuiteBuilder
 from fts_model_gate import ModelVersionRegistry, ModelSelectionGate
 from fts_gatekeeper import LaunchGatekeeper
 from fts_live_suite import LiveReleaseGate
+from fts_real_api_readiness import RealAPIReadinessBuilder
+from fts_true_broker_readiness_gate import TrueBrokerReadinessGate
+from fts_true_broker_live_closure import TrueBrokerLiveClosureService
 from fts_operations_suite import OperatorApprovalRegistry
 from fts_execution_runtime import RecoveryEngine
+from fts_restart_recovery_service import RestartRecoveryService
 from fts_project_quality_suite import RecoveryValidationBuilder
 from fts_execution_runtime import ReconciliationEngine
 from fts_tri_lane_orchestrator import TriLaneOrchestrator
 from fts_prelive_runtime import write_json
 from fts_training_data_builder import get_dynamic_watchlist, generate_ml_dataset
+from fts_decision_desk_builder import DecisionDeskBuilder, infer_entry_state_from_row
+from fts_decision_price_bridge_plus import DecisionPriceBridgePlus
 from fts_trainer_backend import train_models
 from fts_maturity_upgrade_suite import MaturityUpgradeSuite
 from fts_execution_journal_service import append_execution_journal_event
 from fts_kill_switch import KillSwitchManager
-from fts_promoted_model_guard import PromotedModelGuard
 
 RUNTIME_DIR = PATHS.runtime_dir
 
@@ -111,20 +116,117 @@ def _runtime_cash_value(*candidates: Path) -> tuple[str | None, float | None]:
     return None, None
 
 
-def _write_decision_output_evidence(decision_df: pd.DataFrame, raw_orders: list[dict[str, Any]], final_orders: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value is None or pd.isna(value):
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+
+def _safe_bool(value: Any, default: bool = False) -> bool:
+    try:
+        if value is None or pd.isna(value):
+            return default
+        if isinstance(value, str):
+            return value.strip().lower() in {'1', 'true', 'yes', 'y', 'on'}
+        return bool(value)
+    except Exception:
+        return default
+
+
+def _entry_thresholds() -> tuple[float, float, float]:
+    try:
+        from config import PARAMS as _PARAMS  # type: ignore
+    except Exception:
+        _PARAMS = {}
+    prepare_min = float(_PARAMS.get('PREENTRY_PILOT_THRESHOLD', 0.58))
+    full_min = float(_PARAMS.get('CONFIRM_FULL_THRESHOLD', 0.66))
+    readiness_min = float(_PARAMS.get('ENTRY_READINESS_PREPARE_MIN', 0.45))
+    return prepare_min, full_min, readiness_min
+
+
+def _infer_entry_stage(row: pd.Series | dict[str, Any]) -> str:
+    stage = str(row.get('Entry_State') or row.get('Entry_Action') or row.get('Early_Path_State') or row.get('Confirm_Path_State') or '').strip().upper()
+    if stage:
+        return stage
+    try:
+        inferred_stage, _, _, _, _ = infer_entry_state_from_row(dict(row))
+        return inferred_stage if inferred_stage != 'NO_ENTRY' else ''
+    except Exception:
+        prepare_min, full_min, readiness_min = _entry_thresholds()
+        preentry_score = _safe_float(row.get('PreEntry_Score', 0.0), 0.0)
+        confirm_score = _safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0)
+        entry_readiness = _safe_float(row.get('Entry_Readiness', 0.0), 0.0)
+        signal_conf = _safe_float(row.get('Signal_Confidence', row.get('SignalConfidence', row.get('訊號信心分數(%)', 0.0))), 0.0)
+        if signal_conf > 1.5:
+            signal_conf /= 100.0
+        score_gap = abs(_safe_float(row.get('Score_Gap', 0.0), 0.0))
+        if confirm_score >= full_min and _safe_float(row.get('AI_Proba', 0.0), 0.0) >= max(0.50, full_min - 0.08):
+            return 'FULL_ENTRY'
+        if preentry_score >= prepare_min or (signal_conf >= max(0.40, prepare_min - 0.08) and score_gap >= 2.0):
+            return 'PILOT_ENTRY'
+        if entry_readiness >= readiness_min or signal_conf >= readiness_min or score_gap >= 1.0 or preentry_score > 0 or confirm_score > 0:
+            return 'PREPARE'
+        return ''
+
+
+def _build_order_blockers(row: pd.Series | dict[str, Any], ticker: str, action: str, stage: str) -> list[str]:
+    blockers: list[str] = []
+    desk_usable = _safe_bool(row.get('DeskUsable', not _safe_bool(row.get('FallbackBuild', False), False)), True)
+    market_rule_known = 'MarketRulePassed' in row
+    market_rule_passed = _safe_bool(row.get('MarketRulePassed', False), False)
+    qty = int(max(0, round(_safe_float(row.get('Target_Qty', row.get('TargetQty', 0)), 0.0))))
+    ref_price = _safe_float(row.get('Reference_Price', row.get('ref_price', 0.0)), 0.0)
+    active_position_qty = int(max(0, round(_safe_float(row.get('Active_Position_Qty', row.get('Position_Qty', row.get('持倉張數', 0))), 0.0))))
+    has_exec_flag = ('ExecutionEligible' in row) or ('CanAutoSubmit' in row)
+    inferred_exec = ((action in {'BUY', 'LONG', 'SHORT'} and stage in {'PILOT_ENTRY', 'FULL_ENTRY'} and qty > 0 and ref_price > 0) or (action in {'SELL', 'COVER'} and (qty > 0 or active_position_qty > 0) and ref_price > 0))
+    execution_eligible = _safe_bool(row.get('ExecutionEligible', row.get('CanAutoSubmit', inferred_exec)), inferred_exec)
+    if not desk_usable:
+        blockers.append('desk_unusable')
+    if has_exec_flag and not execution_eligible:
+        blockers.append('execution_ineligible')
+    if qty <= 0:
+        blockers.append('target_qty_missing_or_zero')
+    if ref_price <= 0:
+        blockers.append('reference_price_missing_or_zero')
+    if market_rule_known and not market_rule_passed:
+        blockers.append('market_rule_blocked')
+    if action in {'BUY', 'LONG', 'SHORT'} and not stage:
+        blockers.append('entry_stage_missing')
+    if action in {'SELL', 'COVER'} and active_position_qty <= 0 and qty <= 0:
+        blockers.append('exit_without_active_position')
+    return list(dict.fromkeys(blockers))
+
+
+def _write_decision_output_evidence(decision_df: pd.DataFrame, raw_orders: list[dict[str, Any]], final_orders: list[dict[str, Any]], normalization_blocked: list[dict[str, Any]] | None = None) -> tuple[str, dict[str, Any]]:
     decision_preview: list[dict[str, Any]] = []
+    near_miss_preview: list[dict[str, Any]] = []
     action_counts: dict[str, int] = {}
     stage_counts = {'PREPARE': 0, 'PILOT': 0, 'FULL': 0}
+    normalization_blocked = normalization_blocked or []
     if decision_df is not None and not decision_df.empty:
-        for _, row in decision_df.head(50).iterrows():
+        for _, row in decision_df.head(80).iterrows():
             action = str(row.get('Action') or row.get('Decision') or row.get('Signal') or '').strip().upper()
-            stage = str(row.get('Entry_State') or row.get('Entry_Action') or row.get('Early_Path_State') or row.get('Confirm_Path_State') or '').strip()
+            if not action:
+                stage = _infer_entry_stage(row)
+                direction = str(row.get('Direction') or row.get('direction') or '').strip().upper()
+                if stage in {'PILOT_ENTRY', 'FULL_ENTRY'}:
+                    action = 'SHORT' if ('空' in direction or 'SHORT' in direction) else 'BUY'
+                elif 'EXIT' in str(row.get('Exit_State') or '').upper() or 'REDUCE' in str(row.get('Exit_Action') or '').upper():
+                    action = 'SELL'
+                else:
+                    action = 'HOLD'
+            stage = _infer_entry_stage(row)
             score = row.get('Score', row.get('System_Score', row.get('Signal_Score', None)))
+            preentry_score = _safe_float(row.get('PreEntry_Score', 0.0), 0.0)
+            confirm_score = _safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0)
+            entry_readiness = _safe_float(row.get('Entry_Readiness', 0.0), 0.0)
+            breakout_risk = _safe_float(row.get('Breakout_Risk_Next3', 0.0), 0.0)
+            reversal_risk = _safe_float(row.get('Reversal_Risk_Next3', 0.0), 0.0)
+            exit_hazard = _safe_float(row.get('Exit_Hazard_Score', 0.0), 0.0)
             reason = str(row.get('Reason') or row.get('觸發條件明細') or row.get('Golden_Type') or row.get('Setup_Tag') or '').strip()
-            if not reason and action == 'SELL':
-                reason = 'sell_signal_without_executable_entry'
-            if not stage and action in {'BUY', 'LONG'}:
-                stage = 'UNSPECIFIED_ENTRY'
             prepare = 'PREPARE' in stage.upper() or '布局' in stage
             pilot = 'PILOT' in stage.upper() or '試單' in stage
             full = 'FULL' in stage.upper() or '確認' in stage
@@ -135,6 +237,9 @@ def _write_decision_output_evidence(decision_df: pd.DataFrame, raw_orders: list[
             if full:
                 stage_counts['FULL'] += 1
             action_counts[action or 'UNKNOWN'] = action_counts.get(action or 'UNKNOWN', 0) + 1
+            blockers = _build_order_blockers(row, str(row.get('Ticker') or row.get('Ticker SYMBOL') or '').strip(), action, stage)
+            if not reason and blockers:
+                reason = '|'.join(blockers[:4])
             decision_preview.append({
                 'ticker': str(row.get('Ticker') or row.get('Ticker SYMBOL') or '').strip(),
                 'action': action,
@@ -143,20 +248,41 @@ def _write_decision_output_evidence(decision_df: pd.DataFrame, raw_orders: list[
                 'PILOT': pilot,
                 'FULL': full,
                 'score': score,
+                'preentry_score': round(preentry_score, 4),
+                'confirm_score': round(confirm_score, 4),
+                'entry_readiness': round(entry_readiness, 4),
+                'breakout_risk': round(breakout_risk, 4),
+                'reversal_risk': round(reversal_risk, 4),
+                'exit_hazard': round(exit_hazard, 4),
                 'reason': reason,
+                'blockers': blockers[:8],
                 'timestamp': now_str(),
             })
+            if blockers and (prepare or pilot or full or preentry_score > 0 or confirm_score > 0 or entry_readiness > 0):
+                near_miss_preview.append({
+                    'ticker': str(row.get('Ticker') or row.get('Ticker SYMBOL') or '').strip(),
+                    'action': action,
+                    'inferred_stage': stage or 'NO_ENTRY',
+                    'preentry_score': round(preentry_score, 4),
+                    'confirm_score': round(confirm_score, 4),
+                    'entry_readiness': round(entry_readiness, 4),
+                    'blockers': blockers[:8],
+                })
     payload = {
         'generated_at': now_str(),
-        'status': 'decision_output_ready' if not decision_df.empty else 'decision_output_missing',
-        'decision_row_count': int(len(decision_df)),
+        'status': 'decision_output_ready' if decision_df is not None and not decision_df.empty else 'decision_output_missing',
+        'decision_row_count': int(len(decision_df)) if decision_df is not None else 0,
         'raw_order_count': int(len(raw_orders)),
         'normalized_order_count': int(len(final_orders)),
+        'normalization_blocked_count': int(len(normalization_blocked)),
         'tickers': sorted({str(o.get('ticker') or '').upper() for o in final_orders if o.get('ticker')})[:200],
         'action_counts': action_counts,
         'stage_counts': stage_counts,
         'has_entry_stage_signal': bool(stage_counts['PREPARE'] or stage_counts['PILOT'] or stage_counts['FULL']),
-        'decision_preview': decision_preview,
+        'decision_preview': decision_preview[:50],
+        'near_miss_count': int(len(near_miss_preview)),
+        'near_miss_preview': near_miss_preview[:30],
+        'normalization_blocked_preview': normalization_blocked[:30],
         'source_candidates': [str(p) for p in [
             PATHS.data_dir / 'normalized_decision_output_enriched.csv',
             PATHS.data_dir / 'normalized_decision_output.csv',
@@ -166,307 +292,146 @@ def _write_decision_output_evidence(decision_df: pd.DataFrame, raw_orders: list[
     }
     path = PATHS.runtime_dir / 'decision_output_evidence.json'
     write_json(path, payload)
+    near_miss_path = PATHS.runtime_dir / 'entry_near_miss_report.json'
+    write_json(near_miss_path, {
+        'generated_at': now_str(),
+        'status': 'entry_near_miss_report_ready',
+        'near_miss_count': int(len(near_miss_preview)),
+        'items': near_miss_preview[:100],
+    })
     return str(path), payload
 
 
-def _collect_reconciliation_inputs() -> dict[str, Any]:
-    local_orders_src, local_orders = _load_rows_from_json_candidates([
-        PATHS.runtime_dir / 'execution_orders.json',
-        PATHS.runtime_dir / 'execution_runtime.json',
-        PATHS.runtime_dir / 'decision_execution_bridge.json',
-        PATHS.state_dir / 'engine_state.json',
-    ], record_keys=('orders', 'open_orders', 'rows', 'records', 'events'))
-    broker_orders_src, broker_orders = _load_rows_from_json_candidates([
-        PATHS.runtime_dir / 'paper_orders.json',
-        PATHS.runtime_dir / 'broker_orders.json',
-        PATHS.runtime_dir / 'paper_broker_snapshot.json',
-        PATHS.state_dir / 'restart_recovery_snapshot.json',
-        PATHS.state_dir / 'engine_state.json',
-    ], record_keys=('orders', 'open_orders', 'rows', 'records', 'events'))
-    local_fills_src, local_fills = _load_rows_from_json_candidates([
-        PATHS.runtime_dir / 'execution_fills.json',
-        PATHS.runtime_dir / 'execution_runtime.json',
-        PATHS.runtime_dir / 'decision_execution_bridge.json',
-        PATHS.state_dir / 'engine_state.json',
-    ], record_keys=('fills', 'recent_fills', 'rows', 'records', 'events'))
-    broker_fills_src, broker_fills = _load_rows_from_json_candidates([
-        PATHS.runtime_dir / 'paper_fills.json',
-        PATHS.runtime_dir / 'broker_fills.json',
-        PATHS.runtime_dir / 'paper_broker_snapshot.json',
-        PATHS.state_dir / 'restart_recovery_snapshot.json',
-        PATHS.state_dir / 'engine_state.json',
-    ], record_keys=('fills', 'recent_fills', 'rows', 'records', 'events'))
-    local_positions_src, local_positions = _load_rows_from_json_candidates([
-        PATHS.runtime_dir / 'execution_positions_snapshot.json',
-        PATHS.runtime_dir / 'execution_runtime.json',
-        PATHS.state_dir / 'engine_state.json',
-    ], record_keys=('positions', 'rows', 'records', 'events'))
-    broker_positions_src, broker_positions = _load_rows_from_json_candidates([
-        PATHS.runtime_dir / 'paper_positions.json',
-        PATHS.runtime_dir / 'broker_positions.json',
-        PATHS.runtime_dir / 'paper_broker_snapshot.json',
-        PATHS.state_dir / 'restart_recovery_snapshot.json',
-        PATHS.state_dir / 'engine_state.json',
-    ], record_keys=('positions', 'rows', 'records', 'events'))
-    local_cash_src, local_cash = _runtime_cash_value(PATHS.runtime_dir / 'execution_runtime.json', PATHS.state_dir / 'engine_state.json')
-    broker_cash_src, broker_cash = _runtime_cash_value(PATHS.runtime_dir / 'paper_broker_snapshot.json', PATHS.state_dir / 'restart_recovery_snapshot.json', PATHS.state_dir / 'engine_state.json')
-    if local_cash is None:
-        local_cash = CONFIG.starting_cash
-    if broker_cash is None:
-        broker_cash = local_cash
-    return {
-        'local_orders': local_orders, 'broker_orders': broker_orders, 'local_fills': local_fills, 'broker_fills': broker_fills,
-        'local_positions': local_positions, 'broker_positions': broker_positions, 'local_cash': local_cash, 'broker_cash': broker_cash,
-        'sources': {
-            'local_orders': local_orders_src, 'broker_orders': broker_orders_src, 'local_fills': local_fills_src, 'broker_fills': broker_fills_src,
-            'local_positions': local_positions_src, 'broker_positions': broker_positions_src, 'local_cash': local_cash_src, 'broker_cash': broker_cash_src,
-        },
-    }
 
-
-
-def _load_runtime_json(path: Path) -> dict[str, Any]:
+def _ensure_decision_desk_ready() -> tuple[str, dict[str, Any]]:
+    if not _safe_bool(getattr(__import__("config"), "PARAMS", {}).get('CONTROL_TOWER_BUILD_DECISION_DESK', True), True):
+        return '', {'status': 'decision_desk_builder_skipped'}
     try:
-        if path.exists():
-            import json
-            data = json.loads(path.read_text(encoding='utf-8'))
-            return data if isinstance(data, dict) else {}
+        return DecisionDeskBuilder().build_summary()
     except Exception as exc:
-        record_issue('control_tower', 'load_runtime_json_failed', exc, severity='WARNING', fail_mode='fail_open')
-    return {}
+        record_issue('control_tower', 'decision_desk_builder_failed', exc, severity='ERROR', fail_mode='fail_closed')
+        return '', {'status': 'decision_desk_builder_error', 'error': repr(exc)}
 
 
-def _run_maturity_upgrade_suite(stage: str = 'control_tower') -> tuple[str, dict[str, Any]]:
+
+
+def _ensure_auto_decision_pipeline() -> tuple[str, dict[str, Any]]:
+    builder_path, builder_payload = _ensure_decision_desk_ready()
     try:
-        path, payload = MaturityUpgradeSuite().build()
-        payload = payload if isinstance(payload, dict) else {'value': payload}
-        payload = dict(payload); payload['invoked_by'] = stage
-        return str(path), payload
+        bridge_path, bridge_payload = DecisionPriceBridgePlus().build()
+        payload = {
+            'generated_at': now_str(),
+            'status': 'auto_decision_pipeline_ready',
+            'decision_desk_builder': {'path': str(builder_path), 'payload': builder_payload},
+            'decision_price_bridge_plus': {'path': str(bridge_path), 'payload': bridge_payload},
+        }
     except Exception as exc:
-        record_issue('control_tower', 'maturity_upgrade_suite_failed', exc, severity='ERROR', fail_mode='fail_closed')
-        return str(PATHS.runtime_dir / 'maturity_upgrade_suite.json'), {'status': 'error', 'error': repr(exc), 'invoked_by': stage}
-
-
-def _apply_entry_tracking_gate(orders: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    journal = _load_runtime_json(PATHS.runtime_dir / 'entry_tracking_journal.json')
-    states = journal.get('positions', {}) if isinstance(journal, dict) else {}
-    passed, blocked, capped = [], [], []
-    for order in orders:
-        ticker = str(order.get('ticker') or '').upper()
-        state = states.get(ticker, {}) if isinstance(states, dict) else {}
-        followup = str(state.get('followup_status') or '')
-        stage = str(state.get('stage') or '')
-        o = dict(order)
-        if 'expired' in followup and stage != 'FULL_ENTRY':
-            o['gate_blocked_by'] = 'entry_tracking_expired_without_confirmation'
-            o['entry_tracking_state'] = state
-            blocked.append(o)
-            append_execution_journal_event(
-                'ORDER_BLOCKED_BY_ENTRY_TRACKING', source='control_tower_entry_gate', ticker=ticker,
-                action=o.get('action'), qty=o.get('target_qty', o.get('qty', 0)), reference_price=o.get('reference_price', o.get('ref_price')),
-                status='BLOCKED', reason=followup, stage=stage,
-            )
-            continue
-        if stage == 'PILOT_ENTRY':
-            old_qty = int(o.get('target_qty', o.get('qty', 0)) or 0)
-            cap_qty = max(1, old_qty // 3) if old_qty > 0 else 0
-            if cap_qty and cap_qty < old_qty:
-                o['target_qty_before_entry_gate'] = old_qty
-                o['qty_before_entry_gate'] = old_qty
-                o['target_qty'] = cap_qty
-                o['qty'] = cap_qty
-                o['entry_tracking_gate_action'] = 'pilot_qty_capped_to_one_third'
-                capped.append({'ticker': ticker, 'old_qty': old_qty, 'new_qty': cap_qty})
-                append_execution_journal_event(
-                    'ORDER_QTY_CAPPED_BY_ENTRY_TRACKING', source='control_tower_entry_gate', ticker=ticker,
-                    action=o.get('action'), qty=cap_qty, reference_price=o.get('reference_price', o.get('ref_price')),
-                    status='CAPPED', reason='pilot_qty_capped_to_one_third', stage=stage, old_qty=old_qty,
-                )
-        if state:
-            o['entry_tracking_stage'] = stage
-            o['entry_tracking_followup_status'] = followup
-        append_execution_journal_event(
-            'ORDER_PASSED_ENTRY_TRACKING', source='control_tower_entry_gate', ticker=ticker,
-            action=o.get('action'), qty=o.get('target_qty', o.get('qty', 0)), reference_price=o.get('reference_price', o.get('ref_price')),
-            status='PASSED', reason=followup or 'entry_tracking_ok', stage=stage,
-        )
-        passed.append(o)
-    return passed, {
-        'status': 'entry_tracking_gate_ready' if journal else 'entry_tracking_gate_no_journal_yet',
-        'input_order_count': len(orders),
-        'passed_order_count': len(passed),
-        'blocked_order_count': len(blocked),
-        'pilot_qty_capped_count': len(capped),
-        'blocked_orders': blocked[:50],
-        'capped_orders': capped[:50],
-        'journaled_gate_events': True,
-        'policy': {'block_expired_prepare_or_pilot': True, 'cap_pilot_entry_qty_to_one_third': True},
-    }
-
-
-def _apply_position_lifecycle_gate(orders: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    lifecycle = _load_runtime_json(PATHS.runtime_dir / 'position_lifecycle.json')
-    positions = lifecycle.get('positions', {}) if isinstance(lifecycle, dict) else {}
-    out = list(orders)
-    generated = []
-    existing = {(str(o.get('ticker') or '').upper(), str(o.get('action') or '').upper()) for o in out}
-    if isinstance(positions, dict):
-        for ticker, pos in positions.items():
-            if not isinstance(pos, dict):
-                continue
-            rec = str(pos.get('recommendation') or '').upper()
-            qty = int(pos.get('qty') or 0)
-            px = float(pos.get('current_close') or 0.0)
-            if qty <= 0 or px <= 0 or rec not in {'EXIT', 'REDUCE'}:
-                if rec == 'DEFEND':
-                    append_execution_journal_event('POSITION_DEFEND_JOURNAL_ONLY', source='control_tower_position_gate', ticker=ticker, status='DEFEND', qty=qty, reference_price=px, reason=pos.get('exit_attribution'))
-                continue
-            action = 'SELL'
-            target_qty = qty if rec == 'EXIT' else max(1, qty // 2)
-            if (str(ticker).upper(), action) in existing:
-                append_execution_journal_event('POSITION_LIFECYCLE_ORDER_SUPPRESSED_EXISTING_SELL', source='control_tower_position_gate', ticker=ticker, status=rec, qty=target_qty, reference_price=px, reason='existing_sell_order')
-                continue
-            o = {
-                'ticker': str(ticker).upper(), 'action': action, 'target_qty': target_qty,
-                'reference_price': px, 'qty': target_qty, 'ref_price': px,
-                'strategy_name': 'position_lifecycle_' + rec.lower(), 'industry': '持倉生命週期',
-                'position_lifecycle_recommendation': rec,
-                'position_lifecycle_attribution': pos.get('exit_attribution'),
-            }
-            out.append(o)
-            generated.append(o)
-            append_execution_journal_event('ORDER_GENERATED_BY_POSITION_LIFECYCLE', source='control_tower_position_gate', ticker=ticker, action=action, qty=target_qty, reference_price=px, status=rec, reason=pos.get('exit_attribution'), strategy_name=o['strategy_name'])
-    return out, {
-        'status': 'position_lifecycle_gate_ready' if lifecycle else 'position_lifecycle_gate_no_snapshot_yet',
-        'input_order_count': len(orders),
-        'output_order_count': len(out),
-        'generated_exit_or_reduce_order_count': len(generated),
-        'generated_orders': generated[:50],
-        'journaled_gate_events': True,
-        'policy': {'exit_generates_full_sell': True, 'reduce_generates_half_sell': True, 'defend_is_journal_only': True},
-    }
-
-
-def _write_json(name: str, payload: dict[str, Any]) -> str:
-    path = RUNTIME_DIR / name
+        record_issue('control_tower', 'auto_decision_pipeline_failed', exc, severity='ERROR', fail_mode='fail_closed')
+        payload = {
+            'generated_at': now_str(),
+            'status': 'auto_decision_pipeline_partial',
+            'decision_desk_builder': {'path': str(builder_path), 'payload': builder_payload},
+            'decision_price_bridge_plus': {'path': '', 'payload': {'status': 'error', 'error': repr(exc)}},
+        }
+    path = PATHS.runtime_dir / 'auto_decision_pipeline.json'
     write_json(path, payload)
-    return str(path)
-
-
-def _call_script(script_name: str, args: Optional[list[str]] = None, allow_missing: bool = True) -> dict[str, Any]:
-    args = args or []
-    script_path = PATHS.base_dir / script_name
-    if not script_path.exists():
-        if allow_missing:
-            return {'status': 'missing', 'script': script_name, 'returncode': None, 'args': args}
-        raise FileNotFoundError(f'找不到腳本：{script_name}')
-    env = {'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
-    proc = subprocess.run(
-        [sys.executable, str(script_path), *args],
-        cwd=str(PATHS.base_dir),
-        capture_output=True,
-        text=True,
-        encoding='utf-8',
-        errors='replace',
-        env=env,
-    )
-    return {
-        'status': 'ok' if proc.returncode == 0 else 'error',
-        'script': script_name,
-        'returncode': proc.returncode,
-        'args': args,
-        'stdout_tail': '\n'.join((proc.stdout or '').splitlines()[-20:]),
-        'stderr_tail': '\n'.join((proc.stderr or '').splitlines()[-20:]),
-    }
-
-
-def _extract_path_payload(result: Any, fallback_path: Optional[Path] = None) -> tuple[str, dict[str, Any]]:
-    if isinstance(result, tuple):
-        if len(result) >= 2:
-            path = result[0]
-            payload = result[1]
-            if not isinstance(payload, dict):
-                payload = {'value': payload}
-            if len(result) > 2:
-                payload = dict(payload)
-                payload['_extra_return_values'] = list(result[2:])
-            return str(path), payload
-        if len(result) == 1:
-            only = result[0]
-            if isinstance(only, dict):
-                return str(fallback_path or ''), only
-            return str(only), {}
-    if isinstance(result, dict):
-        return str(fallback_path or ''), result
-    if isinstance(result, (str, Path)):
-        return str(result), {}
-    if result is None:
-        return str(fallback_path or ''), {}
-    return str(fallback_path or ''), {'value': result}
-
-
-def _call_builder_result(builder: Any, method_name: str, *args: Any, fallback_path: Optional[Path] = None, **kwargs: Any) -> tuple[str, dict[str, Any]]:
-    method = getattr(builder, method_name)
-    try:
-        return _extract_path_payload(method(*args, **kwargs), fallback_path=fallback_path)
-    except TypeError:
-        sig = inspect.signature(method)
-        accepted_kwargs = {name: value for name, value in kwargs.items() if name in sig.parameters}
-        return _extract_path_payload(method(*args, **accepted_kwargs), fallback_path=fallback_path)
-
-
-def _safe_build(module_name: str, class_name: str, method_name: str, kwargs: Optional[dict[str, Any]] = None) -> dict[str, Any]:
-    kwargs = kwargs or {}
-    try:
-        mod = importlib.import_module(module_name)
-        cls = getattr(mod, class_name)
-        builder = cls()
-        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            result = getattr(builder, method_name)(**kwargs)
-        if isinstance(result, tuple) and len(result) == 2:
-            path, payload = result
-            return {'status': 'ok', 'path': str(path), 'payload': payload}
-        return {'status': 'ok', 'payload': result}
-    except Exception as exc:  # runtime diagnostics
-        record_issue('control_tower', 'run_service_failed', exc, severity='ERROR', fail_mode='fail_closed')
-        return {'status': 'error', 'error': repr(exc), 'module': module_name, 'class_name': class_name, 'method': method_name}
-
+    return str(path), payload
 
 def _load_decision_df() -> pd.DataFrame:
+    _ensure_auto_decision_pipeline()
     candidates = [
         PATHS.data_dir / 'normalized_decision_output_enriched.csv',
         PATHS.data_dir / 'normalized_decision_output.csv',
         PATHS.base_dir / 'daily_decision_desk.csv',
         PATHS.data_dir / 'daily_decision_desk.csv',
     ]
+    if _safe_bool(getattr(__import__("config"), "PARAMS", {}).get('CONTROL_TOWER_LOAD_PRERISK_IF_DECISION_EMPTY', True), True):
+        candidates.extend([PATHS.base_dir / 'daily_decision_desk_prerisk.csv', PATHS.data_dir / 'daily_decision_desk_prerisk.csv'])
     for candidate in candidates:
         if candidate.exists():
             try:
-                return pd.read_csv(candidate)
+                df = pd.read_csv(candidate)
+                if df is None or df.empty:
+                    continue
+                if 'prerisk' in candidate.name.lower() and 'Entry_State' not in df.columns:
+                    try:
+                        df = DecisionDeskBuilder()._enrich_existing(df)
+                    except Exception as exc:
+                        record_issue('control_tower', 'prerisk_contract_bridge_failed', exc, severity='ERROR', fail_mode='fail_open')
+                if df is not None and not df.empty:
+                    return df
             except Exception as exc:  # runtime diagnostics
                 record_issue('control_tower', 'read_decision_csv_candidate_failed', exc, severity='WARNING', fail_mode='fail_open')
                 continue
     return pd.DataFrame()
 
 
-def _normalize_orders(df: pd.DataFrame) -> list[dict[str, Any]]:
+def _normalize_orders(df: pd.DataFrame) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if df is None or df.empty:
-        return []
-    orders = []
-    for _, row in df.head(50).iterrows():
-        ticker = str(row.get('Ticker') or row.get('ticker') or '').strip()
+        return [], []
+    orders: list[dict[str, Any]] = []
+    blocked: list[dict[str, Any]] = []
+    for _, row in df.head(120).iterrows():
+        ticker = str(row.get('Ticker') or row.get('ticker') or row.get('Ticker SYMBOL') or '').strip()
         if not ticker:
             continue
+        explicit_action = str(row.get('Action') or row.get('Decision') or row.get('Signal') or '').strip().upper()
         direction = str(row.get('Direction') or row.get('direction') or '').strip()
-        action = 'BUY'
-        if '空' in direction or 'SHORT' in direction.upper():
+        stage = _infer_entry_stage(row)
+        exit_state = str(row.get('Exit_State') or '').strip().upper()
+        exit_action = str(row.get('Exit_Action') or '').strip().upper()
+        if explicit_action in {'SELL', 'EXIT'} or exit_state == 'EXIT':
+            action = 'SELL'
+        elif explicit_action == 'REDUCE' or exit_action == 'REDUCE':
+            action = 'SELL'
+        elif explicit_action == 'COVER':
+            action = 'COVER'
+        elif explicit_action == 'SHORT':
             action = 'SHORT'
-        desk_usable = bool(row.get('DeskUsable', not bool(row.get('FallbackBuild', False))))
-        execution_eligible = bool(row.get('ExecutionEligible', row.get('CanAutoSubmit', False)))
-        market_rule_passed = bool(row.get('MarketRulePassed', False))
-        qty = int(max(0, round(float(row.get('Target_Qty', row.get('TargetQty', 0)) or 0))))
-        ref_price = float(row.get('Reference_Price', row.get('ref_price', 0.0)) or 0.0)
-        if not desk_usable or not execution_eligible or qty <= 0 or ref_price <= 0 or ('MarketRulePassed' in row and not market_rule_passed):
+        elif explicit_action in {'BUY', 'LONG'}:
+            action = 'BUY'
+        elif stage in {'PILOT_ENTRY', 'FULL_ENTRY'}:
+            action = 'SHORT' if ('空' in direction or 'SHORT' in direction.upper()) else 'BUY'
+        else:
+            blocked.append({
+                'ticker': ticker,
+                'action': 'HOLD',
+                'stage': stage or 'NO_ENTRY',
+                'preentry_score': round(_safe_float(row.get('PreEntry_Score', 0.0), 0.0), 4),
+                'confirm_score': round(_safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0), 4),
+                'entry_readiness': round(_safe_float(row.get('Entry_Readiness', 0.0), 0.0), 4),
+                'target_qty': int(max(0, round(_safe_float(row.get('Target_Qty', row.get('TargetQty', 0)), 0.0)))),
+                'reference_price': _safe_float(row.get('Reference_Price', row.get('Close', row.get('Current_Close', row.get('ref_price', 0.0)))), 0.0),
+                'blockers': ['non_executable_or_action_missing'],
+            })
+            continue
+        active_position_qty = int(max(0, round(_safe_float(row.get('Active_Position_Qty', row.get('Position_Qty', row.get('持倉張數', 0))), 0.0))))
+        qty = int(max(0, round(_safe_float(row.get('Target_Qty', row.get('TargetQty', 0)), 0.0))))
+        if action in {'BUY', 'SHORT'} and qty <= 0 and stage in {'PILOT_ENTRY', 'FULL_ENTRY'}:
+            fallback_enabled = _safe_bool(getattr(__import__("config"), "PARAMS", {}).get('FALLBACK_DECISION_ALLOW_PAPER_EXECUTION', True), True)
+            fallback_qty = int(max(0, round(_safe_float(getattr(__import__("config"), "PARAMS", {}).get('FALLBACK_DECISION_DEFAULT_TARGET_QTY', 1000), 1000.0))))
+            if fallback_enabled and _safe_float(row.get('Reference_Price', row.get('Close', row.get('Current_Close', row.get('ref_price', 0.0)))), 0.0) > 0 and fallback_qty > 0:
+                qty = fallback_qty
+        if action == 'SELL' and qty <= 0 and active_position_qty > 0:
+            qty = active_position_qty
+        if action == 'COVER' and qty <= 0 and active_position_qty > 0:
+            qty = active_position_qty
+        if action == 'SELL' and explicit_action == 'REDUCE' and active_position_qty > 0:
+            qty = max(1, active_position_qty // 2)
+        ref_price = _safe_float(row.get('Reference_Price', row.get('Close', row.get('Current_Close', row.get('ref_price', 0.0)))), 0.0)
+        blockers = _build_order_blockers({**row.to_dict(), 'Target_Qty': qty, 'Reference_Price': ref_price, 'Active_Position_Qty': active_position_qty}, ticker, action, stage)
+        if blockers:
+            blocked.append({
+                'ticker': ticker,
+                'action': action,
+                'stage': stage or 'NO_ENTRY',
+                'preentry_score': round(_safe_float(row.get('PreEntry_Score', 0.0), 0.0), 4),
+                'confirm_score': round(_safe_float(row.get('Confirm_Entry_Score', 0.0), 0.0), 4),
+                'entry_readiness': round(_safe_float(row.get('Entry_Readiness', 0.0), 0.0), 4),
+                'target_qty': qty,
+                'reference_price': ref_price,
+                'blockers': blockers,
+            })
             continue
         orders.append({
             'ticker': ticker,
@@ -475,10 +440,103 @@ def _normalize_orders(df: pd.DataFrame) -> list[dict[str, Any]]:
             'reference_price': ref_price,
             'qty': qty,
             'ref_price': ref_price,
+            'stage': stage or ('EXIT' if action in {'SELL', 'COVER'} else 'UNSPECIFIED_ENTRY'),
             'strategy_name': str(row.get('Structure', row.get('strategy_name', 'default'))),
             'industry': str(row.get('產業類別', row.get('industry', '未知'))),
         })
-    return orders
+    return orders, blocked
+
+
+
+def _apply_entry_tracking_gate(raw_orders: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    try:
+        from fts_entry_tracking_service import EntryTrackingService
+        path, payload = EntryTrackingService().build()
+    except Exception as exc:
+        record_issue('control_tower', 'entry_tracking_gate_failed', exc, severity='ERROR', fail_mode='fail_open')
+        return raw_orders, {'status': 'entry_tracking_gate_error', 'error': repr(exc), 'input_order_count': len(raw_orders), 'output_order_count': len(raw_orders)}
+    actions = payload.get('action_plan', {}).get('actions', []) if isinstance(payload, dict) else []
+    blocked_map = {str(a.get('ticker') or '').upper(): a for a in actions if 'BLOCK' in str(a.get('action') or '').upper()}
+    out: list[dict[str, Any]] = []
+    blocked: list[dict[str, Any]] = []
+    for order in raw_orders:
+        ticker = str(order.get('ticker') or '').upper()
+        stage = str(order.get('stage') or '').upper()
+        if ticker in blocked_map and order.get('action') in {'BUY', 'SHORT'}:
+            blocked.append({'ticker': ticker, 'action': order.get('action'), 'stage': stage, 'reason': blocked_map[ticker].get('reason', 'entry_tracking_blocked')})
+            continue
+        if stage == 'PILOT_ENTRY' and int(order.get('qty', 0) or 0) > 1:
+            pilot_qty = max(1, int(order.get('qty', 0) or 0) // 3)
+            order = {**order, 'qty': pilot_qty, 'target_qty': pilot_qty, 'entry_tracking_qty_capped': True}
+        out.append(order)
+    gate = {
+        'status': 'entry_tracking_gate_ready',
+        'path': str(path),
+        'input_order_count': len(raw_orders),
+        'output_order_count': len(out),
+        'blocked_count': len(blocked),
+        'blocked_preview': blocked[:30],
+        'action_plan_count': len(actions),
+    }
+    return out, gate
+
+
+def _apply_position_lifecycle_gate(raw_orders: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    try:
+        from fts_position_lifecycle_service import PositionLifecycleService
+        path, payload = PositionLifecycleService().build()
+    except Exception as exc:
+        record_issue('control_tower', 'position_lifecycle_gate_failed', exc, severity='ERROR', fail_mode='fail_open')
+        return raw_orders, {'status': 'position_lifecycle_gate_error', 'error': repr(exc), 'input_order_count': len(raw_orders), 'output_order_count': len(raw_orders)}
+    actions = payload.get('summary', {}) if isinstance(payload, dict) else {}
+    lifecycle_actions = []
+    try:
+        lifecycle_actions = __import__('json').loads((PATHS.runtime_dir / 'position_lifecycle_action_plan.json').read_text(encoding='utf-8')).get('actions', [])
+    except Exception:
+        lifecycle_actions = []
+    exit_map = {str(a.get('ticker') or '').upper(): a for a in lifecycle_actions if str(a.get('action') or '').upper() in {'SELL', 'TIGHTEN_STOP_AND_REPLACE_PROTECTIVE_ORDER'}}
+    out: list[dict[str, Any]] = []
+    lifecycle_injected: list[dict[str, Any]] = []
+    blocked_entries: list[dict[str, Any]] = []
+    seen_exit = set()
+    for order in raw_orders:
+        ticker = str(order.get('ticker') or '').upper()
+        lifecycle = exit_map.get(ticker)
+        if lifecycle and order.get('action') in {'BUY', 'SHORT'}:
+            blocked_entries.append({'ticker': ticker, 'action': order.get('action'), 'reason': lifecycle.get('attribution') or lifecycle.get('action') or 'position_lifecycle_exit_active'})
+            continue
+        out.append(order)
+    for ticker, lifecycle in exit_map.items():
+        recommendation = str(lifecycle.get('recommendation') or '').upper()
+        if recommendation in {'EXIT', 'REDUCE'} and ticker not in seen_exit:
+            qty = int(max(0, round(_safe_float(lifecycle.get('qty', 0), 0.0))))
+            ref_price = _safe_float(lifecycle.get('reference_price', 0.0), 0.0)
+            if qty > 0 and ref_price > 0:
+                lifecycle_injected.append({
+                    'ticker': ticker,
+                    'action': 'SELL',
+                    'target_qty': qty,
+                    'reference_price': ref_price,
+                    'qty': qty,
+                    'ref_price': ref_price,
+                    'stage': 'EXIT',
+                    'strategy_name': 'position_lifecycle_service',
+                    'industry': '未知',
+                    'exit_recommendation': recommendation,
+                })
+                seen_exit.add(ticker)
+    out.extend(lifecycle_injected)
+    gate = {
+        'status': 'position_lifecycle_gate_ready',
+        'path': str(path),
+        'input_order_count': len(raw_orders),
+        'output_order_count': len(out),
+        'blocked_entry_count': len(blocked_entries),
+        'blocked_entry_preview': blocked_entries[:30],
+        'injected_exit_count': len(lifecycle_injected),
+        'summary': actions,
+    }
+    return out, gate
 
 
 class _AcceptedSignal:
@@ -489,53 +547,17 @@ class _AcceptedSignal:
         self.reference_price = float(order.get('reference_price', 0.0) or 0.0)
 
 
-
-def _write_approved_execution_artifacts(orders: list[dict[str, Any]], model_guard_payload: dict[str, Any], launch_gate_payload: dict[str, Any], live_safety_payload: dict[str, Any], readiness_payload: dict[str, Any], live_release_payload: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
-    from config import PARAMS as _USER_PARAMS
-    approved_path = PATHS.data_dir / str(_USER_PARAMS.get('CONTROL_TOWER_APPROVED_ORDER_FILE', 'approved_executable_orders.csv'))
-    rows = []
-    paper_allowed = bool(launch_gate_payload.get('go_for_execution', False) and live_safety_payload.get('paper_live_safe', False))
-    promoted_ok = bool(model_guard_payload.get('can_bind_live_promoted_model', False))
-    live_release_allowed = bool(live_release_payload.get('allow_live', False))
-    live_ready = bool(readiness_payload.get('live_ready', False))
-    for order in list(orders or []):
-        row = dict(order)
-        row['control_tower_approved'] = True
-        row['approved_for_execution'] = bool(paper_allowed)
-        row['paper_execution_allowed'] = bool(paper_allowed)
-        row['live_execution_allowed'] = bool(paper_allowed and promoted_ok and live_release_allowed and live_ready)
-        row['promoted_model_required'] = True
-        row['promoted_model_ok'] = bool(promoted_ok)
-        row['live_release_allowed'] = bool(live_release_allowed)
-        row['execution_scope'] = 'LIVE' if row['live_execution_allowed'] else ('PAPER' if row['paper_execution_allowed'] else 'BLOCKED')
-        rows.append(row)
-    pd.DataFrame(rows).to_csv(approved_path, index=False, encoding='utf-8-sig')
-    manifest = {
-        'generated_at': now_str(),
-        'status': 'execution_release_manifest_ready',
-        'approved_orders_path': str(approved_path),
-        'approved_order_count': len(rows),
-        'paper_execution_unlocked': bool(paper_allowed),
-        'live_execution_unlocked': bool(paper_allowed and promoted_ok and live_release_allowed and live_ready),
-        'promoted_model_required': True,
-        'promoted_model_ok': bool(promoted_ok),
-        'model_guard_status': model_guard_payload.get('status'),
-        'live_release_status': live_release_payload.get('status'),
-        'readiness_status': readiness_payload.get('status'),
-    }
-    manifest_path = _write_json('execution_release_manifest.json', manifest)
-    return str(approved_path), manifest_path, manifest
-
 def _build_control_outputs() -> dict[str, Any]:
     health_path, health_payload = ProjectHealthcheck(PATHS.base_dir).build_report(deep=False)
     level2_path, level2_payload = run_level2_mainline()
     maturity_path, maturity_payload = _run_maturity_upgrade_suite('daily_control_outputs_pre_gate')
+    auto_decision_path, auto_decision_payload = _ensure_auto_decision_pipeline()
     decision_df = _load_decision_df()
-    raw_orders = _normalize_orders(decision_df)
+    raw_orders, normalization_blocked = _normalize_orders(decision_df)
     orders_after_entry_gate, entry_tracking_gate = _apply_entry_tracking_gate(raw_orders)
     orders, position_lifecycle_gate = _apply_position_lifecycle_gate(orders_after_entry_gate)
-    decision_evidence_path, decision_evidence_payload = _write_decision_output_evidence(decision_df, raw_orders, orders)
-    decision_execution_gate_path = _write_json('decision_execution_formal_gate.json', {'generated_at': now_str(), 'status': 'decision_execution_gate_ready', 'raw_order_count': len(raw_orders), 'final_order_count': len(orders), 'entry_tracking_gate': entry_tracking_gate, 'position_lifecycle_gate': position_lifecycle_gate, 'decision_output_evidence_path': decision_evidence_path})
+    decision_evidence_path, decision_evidence_payload = _write_decision_output_evidence(decision_df, raw_orders, orders, normalization_blocked=normalization_blocked)
+    decision_execution_gate_path = _write_json('decision_execution_formal_gate.json', {'generated_at': now_str(), 'status': 'decision_execution_gate_ready', 'raw_order_count': len(raw_orders), 'final_order_count': len(orders), 'normalization_blocked_count': len(normalization_blocked), 'normalization_blocked_preview': normalization_blocked[:30], 'entry_tracking_gate': entry_tracking_gate, 'position_lifecycle_gate': position_lifecycle_gate, 'decision_output_evidence_path': decision_evidence_path})
     accepted_signals = [_AcceptedSignal(o) for o in orders]
 
     readiness_path, readiness_payload = _call_builder_result(
@@ -571,6 +593,9 @@ def _build_control_outputs() -> dict[str, Any]:
     validation_path, validation_payload = _call_builder_result(ValidationSuiteBuilder(), 'build', launch_gate_payload, model_gate_payload, live_safety_payload, broker_approval_payload, submission_payload, fallback_path=PATHS.runtime_dir / 'validation_suite_report.json')
     recon_inputs = _collect_reconciliation_inputs()
     recon_path, recon_payload = _call_builder_result(ReconciliationEngine(), 'reconcile', recon_inputs['local_orders'], recon_inputs['broker_orders'], recon_inputs['local_fills'], recon_inputs['broker_fills'], recon_inputs['local_positions'], recon_inputs['broker_positions'], recon_inputs['local_cash'], recon_inputs['broker_cash'], fallback_path=PATHS.runtime_dir / 'reconciliation_engine.json')
+    true_broker_closure_path, true_broker_closure_payload = _call_builder_result(TrueBrokerLiveClosureService(), 'build', fallback_path=PATHS.runtime_dir / 'true_broker_live_closure.json')
+    real_api_path, real_api_payload = _call_builder_result(RealAPIReadinessBuilder(), 'build', fallback_path=PATHS.runtime_dir / 'real_api_readiness.json')
+    true_broker_path, true_broker_payload = _call_builder_result(TrueBrokerReadinessGate(), 'build', fallback_path=PATHS.runtime_dir / 'true_broker_readiness_gate.json')
     if isinstance(recon_payload, dict):
         recon_payload.setdefault('input_sources', recon_inputs.get('sources', {}))
         recon_payload.setdefault('input_counts', {
@@ -579,19 +604,13 @@ def _build_control_outputs() -> dict[str, Any]:
             'local_positions': len(recon_inputs['local_positions']), 'broker_positions': len(recon_inputs['broker_positions']),
         })
         write_json(Path(recon_path), recon_payload)
-    recovery_path, recovery_payload = (
-        _call_builder_result(RecoveryEngine(), 'build_recovery_plan', fallback_path=PATHS.runtime_dir / 'recovery_plan.json')
-        if hasattr(RecoveryEngine(), 'build_recovery_plan') else (str(PATHS.runtime_dir / 'recovery_plan.json'), {'status': 'missing_builder'})
-    )
+    recovery_service = RestartRecoveryService()
+    recovery_path, recovery_payload = recovery_service.build_plan(require_broker_snapshot=False)
     recovery_validation_path, recovery_validation_payload = _call_builder_result(RecoveryValidationBuilder(), 'build', {'total': 0}, recovery_payload if isinstance(recovery_payload, dict) else {}, fallback_path=PATHS.runtime_dir / 'recovery_validation.json')
     latest_approval = OperatorApprovalRegistry().latest_for('live_release')
     live_release_path, live_release_payload = _call_builder_result(
         LiveReleaseGate(), 'evaluate', governance=governance_payload, safety=live_safety_payload, recon=recon_payload if isinstance(recon_payload, dict) else {},
-        recovery=recovery_validation_payload, approval=latest_approval, broker_contract={'defined': True}, fallback_path=PATHS.runtime_dir / 'live_release_gate.json'
-    )
-    promoted_model_guard_path, promoted_model_guard_payload = _call_builder_result(PromotedModelGuard(), 'build', fallback_path=PATHS.runtime_dir / 'promoted_model_guard.json')
-    approved_orders_path, execution_release_manifest_path, execution_release_manifest_payload = _write_approved_execution_artifacts(
-        orders, promoted_model_guard_payload, launch_gate_payload, live_safety_payload, readiness_payload, live_release_payload
+        recovery=recovery_validation_payload, approval=latest_approval, broker_contract={'defined': True}, true_broker=true_broker_payload if isinstance(true_broker_payload, dict) else {}, fallback_path=PATHS.runtime_dir / 'live_release_gate.json'
     )
     tri_lane_path, tri_lane_payload = _call_builder_result(TriLaneOrchestrator(), 'build', fallback_path=PATHS.runtime_dir / 'tri_lane_orchestrator.json')
 
@@ -599,6 +618,7 @@ def _build_control_outputs() -> dict[str, Any]:
         'project_healthcheck': {'path': health_path, 'payload': health_payload},
         'level2_mainline': {'path': level2_path, 'payload': level2_payload},
         'maturity_upgrade_suite': {'path': maturity_path, 'payload': maturity_payload},
+        'auto_decision_pipeline': {'path': auto_decision_path, 'payload': auto_decision_payload},
         'entry_tracking_gate': {'path': str(PATHS.runtime_dir / 'entry_tracking_journal.json'), 'payload': entry_tracking_gate},
         'position_lifecycle_gate': {'path': str(PATHS.runtime_dir / 'position_lifecycle.json'), 'payload': position_lifecycle_gate},
         'decision_output_evidence': {'path': decision_evidence_path, 'payload': decision_evidence_payload},
@@ -612,13 +632,13 @@ def _build_control_outputs() -> dict[str, Any]:
         'broker_approval_gate': {'path': str(broker_approval_path), 'payload': broker_approval_payload},
         'submission_gate': {'path': str(submission_path), 'payload': submission_payload},
         'validation_suite': {'path': str(validation_path), 'payload': validation_payload},
+        'true_broker_live_closure': {'path': str(true_broker_closure_path), 'payload': true_broker_closure_payload},
+        'real_api_readiness': {'path': str(real_api_path), 'payload': real_api_payload},
+        'true_broker_readiness_gate': {'path': str(true_broker_path), 'payload': true_broker_payload},
         'reconciliation': {'path': str(recon_path), 'payload': recon_payload},
         'recovery': {'path': str(recovery_path), 'payload': recovery_payload},
         'recovery_validation': {'path': str(recovery_validation_path), 'payload': recovery_validation_payload},
         'live_release_gate': {'path': str(live_release_path), 'payload': live_release_payload},
-        'promoted_model_guard': {'path': str(promoted_model_guard_path), 'payload': promoted_model_guard_payload},
-        'approved_execution_orders': {'path': str(approved_orders_path), 'payload': {'count': len(orders), 'status': 'approved_execution_orders_ready'}},
-        'execution_release_manifest': {'path': str(execution_release_manifest_path), 'payload': execution_release_manifest_payload},
         'tri_lane_orchestration': {'path': str(tri_lane_path), 'payload': tri_lane_payload},
         'tri_lane_stage_status': tri_lane_payload.get('lanes', {}) if isinstance(tri_lane_payload, dict) else {},
         'tri_lane_stage_runs': tri_lane_payload.get('tri_lane_stage_runs', {}) if isinstance(tri_lane_payload, dict) else {},

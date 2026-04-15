@@ -18,7 +18,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import TimeSeriesSplit
 
 from config import PARAMS
-from model_governance import create_version_tag, get_best_version_entry, promote_best_version, restore_version, snapshot_current_models
+from model_governance import create_version_tag, get_best_version_entry, promote_best_version, restore_version, snapshot_current_models, write_validated_artifacts_manifest
 from fts_data_quality_guard import validate_training_frame
 from fts_feature_catalog import FEATURE_SPECS, PRIORITY_NEW_FEATURES_20
 
@@ -354,25 +354,8 @@ def _apply_feature_review_policy(all_features: list[str], df: pd.DataFrame) -> t
     policy_status = str(policy.get('status') or '')
     if not enforce:
         return before, {'status': 'feature_review_not_enforced', 'policy_path': policy.get('_policy_path', ''), 'input_count': len(before), 'output_count': len(before)}
-    # v92：若特徵審核沒有正式完成，正式訓練預設 fail-closed。
+    # v92：若特徵審核沒有正式完成，正式訓練 fail-closed，避免又回到噪音特徵全收。
     if policy.get('fail_closed') or policy_status.startswith(('blocked', 'waiting')) or not policy.get('_policy_path'):
-        allow_soft_fallback = bool(PARAMS.get('TRAINING_ALLOW_SOFT_FEATURE_REVIEW_FALLBACK', True))
-        can_soft_fallback = allow_soft_fallback and policy_status == 'blocked_no_approved_features'
-        if can_soft_fallback:
-            banned = rejected | watch
-            after = [f for f in before if f not in banned and f in df.columns and f not in META_DROP_COLS]
-            return after, {
-                'status': 'feature_review_soft_fallback',
-                'policy_status': policy_status or 'missing_policy',
-                'policy_path': policy.get('_policy_path', ''),
-                'input_count': len(before),
-                'output_count': len(after),
-                'approved_count': len(approved),
-                'rejected_count': len(rejected),
-                'noise_watchlist_count': len(watch),
-                'hard_blocks_noise_features': False,
-                'reason': 'no_approved_features_but_soft_fallback_enabled',
-            }
         return [], {
             'status': 'feature_review_fail_closed',
             'policy_status': policy_status or 'missing_policy',
@@ -615,6 +598,49 @@ def _split_entry_and_position_day_frames(df: pd.DataFrame) -> tuple[pd.DataFrame
         'sample_type_counts': {str(k): int(v) for k, v in st.value_counts(dropna=False).to_dict().items()},
     }
     return entry_df, position_df, report
+
+
+def _build_validated_artifact_rows(
+    selected_features: list[str],
+    metrics_by_regime: dict[str, Any],
+    lane_artifacts: dict[str, Any],
+    exit_model_artifacts: dict[str, Any],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if selected_features:
+        rows.append({'name': 'selected_features.pkl', 'category': 'shared_features', 'validated': True, 'allow_promote': True, 'reason': 'shared_selected_features_ready'})
+    for regime, payload in (metrics_by_regime or {}).items():
+        if str(payload.get('status', '')).upper() == 'SAVE':
+            rows.append({'name': f'model_{regime}.pkl', 'category': 'shared_model', 'validated': True, 'allow_promote': True, 'reason': 'shared_regime_model_saved', 'regime': regime})
+    for lane, payload in (lane_artifacts or {}).items():
+        lane_name = str(lane).lower()
+        lane_feature_name = f'selected_features_{lane_name}.pkl'
+        lane_feature_ok = int(payload.get('selected_feature_count', 0) or 0) > 0 and str(payload.get('selection_source', '')) == 'lane_train_only'
+        rows.append({'name': lane_feature_name, 'category': 'directional_features', 'validated': bool(lane_feature_ok), 'allow_promote': bool(lane_feature_ok), 'reason': 'lane_features_train_only' if lane_feature_ok else 'lane_features_not_validated', 'lane': lane})
+        for regime, model_info in (payload.get('models', {}) or {}).items():
+            model_path = str(model_info.get('path', '')).strip()
+            if not model_path:
+                continue
+            name = Path(model_path).name
+            model_ok = str(model_info.get('status', '')).upper() == 'SAVE'
+            rows.append({'name': name, 'category': 'directional_model', 'validated': bool(model_ok), 'allow_promote': bool(model_ok), 'reason': 'lane_model_saved' if model_ok else str(model_info.get('reason', 'lane_model_not_validated')), 'lane': lane, 'regime': regime})
+    exit_feature_ok = int(exit_model_artifacts.get('selected_feature_count', 0) or 0) > 0 and str(exit_model_artifacts.get('status', '')) == 'trained'
+    rows.append({'name': 'selected_features_exit.pkl', 'category': 'exit_features', 'validated': bool(exit_feature_ok), 'allow_promote': bool(exit_feature_ok), 'reason': 'exit_features_ready' if exit_feature_ok else str(exit_model_artifacts.get('status', 'exit_features_not_validated'))})
+    for label, info in (exit_model_artifacts.get('models', {}) or {}).items():
+        model_path = str(info.get('path', '')).strip()
+        if not model_path:
+            continue
+        name = Path(model_path).name
+        model_ok = str(info.get('status', '')).upper() == 'SAVE'
+        rows.append({'name': name, 'category': 'exit_model', 'validated': bool(model_ok), 'allow_promote': bool(model_ok), 'reason': 'exit_model_saved' if model_ok else str(info.get('reason', 'exit_model_not_validated')), 'label': label})
+    deduped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in rows:
+        name = str(row.get('name', '')).strip()
+        if name and name not in seen:
+            deduped.append(row)
+            seen.add(name)
+    return deduped
 
 def train_models() -> tuple[Path, dict[str, Any]]:
     dataset_path = Path('data/ml_training_data.csv')
@@ -881,6 +907,17 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     overall_score = float(oot_metrics['avg_return'] * 100 + min(oot_metrics['profit_factor'], 5.0) + oot_metrics['hit_rate'] * 10)
     version_tag = create_version_tag('trained')
     snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features), 'directional_lane_feature_counts': {k: v.get('selected_feature_count', 0) for k, v in lane_artifacts.items()}, 'directional_lane_model_counts': {k: v.get('saved_model_count', 0) for k, v in lane_artifacts.items()}}, note='任務收尾版訓練完成快照')
+    validated_manifest = write_validated_artifacts_manifest(
+        version_tag,
+        _build_validated_artifact_rows(selected_features, metrics_by_regime, lane_artifacts, exit_model_artifacts),
+        metadata={
+            'overall_score': round(overall_score, 4),
+            'shared_feature_count': int(len(selected_features)),
+            'lane_feature_counts': {k: v.get('selected_feature_count', 0) for k, v in lane_artifacts.items()},
+            'lane_saved_model_counts': {k: v.get('saved_model_count', 0) for k, v in lane_artifacts.items()},
+            'exit_saved_model_count': int(exit_model_artifacts.get('saved_model_count', 0) or 0),
+        },
+    )
 
     promotion_floors = {
         'min_selected_features': int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)),
@@ -956,6 +993,7 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     report['promotion_ready'] = promotion_ready
     report['model_live_signal_gate'] = _write_model_live_signal_gate(report, promotion_ready=promotion_ready, promoted=promoted_current_candidate)
     report['selected_feature_authority'] = _write_selected_feature_authority(report)
+    report['validated_artifacts_manifest'] = validated_manifest
     RUNTIME_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     return RUNTIME_PATH, report
 

@@ -80,6 +80,8 @@ def build_entry_metrics(row, params=PARAMS):
     structure = row.get('Structure', row.get('Setup_Tag', 'AI訊號'))
     regime = row.get('Regime', '未知')
     realized_ev = _safe_float(row.get('Realized_EV', 0.0), 0.0)
+    strategy_ev = _safe_float(row.get('Strategy_EV_SQL', row.get('Expected_Return', realized_ev)), realized_ev)
+    effective_ev = max(realized_ev, strategy_ev)
     sample_size = _safe_int(row.get('Sample_Size', row.get('歷史訊號樣本數', 0)), 0)
     ai_proba = _safe_float(row.get('AI_Proba', 0.5), 0.5)
     weighted_buy = _safe_float(row.get('Weighted_Buy_Score', 0.0), 0.0)
@@ -196,7 +198,13 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
     health = str(row.get('Health', 'KEEP')).upper()
 
     if kelly_pct <= 0:
-        reasons.append('kelly_zero')
+        allow_synth_kelly = bool(params.get('SIGNAL_GATE_ALLOW_SYNTHETIC_KELLY', True))
+        if allow_synth_kelly and str(row.get('Entry_State', 'NO_ENTRY')).upper() in {'PILOT_ENTRY', 'FULL_ENTRY'} and _safe_float(params.get('DIRECTIONAL_SYNTHETIC_KELLY', 0.03), 0.0) > 0:
+            diagnostics.append('diag_synthetic_kelly_substitute')
+        elif bool(params.get('SIGNAL_GATE_TREAT_KELLY_ZERO_AS_WARNING', True)):
+            diagnostics.append('diag_kelly_zero')
+        else:
+            reasons.append('kelly_zero')
     if health == 'KILL':
         reasons.append('health_kill')
 
@@ -208,7 +216,12 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
     min_proba, min_ev, min_conf = _lane_thresholds(strategy_bucket, params)
     ai_proba = _safe_float(row.get('AI_Proba', 0.0), 0.0)
     realized_ev = _safe_float(row.get('Realized_EV', 0.0), 0.0)
-    signal_conf = _safe_float(row.get('訊號信心分數(%)', ai_proba * 100.0), ai_proba * 100.0) / 100.0
+    strategy_ev = _safe_float(row.get('Strategy_EV_SQL', row.get('Expected_Return', realized_ev)), realized_ev)
+    effective_ev = max(realized_ev, strategy_ev)
+    signal_conf_raw = row.get('Signal_Confidence', row.get('SignalConfidence', row.get('訊號信心分數(%)', ai_proba)))
+    signal_conf = _safe_float(signal_conf_raw, ai_proba)
+    if signal_conf > 1.5:
+        signal_conf = signal_conf / 100.0
     entry_state = str(row.get('Entry_State', 'NO_ENTRY')).upper()
     early_state = str(row.get('Early_Path_State', entry_state)).upper()
     confirm_state = str(row.get('Confirm_Path_State', 'WAIT_CONFIRM')).upper()
@@ -258,12 +271,14 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
 
     active_min_proba = min_proba
     active_min_conf = min_conf
+    active_min_ev = min_ev
     if entry_state == 'PILOT_ENTRY':
         active_min_proba = pilot_proba
         active_min_conf = pilot_conf
-        if max(breakout_risk, reversal_risk, exit_hazard) > float(params.get('PILOT_MAX_BREAKOUT_RISK', 0.82)):
+        active_min_ev = float(params.get('PILOT_MIN_OOT_EV', min_ev))
+        if max(breakout_risk, reversal_risk, exit_hazard) > float(params.get('PILOT_MAX_BREAKOUT_RISK', 0.88)):
             reasons.append('pilot_risk_too_high')
-    elif max(breakout_risk, reversal_risk, exit_hazard) > float(params.get('FULL_MAX_BREAKOUT_RISK', 0.72)):
+    elif max(breakout_risk, reversal_risk, exit_hazard) > float(params.get('FULL_MAX_BREAKOUT_RISK', 0.80)):
         reasons.append('full_entry_risk_too_high')
 
     if model_decision is not None:
@@ -271,19 +286,19 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
             reasons.extend(list(getattr(model_decision, 'veto_reasons', [])))
         else:
             decision_proba = _safe_float(getattr(model_decision, 'proba', ai_proba), ai_proba)
-            decision_ev = _safe_float(getattr(model_decision, 'realized_ev', realized_ev), realized_ev)
+            decision_ev = max(_safe_float(getattr(model_decision, 'realized_ev', realized_ev), realized_ev), strategy_ev)
             decision_conf = _safe_float(getattr(model_decision, 'signal_confidence', signal_conf), signal_conf)
             if decision_proba < active_min_proba:
                 reasons.append(f'model_proba_low:{decision_proba:.3f}<{active_min_proba:.3f}')
-            if decision_ev < min_ev:
-                reasons.append(f'model_ev_low:{decision_ev:.4f}<{min_ev:.4f}')
+            if decision_ev < active_min_ev:
+                reasons.append(f'model_ev_low:{decision_ev:.4f}<{active_min_ev:.4f}')
             if decision_conf < active_min_conf:
                 reasons.append(f'model_confidence_low:{decision_conf:.3f}<{active_min_conf:.3f}')
     else:
         if ai_proba < active_min_proba:
             reasons.append(f'ai_proba_low:{ai_proba:.3f}<{active_min_proba:.3f}')
-        if realized_ev < min_ev:
-            reasons.append(f'realized_ev_low:{realized_ev:.4f}<{min_ev:.4f}')
+        if effective_ev < active_min_ev:
+            reasons.append(f'realized_ev_low:{effective_ev:.4f}<{active_min_ev:.4f}')
         if signal_conf < active_min_conf:
             reasons.append(f'signal_confidence_low:{signal_conf:.3f}<{active_min_conf:.3f}')
 

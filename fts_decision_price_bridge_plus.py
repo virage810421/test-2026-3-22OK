@@ -1,44 +1,29 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import json
+
 import pandas as pd
+
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log, safe_float
+from fts_price_snapshot_auto_builder import AutoPriceSnapshotBuilder
+from fts_decision_desk_builder import DecisionDeskBuilder
+
 
 class DecisionPriceBridgePlus:
     def __init__(self):
-        self.report_path = PATHS.runtime_dir / "decision_price_bridge_plus.json"
-        self.template_path = PATHS.data_dir / "last_price_snapshot_template.csv"
-        self.enriched_path = PATHS.data_dir / "normalized_decision_output_enriched.csv"
-
-    def _load_price_snapshot(self):
-        candidates = [
-            PATHS.base_dir / "last_price_snapshot.csv",
-            PATHS.base_dir / "daily_price_snapshot.csv",
-            PATHS.data_dir / "last_price_snapshot.csv",
-        ]
-        for p in candidates:
-            if p.exists():
-                try:
-                    df = pd.read_csv(p, encoding='utf-8-sig')
-                    tcol = next((c for c in df.columns if c.lower() in ('ticker','ticker symbol','symbol')), None)
-                    pcol = next((c for c in df.columns if c.lower() in ('close','price','reference_price') or '收盤' in c), None)
-                    if tcol and pcol:
-                        out = df[[tcol,pcol]].copy()
-                        out.columns = ['Ticker','Reference_Price']
-                        out['Ticker'] = out['Ticker'].astype(str).str.strip()
-                        out['Reference_Price'] = out['Reference_Price'].apply(lambda x: safe_float(x,0.0))
-                        return out[out['Reference_Price']>0], str(p)
-                except Exception:
-                    pass
-        return pd.DataFrame(columns=['Ticker','Reference_Price']), ''
+        self.report_path = PATHS.runtime_dir / 'decision_price_bridge_plus.json'
+        self.template_path = PATHS.data_dir / 'last_price_snapshot_template.csv'
+        self.enriched_path = PATHS.data_dir / 'normalized_decision_output_enriched.csv'
+        self.auto_price = AutoPriceSnapshotBuilder()
 
     def build(self):
         norm = PATHS.data_dir / 'normalized_decision_output.csv'
-        if not norm.exists():
-            template = pd.DataFrame([
-                {'Ticker':'2330.TW','Reference_Price':950.0},
-                {'Ticker':'2317.TW','Reference_Price':150.0},
-            ])
+        if not norm.exists() or norm.stat().st_size == 0:
+            DecisionDeskBuilder().build_decision_desk()
+        if not norm.exists() or norm.stat().st_size == 0:
+            template = pd.DataFrame([{'Ticker': '2330.TW', 'Reference_Price': ''}])
             template.to_csv(self.template_path, index=False, encoding='utf-8-sig')
             payload = {
                 'generated_at': now_str(),
@@ -47,39 +32,33 @@ class DecisionPriceBridgePlus:
                 'action': 'prepare_price_template_only',
                 'template_path': str(self.template_path),
             }
-            with open(self.report_path, 'w', encoding='utf-8') as f:
-                json.dump(payload, f, ensure_ascii=False, indent=2)
-            log(f"🧩 已輸出 decision price template：{self.template_path}")
+            self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
             return self.report_path, payload
 
         df = pd.read_csv(norm, encoding='utf-8-sig')
-        template = pd.DataFrame([
-            {'Ticker':'2330.TW','Reference_Price':950.0},
-            {'Ticker':'2317.TW','Reference_Price':150.0},
-        ])
-        template.to_csv(self.template_path, index=False, encoding='utf-8-sig')
+        if df.empty:
+            payload = {'generated_at': now_str(), 'system_name': CONFIG.system_name, 'status': 'normalized_decision_empty'}
+            self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+            return self.report_path, payload
 
-        snap, snap_path = self._load_price_snapshot()
-        before_ok = int((df.get('Reference_Price',0).fillna(0).astype(float) > 0).sum()) if 'Reference_Price' in df.columns else 0
-        if not snap.empty:
-            merged = df.merge(snap, on='Ticker', how='left', suffixes=('','_snap'))
-            if 'Reference_Price_snap' in merged.columns:
-                mask = merged['Reference_Price'].fillna(0).astype(float) <= 0
-                merged.loc[mask, 'Reference_Price'] = merged.loc[mask, 'Reference_Price_snap'].fillna(0)
-                merged = merged.drop(columns=['Reference_Price_snap'])
-            df = merged
-        after_ok = int((df.get('Reference_Price',0).fillna(0).astype(float) > 0).sum()) if 'Reference_Price' in df.columns else 0
+        tickers = df.get('Ticker', pd.Series(dtype=str)).astype(str).tolist()
+        snapshot_path, snapshot_payload, snapshot_map = self.auto_price.build(tickers)
+        before_ok = int((pd.to_numeric(df.get('Reference_Price', pd.Series(dtype=float)), errors='coerce').fillna(0) > 0).sum()) if 'Reference_Price' in df.columns else 0
+        if 'Reference_Price' not in df.columns:
+            df['Reference_Price'] = 0.0
+        df['Reference_Price'] = pd.to_numeric(df['Reference_Price'], errors='coerce').fillna(0.0)
+        for idx, row in df.iterrows():
+            if float(row.get('Reference_Price', 0.0) or 0.0) <= 0:
+                df.at[idx, 'Reference_Price'] = safe_float(snapshot_map.get(str(row.get('Ticker', '')).strip(), 0.0), 0.0)
+        after_ok = int((pd.to_numeric(df.get('Reference_Price', pd.Series(dtype=float)), errors='coerce').fillna(0) > 0).sum())
         df.to_csv(self.enriched_path, index=False, encoding='utf-8-sig')
-        missing = []
-        if 'Reference_Price' in df.columns:
-            bad = df[df['Reference_Price'].fillna(0).astype(float) <= 0]
-            missing = bad['Ticker'].astype(str).drop_duplicates().tolist()[:100]
-
+        missing = df.loc[pd.to_numeric(df['Reference_Price'], errors='coerce').fillna(0) <= 0, 'Ticker'].astype(str).drop_duplicates().tolist()[:100]
         payload = {
             'generated_at': now_str(),
             'system_name': CONFIG.system_name,
-            'status': 'bridge_ready' if after_ok > before_ok else 'template_ready_waiting_for_prices',
-            'price_snapshot_source': snap_path,
+            'status': 'bridge_ready' if after_ok > 0 else 'waiting_for_price_sources',
+            'price_snapshot_source': str(snapshot_path),
+            'auto_price_status': snapshot_payload.get('status'),
             'rows_total': int(len(df)),
             'rows_with_price_before': before_ok,
             'rows_with_price_after': after_ok,
@@ -88,12 +67,11 @@ class DecisionPriceBridgePlus:
             'template_path': str(self.template_path),
             'enriched_output_path': str(self.enriched_path),
             'usage': [
-                '把最新收盤價整理成 last_price_snapshot.csv',
-                '欄位至少要有 Ticker 與 Reference_Price 或 Close',
-                '重新啟動主控後即可把 decision 補成可執行格式'
+                '現在會先自動讀 last_price_snapshot / kline_cache / yfinance',
+                '若仍缺價，再看手動 override CSV',
+                'control tower 會優先讀 enriched output'
             ]
         }
-        with open(self.report_path, 'w', encoding='utf-8') as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
-        log(f"🧩 已輸出 decision price bridge plus：{self.report_path}")
+        self.report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        log(f'🧩 decision price bridge ready: {self.report_path}')
         return self.report_path, payload

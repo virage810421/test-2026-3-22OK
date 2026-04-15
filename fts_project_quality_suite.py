@@ -360,29 +360,41 @@ from typing import Any
 from fts_upgrade_runtime import PATHS, CONFIG, now_str, log, load_json, write_json
 
 
+
 class RecoveryValidationBuilder:
     def __init__(self):
         self.path = PATHS.runtime_dir / 'recovery_validation.json'
 
     def build(self, retry_queue_summary: dict[str, Any], recovery_plan: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
-        state = load_json(PATHS.state_dir / 'engine_state.json', {}) or {}
-        recovery_plan = recovery_plan or {}
+        restart_state = load_json(PATHS.state_dir / 'restart_recovery_snapshot.json', {}) or {}
+        legacy_state = load_json(PATHS.state_dir / 'engine_state.json', {}) or {}
+        state = restart_state or legacy_state
+        recovery_plan = recovery_plan or load_json(PATHS.runtime_dir / 'restart_recovery_plan.json', {}) or {}
         checks = []
         checks.append({'check': 'state_file_exists', 'value': bool(state), 'status': 'ok' if state else 'fail'})
-        checks.append({'check': 'state_has_cash', 'value': state.get('cash', None), 'status': 'ok' if state and 'cash' in state else 'fail'})
+        checks.append({'check': 'state_has_cash', 'value': state.get('cash', None), 'status': 'ok' if state and state.get('cash', None) is not None else 'fail'})
         checks.append({'check': 'state_has_positions', 'value': len(state.get('positions', [])) if state else 0, 'status': 'ok' if state and 'positions' in state else 'fail'})
         checks.append({'check': 'state_has_open_orders', 'value': len(state.get('open_orders', [])) if state else 0, 'status': 'ok' if state and 'open_orders' in state else 'warn'})
+        checks.append({'check': 'broker_snapshot_available', 'value': bool(state.get('broker_snapshot_available', False)), 'status': 'ok' if state.get('broker_snapshot_available', False) else 'warn'})
         retry_total = int(retry_queue_summary.get('total', 0) or 0)
         checks.append({'check': 'retry_queue_total', 'value': retry_total, 'status': 'ok' if retry_total == 0 else 'warn'})
         if recovery_plan:
-            checks.append({'check': 'recovery_plan_ready', 'value': recovery_plan.get('ready_to_recover', False), 'status': 'ok' if recovery_plan.get('ready_to_recover', False) else 'fail'})
-        all_green = all(c['status'] == 'ok' for c in checks if c['check'] != 'state_has_open_orders')
+            resume_ready = bool(recovery_plan.get('ready_to_resume_new_orders', recovery_plan.get('ready_to_recover', False)))
+            checks.append({'check': 'recovery_plan_ready', 'value': resume_ready, 'status': 'ok' if resume_ready else 'fail'})
+            blockers = list(recovery_plan.get('blockers', []) or [])
+        else:
+            blockers = ['missing_recovery_plan']
+            checks.append({'check': 'recovery_plan_ready', 'value': False, 'status': 'fail'})
+        all_green = all(c['status'] == 'ok' for c in checks if c['check'] not in {'state_has_open_orders', 'broker_snapshot_available', 'retry_queue_total'})
         payload = {
             'generated_at': now_str(),
             'system_name': CONFIG.system_name,
+            'snapshot_source': 'restart_recovery_snapshot' if restart_state else ('engine_state' if legacy_state else 'missing'),
             'checks': checks,
+            'blockers': blockers,
             'all_green': all_green,
             'ready_for_resume': all_green,
+            'ready_for_resume_new_orders': all_green,
             'status': 'validation_ready' if all(c['status'] in {'ok', 'warn'} for c in checks) else 'validation_blocked',
         }
         write_json(self.path, payload)

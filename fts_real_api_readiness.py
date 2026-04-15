@@ -1,93 +1,64 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import json
+from typing import Any
+
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
 
+
 class RealAPIReadinessBuilder:
     def __init__(self):
-        self.path = PATHS.runtime_dir / "real_api_readiness.json"
+        self.path = PATHS.runtime_dir / 'real_api_readiness.json'
+
+    @staticmethod
+    def _read_json(path):
+        if not path.exists():
+            return {}
+        try:
+            data = json.loads(path.read_text(encoding='utf-8'))
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
 
     def build(self):
+        probe = self._read_json(PATHS.runtime_dir / 'broker_adapter_probe.json')
+        connect = self._read_json(PATHS.runtime_dir / 'broker_adapter_last_connect.json')
+        callback = self._read_json(PATHS.runtime_dir / 'broker_callback_ingestion_summary.json')
+        ledger = self._read_json(PATHS.runtime_dir / 'execution_ledger_summary.json')
+        recon = self._read_json(PATHS.runtime_dir / 'reconciliation_engine.json') or self._read_json(PATHS.runtime_dir / 'reconciliation_report.json')
+        closure = self._read_json(PATHS.runtime_dir / 'true_broker_live_closure.json')
+        callback_bound = int(callback.get('ingested_count', 0) or 0) > 0
+        ledger_bound = bool((ledger.get('lane_event_counts') or {}) or (ledger.get('lane_order_counts') or {}))
+        reconcile_bound = bool((closure.get('checks') or {}).get('reconcile_green')) or bool(recon.get('all_green'))
+        api_bound = bool(probe.get('ready_for_live_connect')) and bool(connect.get('connected'))
         payload = {
-            "generated_at": now_str(),
-            "system_name": CONFIG.system_name,
-            "target": "real_broker_api_and_real_market_binding",
-            "completed_now": [
-                "broker submission contract defined",
-                "callback normalization contract defined",
-                "live approval workflow reserved",
-                "real broker stub reserved",
-                "order payload preview contract defined",
+            'generated_at': now_str(),
+            'system_name': CONFIG.system_name,
+            'target': 'real_broker_api_and_real_market_binding',
+            'completed_now': [
+                'adapter probe evidence' if probe else 'adapter probe missing',
+                'real connect evidence' if connect else 'real connect missing',
+                'callback ingestion evidence' if callback_bound else 'callback evidence missing',
+                'execution ledger evidence' if ledger_bound else 'ledger evidence missing',
+                'broker/live reconciliation evidence' if reconcile_bound else 'reconcile evidence missing',
             ],
-            "missing_before_live": [
-                "broker authentication and token refresh",
-                "account routing: cash / margin / short-sell",
-                "market session calendar and holiday source",
-                "tick size / price band / odd-lot rules",
-                "broker order id mapping and idempotency key",
-                "real callback receiver and persistence",
-                "partial fill reconciliation against broker ledger",
-                "cancel/replace semantics for each broker",
-                "rate limit and retry policy by endpoint",
-                "live kill-switch and operator confirmation UX",
-            ],
-            "required_adapter_methods": {
-                "connect": "建立 session / websocket / callback channel",
-                "refresh_auth": "更新 token 或簽章",
-                "place_order": "送出現股/融資/融券/零股單",
-                "cancel_order": "撤單",
-                "replace_order": "改價改量；若券商不支援需拆成 cancel+new",
-                "get_order_status": "查詢委託狀態",
-                "get_fills": "查詢成交回報",
-                "get_positions": "查詢庫存",
-                "get_cash": "查詢可用資金",
-                "disconnect": "關閉連線",
+            'api_bound': api_bound,
+            'callback_bound': callback_bound,
+            'ledger_bound': ledger_bound,
+            'reconcile_bound': reconcile_bound,
+            'kill_switch_bound': bool(getattr(CONFIG, 'enable_live_kill_switch', True) and self._read_json(PATHS.runtime_dir / 'kill_switch_state.json')),
+            'true_broker_red_lights': {
+                'api': 'GREEN' if api_bound else 'RED: no real adapter connect proof',
+                'callback': 'GREEN' if callback_bound else 'RED: no callback evidence',
+                'ledger': 'GREEN' if ledger_bound else 'RED: no ledger evidence',
+                'reconcile': 'GREEN' if reconcile_bound else 'RED: no green reconciliation proof',
+                'kill_switch': 'GREEN' if getattr(CONFIG, 'enable_live_kill_switch', True) else 'RED',
             },
-            "real_market_fields": [
-                "market",
-                "board",
-                "currency",
-                "order_type",
-                "time_in_force",
-                "session",
-                "price_limit_up",
-                "price_limit_down",
-                "tick_size",
-                "can_short",
-                "can_margin_long",
-                "lot_size",
-                "odd_lot_allowed",
-            ],
-            "taiwan_equity_focus": {
-                "mandatory_checks": [
-                    "TW listed / OTC symbol normalization",
-                    "1000-share board lot rule",
-                    "odd-lot session / intraday rule separation",
-                    "limit-up / limit-down validation",
-                    "short-sell eligibility flag",
-                    "現股 / 融資 / 融券 routing",
-                ],
-                "recommended_extensions": [
-                    "broker reject reason classifier",
-                    "pre-open / continuous / close auction session tagging",
-                    "T+1 / T+2 settlement awareness for cash forecasting",
-                ]
-            },
-            "api_bound": False,
-            "callback_bound": False,
-            "ledger_bound": False,
-            "reconcile_bound": False,
-            "kill_switch_bound": bool(getattr(CONFIG, "enable_live_kill_switch", True)),
-            "true_broker_red_lights": {
-                "api": "RED: no real SDK/session binding",
-                "callback": "RED: no real callback receiver persistence",
-                "ledger": "RED: no broker ledger import/account statement binding",
-                "reconcile": "RED: no real broker ledger reconciliation proof",
-                "kill_switch": "GREEN if enable_live_kill_switch is true, otherwise RED"
-            },
-            "status": "five_red_lights_until_real_broker_bound"
+            'closure_status': closure.get('status', ''),
+            'status': 'real_api_bound_with_evidence' if api_bound and callback_bound and ledger_bound and reconcile_bound else 'five_red_lights_until_real_broker_bound',
         }
-        with open(self.path, 'w', encoding='utf-8') as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
+        self.path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         log(f"🛰️ 已輸出 real api readiness：{self.path}")
         return self.path, payload

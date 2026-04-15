@@ -14,7 +14,7 @@ from fts_exception_policy import record_diagnostic
 
 try:
     import requests  # type: ignore
-except Exception:  # pragma: no cover - runtime diagnostics import fallback
+except Exception:  # pragma: no cover
     requests = None  # type: ignore
 
 
@@ -23,30 +23,22 @@ class BrokerAdapterPaths:
     config_path: Path
     template_path: Path
     runtime_probe_path: Path
+    runtime_last_connect_path: Path
 
 
 class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
-    """可插式 Phase3 broker adapter。
-
-    - 沒開戶前：產生 config template、驗 contract、可做 dry-run probe。
-    - 開戶後：把 broker_adapter_config.json 填好，即可接 REST / polling 類型 API。
-    - 若 config 仍是 template，會回傳 clear blocked status，而不是直接崩潰。
-    """
-
-    MODULE_VERSION = 'v83_configurable_broker_adapter'
+    MODULE_VERSION = 'v84_configurable_broker_adapter_live_closure'
 
     def __init__(self, config_path: Path | None = None):
         self.paths = BrokerAdapterPaths(
             config_path=config_path or (PATHS.base_dir / getattr(CONFIG, 'broker_adapter_config_filename', 'broker_adapter_config.json')),
             template_path=PATHS.runtime_dir / 'broker_adapter_config.template.json',
             runtime_probe_path=PATHS.runtime_dir / 'broker_adapter_probe.json',
+            runtime_last_connect_path=PATHS.runtime_dir / 'broker_adapter_last_connect.json',
         )
         self._config = self._load_config()
         self._session = requests.Session() if requests is not None else None
 
-    # -----------------------------
-    # config management
-    # -----------------------------
     @staticmethod
     def default_template() -> dict[str, Any]:
         return {
@@ -71,6 +63,7 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
                 'cancel_order': {'method': 'POST', 'path': '/v1/orders/{broker_order_id}/cancel'},
                 'replace_order': {'method': 'POST', 'path': '/v1/orders/{broker_order_id}/replace'},
                 'get_order_status': {'method': 'GET', 'path': '/v1/orders/{broker_order_id}'},
+                'get_open_orders': {'method': 'GET', 'path': '/v1/orders/open'},
                 'get_fills': {'method': 'GET', 'path': '/v1/fills'},
                 'get_positions': {'method': 'GET', 'path': '/v1/positions'},
                 'get_cash': {'method': 'GET', 'path': '/v1/account/cash'},
@@ -130,6 +123,10 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
                 missing.append(f'auth.{field}')
         if requests is None:
             missing.append('requests_not_installed')
+        endpoints = self._config.get('endpoints', {}) or {}
+        for key in ['connect', 'place_order', 'get_order_status', 'get_open_orders', 'get_fills', 'get_positions', 'get_cash', 'poll_callbacks']:
+            if key not in endpoints:
+                missing.append(f'endpoints.{key}')
         return (len(missing) == 0), missing
 
     def probe(self) -> tuple[Path, dict[str, Any]]:
@@ -148,9 +145,25 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
         self.paths.runtime_probe_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         return self.paths.runtime_probe_path, payload
 
-    # -----------------------------
-    # http helpers
-    # -----------------------------
+    def capability_report(self) -> dict[str, Any]:
+        ok, missing = self._is_ready()
+        endpoints = self._config.get('endpoints', {}) or {}
+        return {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'broker_kind': 'configurable_rest_adapter',
+            'provider_name': self._config.get('provider_name', ''),
+            'transport': self._config.get('transport', 'rest'),
+            'supports_callbacks': 'poll_callbacks' in endpoints,
+            'supports_open_orders': 'get_open_orders' in endpoints,
+            'supports_replace': 'replace_order' in endpoints,
+            'supports_cancel': 'cancel_order' in endpoints,
+            'broker_bound': ok,
+            'true_broker_ready': False,
+            'missing_for_true_broker': missing,
+            'status': 'adapter_capability_ready' if ok else 'adapter_capability_blocked',
+        }
+
     def _headers(self) -> dict[str, str]:
         auth = self._config.get('auth', {}) or {}
         headers = {'Content-Type': 'application/json'}
@@ -192,9 +205,8 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
         timeout_cfg = self._config.get('timeouts', {}) or {}
         timeout = (int(timeout_cfg.get('connect_seconds', 10)), int(timeout_cfg.get('read_seconds', 20)))
         response = self._session.request(method=method, url=url, headers=self._headers(), json=payload, params=params, timeout=timeout)
-        body: Any
         try:
-            body = response.json()
+            body: Any = response.json()
         except Exception as exc:
             record_diagnostic('broker_adapter', 'parse_http_response_json', exc, severity='warning', fail_closed=True)
             body = {'raw_text': response.text}
@@ -208,57 +220,82 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
             'url': url,
         }
 
-    # -----------------------------
-    # blueprint implementation
-    # -----------------------------
+    @staticmethod
+    def _extract_items(result: dict[str, Any], keys: tuple[str, ...] = ('items', 'rows', 'data', 'events', 'orders', 'fills', 'positions')) -> list[dict[str, Any]]:
+        body = result.get('body', {}) if isinstance(result, dict) else {}
+        if isinstance(body, list):
+            return [x for x in body if isinstance(x, dict)]
+        if isinstance(body, dict):
+            for key in keys:
+                value = body.get(key)
+                if isinstance(value, list):
+                    return [x for x in value if isinstance(x, dict)]
+            if all(k in body for k in ('broker_order_id', 'status')) or all(k in body for k in ('cash_available', 'equity')):
+                return [body]
+        return []
+
     def connect(self) -> dict[str, Any]:
-        return self._request('connect')
+        result = self._request('connect')
+        payload = {
+            'generated_at': now_str(),
+            'module_version': self.MODULE_VERSION,
+            'provider_name': self._config.get('provider_name', ''),
+            'connected': bool(result.get('ok')),
+            'status': 'connected' if result.get('ok') else result.get('status', 'connect_failed'),
+            'raw': result,
+        }
+        self.paths.runtime_last_connect_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return payload
 
     def refresh_auth(self) -> dict[str, Any]:
         return {'ok': True, 'status': 'auth_refresh_delegated_to_provider', 'requested_at': now_str()}
 
     def place_order(self, payload: dict[str, Any]) -> dict[str, Any]:
-        normalized = self._map_payload(payload)
-        return self._request('place_order', payload=normalized)
+        return self._request('place_order', payload=self._map_payload(payload))
 
     def cancel_order(self, broker_order_id: str) -> dict[str, Any]:
         return self._request('cancel_order', broker_order_id=broker_order_id)
 
     def replace_order(self, broker_order_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-        normalized = self._map_payload(payload)
-        return self._request('replace_order', payload=normalized, broker_order_id=broker_order_id)
+        return self._request('replace_order', payload=self._map_payload(payload), broker_order_id=broker_order_id)
 
     def get_order_status(self, broker_order_id: str) -> dict[str, Any]:
-        return self._request('get_order_status', broker_order_id=broker_order_id)
+        result = self._request('get_order_status', broker_order_id=broker_order_id)
+        rows = self._extract_items(result, keys=('items', 'rows', 'data', 'orders'))
+        if rows:
+            return rows[0]
+        body = result.get('body', {}) if isinstance(result.get('body', {}), dict) else {}
+        return body if isinstance(body, dict) else {'raw': body}
+
+    def get_open_orders(self) -> list[dict[str, Any]]:
+        return self._extract_items(self._request('get_open_orders'), keys=('items', 'rows', 'data', 'orders'))
 
     def get_fills(self, trading_date: str | None = None) -> list[dict[str, Any]]:
-        result = self._request('get_fills', params={'trading_date': trading_date} if trading_date else None)
-        body = result.get('body', {})
-        if isinstance(body, list):
-            return body
-        if isinstance(body, dict):
-            return list(body.get('items', []))
-        return []
+        return self._extract_items(self._request('get_fills', params={'trading_date': trading_date} if trading_date else None), keys=('items', 'rows', 'data', 'fills'))
 
     def get_positions(self) -> list[dict[str, Any]]:
-        result = self._request('get_positions')
-        body = result.get('body', {})
-        if isinstance(body, list):
-            return body
-        if isinstance(body, dict):
-            return list(body.get('items', []))
-        return []
+        return self._extract_items(self._request('get_positions'), keys=('items', 'rows', 'data', 'positions'))
 
     def get_cash(self) -> dict[str, Any]:
         result = self._request('get_cash')
         body = result.get('body', {})
-        if isinstance(body, dict):
-            return body
-        return {'raw': body}
+        if isinstance(body, list) and body and isinstance(body[0], dict):
+            return body[0]
+        return body if isinstance(body, dict) else {'raw': body}
 
     def disconnect(self) -> dict[str, Any]:
         return {'ok': True, 'status': 'disconnect_noop_for_rest_adapter', 'requested_at': now_str()}
 
-    def poll_callbacks(self, cursor: str | None = None) -> dict[str, Any]:
+    def poll_callbacks(self, cursor: str | None = None):
         params = {'cursor': cursor} if cursor else None
-        return self._request('poll_callbacks', params=params)
+        return self._extract_items(self._request('poll_callbacks', params=params), keys=('items', 'rows', 'data', 'events', 'callbacks'))
+
+    def export_broker_snapshot(self) -> dict[str, Any]:
+        return {
+            'generated_at': now_str(),
+            'provider_name': self._config.get('provider_name', ''),
+            'orders': self.get_open_orders(),
+            'fills': self.get_fills(),
+            'positions': self.get_positions(),
+            'cash': self.get_cash(),
+        }
