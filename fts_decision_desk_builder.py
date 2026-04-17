@@ -14,6 +14,12 @@ from fts_market_data_service import MarketDataService
 from fts_market_climate_service import MarketClimateService
 from fts_screening_engine import ScreeningEngine
 from fts_signal_gate import evaluate_signal_gate
+from fts_entry_exit_param_policy import coerce_entry_exit_params, entry_thresholds
+try:
+    from fts_approved_param_mount import get_effective_params_for_mode
+except Exception:  # pragma: no cover
+    def get_effective_params_for_mode(mode: str, base_params=None, stage=None):
+        return dict(base_params or {})
 
 
 class DecisionDeskBuilder:
@@ -26,6 +32,7 @@ class DecisionDeskBuilder:
         self.market = MarketClimateService()
         self.market_data = MarketDataService()
         self.screen = ScreeningEngine()
+        self.params = coerce_entry_exit_params(get_effective_params_for_mode('strategy_signal', dict(PARAMS)))
 
     def _normalize_existing(self, path) -> pd.DataFrame:
         try:
@@ -45,9 +52,7 @@ class DecisionDeskBuilder:
         entry_state = str(row.get('Entry_State', '') or '').upper()
         early_state = str(row.get('Early_Path_State', '') or '').upper()
         confirm_state = str(row.get('Confirm_Path_State', '') or '').upper()
-        prepare_min = float(PARAMS.get('PREENTRY_PILOT_THRESHOLD', 0.52))
-        full_min = float(PARAMS.get('CONFIRM_FULL_THRESHOLD', 0.60))
-        readiness_min = float(PARAMS.get('ENTRY_READINESS_PREPARE_MIN', 0.40))
+        _watch_min, prepare_min, full_min, readiness_min, pilot_confirm_floor = entry_thresholds(self.params)
         pre = safe_float(row.get('PreEntry_Score', row.get('Entry_Readiness', 0.0)), 0.0)
         confirm = safe_float(row.get('Confirm_Entry_Score', row.get('AI_Proba', 0.0)), 0.0)
         signal_conf = safe_float(row.get('Signal_Confidence', row.get('訊號信心分數(%)', 0.0)), 0.0)
@@ -66,7 +71,7 @@ class DecisionDeskBuilder:
             confirm_state = confirm_state or 'FULL_READY'
             fallback = True
         elif pre >= prepare_min or safe_float(row.get('Entry_Readiness', 0.0), 0.0) >= readiness_min:
-            pilot_confirm = max(prepare_min - 0.02, 0.48)
+            pilot_confirm = max(prepare_min - float(self.params.get('PILOT_CONFIRM_MARGIN', 0.02)), pilot_confirm_floor)
             entry_state = 'PILOT_ENTRY' if pilot_confirm_hint >= pilot_confirm else 'PREPARE'
             early_state = early_state or 'PREPARE'
             confirm_state = confirm_state or ('READY' if entry_state == 'PILOT_ENTRY' else 'WAIT_CONFIRM')

@@ -22,6 +22,16 @@ import pandas as pd
 
 from fts_config import PATHS, CONFIG
 from fts_execution_journal_service import append_execution_journal_event
+try:
+    from config import PARAMS  # type: ignore
+except Exception:  # pragma: no cover
+    PARAMS = {}
+try:
+    from fts_approved_param_mount import get_effective_params_for_mode
+except Exception:  # pragma: no cover
+    def get_effective_params_for_mode(mode: str, base_params=None, stage=None):
+        return dict(base_params or {})
+from fts_entry_exit_param_policy import coerce_entry_exit_params
 
 
 class PositionLifecycleService:
@@ -34,6 +44,7 @@ class PositionLifecycleService:
         self.stop_payload_csv_path = PATHS.data_dir / 'stop_replace_payloads.csv'
         self.stop_payload_runtime_path = PATHS.runtime_dir / 'stop_replace_payloads.csv'
         self.history_path = PATHS.runtime_dir / 'position_lifecycle_history.jsonl'
+        self.params = coerce_entry_exit_params(get_effective_params_for_mode('strategy_signal', dict(PARAMS)))
 
     def _read_csv_first(self, candidates: list[Path]) -> tuple[Path | None, pd.DataFrame]:
         for p in candidates:
@@ -293,13 +304,13 @@ class PositionLifecycleService:
         base_progress = float(getattr(CONFIG, 'position_min_progress_pct', 0.01) or 0.01)
         stage_cfg = {
             'PREPARE': {'trail_mult': 1.08, 'defend_mult': 0.74, 'exit_mult': 1.08, 'stale_mult': 0.40, 'progress_mult': 0.70, 'reduce_fraction': 0.00},
-            'PILOT_ENTRY': {'trail_mult': 1.00, 'defend_mult': 0.90, 'exit_mult': 1.20, 'stale_mult': 0.56, 'progress_mult': 0.82, 'reduce_fraction': 0.33},
-            'FULL_ENTRY': {'trail_mult': 1.00, 'defend_mult': 1.00, 'exit_mult': 1.35, 'stale_mult': 1.00, 'progress_mult': 1.00, 'reduce_fraction': 0.50},
+            'PILOT_ENTRY': {'trail_mult': 1.00, 'defend_mult': 0.90, 'exit_mult': 1.20, 'stale_mult': 0.56, 'progress_mult': 0.82, 'reduce_fraction': float(self.params.get('PILOT_REDUCE_FRACTION', 0.30))},
+            'FULL_ENTRY': {'trail_mult': 1.00, 'defend_mult': 1.00, 'exit_mult': 1.35, 'stale_mult': 1.00, 'progress_mult': 1.00, 'reduce_fraction': float(self.params.get('FULL_REDUCE_FRACTION', 0.50))},
             'UNKNOWN': {'trail_mult': 1.02, 'defend_mult': 0.84, 'exit_mult': 1.12, 'stale_mult': 0.50, 'progress_mult': 0.82, 'reduce_fraction': 0.20},
         }
         regime_cfg = {
             'TREND': {'trail_mult': 1.18, 'defend_mult': 1.18, 'exit_mult': 1.18, 'stale_mult': 1.35, 'progress_mult': 0.70, 'reduce_fraction': 0.40},
-            'RANGE': {'trail_mult': 0.88, 'defend_mult': 0.88, 'exit_mult': 0.92, 'stale_mult': 0.72, 'progress_mult': 1.10, 'reduce_fraction': 0.55},
+            'RANGE': {'trail_mult': 0.88, 'defend_mult': 0.88, 'exit_mult': 0.92, 'stale_mult': 0.72, 'progress_mult': 1.10, 'reduce_fraction': float(self.params.get('RANGE_REDUCE_FRACTION', 0.45))},
             'NEUTRAL': {'trail_mult': 1.00, 'defend_mult': 1.00, 'exit_mult': 1.00, 'stale_mult': 1.00, 'progress_mult': 1.00, 'reduce_fraction': 0.50},
         }
         v = self._volatility_inputs(row, drow, entry_stage=entry_stage, regime_bucket=regime_bucket)
@@ -333,6 +344,7 @@ class PositionLifecycleService:
             'stale_days': stale_days,
             'min_progress_pct': round(min_progress, 6),
             'reduce_fraction': round(reduce_fraction, 4),
+            'range_stale_action': str(self.params.get('RANGE_STALE_ACTION', 'DEFEND')).upper(),
         }
 
     def _calculate_protective_stop(
@@ -397,7 +409,10 @@ class PositionLifecycleService:
             if entry_stage == 'FULL_ENTRY':
                 return 'REDUCE', 'stale_position_no_progress'
             if regime_bucket == 'RANGE':
-                return 'EXIT', 'range_probe_stale_exit'
+                range_action = str(profile.get('range_stale_action', 'DEFEND') or 'DEFEND').upper()
+                if range_action not in {'DEFEND', 'REDUCE'}:
+                    range_action = 'DEFEND'
+                return range_action, 'range_probe_stale_guarded_no_direct_exit'
             return 'DEFEND', 'early_stage_stale_watch'
         return 'HOLD', 'profile_hold'
 

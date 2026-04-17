@@ -20,6 +20,7 @@ from config import PARAMS
 from fts_utils import now_str
 from param_storage import (
     approve_candidate,
+    load_candidate,
     load_latest_candidate,
     mark_candidate_judgement,
     transition_candidate_status,
@@ -62,20 +63,14 @@ def _auto_transition_allowed(recommended_status: str) -> bool:
     return False
 
 
-def judge_latest(scope: str, auto_apply: bool = True) -> dict[str, Any]:
-    scope = str(scope or 'trainer::default')
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    if not bool(PARAMS.get('CANDIDATE_AI_JUDGE_ENABLED', True)):
-        payload = {'generated_at': now_str(), 'scope': scope, 'status': 'disabled_by_config'}
-        REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return payload
 
-    candidate = load_latest_candidate(scope_name=scope)
-    if not candidate:
-        payload = {'generated_at': now_str(), 'scope': scope, 'status': 'no_candidate'}
-        REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-        return payload
+def _apply_judgement(candidate: dict[str, Any], scope: str, auto_apply: bool = True) -> dict[str, Any]:
+    """Judge one concrete candidate payload.
 
+    Shared by judge_latest() and judge_candidate_by_id().  It preserves the
+    existing safety contract: AI judge can approve non-live stages only; live
+    promotion remains controlled by release gate.
+    """
     judge_func = _select_judge(scope)
     judgement = judge_func(candidate)
     min_score = float(PARAMS.get('CANDIDATE_MIN_AI_SCORE', 75.0))
@@ -103,7 +98,6 @@ def judge_latest(scope: str, auto_apply: bool = True) -> dict[str, Any]:
         elif _auto_transition_allowed(recommended):
             mark_candidate_judgement(candidate_id, judgement, status=recommended, note='AI judge accepted candidate for next non-live stage')
             applied_status = recommended
-            # Create inert approved snapshot for approved non-live statuses.
             if recommended in {
                 'approved_for_research',
                 'approved_for_rebuild_training_data',
@@ -133,7 +127,6 @@ def judge_latest(scope: str, auto_apply: bool = True) -> dict[str, Any]:
         'writes_production_config': False,
     }
     REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-    # Keep a compact append-only decisions log.
     rows = []
     if DECISIONS_PATH.exists():
         try:
@@ -146,6 +139,42 @@ def judge_latest(scope: str, auto_apply: bool = True) -> dict[str, Any]:
     DECISIONS_PATH.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
     return payload
 
+
+def judge_candidate_by_id(candidate_id: str, auto_apply: bool = True) -> dict[str, Any]:
+    """Judge a specific candidate id.
+
+    Optimizer modules call this after saving a candidate.  Missing helper used
+    to cause auto_judge_failed, so this closes the candidate->judge branch while
+    preserving the no-live-auto-promotion contract.
+    """
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not bool(PARAMS.get('CANDIDATE_AI_JUDGE_ENABLED', True)):
+        payload = {'generated_at': now_str(), 'candidate_id': str(candidate_id), 'status': 'disabled_by_config'}
+        REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return payload
+    candidate = load_candidate(str(candidate_id))
+    if not candidate:
+        payload = {'generated_at': now_str(), 'candidate_id': str(candidate_id), 'status': 'candidate_not_found'}
+        REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return payload
+    scope = str(candidate.get('scope_name') or candidate.get('scope') or 'trainer::default')
+    return _apply_judgement(candidate=candidate, scope=scope, auto_apply=auto_apply)
+
+def judge_latest(scope: str, auto_apply: bool = True) -> dict[str, Any]:
+    scope = str(scope or 'trainer::default')
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not bool(PARAMS.get('CANDIDATE_AI_JUDGE_ENABLED', True)):
+        payload = {'generated_at': now_str(), 'scope': scope, 'status': 'disabled_by_config'}
+        REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return payload
+
+    candidate = load_latest_candidate(scope_name=scope)
+    if not candidate:
+        payload = {'generated_at': now_str(), 'scope': scope, 'status': 'no_candidate'}
+        REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        return payload
+
+    return _apply_judgement(candidate=candidate, scope=scope, auto_apply=auto_apply)
 
 def main() -> None:
     parser = argparse.ArgumentParser()

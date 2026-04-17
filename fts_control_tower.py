@@ -38,6 +38,7 @@ from fts_real_api_readiness import RealAPIReadinessBuilder
 from fts_true_broker_readiness_gate import TrueBrokerReadinessGate
 from fts_true_broker_live_closure import TrueBrokerLiveClosureService
 from fts_operations_suite import OperatorApprovalRegistry
+from fts_entry_exit_param_policy import entry_thresholds, coerce_entry_exit_params
 from fts_execution_runtime import RecoveryEngine
 from fts_restart_recovery_service import RestartRecoveryService
 from fts_project_quality_suite import RecoveryValidationBuilder
@@ -269,11 +270,11 @@ def _safe_bool(value: Any, default: bool = False) -> bool:
 def _entry_thresholds() -> tuple[float, float, float]:
     try:
         from config import PARAMS as _PARAMS  # type: ignore
+        from fts_approved_param_mount import get_effective_params_for_mode  # type: ignore
+        _PARAMS = get_effective_params_for_mode('strategy_signal', dict(_PARAMS))
     except Exception:
         _PARAMS = {}
-    prepare_min = float(_PARAMS.get('PREENTRY_PILOT_THRESHOLD', 0.58))
-    full_min = float(_PARAMS.get('CONFIRM_FULL_THRESHOLD', 0.66))
-    readiness_min = float(_PARAMS.get('ENTRY_READINESS_PREPARE_MIN', 0.45))
+    _watch_min, prepare_min, full_min, readiness_min, _pilot_confirm_min = entry_thresholds(coerce_entry_exit_params(dict(_PARAMS)))
     return prepare_min, full_min, readiness_min
 
 

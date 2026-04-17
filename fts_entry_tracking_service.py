@@ -19,6 +19,16 @@ import pandas as pd
 
 from fts_config import PATHS
 from fts_execution_journal_service import append_execution_journal_event
+try:
+    from config import PARAMS  # type: ignore
+except Exception:  # pragma: no cover
+    PARAMS = {}
+try:
+    from fts_approved_param_mount import get_effective_params_for_mode
+except Exception:  # pragma: no cover
+    def get_effective_params_for_mode(mode: str, base_params=None, stage=None):
+        return dict(base_params or {})
+from fts_entry_exit_param_policy import coerce_entry_exit_params, lifecycle_limits
 
 
 class EntryTrackingService:
@@ -27,9 +37,8 @@ class EntryTrackingService:
     def __init__(self) -> None:
         self.path = PATHS.runtime_dir / 'entry_tracking_journal.json'
         self.action_plan_path = PATHS.runtime_dir / 'entry_tracking_action_plan.json'
-        self.max_prepare_days = 5
-        self.max_pilot_days = 4
-        self.max_missing_days = 2
+        self.params = coerce_entry_exit_params(get_effective_params_for_mode('strategy_signal', dict(PARAMS)))
+        self.max_prepare_days, self.max_pilot_days, self.max_missing_days = lifecycle_limits(self.params)
 
     def _load_decisions(self) -> tuple[Path | None, pd.DataFrame]:
         candidates = [

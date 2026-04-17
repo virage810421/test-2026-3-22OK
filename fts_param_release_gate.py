@@ -27,6 +27,8 @@ except Exception:  # pragma: no cover
     def now_str() -> str:
         return datetime.now().isoformat(timespec='seconds')
 
+from fts_entry_exit_param_policy import candidate_hard_gate
+
 from param_storage import (
     approve_candidate,
     load_candidate,
@@ -95,10 +97,15 @@ def run_release_gate(
     ai = candidate.get('ai_judge', {}) or {}
     rel = candidate.get('release', {}) or {}
     score = float(ai.get('ai_score', 0.0) or 0.0)
+    entry_exit_gate = candidate_hard_gate(candidate)
     reasons: list[str] = []
 
     if not bool(ai.get('hard_gate_pass', False)):
         reasons.append('ai_hard_gate_not_passed')
+    if not bool(entry_exit_gate.get('hard_gate_pass', False)):
+        reasons.append('entry_exit_param_hard_gate_not_passed')
+    if entry_exit_gate.get('strictness_health', {}).get('status') in {'too_loose', 'too_strict', 'mixed_unstable'}:
+        reasons.append('entry_exit_strictness_not_balanced')
     if score < float(PARAMS.get('PARAM_RELEASE_MIN_AI_SCORE', 75.0)):
         reasons.append('ai_score_below_release_floor')
     if bool(PARAMS.get('PARAM_RELEASE_REQUIRE_PAPER', True)) and not bool(rel.get('paper_pass', False)):
@@ -138,6 +145,7 @@ def run_release_gate(
         'reasons': reasons,
         'force': bool(force),
         'evidence_refresh': evidence,
+        'entry_exit_gate': entry_exit_gate,
         'ai_score': score,
         'paper_pass': bool(rel.get('paper_pass', False)),
         'shadow_pass': bool(rel.get('shadow_pass', False)),

@@ -2,6 +2,7 @@
 """AI-style rule judge for label_policy::default candidates."""
 from __future__ import annotations
 from typing import Any
+from fts_entry_exit_param_policy import candidate_hard_gate
 
 def _num(x: Any, default: float = 0.0) -> float:
     try: return float(x)
@@ -37,7 +38,11 @@ def judge_candidate(candidate: dict[str, Any], baseline: dict[str, Any] | None =
         + 0.10 * leakage_safety
         + 0.10 * _num(metrics.get('policy_stability', 0.5), 0.5)
     )
+    entry_exit_gate = candidate_hard_gate(candidate)
+    hard.extend(entry_exit_gate.get('hard_failures', []))
+    if entry_exit_gate.get('strictness_health', {}).get('status') == 'too_strict':
+        score = min(score, 74.0)
     hard_gate_pass = len(set(hard)) == 0
     recommended_status = 'approved_for_rebuild_training_data' if hard_gate_pass and score >= 75.0 else 'rejected'
     reasons = ['label policy candidate passed rebuild hard gates'] if hard_gate_pass else sorted(set(hard))
-    return {'enabled': True, 'ai_score': round(score, 4), 'hard_gate_pass': hard_gate_pass, 'recommended_status': recommended_status, 'reason': reasons, 'detail': {'positive_label_ratio': positive_ratio, 'train_rows': train_rows, 'target_valid_ratio': target_valid}}
+    return {'enabled': True, 'ai_score': round(score, 4), 'hard_gate_pass': hard_gate_pass, 'recommended_status': recommended_status, 'reason': reasons, 'detail': {'positive_label_ratio': positive_ratio, 'train_rows': train_rows, 'target_valid_ratio': target_valid, 'entry_exit_gate': entry_exit_gate}}

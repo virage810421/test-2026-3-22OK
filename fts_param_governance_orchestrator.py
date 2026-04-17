@@ -58,6 +58,13 @@ def run_param_governance(
             except Exception as exc:
                 item['evidence'] = {'status': 'error', 'error': repr(exc)}
 
+        if scope in {'strategy_signal::default', 'execution_policy::default'}:
+            try:
+                from fts_entry_exit_strictness_diagnostic import build_entry_exit_strictness_diagnostic
+                item['entry_exit_strictness'] = build_entry_exit_strictness_diagnostic(write=True)
+            except Exception as exc:
+                item['entry_exit_strictness'] = {'status': 'error', 'error': repr(exc)}
+
         if run_release_gate and scope in {'strategy_signal::default', 'execution_policy::default'}:
             try:
                 from fts_param_release_gate import run_release_gate as _run_release_gate

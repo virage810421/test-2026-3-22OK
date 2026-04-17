@@ -35,6 +35,15 @@ from fts_screening_legacy_compat import (
     _compute_realized_signal_stats,
 )
 
+
+try:
+    from fts_entry_exit_param_policy import coerce_entry_exit_params, entry_thresholds, exit_thresholds, risk_caps
+except Exception:  # pragma: no cover
+    def coerce_entry_exit_params(params): return dict(params or {})
+    def entry_thresholds(params=None): return (0.42, 0.55, 0.63, 0.40, 0.48)
+    def exit_thresholds(params=None): return (0.45, 0.60, 0.72, 0.88)
+    def risk_caps(params=None): return (0.86, 0.78)
+
 try:
     from config import PARAMS  # type: ignore
 except Exception:
@@ -53,7 +62,7 @@ class ScreeningEngine:
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'screening_engine.json'
         Path(PATHS.runtime_dir).mkdir(parents=True, exist_ok=True)
-        self.params = get_effective_params_for_mode('strategy_signal', dict(PARAMS))
+        self.params = coerce_entry_exit_params(get_effective_params_for_mode('strategy_signal', dict(PARAMS)))
         self.market = MarketDataService()
         self.features = FeatureService()
         self.chips = ChipEnrichmentService()
@@ -153,11 +162,8 @@ class ScreeningEngine:
 
         trigger = max(1.0, float(params.get('TRIGGER_SCORE', 2.0)))
         legacy_influence = max(0.0, min(1.0, float(params.get('LEGACY_CONFIRM_INFLUENCE', 0.0))))
-        watch_th = float(params.get('PREENTRY_WATCH_THRESHOLD', 0.42))
-        pilot_th = float(params.get('PREENTRY_PILOT_THRESHOLD', 0.58))
-        full_th = float(params.get('CONFIRM_FULL_THRESHOLD', 0.66))
-        pilot_risk_cap = float(params.get('PILOT_MAX_BREAKOUT_RISK', 0.82))
-        full_risk_cap = float(params.get('FULL_MAX_BREAKOUT_RISK', 0.72))
+        watch_th, pilot_th, full_th, _readiness_min, _pilot_confirm_min = entry_thresholds(params)
+        pilot_risk_cap, full_risk_cap = risk_caps(params)
         require_alignment = bool(params.get('STATE_MACHINE_CONFIRM_REQUIRES_ALIGNMENT', False))
 
         weighted_buy = _series('Weighted_Buy_Score', 0.0) if 'Weighted_Buy_Score' in out.columns else _series('Buy_Score', 0.0)
@@ -230,10 +236,7 @@ class ScreeningEngine:
         entry_state = np.where(full_ok, 'FULL_ENTRY', np.where(pilot_ok, 'PILOT_ENTRY', np.where(watch_ok, 'PREPARE', 'NO_ENTRY')))
         entry_path = np.where(full_ok, 'CONFIRMATION', np.where(watch_ok, 'PREEMPTIVE', 'NONE'))
 
-        exit_warn = float(params.get('EXIT_WARN_HAZARD', 0.45))
-        exit_reduce = float(params.get('STATE_EXIT_REDUCE_HAZARD', 0.55))
-        exit_defend = float(params.get('STATE_EXIT_DEFEND_HAZARD', 0.72))
-        exit_hard = float(params.get('STATE_EXIT_HARD_EXIT', 0.88))
+        exit_warn, exit_reduce, exit_defend, exit_hard = exit_thresholds(params)
         exit_state = np.where(exit_hazard >= exit_hard, 'EXIT', np.where(exit_hazard >= exit_defend, 'DEFEND', np.where(exit_hazard >= exit_reduce, 'REDUCE', 'HOLD')))
         exit_path_state = np.where(exit_hazard >= exit_hard, 'EXIT', np.where(exit_hazard >= exit_defend, 'DEFEND', np.where(exit_hazard >= exit_reduce, 'REDUCE', np.where(exit_hazard >= exit_warn, 'WATCH_EXIT', 'HOLD'))))
 

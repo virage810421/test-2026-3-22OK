@@ -23,6 +23,12 @@ except Exception:  # pragma: no cover
     PARAMS = {}
 
 try:
+    from fts_entry_exit_param_policy import filter_mountable_params
+except Exception:  # pragma: no cover
+    def filter_mountable_params(params, keep_non_entry_exit=True):
+        return dict(params or {}), [], {'status': 'entry_exit_policy_unavailable'}
+
+try:
     from fts_utils import now_str  # type: ignore
 except Exception:  # pragma: no cover
     from datetime import datetime
@@ -165,15 +171,7 @@ def resolve_approved_params_for_scope(
         return effective
 
     params = approved.get('params', {}) if isinstance(approved.get('params', {}), dict) else {}
-    protected_prefixes = {'CANDIDATE_', 'PARAM_RELEASE_', 'LIVE_REQUIRE_', 'MODEL_MIN_OOT_', 'MODEL_MIN_PROMOTION_', 'KILL_SWITCH'}
-    safe_params = {}
-    rejected_keys = []
-    for k, v in params.items():
-        key = str(k)
-        if any(key.startswith(prefix) for prefix in protected_prefixes):
-            rejected_keys.append(key)
-            continue
-        safe_params[key] = v
+    safe_params, rejected_keys, entry_exit_diagnostic = filter_mountable_params(params, keep_non_entry_exit=True)
     effective.update(deepcopy(safe_params))
     report.update({
         'mounted': bool(safe_params),
@@ -182,7 +180,8 @@ def resolve_approved_params_for_scope(
         'candidate_id': approved.get('candidate_id'),
         'version': approved.get('version'),
         'params_mounted': sorted(safe_params.keys()),
-        'protected_keys_rejected': sorted(rejected_keys),
+        'protected_or_out_of_bounds_keys_rejected': sorted(rejected_keys),
+        'entry_exit_param_diagnostic': entry_exit_diagnostic,
     })
     _write_mount_report(report)
     effective['_approved_param_mount'] = {
@@ -193,6 +192,7 @@ def resolve_approved_params_for_scope(
         'candidate_id': approved.get('candidate_id'),
         'version': approved.get('version'),
         'params_mounted': sorted(safe_params.keys()),
+        'protected_or_out_of_bounds_keys_rejected': sorted(rejected_keys),
     }
     return effective
 

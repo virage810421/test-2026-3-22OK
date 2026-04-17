@@ -2,6 +2,7 @@
 """AI-style rule judge for execution_policy::default candidates."""
 from __future__ import annotations
 from typing import Any
+from fts_entry_exit_param_policy import candidate_hard_gate
 
 FORBIDDEN_KEYS = {'KILL_SWITCH', 'LIVE_REQUIRE_PROMOTED_MODEL'}
 
@@ -37,7 +38,11 @@ def judge_candidate(candidate: dict[str, Any], baseline: dict[str, Any] | None =
         + 0.20 * liquidity
         + 0.15 * sizing
     )
+    entry_exit_gate = candidate_hard_gate(candidate)
+    hard.extend(entry_exit_gate.get('hard_failures', []))
+    if entry_exit_gate.get('strictness_health', {}).get('status') == 'too_strict':
+        score = min(score, 74.0)
     hard_gate_pass = len(set(hard)) == 0
     recommended_status = 'approved_for_paper' if hard_gate_pass and score >= 75.0 else 'rejected'
     reasons = ['execution policy candidate passed paper-entry hard gates'] if hard_gate_pass else sorted(set(hard))
-    return {'enabled': True, 'ai_score': round(score, 4), 'hard_gate_pass': hard_gate_pass, 'recommended_status': recommended_status, 'reason': reasons, 'detail': {'avg_slippage': avg_slip, 'order_reject_rate': reject_rate, 'liquidity_gate_score': liquidity}}
+    return {'enabled': True, 'ai_score': round(score, 4), 'hard_gate_pass': hard_gate_pass, 'recommended_status': recommended_status, 'reason': reasons, 'detail': {'avg_slippage': avg_slip, 'order_reject_rate': reject_rate, 'liquidity_gate_score': liquidity, 'entry_exit_gate': entry_exit_gate}}

@@ -8,6 +8,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from fts_watchlist_runtime_service import build_dynamic_watch_list_from_env
+from fts_entry_exit_param_policy import ENTRY_EXIT_DEFAULTS
 
 
 STRATEGY_PARAMS = MappingProxyType({
@@ -135,6 +136,14 @@ LIVE_GATE_PARAMS = MappingProxyType({
 })
 
 
+
+
+ENTRY_EXIT_POLICY_PARAMS = MappingProxyType({
+    # Unified entry/exit strictness parameters. Optimizers may propose these,
+    # but approved mount validates them against fts_entry_exit_param_policy bounds.
+    **ENTRY_EXIT_DEFAULTS,
+})
+
 CANDIDATE_GOVERNANCE_PARAMS = MappingProxyType({
     # ML trainer approved params mount
     "TRAIN_USE_APPROVED_PARAMS": False,
@@ -189,6 +198,7 @@ PARAM_SECTIONS = MappingProxyType({
     'strategy': STRATEGY_PARAMS,
     'portfolio': PORTFOLIO_PARAMS,
     'live_gate': LIVE_GATE_PARAMS,
+    'entry_exit_policy': ENTRY_EXIT_POLICY_PARAMS,
     'candidate_governance': CANDIDATE_GOVERNANCE_PARAMS,
     'alert': ALERT_PARAMS,
 })

@@ -9,6 +9,8 @@ from typing import Any
 
 import pandas as pd
 
+from fts_entry_exit_param_policy import coerce_entry_exit_params, entry_thresholds
+
 try:
     from config import PARAMS  # type: ignore
 except Exception:
@@ -19,6 +21,7 @@ try:
     PARAMS = get_effective_params_for_mode('label_policy', dict(PARAMS))
 except Exception:
     PARAMS = dict(PARAMS)
+PARAMS = coerce_entry_exit_params(dict(PARAMS))
 
 from fts_screening_engine import ScreeningEngine
 from fts_market_data_service import MarketDataService
@@ -144,8 +147,9 @@ def _build_execution_aware_label(computed_df: pd.DataFrame, i: int, hold_days: i
     entry_dt = pd.to_datetime(entry_row.name, errors='coerce')
     exit_dt = pd.to_datetime(future_window.index[-1], errors='coerce')
 
-    setup_ready_label = int(_safe_float(computed_df.iloc[i].get('PreEntry_Score', 0.0), 0.0) >= float(PARAMS.get('PREENTRY_PILOT_THRESHOLD', 0.58)) and favorable_move * 100.0 >= float(PARAMS.get('SETUP_READY_MIN_FAVORABLE_PCT', 1.50)))
-    trigger_confirm_label = int(_safe_float(computed_df.iloc[i].get('Confirm_Entry_Score', 0.0), 0.0) >= float(PARAMS.get('CONFIRM_FULL_THRESHOLD', 0.66)) and favorable_move * 100.0 >= float(PARAMS.get('TRIGGER_CONFIRM_MIN_FAVORABLE_PCT', 3.00)) and int(label_y) == 1)
+    _watch_th, pilot_th, full_th, _readiness_min, _pilot_confirm_min = entry_thresholds(PARAMS)
+    setup_ready_label = int(_safe_float(computed_df.iloc[i].get('PreEntry_Score', 0.0), 0.0) >= pilot_th and favorable_move * 100.0 >= float(PARAMS.get('SETUP_READY_MIN_FAVORABLE_PCT', 1.50)))
+    trigger_confirm_label = int(_safe_float(computed_df.iloc[i].get('Confirm_Entry_Score', 0.0), 0.0) >= full_th and favorable_move * 100.0 >= float(PARAMS.get('TRIGGER_CONFIRM_MIN_FAVORABLE_PCT', 3.00)) and int(label_y) == 1)
     current_exit_hazard = _safe_float(computed_df.iloc[i].get('Exit_Hazard_Score', 0.0), 0.0)
     exit_state_at_label = str(computed_df.iloc[i].get('Exit_State', 'HOLD'))
     exit_defend_label = int(current_exit_hazard >= float(PARAMS.get('EXIT_LABEL_DEFEND_HAZARD', 0.55)) or adverse_move * 100.0 >= float(PARAMS.get('EXIT_LABEL_DEFEND_ADVERSE_PCT', 1.20)) or exit_state_at_label in {'DEFEND','REDUCE','EXIT'})
