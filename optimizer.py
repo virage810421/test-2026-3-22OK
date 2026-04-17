@@ -101,7 +101,19 @@ def run_walk_forward_optimization(iterations: int = 50, split_ratio: float = 0.7
     if not results:
         return None
     best = sorted(results, key=lambda x: x['Score'], reverse=True)[0]
-    save_candidate_params('walk_forward_default', best['Params'], metrics={k: v for k, v in best.items() if k != 'Params'}, source_module='optimizer.py', note='research-only walk-forward candidate')
+    best_params_safe = {k: best['Params'].get(k) for k in PARAM_SPACE.keys()}
+    save_candidate_params(
+        'strategy_signal::default',
+        best_params_safe,
+        metrics={k: v for k, v in best.items() if k != 'Params'},
+        source_module='optimizer.py',
+        note='strategy-signal research-only walk-forward candidate; AI judge required',
+    )
+    try:
+        from fts_candidate_ai_judge import judge_candidate_by_scope
+        best['AI_Judge'] = judge_candidate_by_scope('strategy_signal::default')
+    except Exception as exc:
+        best['AI_Judge'] = {'status': 'auto_judge_failed', 'error': repr(exc)}
     _LAB.write_json_artifact('optimizer_runs', f'walk_forward_best_{now_str().replace(":","").replace("-","").replace("T","_")}.json', best)
     return best
 

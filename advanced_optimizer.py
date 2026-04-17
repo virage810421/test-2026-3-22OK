@@ -188,13 +188,19 @@ def run_bayesian_optimization(n_iter: int = 30, split_ratio: float = 0.7, ticker
         return None
     frontier = get_pareto_frontier(results)
     best = sorted(frontier or results, key=lambda x: x.get('Composite', 0.0), reverse=True)[0]
-    save_candidate_params(
-        'default',
-        best['Params'],
+    strategy_keys = set(_candidate_space().keys())
+    saved = save_candidate_params(
+        'strategy_signal::default',
+        {k: best['Params'].get(k) for k in strategy_keys if k in best['Params']},
         metrics={k: v for k, v in best.items() if k != 'Params'},
         source_module='advanced_optimizer.py',
-        note='research-only Bayesian/GP Pareto candidate',
+        note='strategy-signal research-only Bayesian/GP Pareto candidate; AI judge required',
     )
+    try:
+        from fts_candidate_ai_judge import judge_candidate_by_id
+        best['AI_Judge'] = judge_candidate_by_id(saved.get('candidate_id'))
+    except Exception as exc:
+        best['AI_Judge'] = {'status': 'auto_judge_failed', 'error': repr(exc)}
     _LAB.write_json_artifact('optimizer_runs', f'pareto_gp_best_{now_str().replace(":","").replace("-","").replace(" ","_")}.json', {'best': best, 'frontier': frontier, 'iterations': n_iter})
     return best
 

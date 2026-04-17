@@ -4,7 +4,6 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
-import fnmatch
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -23,67 +22,19 @@ DEFAULT_TRACKED_FILES = [
     'selected_features_long.pkl',
     'selected_features_short.pkl',
     'selected_features_range.pkl',
-    str(getattr(CONFIG, 'exit_selected_features_filename', 'selected_features_exit.pkl')),
+    'selected_features_exit.pkl',
     'model_趨勢多頭.pkl',
     'model_區間盤整.pkl',
     'model_趨勢空頭.pkl',
-    str(getattr(CONFIG, 'exit_defend_model_filename', 'exit_model_defend.pkl')),
-    str(getattr(CONFIG, 'exit_reduce_model_filename', 'exit_model_reduce.pkl')),
-    str(getattr(CONFIG, 'exit_confirm_model_filename', 'exit_model_confirm.pkl')),
+    'exit_model_defend.pkl',
+    'exit_model_reduce.pkl',
+    'exit_model_confirm.pkl',
     'model_long_*.pkl',
     'model_short_*.pkl',
     'model_range_*.pkl',
 ]
-
-
-def _is_pattern(name: str) -> bool:
-    s = str(name or '')
-    return any(ch in s for ch in '*?[]')
-
-
-def _unique(seq: list[str]) -> list[str]:
-    out: list[str] = []
-    seen: set[str] = set()
-    for item in seq:
-        s = str(item or '').strip()
-        if s and s not in seen:
-            seen.add(s)
-            out.append(s)
-    return out
-
-
-def _resolve_tracked_files(tracked_files: list[str] | None = None, source_dir: Path | None = None) -> list[str]:
-    base_dir = Path(source_dir) if source_dir is not None else MODELS_DIR
-    requested = list(tracked_files or DEFAULT_TRACKED_FILES)
-    explicit: list[str] = []
-    patterns: list[str] = []
-    for name in requested:
-        s = str(name or '').strip()
-        if not s:
-            continue
-        if _is_pattern(s):
-            patterns.append(s)
-        else:
-            explicit.append(s)
-    resolved = _unique(explicit)
-    if base_dir.exists():
-        for path in sorted(base_dir.iterdir()):
-            if not path.is_file():
-                continue
-            for pat in patterns:
-                if fnmatch.fnmatch(path.name, pat):
-                    resolved.append(path.name)
-                    break
-    return _unique(resolved)
-
-
-def _version_tracked_files(version_tag: str) -> list[str]:
-    version_dir = VERSIONS_DIR / version_tag
-    if version_dir.exists():
-        files = [p.name for p in sorted(version_dir.iterdir()) if p.is_file()]
-        if files:
-            return _unique(files)
-    return _resolve_tracked_files()
+VALIDATED_MANIFEST_NAME = 'validated_artifacts.json'
+VALIDATED_MANIFEST_NAME = 'validated_artifacts.json'
 
 
 def ensure_dirs() -> None:
@@ -125,6 +76,82 @@ def _copy_if_exists(src: Path, dst: Path) -> bool:
     return True
 
 
+def _expand_tracked_files(base_dir: Path, tracked_files: list[str] | None = None) -> list[str]:
+    resolved: list[str] = []
+    for pattern in list(tracked_files or DEFAULT_TRACKED_FILES):
+        s = str(pattern).strip()
+        if not s:
+            continue
+        if any(ch in s for ch in '*?['):
+            for p in sorted(base_dir.glob(s)):
+                if p.is_file() and p.name not in resolved:
+                    resolved.append(p.name)
+        else:
+            if (base_dir / s).exists() and (base_dir / s).is_file() and s not in resolved:
+                resolved.append(s)
+    return resolved
+
+
+def _validated_manifest_path(version_dir: Path) -> Path:
+    return version_dir / VALIDATED_MANIFEST_NAME
+
+
+def _read_validated_manifest(version_dir: Path) -> dict[str, Any]:
+    return load_json(_validated_manifest_path(version_dir), {})
+
+
+def _manifest_allowed_files(version_dir: Path, manifest: dict[str, Any] | None = None) -> list[str]:
+    payload = manifest or _read_validated_manifest(version_dir)
+    allowed: list[str] = []
+    if not isinstance(payload, dict):
+        return allowed
+    for row in payload.get('artifacts', []) or []:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get('name', '')).strip()
+        if not name:
+            continue
+        if bool(row.get('allow_promote', False)) and (version_dir / name).exists() and name not in allowed:
+            allowed.append(name)
+    return allowed
+
+
+def write_validated_artifacts_manifest(version_tag: str, artifacts: list[dict[str, Any]], metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+    ensure_dirs()
+    version_dir = VERSIONS_DIR / version_tag
+    version_dir.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, Any]] = []
+    for row in artifacts or []:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get('name', '')).strip()
+        if not name:
+            continue
+        exists = (version_dir / name).exists()
+        item = dict(row)
+        item['name'] = name
+        item['exists'] = bool(exists)
+        item['allow_promote'] = bool(item.get('allow_promote', False) and exists)
+        rows.append(item)
+    payload = {
+        'generated_at': now_str(),
+        'version': version_tag,
+        'strict_whitelist': True,
+        'artifacts': rows,
+        'allow_promote_files': [r['name'] for r in rows if r.get('allow_promote')],
+        'metadata': metadata or {},
+        'status': 'validated_artifacts_manifest_ready',
+    }
+    write_json(_validated_manifest_path(version_dir), payload)
+    append_jsonl(EVENTS_PATH, {
+        'time': now_str(),
+        'event': 'write_validated_manifest',
+        'version': version_tag,
+        'allow_promote_count': len(payload['allow_promote_files']),
+    })
+    return payload
+
+
 def _artifact_hash(path: Path) -> str | None:
     if not path.exists() or not path.is_file():
         return None
@@ -153,11 +180,13 @@ def _tracked_payload(version_dir: Path, tracked_files: list[str]) -> list[dict[s
 
 def snapshot_current_models(version_tag: str, metrics: dict[str, Any] | None = None, note: str = '', tracked_files: list[str] | None = None) -> dict[str, Any]:
     ensure_dirs()
-    tracked = _resolve_tracked_files(tracked_files)
+    tracked = tracked_files or DEFAULT_TRACKED_FILES
+    resolved_tracked = _expand_tracked_files(MODELS_DIR, tracked)
+    resolved_tracked = _expand_tracked_files(MODELS_DIR, tracked)
     version_dir = VERSIONS_DIR / version_tag
     version_dir.mkdir(parents=True, exist_ok=True)
     copied = []
-    for filename in tracked:
+    for filename in resolved_tracked:
         src = MODELS_DIR / filename
         dst = version_dir / filename
         if _copy_if_exists(src, dst):
@@ -167,7 +196,9 @@ def snapshot_current_models(version_tag: str, metrics: dict[str, Any] | None = N
         'version': version_tag,
         'timestamp': now_str(),
         'files': copied,
-        'artifacts': _tracked_payload(version_dir, tracked),
+        'tracked_files_requested': list(tracked),
+        'tracked_files_resolved': list(resolved_tracked),
+        'artifacts': _tracked_payload(version_dir, resolved_tracked),
         'metrics': metrics or {},
         'note': note,
         'status': 'snapshot',
@@ -176,7 +207,7 @@ def snapshot_current_models(version_tag: str, metrics: dict[str, Any] | None = N
     registry['versions'].append(entry)
     registry['current_version'] = version_tag
     save_registry(registry)
-    for filename in tracked:
+    for filename in resolved_tracked:
         _copy_if_exists(version_dir / filename, CURRENT_DIR / filename)
     append_jsonl(EVENTS_PATH, {'time': now_str(), 'event': 'snapshot', 'version': version_tag, 'note': note, 'metrics': metrics or {}})
     return entry
@@ -188,9 +219,21 @@ def promote_best_version(version_tag: str) -> dict[str, Any]:
     registry['best_version'] = version_tag
     save_registry(registry)
     version_dir = VERSIONS_DIR / version_tag
-    for filename in _version_tracked_files(version_tag):
-        _copy_if_exists(version_dir / filename, BEST_DIR / filename)
-    payload = {'time': now_str(), 'event': 'promote_best', 'version': version_tag}
+    manifest = _read_validated_manifest(version_dir)
+    manifest_files = _manifest_allowed_files(version_dir, manifest)
+    files_to_copy = manifest_files or _expand_tracked_files(version_dir, DEFAULT_TRACKED_FILES)
+    copied = []
+    for filename in files_to_copy:
+        if _copy_if_exists(version_dir / filename, BEST_DIR / filename):
+            copied.append(filename)
+    payload = {
+        'time': now_str(),
+        'event': 'promote_best',
+        'version': version_tag,
+        'source': 'validated_manifest' if manifest_files else 'fallback_tracked_files',
+        'validated_manifest_present': bool(manifest),
+        'copied': copied,
+    }
     append_jsonl(EVENTS_PATH, payload)
     return payload
 
@@ -198,15 +241,25 @@ def promote_best_version(version_tag: str) -> dict[str, Any]:
 def restore_version(version_tag: str) -> dict[str, Any]:
     ensure_dirs()
     version_dir = VERSIONS_DIR / version_tag
+    manifest = _read_validated_manifest(version_dir)
+    manifest_files = _manifest_allowed_files(version_dir, manifest)
+    files_to_restore = manifest_files or _expand_tracked_files(version_dir, DEFAULT_TRACKED_FILES)
     restored = []
-    for filename in _version_tracked_files(version_tag):
+    for filename in files_to_restore:
         if _copy_if_exists(version_dir / filename, MODELS_DIR / filename):
             restored.append(filename)
             _copy_if_exists(version_dir / filename, CURRENT_DIR / filename)
     registry = load_registry()
     registry['current_version'] = version_tag
     save_registry(registry)
-    payload = {'time': now_str(), 'event': 'restore', 'version': version_tag, 'restored': restored}
+    payload = {
+        'time': now_str(),
+        'event': 'restore',
+        'version': version_tag,
+        'restored': restored,
+        'source': 'validated_manifest' if manifest_files else 'fallback_tracked_files',
+        'validated_manifest_present': bool(manifest),
+    }
     append_jsonl(EVENTS_PATH, payload)
     return payload
 
@@ -228,9 +281,10 @@ class ModelGovernanceManager:
         self.runtime_path = Path(getattr(PATHS, 'runtime_dir', Path('runtime'))) / 'model_governance_status.json'
 
     def _collect_artifact_status(self, tracked_files: list[str] | None = None) -> dict[str, Any]:
-        tracked = _resolve_tracked_files(tracked_files)
+        tracked = tracked_files or DEFAULT_TRACKED_FILES
+        resolved = _expand_tracked_files(MODELS_DIR, tracked)
         rows = []
-        for name in tracked:
+        for name in resolved:
             p = MODELS_DIR / name
             rows.append({
                 'name': name,
@@ -238,7 +292,7 @@ class ModelGovernanceManager:
                 'size_bytes': p.stat().st_size if p.exists() else 0,
                 'sha256': _artifact_hash(p) if p.exists() else None,
             })
-        return {'tracked_files': tracked, 'all_present': all(r['exists'] for r in rows), 'files': rows}
+        return {'tracked_files': tracked, 'resolved_files': resolved, 'all_present': all(r['exists'] for r in rows), 'files': rows}
 
     def register_candidate(self, version_tag: str | None = None, metrics: dict[str, Any] | None = None, note: str = '') -> dict[str, Any]:
         version_tag = version_tag or create_version_tag('candidate')

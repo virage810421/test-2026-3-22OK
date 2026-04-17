@@ -35,6 +35,17 @@ from fts_screening_legacy_compat import (
     _compute_realized_signal_stats,
 )
 
+try:
+    from config import PARAMS  # type: ignore
+except Exception:
+    PARAMS = {}
+
+try:
+    from fts_approved_param_mount import get_effective_params_for_mode
+except Exception:  # pragma: no cover
+    def get_effective_params_for_mode(mode: str, base_params=None, stage=None):
+        return dict(base_params or {})
+
 
 class ScreeningEngine:
     MODULE_VERSION = 'v88_live_safe_ev_state_machine'
@@ -42,6 +53,7 @@ class ScreeningEngine:
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'screening_engine.json'
         Path(PATHS.runtime_dir).mkdir(parents=True, exist_ok=True)
+        self.params = get_effective_params_for_mode('strategy_signal', dict(PARAMS))
         self.market = MarketDataService()
         self.features = FeatureService()
         self.chips = ChipEnrichmentService()
@@ -348,7 +360,9 @@ class ScreeningEngine:
         return out
 
     def _prepare(self, df: pd.DataFrame, p: dict[str, Any] | None = None) -> pd.DataFrame:
-        params = p or {}
+        params = dict(getattr(self, 'params', {}) or {})
+        if p:
+            params.update(p)
         out = df.copy()
         if out.empty or 'Close' not in out.columns:
             return pd.DataFrame()
@@ -366,11 +380,11 @@ class ScreeningEngine:
         out['BB_Lower'] = out['MA20'] - out['STD20'] * 2
         out['BB_Width'] = ((out['BB_Upper'] - out['BB_Lower']) / out['MA20'].replace(0, pd.NA)).fillna(0)
         out['Vol_MA20'] = out['Volume'].rolling(20, min_periods=1).mean() if 'Volume' in out.columns else 0
-        out['RSI'] = self._rsi(out['Close'])
-        ema12 = out['Close'].ewm(span=12, adjust=False).mean()
-        ema26 = out['Close'].ewm(span=26, adjust=False).mean()
+        out['RSI'] = self._rsi(out['Close'], int(params.get('RSI_PERIOD', 14)))
+        ema12 = out['Close'].ewm(span=int(params.get('MACD_FAST', 12)), adjust=False).mean()
+        ema26 = out['Close'].ewm(span=int(params.get('MACD_SLOW', 26)), adjust=False).mean()
         out['MACD'] = ema12 - ema26
-        out['MACD_Signal'] = out['MACD'].ewm(span=9, adjust=False).mean()
+        out['MACD_Signal'] = out['MACD'].ewm(span=int(params.get('MACD_SIGNAL', 9)), adjust=False).mean()
         out['MACD_Hist'] = out['MACD'] - out['MACD_Signal']
         high = out['High'] if 'High' in out.columns else out['Close']
         low = out['Low'] if 'Low' in out.columns else out['Close']
@@ -500,6 +514,7 @@ class ScreeningEngine:
             'official_percentile_mode': True,
             'precise_event_calendar_mode': True,
             'selected_features_driven_live': bool(self.features.load_selected_features()),
+            'approved_strategy_param_mount': dict(getattr(self, 'params', {}).get('_approved_param_mount', {})) if isinstance(getattr(self, 'params', {}), dict) else {},
             'regime_engine': 'direction_strength_environment_v2 + transition_hysteresis_v1',
             'status': 'screening_engine_ready',
         }

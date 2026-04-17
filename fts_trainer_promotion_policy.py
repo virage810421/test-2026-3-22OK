@@ -34,45 +34,54 @@ class TrainerPromotionPolicyBuilder:
             return {}
 
     def _build_shadow_runtime_evidence(self) -> tuple[Any, dict[str, Any]]:
+        try:
+            from fts_shadow_runtime_evidence import ShadowRuntimeEvidenceBuilder
+            path, payload = ShadowRuntimeEvidenceBuilder(self.shadow_runtime_path).build()
+            if isinstance(payload, dict) and payload.get('runtime_observed'):
+                return path, payload
+        except Exception:
+            pass
         journal = self._load_json(PATHS.runtime_dir / 'execution_journal_summary.json')
-        decision_gate = self._load_json(PATHS.runtime_dir / 'decision_execution_formal_gate.json')
+        ledger = self._load_json(PATHS.runtime_dir / 'execution_ledger_summary.json')
+        twap_state = self._load_json(PATHS.runtime_dir / 'twap3_child_order_state.json')
         live_safety = self._load_json(PATHS.runtime_dir / 'live_safety_gate.json')
         closure = self._load_json(PATHS.runtime_dir / 'true_broker_live_closure.json')
-        backend = self._load_json(PATHS.runtime_dir / 'trainer_backend_report.json')
 
-        observed_candidates = int(journal.get('total_event_count_estimate', 0) or 0)
-        observed_orders = int(journal.get('new_order_candidate_count', 0) or 0)
-        final_order_count = int(decision_gate.get('final_order_count', 0) or 0)
-        paper_like_activity = max(observed_orders, final_order_count, int(((closure.get('callback_summary') or {}).get('ingested_count', 0) or 0)))
-        runtime_observed = bool(observed_candidates > 0 or paper_like_activity > 0)
+        observed_journal_events = int(journal.get('total_event_count_estimate', journal.get('event_count', 0)) or 0)
+        ledger_orders = ledger.get('orders', []) if isinstance(ledger.get('orders'), list) else []
+        ledger_fills = ledger.get('fills', []) if isinstance(ledger.get('fills'), list) else []
+        twap_children = []
+        if isinstance(twap_state.get('children'), dict):
+            twap_children = [x for x in twap_state.get('children', {}).values() if isinstance(x, dict)]
+        callback_count = int(((closure.get('callback_summary') or {}).get('ingested_count', 0) or 0)) if isinstance(closure, dict) else 0
+        runtime_observation_count = observed_journal_events + len(ledger_orders) + len(ledger_fills) + len(twap_children) + callback_count
+        runtime_observed = bool(runtime_observation_count > 0)
 
         runtime_drift = None
-        for payload in (journal, decision_gate, closure):
+        for source_payload in (journal, closure, ledger):
             for key in ('shadow_return_drift_pct', 'return_drift_pct', 'paper_return_drift_pct'):
-                if key in payload:
-                    runtime_drift = self._safe_float(payload.get(key), 0.0)
+                if key in source_payload:
+                    runtime_drift = self._safe_float(source_payload.get(key), None)
                     break
             if runtime_drift is not None:
                 break
-        if runtime_drift is None:
-            runtime_drift = self._safe_float(backend.get('shadow_runtime_drift_pct'), None)
 
         payload = {
             'generated_at': now_str(),
             'system_name': CONFIG.system_name,
             'runtime_observed': runtime_observed,
-            'shadow_observation_count': int(observed_candidates),
-            'paper_like_activity_count': int(paper_like_activity),
+            'shadow_observation_count': int(runtime_observation_count),
+            'paper_like_activity_count': int(len(ledger_orders) + len(ledger_fills) + len(twap_children)),
             'shadow_return_drift_pct': runtime_drift,
             'runtime_sources': {
                 'execution_journal_summary': str(PATHS.runtime_dir / 'execution_journal_summary.json') if journal else '',
-                'decision_execution_formal_gate': str(PATHS.runtime_dir / 'decision_execution_formal_gate.json') if decision_gate else '',
+                'execution_ledger_summary': str(PATHS.runtime_dir / 'execution_ledger_summary.json') if ledger else '',
+                'twap3_child_order_state': str(PATHS.runtime_dir / 'twap3_child_order_state.json') if twap_state else '',
                 'true_broker_live_closure': str(PATHS.runtime_dir / 'true_broker_live_closure.json') if closure else '',
-                'trainer_backend_report': str(PATHS.runtime_dir / 'trainer_backend_report.json') if backend else '',
             },
             'live_safety_clear': bool(live_safety.get('go_for_execution', live_safety.get('status') not in {'live_safety_blocked'})) if live_safety else True,
             'status': 'shadow_runtime_evidence_ready' if runtime_observed else 'shadow_runtime_evidence_missing',
-            'truthful_rule': '沒有真實 shadow/paper runtime 觀察證據時，不得把 overfit gap 當作 shadow pass。',
+            'truthful_rule': 'fallback 也不得把 decision gate / offline overfit 當作 shadow runtime；必須是 ledger、TWAP3、callback 或 journal 事件。',
         }
         write_json(self.shadow_runtime_path, payload)
         return self.shadow_runtime_path, payload

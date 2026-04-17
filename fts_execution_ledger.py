@@ -85,6 +85,45 @@ class ExecutionLedger:
                 break
         return positions, cash, sources
 
+
+    def _twap3_runtime_evidence(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
+        """Read TWAP3 child-order state and turn it into local ledger evidence."""
+        source = PATHS.runtime_dir / 'twap3_child_order_state.json'
+        data = self._read_json(source)
+        children = data.get('children', {}) if isinstance(data, dict) else {}
+        orders: list[dict[str, Any]] = []
+        fills: list[dict[str, Any]] = []
+        if isinstance(children, dict):
+            for child_id, child in children.items():
+                if not isinstance(child, dict):
+                    continue
+                order_id = str(child.get('child_order_id') or child_id)
+                row = {
+                    **child,
+                    'order_id': order_id,
+                    'client_order_id': order_id,
+                    'parent_order_id': str(child.get('parent_order_id') or ''),
+                    'ticker_symbol': str(child.get('ticker') or child.get('ticker_symbol') or ''),
+                    'lane': str(child.get('lane') or child.get('side') or 'TWAP3'),
+                    'execution_style': 'TWAP3',
+                    'status': str(child.get('status') or ''),
+                }
+                orders.append(row)
+                try:
+                    filled_qty = float(child.get('filled_qty') or 0)
+                except Exception:
+                    filled_qty = 0.0
+                if filled_qty > 0 or str(child.get('status') or '').upper() in {'FILLED', 'PARTIALLY_FILLED'}:
+                    fills.append({
+                        **row,
+                        'fill_id': f"TWAP3-FILL-{order_id}",
+                        'fill_qty': filled_qty,
+                        'filled_qty': filled_qty,
+                        'quantity_filled': filled_qty,
+                    })
+        sources = {'twap3_child_order_state': str(source) if orders or fills else ''}
+        return orders, fills, sources
+
     def build_summary(self) -> tuple[str, dict[str, Any]]:
         lane_event_counts = defaultdict(int)
         lane_mutation_counts = defaultdict(int)
@@ -128,31 +167,60 @@ class ExecutionLedger:
                     }
                     orders_by_key[order_key] = merged
                 fill_key = self._fill_key(payload)
-                if str(row.get('event_type', '')).lower() == 'fill_event' and fill_key:
+                event_type_l = str(row.get('event_type', '')).lower()
+                status_u = str(payload.get('status') or '').upper()
+                filled_qty = self._safe_float(
+                    payload.get('fill_qty', payload.get('filled_qty', payload.get('quantity_filled', payload.get('shares', payload.get('qty', 0))))),
+                    0.0,
+                )
+                # Paper opened positions and TWAP3 paper callbacks are execution evidence.
+                # The old summary only counted literal ``fill_event`` rows, so paper opens
+                # could create orders but zero fills, breaking shadow/reconciliation closure.
+                is_fill_like = (
+                    event_type_l == 'fill_event'
+                    or 'fill' in event_type_l
+                    or event_type_l in {'paper_position_opened', 'position_opened'}
+                    or status_u in {'FILLED', 'PAPER_FILLED', 'PARTIALLY_FILLED'}
+                    or filled_qty > 0
+                )
+                if is_fill_like and fill_key:
                     fbase = fills_by_key.get(fill_key, {})
                     fills_by_key[fill_key] = {
                         **fbase,
                         **payload,
                         'fill_id': fill_key,
                         'order_id': self._order_key(payload),
-                        'client_order_id': str(payload.get('client_order_id') or fbase.get('client_order_id') or ''),
+                        'client_order_id': str(payload.get('client_order_id') or fbase.get('client_order_id') or self._order_key(payload) or ''),
                         'broker_order_id': str(payload.get('broker_order_id') or fbase.get('broker_order_id') or ''),
                         'lane': lane,
                         'status': str(payload.get('status') or fbase.get('status') or 'FILLED'),
+                        'fill_qty': filled_qty,
+                        'filled_qty': filled_qty,
                         'recorded_at': str(row.get('recorded_at') or ''),
+                        'source_event_type': str(row.get('event_type') or ''),
                     }
 
         for lane, orders in per_lane_orders.items():
             order_counts[lane] = len(orders)
 
         positions, cash, fallback_sources = self._fallback_positions_cash()
-        orders = list(sorted(orders_by_key.values(), key=lambda x: str(x.get('last_recorded_at') or '')))
-        fills = list(sorted(fills_by_key.values(), key=lambda x: str(x.get('recorded_at') or '')))
+        twap_orders, twap_fills, twap_sources = self._twap3_runtime_evidence()
+        for row in twap_orders:
+            key = str(row.get('client_order_id') or row.get('order_id') or '')
+            if key and key not in orders_by_key:
+                orders_by_key[key] = row
+        for row in twap_fills:
+            key = str(row.get('fill_id') or '')
+            if key and key not in fills_by_key:
+                fills_by_key[key] = row
+        orders = list(sorted(orders_by_key.values(), key=lambda x: str(x.get('last_recorded_at') or x.get('last_update') or '')))
+        fills = list(sorted(fills_by_key.values(), key=lambda x: str(x.get('recorded_at') or x.get('last_update') or '')))
 
         sources = {
             'events_jsonl': str(self.events_path),
             'positions': fallback_sources.get('positions', ''),
             'cash': fallback_sources.get('cash', ''),
+            **twap_sources,
         }
         snapshot = {
             'generated_at': now_str(),

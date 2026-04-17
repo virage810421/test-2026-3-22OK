@@ -134,6 +134,51 @@ LIVE_GATE_PARAMS = MappingProxyType({
     "ENABLE_TRI_LANE_STAGE_RUNNERS": True,
 })
 
+
+CANDIDATE_GOVERNANCE_PARAMS = MappingProxyType({
+    # ML trainer approved params mount
+    "TRAIN_USE_APPROVED_PARAMS": False,
+    "TRAIN_APPROVED_PARAM_SCOPE": "trainer::default",
+    "TRAIN_PARAM_OPTIMIZER_SCOPE": "trainer::default",
+    "TRAIN_PARAM_OPTIMIZER_ITERATIONS": 24,
+
+    # Trainer params that were previously hidden fallback defaults
+    "MODEL_MIN_SAMPLES_LEAF": 3,
+    "OOT_RATIO": 0.20,
+    "WF_GAP": 5,
+
+    # Label policy approved params mount
+    "LABEL_USE_APPROVED_POLICY": False,
+    "LABEL_APPROVED_PARAM_SCOPE": "label_policy::default",
+
+    # Strategy/signal approved params mount
+    "STRATEGY_USE_APPROVED_PARAMS": False,
+    "STRATEGY_APPROVED_PARAM_SCOPE": "strategy_signal::default",
+
+    # Execution policy approved params mount
+    "EXECUTION_USE_APPROVED_PARAMS": False,
+    "EXECUTION_APPROVED_PARAM_SCOPE": "execution_policy::default",
+
+    # Candidate AI judge gates: AI can judge/recommend, but live promotion is locked.
+    "CANDIDATE_AI_JUDGE_ENABLED": True,
+    "CANDIDATE_AI_AUTO_APPROVE_RESEARCH": True,
+    "CANDIDATE_AI_AUTO_APPROVE_PAPER": True,
+    "CANDIDATE_AI_AUTO_APPROVE_SHADOW": True,
+    "CANDIDATE_AI_AUTO_PROMOTE_LIVE": False,
+    "CANDIDATE_MIN_AI_SCORE": 75.0,
+    "CANDIDATE_MIN_HARD_GATE_PASS": True,
+
+    # Release gate floors
+    "PARAM_RELEASE_REQUIRE_PAPER": True,
+    "PARAM_RELEASE_REQUIRE_SHADOW": True,
+    "PARAM_RELEASE_MIN_AI_SCORE": 75.0,
+    "PARAM_RELEASE_ALLOW_LIVE_AUTO_PROMOTION": False,
+    "PARAM_RELEASE_AUTO_REFRESH_EVIDENCE": True,
+    "PARAM_EVIDENCE_MIN_PAPER_ACTIVITY": 1,
+    "PARAM_EVIDENCE_MAX_REJECT_RATE": 0.20,
+    "PARAM_MOUNT_STAGE": "paper",
+})
+
 ALERT_PARAMS = MappingProxyType({
     "ALERT_TEST_MODE": True,
     "ALERT_LINE_BOT_TOKEN": os.getenv("ALERT_LINE_BOT_TOKEN", "").strip(),
@@ -144,6 +189,7 @@ PARAM_SECTIONS = MappingProxyType({
     'strategy': STRATEGY_PARAMS,
     'portfolio': PORTFOLIO_PARAMS,
     'live_gate': LIVE_GATE_PARAMS,
+    'candidate_governance': CANDIDATE_GOVERNANCE_PARAMS,
     'alert': ALERT_PARAMS,
 })
 

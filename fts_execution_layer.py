@@ -9,6 +9,12 @@ from typing import Any
 import pandas as pd
 
 from config import PARAMS
+
+try:
+    from fts_approved_param_mount import get_effective_params_for_mode
+    PARAMS = get_effective_params_for_mode('execution_policy', dict(PARAMS))
+except Exception:
+    PARAMS = dict(PARAMS)
 from fts_strategy_policy_layer import get_active_strategy, get_strategy_policy
 from fts_exception_policy import record_diagnostic
 from fts_symbol_contract import get_ticker_symbol, ensure_execution_symbol
@@ -47,6 +53,10 @@ class PositionPlan:
     child_order_count: int = 1
     max_child_qty: int = 0
     liquidity_score: float = 0.0
+    twap_parent_order_id: str = ''
+    child_orders: list[dict[str, Any]] | None = None
+    twap_resume_token: str = ''
+    execution_plan_status: str = ''
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -78,6 +88,32 @@ def direction_bucket(direction_text: str) -> str:
     if 'RANGE' in u or '區間' in s:
         return 'RANGE'
     return 'SHORT' if ('空' in s or 'SHORT' in u or 'SELL' in u) else 'LONG'
+
+
+def _execution_side_from_row(row) -> str:
+    bucket = direction_bucket(row.get('Direction', row.get('Action', '')) if hasattr(row, 'get') else '')
+    return 'SELL' if bucket == 'SHORT' else 'BUY'
+
+
+def _build_twap3_child_plan(row, curr_price: float, shares: int, liq_plan: dict[str, Any]) -> dict[str, Any]:
+    if str(liq_plan.get('execution_style', 'SINGLE')).upper() != 'TWAP3' or int(shares or 0) <= 0:
+        return {}
+    try:
+        from fts_twap3_child_order_engine import TWAP3ChildOrderEngine
+        ticker = ensure_execution_symbol(get_ticker_symbol(row) or str(row.get('Ticker', row.get('Ticker SYMBOL', 'UNKNOWN'))))
+        return TWAP3ChildOrderEngine().build_plan(
+            ticker=ticker,
+            side=_execution_side_from_row(row),
+            total_qty=int(shares),
+            reference_price=float(curr_price),
+            liquidity_score=float(liq_plan.get('liquidity_score', 0.0) or 0.0),
+            adv20=float(liq_plan.get('adv20', 0.0) or 0.0),
+            turnover_ratio=float(liq_plan.get('turnover_ratio', 0.0) or 0.0),
+            child_count=int(liq_plan.get('child_order_count', 3) or 3),
+        )
+    except Exception as exc:
+        record_diagnostic('execution_layer', 'twap3_child_plan_build_failed', exc, severity='error', fail_closed=True, context={'ticker_symbol': get_ticker_symbol(row), 'shares': shares})
+        return {'status': 'twap3_child_plan_build_failed', 'error': repr(exc), 'child_orders': []}
 
 
 def build_entry_metrics(row, params=PARAMS):
@@ -286,6 +322,20 @@ def signal_gate(row, model_decision=None, params=PARAMS) -> GateDecision:
         reasons.append('full_entry_risk_too_high')
 
     if model_decision is not None:
+        role_decisions = getattr(model_decision, 'role_decisions', {}) or {}
+        if isinstance(role_decisions, dict):
+            role_veto = role_decisions.get('veto_reasons', []) or []
+            if not bool(role_decisions.get('approved', True)):
+                reasons.extend([str(x) for x in role_veto])
+            entry_alpha = role_decisions.get('entry_alpha', {}) or {}
+            risk_failure = role_decisions.get('risk_failure', {}) or {}
+            execution_role = role_decisions.get('execution', {}) or {}
+            if isinstance(entry_alpha, dict) and not bool(entry_alpha.get('approved', True)):
+                reasons.extend([f"entry_alpha:{x}" for x in entry_alpha.get('reasons', [])])
+            if isinstance(risk_failure, dict) and not bool(risk_failure.get('approved', True)):
+                reasons.extend([f"risk_failure:{x}" for x in risk_failure.get('reasons', [])])
+            if isinstance(execution_role, dict) and not bool(execution_role.get('approved', True)):
+                reasons.extend([f"execution_model:{x}" for x in execution_role.get('reasons', [])])
         if not bool(getattr(model_decision, 'approved', False)):
             reasons.extend(list(getattr(model_decision, 'veto_reasons', [])))
         else:
@@ -402,11 +452,14 @@ def _execution_liquidity_plan(row, curr_price: float, requested_shares: int, par
     if turnover_ratio > 0 and turnover_ratio < float(params.get('EXECUTION_TURNOVER_SOFT_FLOOR', 0.6)):
         shares_cap = int(shares_cap * float(params.get('EXECUTION_LOW_TURNOVER_SIZE_MULTIPLIER', 0.5)))
 
-    execution_style = str(params.get('execution_style', 'SINGLE')).upper()
+    execution_style = str(params.get('EXECUTION_STYLE', params.get('execution_style', 'SINGLE'))).upper()
+    if shares_cap > 0 and (liquidity_score > 0 and liquidity_score < float(params.get('EXECUTION_TWAP3_LIQUIDITY_SOFT_CEILING', 0.75))):
+        execution_style = 'TWAP3'
     child_order_count = 1
     max_child_qty = shares_cap
     if execution_style == 'TWAP3' and shares_cap > 0:
-        child_order_count = 3
+        child_order_count = int(params.get('TWAP3_CHILD_COUNT', 3) or 3)
+        child_order_count = max(1, child_order_count)
         max_child_qty = max(1, int((shares_cap + child_order_count - 1) // child_order_count))
     return {
         'allowed': True,
@@ -464,7 +517,20 @@ def compute_position_plan(row, curr_price: float, total_nav: float, current_cash
 
     applied_alloc = total_cost / total_nav if total_nav > 0 else 0.0
     risk_amount = total_cost * risk_budget_ratio
-    plan = PositionPlan(True, 'ok', shares, total_cost, requested_alloc, applied_alloc, risk_amount, stop_pct, tp_pct, str(liq_plan.get('execution_style', 'SINGLE')), int(liq_plan.get('child_order_count', 1) or 1), int(liq_plan.get('max_child_qty', 0) or 0), float(liq_plan.get('liquidity_score', 0.0) or 0.0))
+    twap_plan = _build_twap3_child_plan(row, curr_price, shares, liq_plan)
+    if str(liq_plan.get('execution_style', 'SINGLE')).upper() == 'TWAP3' and (not twap_plan or str(twap_plan.get('status', '')).startswith('twap3_child_plan_build_failed')):
+        return PositionPlan(False, 'twap3_child_plan_not_ready_fail_closed', 0, 0.0, requested_alloc, 0.0, 0.0, stop_pct, tp_pct, 'TWAP3', int(liq_plan.get('child_order_count', 3) or 3), int(liq_plan.get('max_child_qty', 0) or 0), float(liq_plan.get('liquidity_score', 0.0) or 0.0), str(twap_plan.get('parent_order_id', '') if isinstance(twap_plan, dict) else ''), [], '', str(twap_plan.get('status', 'missing_twap_plan') if isinstance(twap_plan, dict) else 'missing_twap_plan'))
+    plan = PositionPlan(
+        True, 'ok', shares, total_cost, requested_alloc, applied_alloc, risk_amount, stop_pct, tp_pct,
+        str(liq_plan.get('execution_style', 'SINGLE')),
+        int(liq_plan.get('child_order_count', 1) or 1),
+        int(liq_plan.get('max_child_qty', 0) or 0),
+        float(liq_plan.get('liquidity_score', 0.0) or 0.0),
+        str(twap_plan.get('parent_order_id', '') if isinstance(twap_plan, dict) else ''),
+        list(twap_plan.get('child_orders', []) if isinstance(twap_plan, dict) else []),
+        str(twap_plan.get('resume_token', '') if isinstance(twap_plan, dict) else ''),
+        str(twap_plan.get('status', 'not_required') if isinstance(twap_plan, dict) and twap_plan else 'not_required'),
+    )
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(plan.as_dict(), ensure_ascii=False, indent=2), encoding='utf-8')
     return plan

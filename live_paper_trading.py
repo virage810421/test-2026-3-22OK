@@ -951,6 +951,46 @@ def run_eod_broker():
                 daily_log.append(f"⚠️ 略過 {ticker}: {plan.reason}")
                 continue
 
+            if str(getattr(plan, 'execution_style', '')).upper() == 'TWAP3':
+                try:
+                    from fts_twap3_child_order_engine import TWAP3ChildOrderEngine
+                    twap_engine = TWAP3ChildOrderEngine()
+                    if getattr(plan, 'twap_parent_order_id', '') and getattr(plan, 'child_orders', None):
+                        twap_engine.register_plan({
+                            'parent_order_id': getattr(plan, 'twap_parent_order_id', ''),
+                            'ticker': ticker,
+                            'side': 'SELL' if candidate_lane == 'SHORT' else 'BUY',
+                            'total_qty': int(plan.shares),
+                            'reference_price': float(curr_price),
+                            'execution_style': 'TWAP3',
+                            'status': 'PAPER_SUBMITTED' if not _is_true_live_context() else 'READY_FOR_BROKER_SUBMIT',
+                            'child_count': int(getattr(plan, 'child_order_count', 3) or 3),
+                            'child_orders': list(getattr(plan, 'child_orders', []) or []),
+                            'resume_token': getattr(plan, 'twap_resume_token', ''),
+                        })
+                        queue_payload = twap_engine.build_broker_submission_queue(mark_pending=True)
+                        _record_directional_execution_event('twap3_parent_plan', {'client_order_id': getattr(plan, 'twap_parent_order_id', ''), 'order_id': getattr(plan, 'twap_parent_order_id', ''), 'ticker_symbol': ticker, 'direction_bucket': candidate_lane, 'status': 'PENDING_SUBMIT', 'execution_style': 'TWAP3', 'shares': int(plan.shares), 'child_order_count': int(getattr(plan, 'child_order_count', 3) or 3)})
+                        for qrow in list(queue_payload.get('orders', []) or []):
+                            _record_directional_execution_event('twap3_child_submission_queue', {**qrow, 'direction_bucket': candidate_lane, 'status': 'PENDING_SUBMIT'})
+                        if not _is_true_live_context():
+                            for child in list(getattr(plan, 'child_orders', []) or []):
+                                cb = {
+                                    'event_id': f"paper-fill-{child.get('child_order_id')}",
+                                    'child_order_id': child.get('child_order_id'),
+                                    'status': 'FILLED',
+                                    'filled_qty': child.get('qty', 0),
+                                    'cumulative_filled_qty': child.get('qty', 0),
+                                    'broker_order_id': f"PAPER-{child.get('child_order_id')}",
+                                }
+                                twap_engine.apply_child_callback(cb)
+                                _record_directional_execution_event('fill_event', {**child, **cb, 'client_order_id': child.get('child_order_id'), 'order_id': child.get('child_order_id'), 'ticker_symbol': ticker, 'direction_bucket': candidate_lane, 'execution_style': 'TWAP3', 'fill_id': f"PAPER-FILL-{child.get('child_order_id')}"})
+                        twap_engine.summarize()
+                        daily_log.append(f"🧩 {ticker}: TWAP3 child-order plan ready parent={getattr(plan, 'twap_parent_order_id', '')} child_count={len(getattr(plan, 'child_orders', []) or [])}")
+                except Exception as exc:
+                    _diag('twap3_child_order_runtime_register', exc, severity='error', fail_closed=True, context={'ticker_symbol': ticker})
+                    daily_log.append(f"🛑 略過 {ticker}: TWAP3 child-order runtime failed")
+                    continue
+
             shares = int(plan.shares)
             total_cost = float(plan.total_cost)
             risk_amount = float(plan.risk_amount)
@@ -985,6 +1025,7 @@ def run_eod_broker():
                 ),
             )
             conn.commit()
+            _record_directional_execution_event('paper_position_opened', {'client_order_id': f'PAPER-{ticker}-{entry_time.strftime("%Y%m%d%H%M%S")}', 'order_id': f'PAPER-{ticker}-{entry_time.strftime("%Y%m%d%H%M%S")}', 'ticker_symbol': ticker, 'direction_bucket': candidate_lane, 'status': 'FILLED' if not _is_true_live_context() else 'SUBMITTED', 'execution_style': str(getattr(plan, 'execution_style', 'SINGLE')), 'shares': shares, 'price': curr_price, 'total_cost': total_cost, 'risk_amount': risk_amount, 'entry_state': str(row.get('Entry_State', ''))})
             _update_active_position_symbol_alias(cursor, ticker, entry_time)
             try:
                 stop_px = curr_price * (1 - float(entry_metrics['預期停損(%)'])) if 'Long' in str(trade_direction) or '多' in str(trade_direction) else curr_price * (1 + float(entry_metrics['預期停損(%)']))
@@ -1066,6 +1107,11 @@ def run_eod_broker():
 
     send_line_bot_msg(full_report)
     _sync_execution_sql_runtime_tables(conn, current_cash, execution_logger=execution_logger, note='end_of_run')
+    try:
+        ExecutionLedger().build_summary()
+        _build_shadow_evidence_now()
+    except Exception as exc:
+        _diag('shadow_runtime_evidence_end_of_run', exc, severity='warning', fail_closed=False)
 
     cursor.close()
     conn.close()
@@ -1075,6 +1121,14 @@ def run_eod_broker():
         except Exception as exc:
             _diag('execution_logger_close', exc, severity='warning', fail_closed=False)
 
+
+
+def _build_shadow_evidence_now():
+    try:
+        from fts_shadow_runtime_evidence import ShadowRuntimeEvidenceBuilder
+        ShadowRuntimeEvidenceBuilder().build()
+    except Exception as exc:
+        _diag('build_shadow_runtime_evidence', exc, severity='warning', fail_closed=False)
 
 def _record_directional_execution_event(event_type: str, payload: dict):
     try:

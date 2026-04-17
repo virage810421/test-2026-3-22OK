@@ -1,6 +1,0 @@
-設計缺失修補 v2
-- config.py：PARAMS 改為 immutable mapping；動態 watchlist 的環境變數讀取移出 config
-- fts_watchlist_runtime_service.py：新增 build_dynamic_watch_list_from_env
-- broker_base.py：compat helper 再收斂，restore_state / market price 更新不再散落 hasattr
-- event_backtester.py：setup/regime 字串契約再集中，未動 simulate_trade_path 的逐列模擬
-- fts_broker_real_stub.py：正式對外類別改為 composition facade，不再繼續 subclass monkey-patched class

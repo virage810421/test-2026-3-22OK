@@ -6,8 +6,9 @@ from __future__ import annotations
 升級點：
 1. 缺訓練資料時輸出 fail-closed policy，不再讓 trainer 默默跳過審核。
 2. 加入 train/live parity 檢查；正式 live 訓練預設只允許 live-approved 或明確 priority 的特徵。
-3. 加入 stability / regime persistence / cross-period survival / ablation proxy 指標。
-4. 產出 approved/rejected/noise/watchlist 清單供 fts_trainer_backend 強制使用。
+3. 加入 stability / regime persistence / cross-period survival 指標。
+4. 接上真正 leave-one-feature-out ablation retrain governance，不再只靠 proxy。
+5. 產出 approved/rejected/noise/watchlist 清單供 fts_trainer_backend 強制使用。
 """
 
 import json
@@ -32,7 +33,7 @@ META_COLS = {
 
 
 class FeatureReviewService:
-    MODULE_VERSION = 'v93_feature_review_stability_survival_governance'
+    MODULE_VERSION = 'v20260417_feature_review_full_ablation_governance'
 
     def __init__(self) -> None:
         self.runtime_path = PATHS.runtime_dir / 'feature_review_report.json'
@@ -262,6 +263,53 @@ class FeatureReviewService:
         approved = [r['feature'] for r in rows if r['status'] == 'approved']
         rejected = [r['feature'] for r in rows if r['status'] == 'reject']
         watchlist = [r['feature'] for r in rows if r['status'] == 'watchlist_noise_candidate']
+
+        ablation_gate: dict[str, Any] = {
+            'enabled': bool(PARAMS.get('FEATURE_REVIEW_ENABLE_FULL_ABLATION', True)),
+            'required': bool(PARAMS.get('FEATURE_REVIEW_REQUIRE_FULL_ABLATION', True)),
+            'enforced': False,
+            'status': 'not_run',
+            'policy_path': '',
+        }
+        if ablation_gate['enabled'] and approved:
+            try:
+                from fts_feature_ablation_service import FeatureAblationService
+                service = FeatureAblationService()
+                ab_path, ab_payload = service.build(features=approved[:int(PARAMS.get('ABLATION_MAX_FEATURES', 24))])
+                ablation_gate.update({
+                    'status': str(ab_payload.get('status')),
+                    'runtime_path': str(ab_path),
+                    'policy_path': str(service.policy_path),
+                    'base_score': ab_payload.get('base_score'),
+                    'candidate_feature_count': ab_payload.get('candidate_feature_count'),
+                    'approved_count': len(ab_payload.get('ablation_approved_features', []) or []),
+                    'rejected_count': len(ab_payload.get('ablation_rejected_features', []) or []),
+                    'watchlist_count': len(ab_payload.get('ablation_watchlist_features', []) or []),
+                })
+                if ab_payload.get('status') == 'feature_ablation_ready':
+                    ablation_gate['enforced'] = True
+                    ab_approved = {str(x) for x in ab_payload.get('ablation_approved_features', [])}
+                    ab_rejected = {str(x) for x in ab_payload.get('ablation_rejected_features', [])}
+                    ab_watch = {str(x) for x in ab_payload.get('ablation_watchlist_features', [])}
+                    approved_before = list(approved)
+                    approved = [f for f in approved if f in ab_approved]
+                    rejected = list(dict.fromkeys(rejected + [f for f in approved_before if f in ab_rejected]))
+                    watchlist = list(dict.fromkeys(watchlist + [f for f in approved_before if f in ab_watch or f not in ab_approved]))
+                    for r in rows:
+                        f = r.get('feature')
+                        if f in ab_rejected:
+                            r['status'] = 'reject'
+                            r.setdefault('reject_reasons', []).append('failed_full_ablation')
+                        elif f in ab_watch or (f in approved_before and f not in ab_approved):
+                            r['status'] = 'watchlist_noise_candidate'
+                            r.setdefault('reject_reasons', []).append('weak_or_missing_full_ablation_survival')
+                elif ablation_gate['required']:
+                    approved = []
+            except Exception as exc:
+                ablation_gate.update({'status': 'error', 'error': repr(exc)})
+                if ablation_gate['required']:
+                    approved = []
+
         payload = {
             'generated_at': generated_at,
             'module_version': self.MODULE_VERSION,
@@ -281,8 +329,10 @@ class FeatureReviewService:
                 'min_regime_persistence': float(PARAMS.get('FEATURE_REVIEW_MIN_REGIME_PERSISTENCE', 0.34)),
                 'train_live_parity_enforced': bool(PARAMS.get('MODEL_ENFORCE_TRAIN_LIVE_FEATURE_PARITY', True)),
                 'priority_or_live_approved_can_pass_evidence_floor': True,
-                'ablation_policy': 'proxy_only_no_full_model_retrain',
+                'ablation_policy': 'full_leave_one_feature_out_retrain_enforced_when_ready',
+                'full_ablation_required': bool(PARAMS.get('FEATURE_REVIEW_REQUIRE_FULL_ABLATION', True)),
             },
+            'ablation_gate': ablation_gate,
             'approved_features': approved[:500],
             'noise_watchlist': watchlist[:500],
             'rejected_features': rejected[:500],
@@ -290,8 +340,13 @@ class FeatureReviewService:
             'hard_blocks': [] if approved else ['no_approved_features_after_review'],
         }
         if not approved:
-            payload['status'] = 'blocked_no_approved_features'
-            payload['blocked_reason_category'] = 'no_approved_features_after_review'
+            if ablation_gate.get('enabled') and ablation_gate.get('required') and ablation_gate.get('status') != 'feature_ablation_ready':
+                payload['status'] = 'blocked_full_ablation_not_ready'
+                payload['blocked_reason_category'] = 'full_ablation_not_ready'
+                payload['hard_blocks'] = list(dict.fromkeys(payload.get('hard_blocks', []) + ['full_ablation_not_ready']))
+            else:
+                payload['status'] = 'blocked_no_approved_features'
+                payload['blocked_reason_category'] = 'no_approved_features_after_review'
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         self._write_policy(payload, approved, rejected, watchlist)
         return self.runtime_path, payload

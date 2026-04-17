@@ -688,6 +688,33 @@ def _safe_build(module_name: str, class_name: str, method_name: str, kwargs: dic
         return {'status': 'error', 'path': str(out_path), 'payload': payload}
 
 
+
+def _run_param_governance(trigger_stage: str, scopes: list[str] | None = None, run_release_gate: bool = False) -> dict[str, Any]:
+    """Run parameter candidate AI judge / mount summary from control tower.
+
+    This stage is non-live by default. It never promotes live unless the release
+    gate configuration explicitly allows it.
+    """
+    try:
+        from fts_param_governance_orchestrator import run_param_governance
+        payload = run_param_governance(scopes=scopes, run_release_gate=run_release_gate, force_release=False)
+        payload.setdefault('trigger_stage', trigger_stage)
+        out = PATHS.runtime_dir / 'param_governance_orchestrator.json'
+        try:
+            write_json(out, payload)
+        except Exception:
+            pass
+        return {'status': 'ok', 'path': str(out), 'payload': payload}
+    except Exception as exc:
+        record_issue('control_tower', f'param_governance_{trigger_stage}', exc, severity='ERROR', fail_mode='fail_closed')
+        payload = {'generated_at': now_str(), 'status': 'error', 'trigger_stage': trigger_stage, 'error': repr(exc)}
+        out = PATHS.runtime_dir / 'param_governance_orchestrator.json'
+        try:
+            write_json(out, payload)
+        except Exception:
+            pass
+        return {'status': 'error', 'path': str(out), 'payload': payload}
+
 def _run_maturity_upgrade_suite(trigger_stage: str) -> tuple[str, dict[str, Any]]:
     try:
         path, payload = _call_builder_result(MaturityUpgradeSuite(), 'build', fallback_path=PATHS.runtime_dir / 'maturity_upgrade_suite.json')
@@ -732,8 +759,18 @@ def _collect_reconciliation_inputs() -> dict[str, Any]:
     broker_snapshot = _load_json_file(PATHS.runtime_dir / 'broker_runtime_snapshot.json', {})
     callback_summary = _load_json_file(PATHS.runtime_dir / 'broker_callback_ingestion_summary.json', {})
     account_snapshot = _load_json_file(PATHS.runtime_dir / 'execution_account_snapshot.json', {})
+    twap_state = _load_json_file(PATHS.runtime_dir / 'twap3_child_order_state.json', {})
 
     local_orders = list(ledger.get('orders', []) or [])
+    twap_children = []
+    if isinstance(twap_state, dict) and isinstance(twap_state.get('children'), dict):
+        twap_children = [dict(x) for x in twap_state.get('children', {}).values() if isinstance(x, dict)]
+        for child in twap_children:
+            child.setdefault('client_order_id', child.get('child_order_id'))
+            child.setdefault('order_id', child.get('child_order_id'))
+            child.setdefault('ticker_symbol', child.get('ticker'))
+            child.setdefault('execution_style', 'TWAP3')
+        local_orders.extend(twap_children)
     broker_orders = list(
         broker_snapshot.get('open_orders')
         or broker_snapshot.get('orders')
@@ -741,6 +778,13 @@ def _collect_reconciliation_inputs() -> dict[str, Any]:
         or []
     )
     local_fills = list(ledger.get('fills', []) or [])
+    for child in twap_children:
+        try:
+            filled_qty = float(child.get('filled_qty') or 0)
+        except Exception:
+            filled_qty = 0.0
+        if filled_qty > 0 or str(child.get('status') or '').upper() in {'FILLED', 'PARTIALLY_FILLED'}:
+            local_fills.append({**child, 'fill_id': 'TWAP3-FILL-' + str(child.get('child_order_id')), 'filled_qty': filled_qty, 'fill_qty': filled_qty})
     broker_fills = list(broker_snapshot.get('fills', []) or callback_summary.get('fills', []) or [])
     local_positions = list(ledger.get('positions', []) or [])
     broker_positions = list(broker_snapshot.get('positions', []) or broker_snapshot.get('holdings', []) or [])
@@ -813,6 +857,10 @@ def _build_control_outputs() -> dict[str, Any]:
     validation_path, validation_payload = _call_builder_result(ValidationSuiteBuilder(), 'build', launch_gate_payload, model_gate_payload, live_safety_payload, broker_approval_payload, submission_payload, fallback_path=PATHS.runtime_dir / 'validation_suite_report.json')
     recon_inputs = _collect_reconciliation_inputs()
     recon_path, recon_payload = _call_builder_result(ReconciliationEngine(), 'reconcile', recon_inputs['local_orders'], recon_inputs['broker_orders'], recon_inputs['local_fills'], recon_inputs['broker_fills'], recon_inputs['local_positions'], recon_inputs['broker_positions'], recon_inputs['local_cash'], recon_inputs['broker_cash'], fallback_path=PATHS.runtime_dir / 'reconciliation_engine.json')
+    twap3_runtime_closure = _safe_build('fts_twap3_runtime_closure', 'TWAP3RuntimeClosure', 'build')
+    shadow_runtime_evidence = _safe_build('fts_shadow_runtime_evidence', 'ShadowRuntimeEvidenceBuilder', 'build')
+    param_governance = _run_param_governance('daily_control_outputs', scopes=['strategy_signal::default', 'execution_policy::default'], run_release_gate=True)
+    nonbroker_runtime_closure_gate = _safe_build('fts_nonbroker_runtime_closure_gate', 'NonBrokerRuntimeClosureGate', 'build')
     true_broker_closure_path, true_broker_closure_payload = _call_builder_result(TrueBrokerLiveClosureService(), 'build', fallback_path=PATHS.runtime_dir / 'true_broker_live_closure.json')
     real_api_path, real_api_payload = _call_builder_result(RealAPIReadinessBuilder(), 'build', fallback_path=PATHS.runtime_dir / 'real_api_readiness.json')
     true_broker_path, true_broker_payload = _call_builder_result(TrueBrokerReadinessGate(), 'build', fallback_path=PATHS.runtime_dir / 'true_broker_readiness_gate.json')
@@ -855,6 +903,10 @@ def _build_control_outputs() -> dict[str, Any]:
         'real_api_readiness': {'path': str(real_api_path), 'payload': real_api_payload},
         'true_broker_readiness_gate': {'path': str(true_broker_path), 'payload': true_broker_payload},
         'reconciliation': {'path': str(recon_path), 'payload': recon_payload},
+        'twap3_runtime_closure': twap3_runtime_closure,
+        'shadow_runtime_evidence': shadow_runtime_evidence,
+        'param_governance': param_governance,
+        'nonbroker_runtime_closure_gate': nonbroker_runtime_closure_gate,
         'recovery': {'path': str(recovery_path), 'payload': recovery_payload},
         'recovery_validation': {'path': str(recovery_validation_path), 'payload': recovery_validation_payload},
         'live_release_gate': {'path': str(live_release_path), 'payload': live_release_payload},
@@ -891,6 +943,12 @@ def run_train() -> dict[str, Any]:
     warnings.filterwarnings('ignore', category=FutureWarning, module='pandas')
     kill_switch_path, kill_switch_payload = _ensure_kill_switch_state()
     steps: list[dict[str, Any]] = [{'stage': 'kill_switch_state', 'status': 'ok' if kill_switch_payload.get('status') == 'kill_switch_state_ready' else 'error', 'path': kill_switch_path, 'payload_status': kill_switch_payload.get('status')}]
+    try:
+        pg = _run_param_governance('train_pre_data_builder', scopes=['trainer::default', 'label_policy::default'], run_release_gate=False)
+        steps.append({'stage': 'param_governance_pre_train', 'status': pg.get('status'), 'path': pg.get('path', ''), 'payload_status': (pg.get('payload') or {}).get('status')})
+    except Exception as exc:
+        record_issue('control_tower', 'train_param_governance_failed', exc, severity='ERROR', fail_mode='fail_closed')
+        steps.append({'stage': 'param_governance_pre_train', 'status': 'error', 'error': repr(exc)})
     try:
         tickers = get_dynamic_watchlist()
         df = generate_ml_dataset(tickers)
@@ -1015,6 +1073,9 @@ def run_bootstrap() -> dict[str, Any]:
         _call_admin_command('broker-contract-audit', allow_missing=False),
         _call_admin_command('callback-ingest', allow_missing=False),
         _call_admin_command('reconciliation-runtime', allow_missing=False),
+        _call_admin_command('twap3-runtime', allow_missing=True),
+        _call_admin_command('shadow-evidence', allow_missing=True),
+        _call_admin_command('runtime-closure', allow_missing=True),
         _call_admin_command('restart-recovery', allow_missing=False),
         _call_admin_command('prebroker-95-audit', allow_missing=False),
         _call_admin_command('maturity-upgrade', allow_missing=True),

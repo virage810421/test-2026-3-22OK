@@ -9,6 +9,12 @@ from typing import Any
 from config import PARAMS
 
 try:
+    from fts_approved_param_mount import get_effective_params_for_mode
+    PARAMS = get_effective_params_for_mode('strategy_signal', dict(PARAMS))
+except Exception:
+    PARAMS = dict(PARAMS)
+
+try:
     from fts_config import PATHS, CONFIG  # type: ignore
 except Exception:  # pragma: no cover
     class _Paths:
@@ -133,10 +139,27 @@ def infer_side_from_setup(setup_tag: str) -> str:
     return '其他'
 
 
+def _apply_approved_strategy_policy_overrides(policy: dict[str, Any]) -> dict[str, Any]:
+    """Apply approved strategy_signal params to policy-book output."""
+    out = dict(policy or {})
+    try:
+        if 'STRATEGY_MIN_PROBA_DELTA' in PARAMS:
+            out['min_proba'] = max(0.0, min(0.99, float(out.get('min_proba', 0.5)) + float(PARAMS.get('STRATEGY_MIN_PROBA_DELTA', 0.0))))
+        if 'STRATEGY_POLICY_MULTIPLIER_SCALE' in PARAMS:
+            out['multiplier'] = max(0.0, float(out.get('multiplier', 1.0)) * float(PARAMS.get('STRATEGY_POLICY_MULTIPLIER_SCALE', 1.0)))
+        if 'STRATEGY_STOP_SCALE' in PARAMS:
+            out['stop_scale'] = max(0.0, float(out.get('stop_scale', 1.0)) * float(PARAMS.get('STRATEGY_STOP_SCALE', 1.0)))
+        if 'STRATEGY_TP_SCALE' in PARAMS:
+            out['tp_scale'] = max(0.0, float(out.get('tp_scale', 1.0)) * float(PARAMS.get('STRATEGY_TP_SCALE', 1.0)))
+    except Exception:
+        return dict(policy or {})
+    return out
+
 def get_strategy_policy(setup_tag: str, regime: str = '未知') -> dict[str, Any]:
     side = infer_side_from_setup(setup_tag)
     regime_book = _POLICY_BOOK.get(str(regime).strip(), _POLICY_BOOK['區間盤整'])
     base = regime_book.get(side, regime_book['其他']).copy()
+    base = _apply_approved_strategy_policy_overrides(base)
     policy = StrategyPolicy(regime=str(regime).strip(), side=side, setup_tag=str(setup_tag), **base)
     return policy.as_dict()
 
@@ -167,6 +190,7 @@ def export_policy_runtime() -> Path:
     payload = {
         'policy_mode': getattr(CONFIG, 'strategy_policy_mode', 'explicit'),
         'generated_from': 'fts_strategy_policy_layer.py',
+        'approved_strategy_param_mount': PARAMS.get('_approved_param_mount', {}) if isinstance(PARAMS, dict) else {},
         'regime_count': len(_POLICY_BOOK),
         'policies': _POLICY_BOOK,
     }

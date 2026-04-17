@@ -15,7 +15,7 @@ from fts_trainer_promotion_policy import TrainerPromotionPolicyBuilder
 
 
 class TrainingGovernanceMainline:
-    MODULE_VERSION = 'v20260416_training_governance_shadow_runtime_truthful'
+    MODULE_VERSION = 'v20260417_training_governance_runtime_evidence_closed_loop'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'training_governance_mainline.json'
@@ -70,6 +70,11 @@ class TrainingGovernanceMainline:
 
     def _load_shadow_runtime_evidence(self) -> dict[str, Any]:
         try:
+            from fts_shadow_runtime_evidence import ShadowRuntimeEvidenceBuilder
+            ShadowRuntimeEvidenceBuilder().build()
+        except Exception:
+            pass
+        try:
             _path, payload = TrainerPromotionPolicyBuilder()._build_shadow_runtime_evidence()
             return payload if isinstance(payload, dict) else {}
         except Exception as exc:
@@ -88,6 +93,8 @@ class TrainingGovernanceMainline:
             'broker_fills.json',
             'execution_runtime.json',
             'decision_execution_bridge.json',
+            'twap3_child_order_state.json',
+            'shadow_runtime_evidence.json',
         ])
         orders_source, orders = self._load_runtime_records([
             'execution_orders.json',
@@ -96,12 +103,15 @@ class TrainingGovernanceMainline:
             'broker_orders.json',
             'execution_runtime.json',
             'decision_execution_bridge.json',
+            'twap3_child_order_state.json',
+            'shadow_runtime_evidence.json',
         ])
         callbacks_source, callbacks = self._load_runtime_records([
             'execution_broker_callbacks.json',
             'broker_callbacks.json',
             'callbacks.json',
             'execution_runtime.json',
+            'twap3_child_order_state.json',
         ])
 
         closed_trades = [
@@ -226,9 +236,11 @@ class TrainingGovernanceMainline:
             },
             walk_forward={'score': float(report.get('walk_forward_summary', {}).get('score', 0.0) or 0.0)},
             shadow_result={
-                'return_drift_pct': float((shadow_runtime.get('shadow_return_drift_pct') if shadow_runtime.get('shadow_return_drift_pct') is not None else report.get('overfit_gap', 0.0)) or 0.0),
+                # v20260417b：沒有 runtime shadow evidence 時，不再把 offline overfit_gap
+                # 塞進 shadow_result；candidate 會因 runtime_observed=False 被擋下。
+                'return_drift_pct': float(shadow_runtime.get('shadow_return_drift_pct') or 999.0) if shadow_runtime.get('runtime_observed', False) else 999.0,
                 'runtime_observed': bool(shadow_runtime.get('runtime_observed', False)),
-                'source': 'shadow_runtime_evidence' if shadow_runtime.get('runtime_observed', False) else 'offline_overfit_fallback',
+                'source': 'shadow_runtime_evidence' if shadow_runtime.get('runtime_observed', False) else 'runtime_shadow_missing_no_offline_fallback',
             },
             rollback_version=(best_entry.get('version') or create_version_tag('no_approved_version')),
         )

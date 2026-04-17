@@ -18,7 +18,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import TimeSeriesSplit
 
 from config import PARAMS
-from model_governance import create_version_tag, get_best_version_entry, promote_best_version, restore_version, snapshot_current_models
+from model_governance import create_version_tag, get_best_version_entry, promote_best_version, restore_version, snapshot_current_models, write_validated_artifacts_manifest
 from fts_data_quality_guard import validate_training_frame
 from fts_feature_catalog import FEATURE_SPECS, PRIORITY_NEW_FEATURES_20
 
@@ -402,25 +402,8 @@ def _apply_feature_review_policy(all_features: list[str], df: pd.DataFrame) -> t
     policy_status = str(policy.get('status') or '')
     if not enforce:
         return before, {'status': 'feature_review_not_enforced', 'policy_path': policy.get('_policy_path', ''), 'input_count': len(before), 'output_count': len(before)}
-    # v92：若特徵審核沒有正式完成，正式訓練預設 fail-closed。
+    # v92：若特徵審核沒有正式完成，正式訓練 fail-closed，避免又回到噪音特徵全收。
     if policy.get('fail_closed') or policy_status.startswith(('blocked', 'waiting')) or not policy.get('_policy_path'):
-        allow_soft_fallback = bool(PARAMS.get('TRAINING_ALLOW_SOFT_FEATURE_REVIEW_FALLBACK', True))
-        can_soft_fallback = allow_soft_fallback and policy_status == 'blocked_no_approved_features'
-        if can_soft_fallback:
-            banned = rejected | watch
-            after = [f for f in before if f not in banned and f in df.columns and f not in META_DROP_COLS]
-            return after, {
-                'status': 'feature_review_soft_fallback',
-                'policy_status': policy_status or 'missing_policy',
-                'policy_path': policy.get('_policy_path', ''),
-                'input_count': len(before),
-                'output_count': len(after),
-                'approved_count': len(approved),
-                'rejected_count': len(rejected),
-                'noise_watchlist_count': len(watch),
-                'hard_blocks_noise_features': False,
-                'reason': 'no_approved_features_but_soft_fallback_enabled',
-            }
         return [], {
             'status': 'feature_review_fail_closed',
             'policy_status': policy_status or 'missing_policy',
@@ -663,6 +646,49 @@ def _split_entry_and_position_day_frames(df: pd.DataFrame) -> tuple[pd.DataFrame
         'sample_type_counts': {str(k): int(v) for k, v in st.value_counts(dropna=False).to_dict().items()},
     }
     return entry_df, position_df, report
+
+
+def _build_validated_artifact_rows(
+    selected_features: list[str],
+    metrics_by_regime: dict[str, Any],
+    lane_artifacts: dict[str, Any],
+    exit_model_artifacts: dict[str, Any],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if selected_features:
+        rows.append({'name': 'selected_features.pkl', 'category': 'shared_features', 'validated': True, 'allow_promote': True, 'reason': 'shared_selected_features_ready'})
+    for regime, payload in (metrics_by_regime or {}).items():
+        if str(payload.get('status', '')).upper() == 'SAVE':
+            rows.append({'name': f'model_{regime}.pkl', 'category': 'shared_model', 'validated': True, 'allow_promote': True, 'reason': 'shared_regime_model_saved', 'regime': regime})
+    for lane, payload in (lane_artifacts or {}).items():
+        lane_name = str(lane).lower()
+        lane_feature_name = f'selected_features_{lane_name}.pkl'
+        lane_feature_ok = int(payload.get('selected_feature_count', 0) or 0) > 0 and str(payload.get('selection_source', '')) == 'lane_train_only'
+        rows.append({'name': lane_feature_name, 'category': 'directional_features', 'validated': bool(lane_feature_ok), 'allow_promote': bool(lane_feature_ok), 'reason': 'lane_features_train_only' if lane_feature_ok else 'lane_features_not_validated', 'lane': lane})
+        for regime, model_info in (payload.get('models', {}) or {}).items():
+            model_path = str(model_info.get('path', '')).strip()
+            if not model_path:
+                continue
+            name = Path(model_path).name
+            model_ok = str(model_info.get('status', '')).upper() == 'SAVE'
+            rows.append({'name': name, 'category': 'directional_model', 'validated': bool(model_ok), 'allow_promote': bool(model_ok), 'reason': 'lane_model_saved' if model_ok else str(model_info.get('reason', 'lane_model_not_validated')), 'lane': lane, 'regime': regime})
+    exit_feature_ok = int(exit_model_artifacts.get('selected_feature_count', 0) or 0) > 0 and str(exit_model_artifacts.get('status', '')) == 'trained'
+    rows.append({'name': 'selected_features_exit.pkl', 'category': 'exit_features', 'validated': bool(exit_feature_ok), 'allow_promote': bool(exit_feature_ok), 'reason': 'exit_features_ready' if exit_feature_ok else str(exit_model_artifacts.get('status', 'exit_features_not_validated'))})
+    for label, info in (exit_model_artifacts.get('models', {}) or {}).items():
+        model_path = str(info.get('path', '')).strip()
+        if not model_path:
+            continue
+        name = Path(model_path).name
+        model_ok = str(info.get('status', '')).upper() == 'SAVE'
+        rows.append({'name': name, 'category': 'exit_model', 'validated': bool(model_ok), 'allow_promote': bool(model_ok), 'reason': 'exit_model_saved' if model_ok else str(info.get('reason', 'exit_model_not_validated')), 'label': label})
+    deduped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in rows:
+        name = str(row.get('name', '')).strip()
+        if name and name not in seen:
+            deduped.append(row)
+            seen.add(name)
+    return deduped
 
 def train_models() -> tuple[Path, dict[str, Any]]:
     dataset_path = Path('data/ml_training_data.csv')
@@ -929,6 +955,17 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     overall_score = float(oot_metrics['avg_return'] * 100 + min(oot_metrics['profit_factor'], 5.0) + oot_metrics['hit_rate'] * 10)
     version_tag = create_version_tag('trained')
     snapshot_current_models(version_tag, metrics={'overall_score': round(overall_score, 4), 'out_of_time': oot_metrics, 'walk_forward': wf_summary, 'feature_count': len(selected_features), 'directional_lane_feature_counts': {k: v.get('selected_feature_count', 0) for k, v in lane_artifacts.items()}, 'directional_lane_model_counts': {k: v.get('saved_model_count', 0) for k, v in lane_artifacts.items()}}, note='任務收尾版訓練完成快照')
+    validated_manifest = write_validated_artifacts_manifest(
+        version_tag,
+        _build_validated_artifact_rows(selected_features, metrics_by_regime, lane_artifacts, exit_model_artifacts),
+        metadata={
+            'overall_score': round(overall_score, 4),
+            'shared_feature_count': int(len(selected_features)),
+            'lane_feature_counts': {k: v.get('selected_feature_count', 0) for k, v in lane_artifacts.items()},
+            'lane_saved_model_counts': {k: v.get('saved_model_count', 0) for k, v in lane_artifacts.items()},
+            'exit_saved_model_count': int(exit_model_artifacts.get('saved_model_count', 0) or 0),
+        },
+    )
 
     promotion_floors = {
         'min_selected_features': int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)),
@@ -1004,8 +1041,329 @@ def train_models() -> tuple[Path, dict[str, Any]]:
     report['promotion_ready'] = promotion_ready
     report['model_live_signal_gate'] = _write_model_live_signal_gate(report, promotion_ready=promotion_ready, promoted=promoted_current_candidate)
     report['selected_feature_authority'] = _write_selected_feature_authority(report)
+    report['validated_artifacts_manifest'] = validated_manifest
     RUNTIME_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     return RUNTIME_PATH, report
+
+
+# ======================================================================
+# AI-candidate governance extension
+# ======================================================================
+from contextlib import contextmanager
+
+TRAIN_PARAM_KEYS = {
+    'MODEL_N_ESTIMATORS',
+    'MODEL_MAX_DEPTH',
+    'MODEL_MIN_SAMPLES_LEAF',
+    'MODEL_MIN_SELECTED_FEATURES',
+    'MODEL_MAX_SELECTED_FEATURES',
+    'OOT_RATIO',
+    'WF_GAP',
+    'WF_SPLITS',
+}
+
+FROZEN_GOVERNANCE_PARAM_KEYS = {
+    'MODEL_MIN_OOT_PF',
+    'MODEL_MIN_OOT_HIT_RATE',
+    'MODEL_MIN_PROMOTION_SCORE',
+    'LIVE_ONLY_USE_PROMOTED_MODEL',
+    'LIVE_REQUIRE_PROMOTED_MODEL',
+    'MODEL_BLOCK_LIVE_ON_UNPROMOTED',
+    'KILL_SWITCH',
+    'MAX_DRAWDOWN_LIMIT',
+}
+
+
+def _p(key: str, default: Any = None) -> Any:
+    """Parameter resolver for code paths that opt into active trainer params."""
+    try:
+        return PARAMS.get(key, default)
+    except Exception:
+        return default
+
+
+def _sanitize_training_params(params: dict[str, Any] | None) -> dict[str, Any]:
+    """Keep only ML trainer-tunable params and normalize types.
+
+    This prevents a candidate from smuggling live gates, kill switches or
+    promotion floors into training optimization.
+    """
+    raw = dict(params or {})
+    out: dict[str, Any] = {}
+    int_keys = {
+        'MODEL_N_ESTIMATORS',
+        'MODEL_MAX_DEPTH',
+        'MODEL_MIN_SAMPLES_LEAF',
+        'MODEL_MIN_SELECTED_FEATURES',
+        'MODEL_MAX_SELECTED_FEATURES',
+        'WF_GAP',
+        'WF_SPLITS',
+    }
+    float_keys = {'OOT_RATIO'}
+    for key in TRAIN_PARAM_KEYS:
+        if key not in raw:
+            continue
+        try:
+            if key in int_keys:
+                out[key] = int(raw[key])
+            elif key in float_keys:
+                out[key] = float(raw[key])
+            else:
+                out[key] = raw[key]
+        except Exception:
+            continue
+    if 'MODEL_N_ESTIMATORS' in out:
+        out['MODEL_N_ESTIMATORS'] = max(10, min(int(out['MODEL_N_ESTIMATORS']), 2000))
+    if 'MODEL_MAX_DEPTH' in out:
+        out['MODEL_MAX_DEPTH'] = max(2, min(int(out['MODEL_MAX_DEPTH']), 30))
+    if 'MODEL_MIN_SAMPLES_LEAF' in out:
+        out['MODEL_MIN_SAMPLES_LEAF'] = max(1, min(int(out['MODEL_MIN_SAMPLES_LEAF']), 100))
+    if 'MODEL_MIN_SELECTED_FEATURES' in out:
+        out['MODEL_MIN_SELECTED_FEATURES'] = max(1, min(int(out['MODEL_MIN_SELECTED_FEATURES']), 100))
+    if 'MODEL_MAX_SELECTED_FEATURES' in out:
+        out['MODEL_MAX_SELECTED_FEATURES'] = max(1, min(int(out['MODEL_MAX_SELECTED_FEATURES']), 200))
+    if (
+        'MODEL_MIN_SELECTED_FEATURES' in out and
+        'MODEL_MAX_SELECTED_FEATURES' in out and
+        out['MODEL_MAX_SELECTED_FEATURES'] < out['MODEL_MIN_SELECTED_FEATURES']
+    ):
+        out['MODEL_MAX_SELECTED_FEATURES'] = out['MODEL_MIN_SELECTED_FEATURES']
+    if 'OOT_RATIO' in out:
+        out['OOT_RATIO'] = max(0.05, min(float(out['OOT_RATIO']), 0.40))
+    if 'WF_GAP' in out:
+        out['WF_GAP'] = max(0, min(int(out['WF_GAP']), 60))
+    if 'WF_SPLITS' in out:
+        out['WF_SPLITS'] = max(2, min(int(out['WF_SPLITS']), 12))
+    return out
+
+
+def _resolve_training_params(base_params: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Resolve approved trainer params only when the explicit switch is on."""
+    effective = dict(base_params or PARAMS)
+    if bool(effective.get('TRAIN_USE_APPROVED_PARAMS', False)):
+        try:
+            from param_storage import resolve_params_for_context
+            scope = str(effective.get('TRAIN_APPROVED_PARAM_SCOPE', 'trainer::default'))
+            effective = resolve_params_for_context(base_params=effective, scope_name=scope)
+        except Exception as exc:
+            effective['_approved_param_load_error'] = repr(exc)
+    return effective
+
+
+@contextmanager
+def _temporary_trainer_params(params: dict[str, Any] | None):
+    """Temporarily replace module-level PARAMS for dry-run and approved train."""
+    global PARAMS
+    old = PARAMS
+    merged = dict(old)
+    if params:
+        merged.update(dict(params))
+    PARAMS = merged
+    try:
+        yield
+    finally:
+        PARAMS = old
+
+
+def _optimizer_score_from_eval(payload: dict[str, Any]) -> float:
+    oot = payload.get('out_of_time', {}) or {}
+    wf = payload.get('walk_forward', payload.get('walk_forward_summary', {}) or {})
+    overall = float(payload.get('overall_score', 0.0) or 0.0)
+    pf = float(oot.get('profit_factor', 0.0) or 0.0)
+    hit = float(oot.get('hit_rate', 0.0) or 0.0)
+    avg = float(oot.get('avg_return', 0.0) or 0.0)
+    wf_ret = float(wf.get('ret_mean', 0.0) or 0.0)
+    eff = float(wf.get('effective_splits', 0.0) or 0.0)
+    overfit_gap = float(payload.get('overfit_gap', max(0.0, wf_ret - avg)) or 0.0)
+    feature_count = int(payload.get('selected_feature_count', payload.get('selected_features_count', 0)) or 0)
+    max_depth = int((payload.get('params') or {}).get('MODEL_MAX_DEPTH', PARAMS.get('MODEL_MAX_DEPTH', 7)) or 7)
+    feature_penalty = max(0.0, (feature_count - float(PARAMS.get('MODEL_MAX_SELECTED_FEATURES', 18))) * 0.03)
+    complexity_penalty = max(0.0, (max_depth - 8) * 0.05)
+    return float(
+        overall * 0.25
+        + min(pf, 5.0) * 1.25
+        + hit * 4.0
+        + avg * 100.0
+        + wf_ret * 75.0
+        + eff * 0.15
+        - overfit_gap * 150.0
+        - feature_penalty
+        - complexity_penalty
+    )
+
+
+def evaluate_training_params(
+    df: pd.DataFrame,
+    params: dict[str, Any],
+    dry_run: bool = True,
+    write_artifacts: bool = False,
+) -> dict[str, Any]:
+    """Dry-run evaluate one ML trainer param set without writing model artifacts."""
+    safe_params = _sanitize_training_params(params)
+    merged_params = dict(PARAMS)
+    merged_params.update(safe_params)
+    hard_failures: list[str] = []
+
+    forbidden = sorted([k for k in (params or {}).keys() if k in FROZEN_GOVERNANCE_PARAM_KEYS])
+    if forbidden:
+        hard_failures.append('forbidden_governance_keys:' + ','.join(forbidden))
+
+    with _temporary_trainer_params(merged_params):
+        try:
+            work_df = df.copy()
+            if work_df.empty:
+                return {'status': 'blocked', 'reason': 'dataset_empty', 'params': safe_params, 'hard_failures': ['dataset_empty']}
+            work_df, quality_report = validate_training_frame(work_df, min_rows=max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))))
+            if quality_report.get('status') == 'blocked':
+                return {
+                    'status': 'blocked_by_data_quality',
+                    'quality_report': quality_report,
+                    'params': safe_params,
+                    'hard_failures': hard_failures + ['data_quality_blocked'],
+                    'optimizer_score': -1e18,
+                }
+            if 'Date' in work_df.columns:
+                work_df = work_df.sort_values('Date').reset_index(drop=True)
+            work_df, target_return_report = _validate_target_return_frame(work_df)
+            if work_df is None:
+                return {
+                    'status': 'blocked_by_target_return',
+                    'target_return_report': target_return_report,
+                    'params': safe_params,
+                    'hard_failures': hard_failures + ['target_return_blocked'],
+                    'optimizer_score': -1e18,
+                }
+            if 'Label_Y' not in work_df.columns:
+                return {'status': 'blocked', 'reason': 'label_y_missing', 'params': safe_params, 'hard_failures': hard_failures + ['label_y_missing'], 'optimizer_score': -1e18}
+            work_df['Label_Y'] = pd.to_numeric(work_df['Label_Y'], errors='coerce').fillna(0).astype(int)
+            entry_df, _position_day_df, sample_type_report = _split_entry_and_position_day_frames(work_df)
+            work_df = entry_df.copy()
+            if len(work_df) < max(80, int(PARAMS.get('MODEL_MIN_TRAIN_ROWS', 80))):
+                return {
+                    'status': 'blocked_by_entry_signal_row_count',
+                    'rows_after_entry_filter': int(len(work_df)),
+                    'sample_type_report': sample_type_report,
+                    'params': safe_params,
+                    'hard_failures': hard_failures + ['entry_signal_rows_below_floor'],
+                    'optimizer_score': -1e18,
+                }
+
+            all_features, _ = _build_feature_columns(work_df)
+            all_features, feature_review_gate = _apply_feature_review_policy(all_features, work_df)
+            if len(all_features) < int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)):
+                return {
+                    'status': 'blocked_by_feature_review_gate',
+                    'feature_review_gate': feature_review_gate,
+                    'params': safe_params,
+                    'hard_failures': hard_failures + ['feature_review_gate_selected_too_few_features'],
+                    'optimizer_score': -1e18,
+                }
+
+            work_df = _materialize_interactions(work_df, all_features)
+            train_df, oot_df = _chronological_split(work_df, oot_ratio=float(PARAMS.get('OOT_RATIO', 0.20)))
+            selected_features, ranked_features = _select_features_train_only(train_df, all_features)
+            train_df = _materialize_interactions(train_df, selected_features)
+            oot_df = _materialize_interactions(oot_df, selected_features)
+            selected_features = [f for f in selected_features if f in train_df.columns and f in oot_df.columns]
+
+            if len(selected_features) < int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)):
+                hard_failures.append('selected_features_below_floor')
+            if train_df['Label_Y'].nunique() < 2:
+                hard_failures.append('train_label_single_class')
+
+            X_train = train_df[selected_features].replace([np.inf, -np.inf], np.nan).fillna(0.0) if selected_features else pd.DataFrame()
+            y_train = train_df['Label_Y']
+            X_oot = oot_df[selected_features].replace([np.inf, -np.inf], np.nan).fillna(0.0) if selected_features else pd.DataFrame()
+            y_oot = oot_df['Label_Y'] if 'Label_Y' in oot_df.columns else pd.Series(dtype=int)
+            ret_oot = oot_df['Target_Return'] if 'Target_Return' in oot_df.columns else pd.Series(dtype=float)
+
+            wf_results, wf_summary = _purged_walk_forward(
+                X_train,
+                y_train,
+                train_df['Target_Return'],
+                gap=int(PARAMS.get('WF_GAP', 5)),
+                splits=int(PARAMS.get('WF_SPLITS', 5)),
+            )
+
+            oot_metrics = {'hit_rate': 0.0, 'avg_return': 0.0, 'pred_accuracy': 0.0, 'profit_factor': 0.0, 'coverage': 0.0}
+            model = None
+            if len(selected_features) >= int(PARAMS.get('MODEL_MIN_SELECTED_FEATURES', 8)) and len(X_train) >= 80 and y_train.nunique() >= 2:
+                model = _fit_model(X_train, y_train)
+            if model is not None and len(X_oot) > 0:
+                pred_oot = model.predict(X_oot)
+                oot_metrics = _evaluate_predictions(pred_oot, y_oot, ret_oot)
+            else:
+                hard_failures.append('model_not_fit_for_candidate')
+
+            overall_score = float(oot_metrics['avg_return'] * 100 + min(oot_metrics['profit_factor'], 5.0) + oot_metrics['hit_rate'] * 10)
+            overfit_gap = float(max(0.0, float(wf_summary.get('ret_mean', 0.0) or 0.0) - float(oot_metrics.get('avg_return', 0.0) or 0.0)))
+
+            if oot_metrics.get('profit_factor', 0.0) < float(PARAMS.get('MODEL_MIN_OOT_PF', 1.0)):
+                hard_failures.append('oot_profit_factor_below_floor')
+            if oot_metrics.get('hit_rate', 0.0) < float(PARAMS.get('MODEL_MIN_OOT_HIT_RATE', 0.45)):
+                hard_failures.append('oot_hit_rate_below_floor')
+            if int(wf_summary.get('effective_splits', 0) or 0) < int(PARAMS.get('MODEL_MIN_WF_EFFECTIVE_SPLITS', 3)):
+                hard_failures.append('walk_forward_effective_splits_below_floor')
+            if float(wf_summary.get('ret_mean', 0.0) or 0.0) < float(PARAMS.get('MODEL_MIN_WF_RET_MEAN', 0.0)):
+                hard_failures.append('walk_forward_return_below_floor')
+
+            payload = {
+                'status': 'evaluated',
+                'dry_run': bool(dry_run),
+                'write_artifacts': bool(write_artifacts),
+                'params': safe_params,
+                'rows_total': int(len(work_df)),
+                'rows_train': int(len(train_df)),
+                'rows_out_of_time': int(len(oot_df)),
+                'selected_feature_count': int(len(selected_features)),
+                'selected_features_preview': selected_features[:25],
+                'ranked_preview': ranked_features[:15],
+                'out_of_time': oot_metrics,
+                'walk_forward': wf_summary,
+                'walk_forward_results_preview': wf_results[:5],
+                'overall_score': overall_score,
+                'overfit_gap': overfit_gap,
+                'hard_failures': sorted(set(hard_failures)),
+                'feature_review_gate': feature_review_gate,
+                'target_return_report': target_return_report,
+                'sample_type_report': sample_type_report,
+            }
+            payload['optimizer_score'] = _optimizer_score_from_eval(payload)
+            if payload['hard_failures']:
+                payload['status'] = 'evaluated_with_hard_failures'
+            if write_artifacts:
+                path = Path('runtime') / 'trainer_param_eval_report.json'
+                path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+                payload['artifact_path'] = str(path)
+            return payload
+        except Exception as exc:
+            return {
+                'status': 'evaluation_error',
+                'reason': repr(exc),
+                'params': safe_params,
+                'hard_failures': hard_failures + ['evaluation_exception'],
+                'optimizer_score': -1e18,
+            }
+
+
+_ORIGINAL_TRAIN_MODELS = train_models
+
+
+def train_models() -> tuple[Path, dict[str, Any]]:
+    """Wrapper: normal train uses baseline unless TRAIN_USE_APPROVED_PARAMS=True."""
+    effective = _resolve_training_params(dict(PARAMS))
+    with _temporary_trainer_params(effective):
+        path, payload = _ORIGINAL_TRAIN_MODELS()
+        try:
+            payload.setdefault('approved_param_mount', {
+                'enabled': bool(effective.get('TRAIN_USE_APPROVED_PARAMS', False)),
+                'scope': str(effective.get('TRAIN_APPROVED_PARAM_SCOPE', 'trainer::default')),
+                'resolution_chain': effective.get('_approved_resolution_chain', []),
+            })
+            Path(path).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        except Exception:
+            pass
+        return path, payload
 
 
 if __name__ == '__main__':

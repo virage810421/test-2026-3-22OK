@@ -10,7 +10,7 @@ from fts_config import PATHS
 from fts_utils import now_str, log
 from fts_research_lab import ResearchLab
 from fts_approved_artifact_loader import ApprovedArtifactLoader
-from param_storage import approve_latest_candidate, load_latest_candidate, load_approved_params
+from param_storage import load_latest_candidate, load_approved_params
 from fts_research_suite import auto_approve_latest_alpha_candidate
 from model_governance import load_registry, get_best_version_entry
 
@@ -33,16 +33,16 @@ class ApprovedPipeline:
         return {}
 
     def _auto_approve_default_params(self) -> dict[str, Any]:
-        latest = load_latest_candidate('default')
-        if not latest:
-            return {'status': 'no_default_candidate'}
-        metrics = latest.get('metrics', {}) or {}
-        score = float(metrics.get('Score', metrics.get('Composite', 0.0)) or 0.0)
-        ev = float(metrics.get('Test_EV', 0.0) or 0.0)
-        if score < 0.0 and ev <= 0:
-            return {'status': 'candidate_below_floor', 'candidate_id': latest.get('candidate_id')}
-        approved = approve_latest_candidate('default', approver='approved_pipeline_auto', note='approved pipeline auto-approve default candidate')
-        return {'status': 'approved', 'candidate_id': latest.get('candidate_id'), 'approved_scope': approved.get('scope_name') if approved else 'default'}
+        # Governance upgrade: do not auto-approve old default scope directly.
+        # Route candidate decisions through fts_candidate_ai_judge so hard gates
+        # and scope-specific statuses are applied before any approved snapshot is
+        # created.
+        try:
+            from fts_candidate_ai_judge import judge_latest
+            scope = str(PARAMS.get('TRAIN_APPROVED_PARAM_SCOPE', PARAMS.get('APPROVED_DEFAULT_SCOPE', 'trainer::default')))
+            return judge_latest(scope=scope, auto_apply=True)
+        except Exception as exc:
+            return {'status': 'candidate_ai_judge_error', 'reason': repr(exc)}
 
     def run(self, auto_capture_features: bool = True, auto_approve_params: bool = True, auto_approve_alpha: bool = True) -> tuple[Path, dict[str, Any]]:
         scope = str(PARAMS.get('APPROVED_DEFAULT_SCOPE', 'default'))

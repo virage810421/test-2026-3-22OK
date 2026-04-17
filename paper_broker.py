@@ -7,6 +7,17 @@ from typing import Dict, List, Optional, Any
 from broker_base import BrokerBase, FillEvent, OrderRecord, OrderRequest, OrderSide, OrderStatus, OrderType
 
 try:
+    from config import PARAMS  # type: ignore
+except Exception:
+    PARAMS = {}
+try:
+    from fts_approved_param_mount import get_effective_params_for_mode
+except Exception:  # pragma: no cover
+    def get_effective_params_for_mode(mode: str, base_params=None, stage=None):
+        return dict(base_params or {})
+
+
+try:
     from fts_execution_journal_service import append_execution_journal_event
 except Exception:  # pragma: no cover
     def append_execution_journal_event(*args, **kwargs):
@@ -19,6 +30,16 @@ def _now() -> str:
 
 class PaperBroker(BrokerBase):
     def __init__(self, initial_cash: float = 5_000_000, commission_rate: float = 0.001425, tax_rate_sell: float = 0.003, tax_rate_short: float = 0.003, default_slippage_bps: float = 5.0, partial_fill_threshold_value: float = 1_500_000, partial_fill_ratio: float = 0.5, allow_short: bool = True):
+        exec_params = get_effective_params_for_mode('execution_policy', dict(PARAMS))
+        self.approved_param_mount = exec_params.get('_approved_param_mount', {}) if isinstance(exec_params, dict) else {}
+        initial_cash = exec_params.get('PAPER_BROKER_INITIAL_CASH', initial_cash)
+        commission_rate = exec_params.get('PAPER_BROKER_COMMISSION_RATE', commission_rate)
+        tax_rate_sell = exec_params.get('PAPER_BROKER_TAX_RATE_SELL', tax_rate_sell)
+        tax_rate_short = exec_params.get('PAPER_BROKER_TAX_RATE_SHORT', tax_rate_short)
+        default_slippage_bps = exec_params.get('PAPER_BROKER_DEFAULT_SLIPPAGE_BPS', default_slippage_bps)
+        partial_fill_threshold_value = exec_params.get('PAPER_BROKER_PARTIAL_FILL_THRESHOLD_VALUE', partial_fill_threshold_value)
+        partial_fill_ratio = exec_params.get('PAPER_BROKER_PARTIAL_FILL_RATIO', partial_fill_ratio)
+        allow_short = exec_params.get('PAPER_BROKER_ALLOW_SHORT', allow_short)
         self.cash = float(initial_cash)
         self.commission_rate = float(commission_rate)
         self.tax_rate_sell = float(tax_rate_sell)

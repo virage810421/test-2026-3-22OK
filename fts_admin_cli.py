@@ -21,9 +21,17 @@ Supported examples:
   python fts_admin_cli.py callback-ingest
   python fts_admin_cli.py reconciliation-runtime
   python fts_admin_cli.py restart-recovery
+  python fts_admin_cli.py shadow-evidence
+  python fts_admin_cli.py twap3-runtime
+  python fts_admin_cli.py runtime-closure
   python fts_admin_cli.py exit-artifact-bootstrap
   python fts_admin_cli.py portfolio-backtest --period 3y
   python fts_admin_cli.py prebroker-95-audit --run-backtest --bootstrap-exit
+  python fts_admin_cli.py train-param-optimize --iterations 24
+  python fts_admin_cli.py param-ai-judge --scope trainer::default
+  python fts_admin_cli.py param-release-gate --scope strategy_signal::default
+  python fts_admin_cli.py approved-param-mount-report
+  python fts_admin_cli.py param-governance --all-scopes
 """
 
 import argparse
@@ -136,6 +144,20 @@ def run_restart_recovery(argv: Sequence[str] | None = None) -> int:
     return _call_main_with_argv(main, argv)
 
 
+def run_shadow_evidence(argv: Sequence[str] | None = None) -> int:
+    from fts_shadow_runtime_evidence import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_twap3_runtime(argv: Sequence[str] | None = None) -> int:
+    from fts_twap3_runtime_closure import main
+    return _call_main_with_argv(main, argv)
+
+def run_runtime_closure(argv: Sequence[str] | None = None) -> int:
+    from fts_nonbroker_runtime_closure_gate import main
+    return _call_main_with_argv(main, argv)
+
+
 def run_exit_artifact_bootstrap(argv: Sequence[str] | None = None) -> int:
     from fts_exit_model_artifact_bootstrap import main
     return _call_main_with_argv(main, argv)
@@ -179,6 +201,44 @@ def run_patch_retirement_report(argv: Sequence[str] | None = None) -> int:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     print(f'🧹 patch retirement report：{path}')
     return 0
+
+
+def run_train_param_optimize(argv: Sequence[str] | None = None) -> int:
+    from fts_train_param_optimizer import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_param_ai_judge(argv: Sequence[str] | None = None) -> int:
+    from fts_candidate_ai_judge import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_param_release_gate(argv: Sequence[str] | None = None) -> int:
+    from fts_param_release_gate import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_approved_param_mount_report(argv: Sequence[str] | None = None) -> int:
+    from fts_approved_param_mount import main
+    return _call_main_with_argv(main, argv)
+
+
+def run_param_governance(argv: Sequence[str] | None = None) -> int:
+    from fts_param_governance_orchestrator import main
+    return _call_main_with_argv(main, argv)
+
+def run_param_evidence_collect(argv: Sequence[str] | None = None) -> int:
+    from fts_param_evidence_collector import main
+    return _call_main_with_argv(main, argv)
+
+def run_label_policy_optimize(argv: Sequence[str] | None = None) -> int:
+    from fts_label_policy_optimizer import main
+    return _call_main_with_argv(main, argv)
+
+def run_execution_policy_optimize(argv: Sequence[str] | None = None) -> int:
+    from fts_execution_policy_optimizer import main
+    return _call_main_with_argv(main, argv)
+
 _COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     'healthcheck': run_healthcheck,
     'completion-audit': run_completion_audit,
@@ -194,11 +254,22 @@ _COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     'callback-ingest': run_callback_ingest,
     'reconciliation-runtime': run_reconciliation_runtime,
     'restart-recovery': run_restart_recovery,
+    'shadow-evidence': run_shadow_evidence,
+    'twap3-runtime': run_twap3_runtime,
+    'runtime-closure': run_runtime_closure,
     'exit-artifact-bootstrap': run_exit_artifact_bootstrap,
     'portfolio-backtest': run_portfolio_backtest,
     'prebroker-95-audit': run_prebroker_95_audit,
     'maturity-upgrade': run_maturity_upgrade,
     'patch-retirement-report': run_patch_retirement_report,
+    'train-param-optimize': run_train_param_optimize,
+    'param-ai-judge': run_param_ai_judge,
+    'param-release-gate': run_param_release_gate,
+    'approved-param-mount-report': run_approved_param_mount_report,
+    'param-governance': run_param_governance,
+    'param-evidence-collect': run_param_evidence_collect,
+    'label-policy-optimize': run_label_policy_optimize,
+    'execution-policy-optimize': run_execution_policy_optimize,
 }
 
 
@@ -213,11 +284,22 @@ _ALIASES = {
     'callbacks': 'callback-ingest',
     'reconcile': 'reconciliation-runtime',
     'recovery': 'restart-recovery',
+    'shadow': 'shadow-evidence',
+    'twap3': 'twap3-runtime',
+    'closure': 'runtime-closure',
+    'nonbroker-closure': 'runtime-closure',
     'exit-bootstrap': 'exit-artifact-bootstrap',
     'portfolio-bt': 'portfolio-backtest',
     'prelive-95': 'prebroker-95-audit',
     'maturity': 'maturity-upgrade',
     'retirement-report': 'patch-retirement-report',
+    'train-param-search': 'train-param-optimize',
+    'candidate-judge': 'param-ai-judge',
+    'release-gate': 'param-release-gate',
+    'param-mount': 'approved-param-mount-report',
+    'param-evidence': 'param-evidence-collect',
+    'label-optimize': 'label-policy-optimize',
+    'execution-optimize': 'execution-policy-optimize',
 }
 
 

@@ -77,6 +77,11 @@ class ModelDecision:
     feature_scope: str = 'SHARED'
     direction_scope: str = 'SHARED'
     heuristic_fallback_active: bool = False
+    role_decisions: dict[str, Any] = field(default_factory=dict)
+    entry_alpha_decision: dict[str, Any] = field(default_factory=dict)
+    risk_failure_decision: dict[str, Any] = field(default_factory=dict)
+    sizing_decision: dict[str, Any] = field(default_factory=dict)
+    execution_model_decision: dict[str, Any] = field(default_factory=dict)
     debug: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
@@ -272,6 +277,26 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
     readiness_boost = 1.08 if entry_readiness >= 0.60 else 1.02 if entry_readiness >= 0.35 else 1.0
     risk_penalty = 0.82 if max(breakout_risk, reversal_risk, exit_hazard) >= 0.80 else 0.92 if max(breakout_risk, reversal_risk, exit_hazard) >= 0.60 else 1.0
     conviction = max(0.0, min(proba * (float(base_multiplier) * 2.0) * ev_boost * sample_boost * readiness_boost * risk_penalty, 2.5))
+
+    role_decisions: dict[str, Any] = {}
+    try:
+        from fts_model_role_router import build_model_role_bundle
+        role_bundle = build_model_role_bundle(
+            latest_row,
+            proba=proba,
+            expected_return=expected_return,
+            signal_confidence=signal_conf,
+            base_approved=(len(veto_reasons) == 0),
+        )
+        role_decisions = role_bundle.as_dict()
+        if not role_bundle.approved:
+            veto_reasons.extend(role_bundle.veto_reasons())
+    except Exception as exc:  # runtime diagnostics
+        record_issue('model_layer', 'model_role_router_failed', exc, severity='ERROR', fail_mode='fail_closed')
+        role_decisions = {'approved': False, 'veto_reasons': ['model_role_router_failed']}
+        veto_reasons.append('model_role_router_failed')
+
+    veto_reasons = list(dict.fromkeys([str(x) for x in veto_reasons if str(x)]))
     approved = len(veto_reasons) == 0
 
     decision = ModelDecision(
@@ -292,6 +317,11 @@ def evaluate_model_signal(latest_row, regime: str, min_proba: float = 0.5, base_
         feature_scope=direction_scope,
         direction_scope=direction_scope,
         heuristic_fallback_active=heuristic_fallback_active,
+        role_decisions=role_decisions,
+        entry_alpha_decision=role_decisions.get('entry_alpha', {}) if isinstance(role_decisions, dict) else {},
+        risk_failure_decision=role_decisions.get('risk_failure', {}) if isinstance(role_decisions, dict) else {},
+        sizing_decision=role_decisions.get('sizing', {}) if isinstance(role_decisions, dict) else {},
+        execution_model_decision=role_decisions.get('execution', {}) if isinstance(role_decisions, dict) else {},
         debug={'selected_count': len(_selected_features_for_scope(direction_scope)), 'allow_heuristic_model_fallback': bool(ALLOW_HEURISTIC_FALLBACK), 'Regime_Label': latest_row.get('Regime_Label', regime), 'Transition_Label': latest_row.get('Transition_Label', ''), 'Entry_State': entry_state, 'PreEntry_Score': latest_row.get('PreEntry_Score'), 'Confirm_Entry_Score': latest_row.get('Confirm_Entry_Score'), 'Entry_Readiness': entry_readiness, 'Breakout_Risk_Next3': breakout_risk, 'Reversal_Risk_Next3': reversal_risk, 'Exit_Hazard_Score': exit_hazard, 'Expected_Return': expected_return, 'EV_Source': ev_source, 'Next_Regime_Prob_Bull': latest_row.get('Next_Regime_Prob_Bull'), 'Next_Regime_Prob_Bear': latest_row.get('Next_Regime_Prob_Bear'), 'Next_Regime_Prob_Range': latest_row.get('Next_Regime_Prob_Range')},
     )
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
