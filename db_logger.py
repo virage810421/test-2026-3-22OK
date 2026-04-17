@@ -40,7 +40,7 @@ class SQLServerExecutionLogger:
     def __init__(
         self,
         server: str = "localhost",
-        database: str = "股票online",
+        database: str = "股票Online",
         driver: str = "ODBC Driver 17 for SQL Server",
         trusted_connection: str = "yes",
         enabled: bool = False,

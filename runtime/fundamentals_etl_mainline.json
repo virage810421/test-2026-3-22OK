@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 16:23:53",
+  "generated_at": "2026-04-16 13:39:31",
   "module_version": "v83_fundamentals_etl_mainline_builtin",
   "system_name": "正式交易主控版_v83_official_main",
   "mode": "local_sync_only",
@@ -28,7 +28,7 @@
   "merged_rows": 2143,
   "saved_csv_path": "C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv",
   "data_quality": {
-    "generated_at": "2026-04-15 16:23:53",
+    "generated_at": "2026-04-16 13:39:31",
     "dataset_name": "fundamentals_etl_mainline",
     "rows": 2143,
     "columns": 11,

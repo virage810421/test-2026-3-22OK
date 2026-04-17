@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-10 13:16:51",
-  "module_version": "v83_configurable_broker_adapter",
+  "generated_at": "2026-04-16 13:39:36",
+  "module_version": "v84_configurable_broker_adapter_live_closure",
   "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
   "template_path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_adapter_config.template.json",
   "provider_name": "fill_me_after_account_opened",
@@ -11,7 +11,8 @@
     "provider_name",
     "base_url",
     "auth.api_key",
-    "auth.account_id"
+    "auth.account_id",
+    "endpoints.get_open_orders"
   ],
   "status": "broker_adapter_account_pending"
 }

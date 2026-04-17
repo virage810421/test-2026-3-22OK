@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-12 20:20:18",
+  "generated_at": "2026-04-16 11:49:50",
   "module_version": "v83_level3_control_tower_integrated",
-  "error_type": "UnicodeEncodeError",
-  "error": "'cp950' codec can't encode character '\\U0001f9ec' in position 11: illegal multibyte sequence"
+  "error_type": "NameError",
+  "error": "name '_collect_reconciliation_inputs' is not defined"
 }

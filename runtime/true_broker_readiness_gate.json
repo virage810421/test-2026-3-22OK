@@ -1,32 +1,35 @@
 {
-  "generated_at": "2026-04-15 20:49:23",
-  "module_version": "v92_true_broker_five_red_lights_gate",
+  "generated_at": "2026-04-16 14:37:03",
+  "module_version": "v84_true_broker_readiness_gate_with_live_closure",
   "status": "blocked_for_real_broker",
   "lights": {
     "api": false,
     "callback": false,
-    "ledger": false,
+    "ledger": true,
     "reconcile": true,
     "kill_switch": true
   },
   "red_lights": [
     "api",
-    "callback",
-    "ledger"
+    "callback"
   ],
-  "green_count": 2,
+  "green_count": 3,
   "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
   "evidence": {
     "adapter_enabled": false,
     "provider_name": "fill_me_after_account_opened",
     "base_url_present": false,
-    "auth_api_key_present": false,
-    "auth_account_id_present": false,
-    "probe_ready_for_live_connect": false,
-    "callback_files": [],
-    "ledger_files": [],
-    "reconciliation_status": "reconciled",
-    "kill_switch_state_present": true
+    "closure_status": "true_broker_live_closure_partial",
+    "closure_checks": {
+      "adapter_ready": false,
+      "api_connected": false,
+      "callback_evidence": false,
+      "ledger_evidence": false,
+      "reconcile_green": false,
+      "kill_switch_ready": true,
+      "activity_observed": false
+    },
+    "real_api_status": "five_red_lights_until_real_broker_bound"
   },
-  "production_rule": "LIVE/真券商必須五燈全綠；沒有真實券商 API/callback/ledger/reconcile 實證時不可補分。"
+  "production_rule": "LIVE/真券商必須五燈全綠，且 true_broker_live_closure 必須 ready；沒有真實 API/callback/ledger/reconcile 證據時不可過關。"
 }

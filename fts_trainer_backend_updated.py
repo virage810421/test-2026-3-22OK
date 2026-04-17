@@ -164,6 +164,54 @@ def _write_model_live_signal_gate(report: dict[str, Any], promotion_ready: bool,
     (Path('runtime') / 'model_live_signal_gate.json').write_text(json.dumps(gate, ensure_ascii=False, indent=2), encoding='utf-8')
     return gate
 
+def _write_selected_feature_authority(report: dict[str, Any]) -> dict[str, Any]:
+    runtime_dir = Path('runtime')
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    models_dir = Path('models')
+    selected_features = report.get('selected_features', []) or []
+    if not isinstance(selected_features, list):
+        selected_features = list(selected_features) if isinstance(selected_features, (tuple, set)) else []
+    selected_features = [str(x) for x in selected_features if str(x)]
+    feature_review_gate = report.get('feature_review_gate', {}) or {}
+    feature_review_build = report.get('feature_review_build', {}) or {}
+    policy_path = str(feature_review_gate.get('policy_path') or '')
+    selected_feature_pkl = models_dir / 'selected_features.pkl'
+    payload = {
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'status': 'selected_feature_authority_ready' if selected_features else 'selected_feature_authority_missing',
+        'authority_mode': str(feature_review_gate.get('mode') or feature_review_gate.get('status') or 'trainer_selected_features'),
+        'policy_path': policy_path,
+        'policy_status': str(feature_review_gate.get('policy_status') or ''),
+        'feature_review_gate_status': str(feature_review_gate.get('status') or ''),
+        'feature_review_build_status': str(feature_review_build.get('status') or ''),
+        'selected_features_path': str(selected_feature_pkl),
+        'selected_features_count': int(len(selected_features)),
+        'selected_features_preview': selected_features[:50],
+        'selected_features_sha1_basis': '|'.join(selected_features[:200]),
+        'dropped_by_review_count': int(feature_review_gate.get('dropped_by_review_count', 0) or 0),
+        'approved_count': int(feature_review_gate.get('approved_count', 0) or 0),
+        'rejected_count': int(feature_review_gate.get('rejected_count', 0) or 0),
+        'noise_watchlist_count': int(feature_review_gate.get('noise_watchlist_count', 0) or 0),
+        'train_live_parity_enforced': bool(feature_review_gate.get('train_live_parity_enforced', False)),
+        'warnings': list(report.get('warnings', []) or []),
+        'promotion_ready': bool(report.get('promotion_ready', False)),
+        'promotion_status': str((report.get('promotion', {}) or {}).get('status') or ''),
+        'out_of_time_profit_factor': float(((report.get('out_of_time', {}) or {}).get('profit_factor', 0.0)) or 0.0),
+        'out_of_time_hit_rate': float(((report.get('out_of_time', {}) or {}).get('hit_rate', 0.0)) or 0.0),
+        'walk_forward_effective_splits': int(((report.get('walk_forward_summary', {}) or {}).get('effective_splits', 0)) or 0),
+        'overall_score': float(report.get('overall_score', 0.0) or 0.0),
+    }
+    path = runtime_dir / 'selected_feature_authority.json'
+    try:
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+        payload['path'] = str(path)
+    except Exception as exc:
+        payload['status'] = 'selected_feature_authority_write_failed'
+        payload['error'] = repr(exc)
+        payload['path'] = str(path)
+    return payload
+
+
 def _exit_selected_feature_pkl() -> Path:
     return Path('models') / 'selected_features_exit.pkl'
 

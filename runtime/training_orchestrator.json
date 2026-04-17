@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 20:49:24",
+  "generated_at": "2026-04-16 14:37:04",
   "status": "train_invoked_via_control_tower",
   "entrypoints": [
     "fts_training_data_builder.generate_ml_dataset",
@@ -22,29 +22,27 @@
       "stage": "maturity_upgrade_suite",
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\maturity_upgrade_suite.json",
-      "payload_status": "maturity_upgrade_ready",
+      "payload_status": "maturity_upgrade_partial",
       "entrypoint": "fts_maturity_upgrade_suite.MaturityUpgradeSuite.build"
     },
     {
       "stage": "trainer_backend",
-      "status": "ok",
-      "path": "runtime\\trainer_backend_report.json",
-      "payload_status": "trained",
+      "status": "error",
+      "error": "NameError(\"name '_write_selected_feature_authority' is not defined\")",
       "entrypoint": "fts_trainer_backend.train_models"
     },
     {
       "stage": "maturity_upgrade_suite_after_train",
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\maturity_upgrade_suite.json",
-      "payload_status": "maturity_upgrade_ready",
+      "payload_status": "maturity_upgrade_partial",
       "blocked_items": [
         {
           "label": "true_broker_readiness_gate",
           "payload_status": "blocked_for_real_broker",
           "hard_blocks": [
             "api",
-            "callback",
-            "ledger"
+            "callback"
           ]
         }
       ],

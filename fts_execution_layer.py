@@ -43,6 +43,10 @@ class PositionPlan:
     risk_amount: float
     stop_pct: float
     take_profit_pct: float
+    execution_style: str = 'SINGLE'
+    child_order_count: int = 1
+    max_child_qty: int = 0
+    liquidity_score: float = 0.0
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -357,6 +361,65 @@ def portfolio_gate(row, total_nav, portfolio_state, sector_name='未知產業', 
     return GateDecision(allowed=not reasons, reasons=reasons)
 
 
+
+def _execution_liquidity_plan(row, curr_price: float, requested_shares: int, params=PARAMS) -> dict[str, Any]:
+    liquidity_score = _safe_float(row.get('Liquidity_Score', row.get('liquidity_score', 0.0)), 0.0)
+    adv20 = _safe_float(row.get('ADV20', row.get('ADV20_Proxy', row.get('二十日平均成交額', 0.0))), 0.0)
+    turnover_ratio = _safe_float(row.get('Turnover_Ratio', row.get('Turnover_Proxy', 0.0)), 0.0)
+    hard_min_liq = float(params.get('EXECUTION_MIN_LIQUIDITY_SCORE', 0.20))
+    hard_min_adv20 = float(params.get('EXECUTION_MIN_ADV20', 5_000_000))
+    max_adv_participation = float(params.get('EXECUTION_MAX_ADV20_PARTICIPATION', 0.02))
+
+    if liquidity_score > 0 and liquidity_score < hard_min_liq:
+        return {
+            'allowed': False,
+            'reason': 'liquidity_score_below_hard_gate',
+            'liquidity_score': liquidity_score,
+            'adv20': adv20,
+            'turnover_ratio': turnover_ratio,
+            'shares_cap': 0,
+            'execution_style': 'BLOCKED',
+            'child_order_count': 0,
+            'max_child_qty': 0,
+        }
+    if adv20 > 0 and adv20 < hard_min_adv20:
+        return {
+            'allowed': False,
+            'reason': 'adv20_below_hard_gate',
+            'liquidity_score': liquidity_score,
+            'adv20': adv20,
+            'turnover_ratio': turnover_ratio,
+            'shares_cap': 0,
+            'execution_style': 'BLOCKED',
+            'child_order_count': 0,
+            'max_child_qty': 0,
+        }
+
+    shares_cap = requested_shares
+    if adv20 > 0 and curr_price > 0 and max_adv_participation > 0:
+        max_order_value = adv20 * max_adv_participation
+        shares_cap = min(shares_cap, int(max_order_value / max(curr_price, 1e-9)))
+    if turnover_ratio > 0 and turnover_ratio < float(params.get('EXECUTION_TURNOVER_SOFT_FLOOR', 0.6)):
+        shares_cap = int(shares_cap * float(params.get('EXECUTION_LOW_TURNOVER_SIZE_MULTIPLIER', 0.5)))
+
+    execution_style = str(params.get('execution_style', 'SINGLE')).upper()
+    child_order_count = 1
+    max_child_qty = shares_cap
+    if execution_style == 'TWAP3' and shares_cap > 0:
+        child_order_count = 3
+        max_child_qty = max(1, int((shares_cap + child_order_count - 1) // child_order_count))
+    return {
+        'allowed': True,
+        'reason': 'ok',
+        'liquidity_score': liquidity_score,
+        'adv20': adv20,
+        'turnover_ratio': turnover_ratio,
+        'shares_cap': max(0, shares_cap),
+        'execution_style': execution_style,
+        'child_order_count': child_order_count,
+        'max_child_qty': max_child_qty,
+    }
+
 def compute_position_plan(row, curr_price: float, total_nav: float, current_cash: float, entry_metrics: dict[str, Any], params=PARAMS) -> PositionPlan:
     if not bool(entry_metrics.get('Policy_Ready', True)):
         record_diagnostic('execution_layer', 'compute_position_plan_policy_not_ready', severity='error', fail_closed=True, context={'ticker_symbol': get_ticker_symbol(row)})
@@ -385,16 +448,23 @@ def compute_position_plan(row, curr_price: float, total_nav: float, current_cash
     shares = min(q for q in [qty_by_cap, qty_by_risk] if q > 0) if any(q > 0 for q in [qty_by_cap, qty_by_risk]) else 0
     if shares >= 1000:
         shares = int(shares // 1000) * 1000
+
+    liq_plan = _execution_liquidity_plan(row, curr_price, shares, params=params)
+    if not liq_plan.get('allowed', True):
+        return PositionPlan(False, str(liq_plan.get('reason') or 'liquidity_gate_blocked'), 0, 0.0, requested_alloc, 0.0, 0.0, stop_pct, tp_pct, str(liq_plan.get('execution_style', 'BLOCKED')), int(liq_plan.get('child_order_count', 0) or 0), int(liq_plan.get('max_child_qty', 0) or 0), float(liq_plan.get('liquidity_score', 0.0) or 0.0))
+    shares = min(shares, int(liq_plan.get('shares_cap', shares) or shares))
+    if shares >= 1000:
+        shares = int(shares // 1000) * 1000
     total_cost = curr_price * shares * (1 + float(params.get('FEE_RATE', 0.001425)) * float(params.get('FEE_DISCOUNT', 1.0)))
 
     if shares < 1:
-        return PositionPlan(False, 'shares_below_minimum', 0, 0.0, requested_alloc, 0.0, 0.0, stop_pct, tp_pct)
+        return PositionPlan(False, 'shares_below_minimum_after_liquidity_gate', 0, 0.0, requested_alloc, 0.0, 0.0, stop_pct, tp_pct, str(liq_plan.get('execution_style', 'SINGLE')), int(liq_plan.get('child_order_count', 1) or 1), int(liq_plan.get('max_child_qty', 0) or 0), float(liq_plan.get('liquidity_score', 0.0) or 0.0))
     if total_cost > current_cash and not bool(params.get('IGNORE_CASH_LIMIT', False)):
-        return PositionPlan(False, 'cash_insufficient', 0, total_cost, requested_alloc, 0.0, 0.0, stop_pct, tp_pct)
+        return PositionPlan(False, 'cash_insufficient', 0, total_cost, requested_alloc, 0.0, 0.0, stop_pct, tp_pct, str(liq_plan.get('execution_style', 'SINGLE')), int(liq_plan.get('child_order_count', 1) or 1), int(liq_plan.get('max_child_qty', 0) or 0), float(liq_plan.get('liquidity_score', 0.0) or 0.0))
 
     applied_alloc = total_cost / total_nav if total_nav > 0 else 0.0
     risk_amount = total_cost * risk_budget_ratio
-    plan = PositionPlan(True, 'ok', shares, total_cost, requested_alloc, applied_alloc, risk_amount, stop_pct, tp_pct)
+    plan = PositionPlan(True, 'ok', shares, total_cost, requested_alloc, applied_alloc, risk_amount, stop_pct, tp_pct, str(liq_plan.get('execution_style', 'SINGLE')), int(liq_plan.get('child_order_count', 1) or 1), int(liq_plan.get('max_child_qty', 0) or 0), float(liq_plan.get('liquidity_score', 0.0) or 0.0))
     RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.write_text(json.dumps(plan.as_dict(), ensure_ascii=False, indent=2), encoding='utf-8')
     return plan

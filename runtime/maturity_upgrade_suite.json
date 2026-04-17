@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-04-15 20:49:23",
+  "generated_at": "2026-04-16 14:37:03",
   "module_version": "v92_maturity_gap_closed_loop_suite",
-  "status": "maturity_upgrade_ready",
+  "status": "maturity_upgrade_partial",
   "items": [
     {
       "label": "feature_review",
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\feature_review_report.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:21",
+        "generated_at": "2026-04-16 14:37:00",
         "module_version": "v92_feature_review_train_live_parity_fail_closed",
         "status": "feature_review_ready",
         "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
@@ -885,7 +885,7 @@
             "feature": "ATR14",
             "status": "approved",
             "coverage": 1.0,
-            "unique_count": 4425,
+            "unique_count": 4422,
             "zero_ratio": 0.0,
             "corr_to_target": -0.008408,
             "abs_corr_to_target": 0.008408,
@@ -1530,7 +1530,7 @@
             "feature": "MOUNT__ATR14",
             "status": "reject",
             "coverage": 1.0,
-            "unique_count": 4425,
+            "unique_count": 4422,
             "zero_ratio": 0.0,
             "corr_to_target": -0.008408,
             "abs_corr_to_target": 0.008408,
@@ -2952,7 +2952,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\entry_tracking_journal.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:22",
+        "generated_at": "2026-04-16 14:37:01",
         "module_version": "v92_entry_tracking_closed_loop_gate",
         "status": "entry_tracking_ready",
         "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
@@ -2980,11 +2980,13 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:22",
+        "generated_at": "2026-04-16 14:37:01",
         "module_version": "v92_position_lifecycle_closed_loop",
         "status": "no_active_positions",
         "message": "尚無 active_positions.csv；生命週期服務已就緒，等有持倉後會開始逐日記錄。",
         "action_plan_json": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle_action_plan.json",
+        "stop_replace_payload_csv": "C:\\test\\test-2026-3-22OK\\data\\stop_replace_payloads.csv",
+        "stop_replace_payload_runtime_csv": "C:\\test\\test-2026-3-22OK\\runtime\\stop_replace_payloads.csv",
         "positions": {},
         "wrong_exit_statistics": {
           "status": "no_history_yet",
@@ -3004,7 +3006,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\model_governance_enhancement.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:23",
+        "generated_at": "2026-04-16 14:37:02",
         "module_version": "v92_walkforward_oos_drift_retention_governance",
         "status": "model_governance_enhanced_ready",
         "training_data_path": "C:\\test\\test-2026-3-22OK\\data\\ml_training_data.csv",
@@ -3034,7 +3036,7 @@
           ]
         },
         "live_signal_gate": {
-          "generated_at": "2026-04-15 20:49:20",
+          "generated_at": "2026-04-16 14:36:59",
           "allow_live_signal": false,
           "promotion_ready": false,
           "promoted_current_candidate": false,
@@ -3042,7 +3044,7 @@
           "reason": "promotion_not_cleared",
           "promotion": {
             "status": "restored_pretrain",
-            "version": "pretrain_20260415_204857",
+            "version": "pretrain_20260416_143621",
             "reason": "promotion_floor_not_met",
             "failures": [
               "oot_profit_factor_below_floor",
@@ -3051,21 +3053,21 @@
             ]
           },
           "out_of_time": {
-            "hit_rate": 0.17252931323283083,
-            "avg_return": -0.0006918777219430485,
-            "pred_accuracy": 0.5678391959798995,
-            "profit_factor": 0.9019173852171419,
-            "coverage": 0.36515912897822445
+            "hit_rate": 0.18760469011725292,
+            "avg_return": -0.0004436499162479062,
+            "pred_accuracy": 0.5644891122278057,
+            "profit_factor": 0.9370463288572818,
+            "coverage": 0.3953098827470687
           },
           "walk_forward_summary": {
-            "ret_mean": -0.0020586633165829145,
-            "hit_rate_mean": 0.16532663316582913,
-            "pf_mean": 0.7808267770682483,
-            "coverage_mean": 0.37386934673366834,
+            "ret_mean": -0.001757732663316583,
+            "hit_rate_mean": 0.17035175879396985,
+            "pf_mean": 0.8615697887604096,
+            "coverage_mean": 0.39095477386934674,
             "effective_splits": 5,
-            "score": 0.5749604454099568
+            "score": 0.6857965224287512
           },
-          "overall_score": 2.5580227453511455,
+          "overall_score": 2.7687282384050205,
           "status": "live_signal_blocked"
         },
         "drift_monitor": {
@@ -3114,12 +3116,12 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_journal_summary.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:23",
+        "generated_at": "2026-04-16 14:37:02",
         "module_version": "v92_execution_journal_closed_loop",
         "status": "execution_journal_ready",
         "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
         "journal_jsonl": "C:\\test\\test-2026-3-22OK\\runtime\\execution_journal.jsonl",
-        "total_event_count_estimate": 3,
+        "total_event_count_estimate": 6,
         "new_event_count": 0,
         "new_order_candidate_count": 0,
         "new_blocked_count": 0,
@@ -3138,7 +3140,7 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:23",
+        "generated_at": "2026-04-16 14:37:02",
         "status": "restart_recovery_blocked",
         "ready_to_resume_new_orders": false,
         "blockers": [
@@ -3155,7 +3157,7 @@
         "broker_snapshot_found": false,
         "execution_ledger_snapshot_found": true,
         "execution_ledger_snapshot": {
-          "generated_at": "2026-04-15 16:24:03",
+          "generated_at": "2026-04-16 13:39:36",
           "lane_orders": {
             "LONG": [
               "HC1",
@@ -3180,36 +3182,39 @@
       "status": "ok",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\true_broker_readiness_gate.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:23",
-        "module_version": "v92_true_broker_five_red_lights_gate",
+        "generated_at": "2026-04-16 14:37:03",
+        "module_version": "v84_true_broker_readiness_gate_with_live_closure",
         "status": "blocked_for_real_broker",
         "lights": {
           "api": false,
           "callback": false,
-          "ledger": false,
+          "ledger": true,
           "reconcile": true,
           "kill_switch": true
         },
         "red_lights": [
           "api",
-          "callback",
-          "ledger"
+          "callback"
         ],
-        "green_count": 2,
+        "green_count": 3,
         "config_path": "C:\\test\\test-2026-3-22OK\\broker_adapter_config.json",
         "evidence": {
           "adapter_enabled": false,
           "provider_name": "fill_me_after_account_opened",
           "base_url_present": false,
-          "auth_api_key_present": false,
-          "auth_account_id_present": false,
-          "probe_ready_for_live_connect": false,
-          "callback_files": [],
-          "ledger_files": [],
-          "reconciliation_status": "reconciled",
-          "kill_switch_state_present": true
+          "closure_status": "true_broker_live_closure_partial",
+          "closure_checks": {
+            "adapter_ready": false,
+            "api_connected": false,
+            "callback_evidence": false,
+            "ledger_evidence": false,
+            "reconcile_green": false,
+            "kill_switch_ready": true,
+            "activity_observed": false
+          },
+          "real_api_status": "five_red_lights_until_real_broker_bound"
         },
-        "production_rule": "LIVE/真券商必須五燈全綠；沒有真實券商 API/callback/ledger/reconcile 實證時不可補分。"
+        "production_rule": "LIVE/真券商必須五燈全綠，且 true_broker_live_closure 必須 ready；沒有真實 API/callback/ledger/reconcile 證據時不可過關。"
       }
     }
   ],
@@ -3220,8 +3225,7 @@
       "payload_status": "blocked_for_real_broker",
       "hard_blocks": [
         "api",
-        "callback",
-        "ledger"
+        "callback"
       ]
     }
   ],
@@ -3232,5 +3236,40 @@
     "ai_training_governance": "trainer report + walk-forward/OOS/drift/retention; rerun after TRAIN",
     "paper_prelive": "execution_journal + restart_recovery plan",
     "real_broker_readiness": "true_broker_readiness_gate keeps five red lights until actual API/callback/ledger/reconcile/kill-switch evidence"
-  }
+  },
+  "completed_sections": [
+    {
+      "section": "feature_engineering",
+      "detail": "feature_review fail-closed + train/live parity policy",
+      "item_status": "feature_review_ready"
+    },
+    {
+      "section": "prepare_pilot_full_entry",
+      "detail": "entry_tracking action_plan + control tower gate",
+      "item_status": "entry_tracking_ready"
+    },
+    {
+      "section": "exit_reduce_defend",
+      "detail": "position_lifecycle action_plan + generated SELL for EXIT/REDUCE",
+      "item_status": "no_active_positions"
+    },
+    {
+      "section": "ai_training_governance",
+      "detail": "trainer report + walk-forward/OOS/drift/retention; rerun after TRAIN",
+      "item_status": "model_governance_enhanced_ready"
+    },
+    {
+      "section": "paper_prelive",
+      "detail": "execution_journal + restart_recovery plan",
+      "item_status": "restart_recovery_blocked"
+    }
+  ],
+  "pending_sections": [
+    {
+      "section": "real_broker_readiness",
+      "detail": "true_broker_readiness_gate keeps five red lights until actual API/callback/ledger/reconcile/kill-switch evidence",
+      "item_status": "blocked_for_real_broker"
+    }
+  ],
+  "trigger_stage": "train_after_trainer_backend"
 }

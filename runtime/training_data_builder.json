@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-04-15 20:48:55",
+  "generated_at": "2026-04-16 14:36:17",
   "dataset_path": "data\\ml_training_data.csv",
   "status": "ok",
   "build_mode": "incremental_merge",
-  "tickers_requested": 16,
-  "existing_rows_before": 0,
+  "tickers_requested": 60,
+  "existing_rows_before": 17928,
   "rows_generated": 17928,
-  "rows_new_before_dedupe": 17928,
+  "rows_new_before_dedupe": 0,
   "quality_report": {
-    "generated_at": "2026-04-15 20:48:54",
+    "generated_at": "2026-04-16 14:36:14",
     "dataset_name": "ml_training_generated",
     "rows": 17928,
     "columns": 188,
@@ -28,165 +28,474 @@
     "status": "ok",
     "missing_flag_columns_added": [
       "Feature_Row_Index",
-      "Current_Close",
-      "Unrealized_Return",
       "Unrealized_Return_Pct",
-      "Remaining_Return_To_Planned_Exit",
-      "Remaining_Return_To_Planned_Exit_Pct",
-      "Adverse_To_Date_Pct",
-      "Favorable_To_Date_Pct"
+      "Remaining_Return_To_Planned_Exit_Pct"
     ]
   },
   "ticker_reports": [
     {
       "ticker": "2330.TW",
-      "rows_added": 1314,
-      "status": "ok",
-      "download_rows": 726,
-      "computed_rows": 726
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
       "ticker": "2317.TW",
-      "rows_added": 1056,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
       "ticker": "2454.TW",
-      "rows_added": 1662,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "2603.TW",
-      "rows_added": 1044,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
       "ticker": "2881.TW",
-      "rows_added": 1176,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
-      "ticker": "3231.TW",
-      "rows_added": 1020,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "1519.TW",
-      "rows_added": 1350,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "2002.TW",
-      "rows_added": 996,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "2303.TW",
-      "rows_added": 1032,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "2308.TW",
-      "rows_added": 1182,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "2382.TW",
-      "rows_added": 984,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
-    },
-    {
-      "ticker": "2408.TW",
-      "rows_added": 852,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
+      "ticker": "2603.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
       "ticker": "2882.TW",
-      "rows_added": 1026,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
       "ticker": "2891.TW",
-      "rows_added": 924,
-      "status": "ok",
-      "download_rows": 728,
-      "computed_rows": 728
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
       "ticker": "3711.TW",
-      "rows_added": 1194,
-      "status": "ok",
-      "download_rows": 726,
-      "computed_rows": 726
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     },
     {
       "ticker": "6505.TW",
-      "rows_added": 1116,
-      "status": "ok",
-      "download_rows": 726,
-      "computed_rows": 726
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1101.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1102.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1103.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1104.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1108.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1109.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1110.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1201.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1203.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1210.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1215.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1216.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1217.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1218.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1219.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1220.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1225.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: boolean value of NA is ambiguous"
+    },
+    {
+      "ticker": "1227.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1229.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1231.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1232.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1233.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1234.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1235.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1236.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1256.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1301.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1303.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1304.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1305.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1307.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1308.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1309.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1310.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1312.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1313.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1314.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1315.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1316.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1319.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1321.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1323.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1324.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1325.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1326.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1337.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1338.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1339.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1340.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1341.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
+    },
+    {
+      "ticker": "1342.TW",
+      "rows_added": 0,
+      "status": "error",
+      "download_rows": 727,
+      "error": "TypeError: _history_delta() takes from 2 to 3 positional arguments but 4 were given"
     }
   ],
-  "selected_feature_count": 15,
-  "training_selected_feature_count": 15,
+  "selected_feature_count": 18,
+  "training_selected_feature_count": 18,
   "training_selected_features_sample": [
     "MACD_Hist",
     "Score_Gap",
     "Volume_Z20",
     "Regime_TrendStrength_X_ScoreGap",
-    "ADV20_Proxy",
-    "Turnover_Proxy",
-    "DollarVol20_Proxy",
-    "ATR14",
-    "Return_Z20",
-    "Intraday_Return",
-    "Return_Z20_X_MACD_Hist",
+    "Sell_Score_Slope_5d",
     "Gap_Pct",
-    "ATR_Pct",
-    "ADX",
-    "RSI"
+    "Overnight_Return",
+    "Range_Confidence_Delta",
+    "RealizedVol_60",
+    "Return_Z20",
+    "RSI_Reclaim_Speed",
+    "Proba_Delta_3d",
+    "MACD_Hist_X_Gap_Pct",
+    "MACD_Hist_X_Overnight_Return",
+    "Gap_Pct_X_Score_Gap",
+    "ADX_Delta_3d",
+    "ATR_Pctl_252",
+    "Range_Mean_Reversion_Score"
   ],
-  "live_selected_feature_count": 15,
+  "live_selected_feature_count": 18,
   "live_selected_features_sample": [
     "MACD_Hist",
     "Score_Gap",
     "Volume_Z20",
     "Regime_TrendStrength_X_ScoreGap",
-    "ADV20_Proxy",
-    "Turnover_Proxy",
-    "DollarVol20_Proxy",
-    "ATR14",
-    "Return_Z20",
-    "Intraday_Return",
-    "Return_Z20_X_MACD_Hist",
+    "Sell_Score_Slope_5d",
     "Gap_Pct",
-    "ATR_Pct",
-    "ADX",
-    "RSI"
+    "Overnight_Return",
+    "Range_Confidence_Delta",
+    "RealizedVol_60",
+    "Return_Z20",
+    "RSI_Reclaim_Speed",
+    "Proba_Delta_3d",
+    "MACD_Hist_X_Gap_Pct",
+    "MACD_Hist_X_Overnight_Return",
+    "Gap_Pct_X_Score_Gap",
+    "ADX_Delta_3d",
+    "ATR_Pctl_252",
+    "Range_Mean_Reversion_Score"
   ],
   "advanced_feature_columns_present": [
     "Score_Gap_Slope_3d",

@@ -20,6 +20,10 @@ from typing import List
 PROJECT_ROOT = Path(__file__).resolve().parent
 PYTHON = sys.executable or "python"
 HEARTBEAT_SECONDS = 5
+BOOTSTRAP_DATABASE_NAME = "股票Online"
+ZERO_NULL_REPAIR_SCRIPT = "fts_zero_null_sql_csv_repair.py"
+ZERO_NULL_REPAIR_DATASETS = "fundamentals,revenue,chip"
+
 
 # Windows 中文輸出常見是 CP950/Big5；子程序也可能被 PYTHONIOENCODING 強制成 UTF-8。
 # GUI 這裡用二進位讀取，再自動嘗試多種解碼，避免中文變成亂碼。
@@ -46,6 +50,7 @@ def _decode_output(data: bytes) -> str:
     return data.decode("utf-8", errors="replace")
 
 
+
 def _format_elapsed(seconds: float) -> str:
     total = max(0, int(seconds))
     h, rem = divmod(total, 3600)
@@ -68,7 +73,7 @@ class CommandItem:
 
 
 COMMANDS = [
-    CommandItem("主程式", "初始化 / 第一次啟動", ["formal_trading_system_v83_official_main.py", "--bootstrap"], "新電腦、重新建資料庫、第一次啟動時使用。會建置 runtime、補本地資料、檢查 SQL 與系統狀態。", "此流程可能需要數分鐘；若資料或網路較慢，中途可能短暫沒有新輸出。", True, False, True),
+    CommandItem("主程式", "初始化 / 第一次啟動", ["formal_trading_system_v83_official_main.py", "--bootstrap"], "新電腦、重新建資料庫、第一次啟動時使用。會先確保建立資料庫【股票Online】、再建置 runtime、補本地資料、檢查 SQL 與系統狀態。", "此流程可能需要數分鐘；若資料或網路較慢，中途可能短暫沒有新輸出。", True, False, True),
     CommandItem("主程式", "日常執行", ["formal_trading_system_v83_official_main.py"], "日常主流程。", "預設就是日常模式。", False, False, True),
     CommandItem("主程式", "訓練模式", ["formal_trading_system_v83_official_main.py", "--train"], "建立/更新訓練資料並訓練模型。", "需要資料與 labels 充足；第一次可能花較久。", True, False, True),
     CommandItem("資料庫", "資料庫升級 / 建立資料表", ["fts_db_migrations.py", "upgrade"], "建立或升級 SQL 資料表、欄位與中文欄名查詢 view。", "重新建資料庫後第一個要跑。", True, False, True),
@@ -88,6 +93,9 @@ COMMANDS = [
     CommandItem("資料/特徵", "同步特徵快照到 SQL", ["fts_admin_cli.py", "sync-feature-snapshots"], "把 feature snapshots 同步寫入 SQL。", "資料多時可能需要較久。", False, False, True),
     CommandItem("稽核", "訓練壓力測試", ["fts_admin_cli.py", "training-stress-audit"], "執行訓練壓力測試與穩定性稽核。", "檢查訓練流程安全性，不是正式訓練。", False, False, True),
     CommandItem("稽核", "資料回補韌性檢查", ["fts_admin_cli.py", "backfill-resilience-audit"], "檢查資料回補、缺口修復、local-first 韌性。", "資料多時可能需要較久。", False, False, True),
+    CommandItem("資料修補", "零值 / 空值掃描（dry-run）", [ZERO_NULL_REPAIR_SCRIPT, "--datasets", ZERO_NULL_REPAIR_DATASETS], "掃描本地 CSV / SQL 的 0 值與空值，並到網路確認是本來就為 0/空值，還是抓取遺漏。只產生報告，不寫回。", "建議先跑這個確認報告，再決定是否正式補值。會輸出 runtime/zero_null_repair_report.json。", False, False, True),
+    CommandItem("資料修補", "零值 / 空值正式補值（apply）", [ZERO_NULL_REPAIR_SCRIPT, "--datasets", ZERO_NULL_REPAIR_DATASETS, "--apply"], "正式把確認屬於遺漏的數值補回本地 CSV 與 SQL。", "危險：會改寫 CSV 與 SQL；腳本會先自動備份 CSV。建議先完成 dry-run。", True, True, True),
+    CommandItem("資料修補", "只修基本面（apply）", [ZERO_NULL_REPAIR_SCRIPT, "--datasets", "fundamentals", "--apply"], "只針對 fundamentals_clean / 基本面 CSV 進行 0 值與空值回補。", "適合先小範圍驗證流程。", True, True, True),
 ]
 
 FLOWS = {
@@ -104,6 +112,10 @@ FLOWS = {
     "清理前安全檢查流程": [
         ["fts_admin_cli.py", "second-merge-cleanup"],
         ["fts_admin_cli.py", "healthcheck", "--deep"],
+    ],
+    "零值 / 空值修補標準流程": [
+        [ZERO_NULL_REPAIR_SCRIPT, "--datasets", ZERO_NULL_REPAIR_DATASETS],
+        [ZERO_NULL_REPAIR_SCRIPT, "--datasets", ZERO_NULL_REPAIR_DATASETS, "--apply"],
     ],
 }
 
@@ -172,13 +184,35 @@ class App(tk.Tk):
     def _is_bootstrap_args(self, args: List[str]) -> bool:
         return "formal_trading_system_v83_official_main.py" in args and "--bootstrap" in args
 
+    def _is_zero_null_repair_args(self, args: List[str]) -> bool:
+        return bool(args) and args[0] == ZERO_NULL_REPAIR_SCRIPT
+
+    def _is_zero_null_apply_args(self, args: List[str]) -> bool:
+        return self._is_zero_null_repair_args(args) and "--apply" in args
+
+    def _bootstrap_flow(self):
+        return [
+            ["fts_db_migrations.py", "upgrade"],
+            ["formal_trading_system_v83_official_main.py", "--bootstrap"],
+        ]
+
     def select(self, item):
         self.selected = item
         cmd = " ".join([PYTHON, "-u"] + item.args)
         self.info.delete("1.0", tk.END)
         extra = ""
         if self._is_bootstrap_args(item.args):
-            extra = "\nBootstrap 提醒：這個流程可能需要數分鐘；若正在讀本地 CSV、連 SQL、補 runtime 或檢查資料，畫面可能短暫沒有新輸出。APP 會每 5 秒顯示仍在執行。\n"
+            extra = (
+                f"\nBootstrap 提醒：這個流程會先確保建立資料庫【{BOOTSTRAP_DATABASE_NAME}】，再進行初始化。"
+                "若正在讀本地 CSV、連 SQL、補 runtime 或檢查資料，畫面可能短暫沒有新輸出。"
+                "APP 會每 5 秒顯示仍在執行。\n"
+            )
+        elif self._is_zero_null_repair_args(item.args):
+            apply_text = "會正式寫回 CSV / SQL。" if self._is_zero_null_apply_args(item.args) else "只掃描與驗證，不會寫回 CSV / SQL。"
+            extra = (
+                f"\n資料修補提醒：這支會先掃描本地資料，再去網路確認 0 值與空值是真缺漏還是真實值。{apply_text}\n"
+                "建議先跑 dry-run 看 runtime/zero_null_repair_report.json，再決定是否 apply。\n"
+            )
         self.info.insert(
             tk.END,
             f"名稱：{item.name}\n"
@@ -194,13 +228,45 @@ class App(tk.Tk):
         if self._is_bootstrap_args(item.args):
             message = (
                 f"要執行：{item.name}\n\n"
+                f"此流程會先建立 / 升級資料庫【{BOOTSTRAP_DATABASE_NAME}】後，再執行 bootstrap。\n"
                 "Bootstrap 可能需要數分鐘。\n"
                 "執行期間 APP 會顯示計時器，並每 5 秒輸出『仍在執行』。\n\n"
-                f"{' '.join([PYTHON, '-u'] + item.args)}"
+                f"第一步：{PYTHON} -u fts_db_migrations.py upgrade\n"
+                f"第二步：{PYTHON} -u formal_trading_system_v83_official_main.py --bootstrap"
             )
             if not messagebox.askyesno("確認執行 Bootstrap", message):
                 return
-        elif item.confirm or item.dangerous:
+            self.run_flow(f"{item.name}（含建立資料庫 {BOOTSTRAP_DATABASE_NAME}）", self._bootstrap_flow())
+            return
+
+        if self._is_zero_null_repair_args(item.args) and not self._is_zero_null_apply_args(item.args):
+            cmd_text = " ".join([PYTHON, "-u"] + item.args)
+            message = (
+                f"要執行：{item.name}\n\n"
+                "這是 dry-run，只會掃描本地 CSV / SQL 的 0 值與空值，並到網路確認是否為遺漏資料。\n"
+                "不會改寫 CSV / SQL。\n\n"
+                f"實際指令：{cmd_text}"
+            )
+            if not messagebox.askyesno("確認執行資料修補掃描", message):
+                return
+            self.run_cmd(item.args, title=item.name)
+            return
+
+        if self._is_zero_null_apply_args(item.args):
+            cmd_text = " ".join([PYTHON, "-u"] + item.args)
+            message = (
+                f"要執行：{item.name}\n\n"
+                "這會先比對網路來源，再把確認屬於遺漏的值寫回 CSV 與 SQL。\n"
+                "建議你先跑 dry-run 確認 runtime/zero_null_repair_report.json。\n"
+                "腳本會先備份 CSV，但這仍屬於有改寫風險的操作。\n\n"
+                f"實際指令：{cmd_text}"
+            )
+            if not messagebox.askyesno("確認正式補值", message):
+                return
+            self.run_cmd(item.args, title=item.name)
+            return
+
+        if item.confirm or item.dangerous:
             if not messagebox.askyesno("確認執行", f"要執行：{item.name}\n\n{' '.join([PYTHON, '-u'] + item.args)}"):
                 return
         self.run_cmd(item.args, title=item.name)
@@ -214,6 +280,7 @@ class App(tk.Tk):
                 ok = self._run_blocking(args, title="流程步驟")
                 if not ok:
                     break
+
         threading.Thread(target=worker, daemon=True).start()
 
     def run_cmd(self, args, title=""):
@@ -229,15 +296,19 @@ class App(tk.Tk):
         self.next_heartbeat_at = self.started_at + HEARTBEAT_SECONDS
         self.current_title = title or args[0]
 
-        self.q.put(f"\n========== 執行：{self.current_title} ==========" + "\n")
+        self.q.put(f"\n========== 執行：{self.current_title} ==========\n")
         self.q.put("$ " + " ".join(cmd) + "\n")
         if self._is_bootstrap_args(args):
             self.q.put("[圖形介面] Bootstrap 可能需要數分鐘。若中途沒有新輸出，請看右上角狀態與已執行時間。\n")
+        elif self._is_zero_null_repair_args(args):
+            if self._is_zero_null_apply_args(args):
+                self.q.put("[圖形介面] 資料修補 apply 模式：會先驗證，再正式回寫 CSV / SQL。\n")
+            else:
+                self.q.put("[圖形介面] 資料修補 dry-run：只掃描與驗證，不會回寫 CSV / SQL。\n")
         self.q.put("[圖形介面] 已啟動程序，開始計時。\n")
 
         try:
             env = os.environ.copy()
-            # 盡量讓被呼叫的 Python 腳本即時輸出；若仍是 CP950，下面也會 fallback 解碼。
             env.setdefault("PYTHONIOENCODING", "utf-8")
             env.setdefault("PYTHONUTF8", "1")
             env.setdefault("PYTHONUNBUFFERED", "1")
@@ -252,7 +323,6 @@ class App(tk.Tk):
                 env=env,
             )
             assert self.proc.stdout is not None
-            # 用 readline 搭配 python -u / PYTHONUNBUFFERED，盡量即時刷新 stdout。
             for raw in iter(self.proc.stdout.readline, b""):
                 if raw:
                     self.q.put(_decode_output(raw))

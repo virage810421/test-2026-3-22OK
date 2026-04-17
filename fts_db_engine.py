@@ -20,7 +20,7 @@ except Exception:  # pragma: no cover
 @dataclass
 class DBConfig:
     server: str = 'localhost'
-    database: str = '股票online'
+    database: str = '股票Online'
     driver: str = 'ODBC Driver 17 for SQL Server'
     trusted_connection: str = 'yes'
     use_sqlalchemy_preferred: bool = True

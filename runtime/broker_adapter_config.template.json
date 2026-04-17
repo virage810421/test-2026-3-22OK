@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-10 13:16:51",
-  "module_version": "v83_configurable_broker_adapter",
+  "generated_at": "2026-04-16 13:39:36",
+  "module_version": "v84_configurable_broker_adapter_live_closure",
   "enabled": false,
   "provider_name": "fill_me_after_account_opened",
   "transport": "rest",
@@ -37,6 +37,10 @@
     "get_order_status": {
       "method": "GET",
       "path": "/v1/orders/{broker_order_id}"
+    },
+    "get_open_orders": {
+      "method": "GET",
+      "path": "/v1/orders/open"
     },
     "get_fills": {
       "method": "GET",

@@ -14,7 +14,7 @@ from fts_exception_policy import record_diagnostic
 
 try:
     import requests  # type: ignore
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     requests = None  # type: ignore
 
 
@@ -183,6 +183,24 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
         base_url = str(self._config.get('base_url', '')).rstrip('/')
         return method, f'{base_url}{path}'
 
+    @staticmethod
+    def _response_content_type(response: Any) -> str:
+        headers = getattr(response, 'headers', {}) or {}
+        return str(headers.get('Content-Type', '') or '').strip()
+
+    def _parse_response_body(self, response: Any) -> tuple[Any, str]:
+        content_type = self._response_content_type(response).lower()
+        text = getattr(response, 'text', '')
+        if not text:
+            return {}, 'empty_body'
+        if 'json' not in content_type:
+            return {'raw_text': text, 'content_type': content_type or 'unknown'}, 'invalid_content_type'
+        try:
+            return response.json(), 'json_ok'
+        except ValueError as exc:
+            record_diagnostic('broker_adapter', 'parse_http_response_json', exc, severity='warning', fail_closed=True)
+            return {'raw_text': text, 'content_type': content_type}, 'json_parse_error'
+
     def _map_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
         mapping = self._config.get('payload_mapping', {}) or {}
         out: dict[str, Any] = {}
@@ -204,17 +222,34 @@ class ConfigurableBrokerAdapter(RealBrokerAdapterBlueprint):
         method, url = self._endpoint(name, **path_vars)
         timeout_cfg = self._config.get('timeouts', {}) or {}
         timeout = (int(timeout_cfg.get('connect_seconds', 10)), int(timeout_cfg.get('read_seconds', 20)))
-        response = self._session.request(method=method, url=url, headers=self._headers(), json=payload, params=params, timeout=timeout)
         try:
-            body: Any = response.json()
+            response = self._session.request(method=method, url=url, headers=self._headers(), json=payload, params=params, timeout=timeout)
         except Exception as exc:
-            record_diagnostic('broker_adapter', 'parse_http_response_json', exc, severity='warning', fail_closed=True)
-            body = {'raw_text': response.text}
+            record_diagnostic('broker_adapter', 'request_transport_error', exc, severity='warning', fail_closed=True)
+            return {
+                'ok': False,
+                'http_status': None,
+                'status': 'transport_error',
+                'body': {'error_type': type(exc).__name__, 'message': str(exc)},
+                'requested_at': now_str(),
+                'endpoint_name': name,
+                'url': url,
+            }
+        body, parse_status = self._parse_response_body(response)
+        if response.ok and parse_status in {'json_ok', 'empty_body'}:
+            status = 'http_ok'
+        elif parse_status == 'invalid_content_type':
+            status = 'invalid_content_type'
+        elif parse_status == 'json_parse_error':
+            status = 'json_parse_error'
+        else:
+            status = 'http_error' if not response.ok else parse_status
         return {
-            'ok': response.ok,
+            'ok': bool(response.ok) and parse_status in {'json_ok', 'empty_body'},
             'http_status': response.status_code,
-            'status': 'http_ok' if response.ok else 'http_error',
+            'status': status,
             'body': body,
+            'content_type': self._response_content_type(response),
             'requested_at': now_str(),
             'endpoint_name': name,
             'url': url,

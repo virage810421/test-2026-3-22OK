@@ -1,27 +1,39 @@
 {
-  "generated_at": "2026-04-14T21:34:19",
+  "generated_at": "2026-04-16T14:36:59",
   "event_count": 1,
-  "hard_block_count": 0,
-  "warning_count": 1,
-  "error_count": 0,
+  "hard_block_count": 1,
+  "warning_count": 0,
+  "error_count": 1,
   "counters": {
-    "db_migrations::ensure_database_exists_failed::WARNING": 1
+    "control_tower::trainer_backend_failed::ERROR": 1
   },
   "recent_events": [
     {
-      "time": "2026-04-14T21:34:19",
-      "component": "db_migrations",
-      "operation": "ensure_database_exists_failed",
-      "severity": "WARNING",
-      "fail_mode": "fail_open",
-      "hard_block": false,
-      "error_type": "ProgrammingError",
-      "error": "ProgrammingError('42000', \"[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]接近 'QUOTENAME' 之處的語法不正確。 (102) (SQLExecDirectW); [42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]陳述式無法準備。 (8180)\")",
-      "context": {
-        "database": "股票online"
-      }
+      "time": "2026-04-16T14:36:59",
+      "component": "control_tower",
+      "operation": "trainer_backend_failed",
+      "severity": "ERROR",
+      "fail_mode": "fail_closed",
+      "hard_block": true,
+      "error_type": "NameError",
+      "error": "NameError(\"name '_write_selected_feature_authority' is not defined\")",
+      "context": {},
+      "traceback_tail": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\fts_control_tower.py\", line 920, in run_train\n    trainer_path, trainer_payload = train_models()\n                                    ~~~~~~~~~~~~^^\n  File \"C:\\test\\test-2026-3-22OK\\fts_trainer_backend.py\", line 958, in train_models\n    report['selected_feature_authority'] = _write_selected_feature_authority(report)\n                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nNameError: name '_write_selected_feature_authority' is not defined\n"
     }
   ],
-  "hard_blocks": [],
+  "hard_blocks": [
+    {
+      "time": "2026-04-16T14:36:59",
+      "component": "control_tower",
+      "operation": "trainer_backend_failed",
+      "severity": "ERROR",
+      "fail_mode": "fail_closed",
+      "hard_block": true,
+      "error_type": "NameError",
+      "error": "NameError(\"name '_write_selected_feature_authority' is not defined\")",
+      "context": {},
+      "traceback_tail": "Traceback (most recent call last):\n  File \"C:\\test\\test-2026-3-22OK\\fts_control_tower.py\", line 920, in run_train\n    trainer_path, trainer_payload = train_models()\n                                    ~~~~~~~~~~~~^^\n  File \"C:\\test\\test-2026-3-22OK\\fts_trainer_backend.py\", line 958, in train_models\n    report['selected_feature_authority'] = _write_selected_feature_authority(report)\n                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nNameError: name '_write_selected_feature_authority' is not defined\n"
+    }
+  ],
   "extra": {}
 }

@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+"""正式覆蓋版 fts_broker_real_stub.py
+由 clean mixin 版整理而成，可直接覆蓋專案同名檔。
+"""
 from __future__ import annotations
 
 import uuid
 from dataclasses import asdict, is_dataclass
-from typing import Any, Dict, List, Tuple
+from datetime import datetime
+import json as _json_rbs
+from typing import Any, Dict, List, Tuple, Callable
 
 from fts_broker_interface import BrokerBase
 from fts_config import CONFIG
@@ -19,7 +24,7 @@ except ImportError as exc:  # pragma: no cover - optional runtime component
     CallbackEventStore = None  # type: ignore
 
 
-class RealBrokerStub(BrokerBase):
+class _CoreRealBrokerStub(BrokerBase):
     """
     Phase-2 mock broker.
     名字仍叫 RealBrokerStub，是為了讓你現有 broker factory 不用重寫，
@@ -643,366 +648,14 @@ class RealBrokerStub(BrokerBase):
             except Exception as exc:
                 record_diagnostic('broker_adapter', 'callback_event_store_record', exc, severity='warning', fail_closed=False)
 
-# =============================================================================
-# vNext callback / reconciliation / lot-level extension for mock real broker
-# =============================================================================
+
+
 try:
-    _RBS_ORIG_INIT = RealBrokerStub.__init__
-    _RBS_ORIG_APPLY_FILL = RealBrokerStub._apply_fill
-    _RBS_ORIG_RECORD_CALLBACK = RealBrokerStub._record_callback
-
-    def _rbs_lot_now() -> str:
-        return now_str()
-
-    def _rbs_init_lot_book(self) -> None:
-        if not hasattr(self, '_position_lots') or self._position_lots is None:
-            self._position_lots = []
-        if not hasattr(self, '_lot_seq'):
-            self._lot_seq = 0
-        if not hasattr(self, '_callback_handlers') or self._callback_handlers is None:
-            self._callback_handlers = []
-        if not hasattr(self, '_callback_cursor'):
-            self._callback_cursor = 0
-        if not hasattr(self, '_lot_close_history'):
-            self._lot_close_history = []
-
-    def _rbs_patched_init(self, *args, **kwargs):
-        _RBS_ORIG_INIT(self, *args, **kwargs)
-        _rbs_init_lot_book(self)
-
-    def _rbs_next_lot_id(self, ticker: str) -> str:
-        _rbs_init_lot_book(self)
-        self._lot_seq += 1
-        return f"RLOT-{str(ticker).replace('.', '')}-{self._lot_seq:06d}"
-
-    def _rbs_open_lot(self, ticker: str, side: str, qty: int, price: float, order_row: dict) -> None:
-        _rbs_init_lot_book(self)
-        qty = int(qty or 0)
-        if qty <= 0:
-            return
-        self._position_lots.append({
-            'lot_id': _rbs_next_lot_id(self, ticker),
-            'ticker': str(ticker),
-            'symbol': str(ticker),
-            'side': str(side).upper(),
-            'direction_bucket': str(side).upper(),
-            'open_qty': qty,
-            'remaining_qty': qty,
-            'avg_cost': float(price or 0.0),
-            'entry_price': float(price or 0.0),
-            'entry_time': _rbs_lot_now(),
-            'entry_order_id': str(order_row.get('broker_order_id') or order_row.get('client_order_id') or ''),
-            'client_order_id': str(order_row.get('client_order_id') or ''),
-            'strategy_name': str(order_row.get('strategy_name') or ''),
-            'status': 'OPEN',
-            'realized_pnl': 0.0,
-            'close_qty': 0,
-            'close_price': 0.0,
-            'close_time': '',
-        })
-
-    def _rbs_close_lots_fifo(self, ticker: str, close_side: str, qty: int, price: float, order_row: dict) -> None:
-        _rbs_init_lot_book(self)
-        remaining = int(qty or 0)
-        if remaining <= 0:
-            return
-        for lot in self._position_lots:
-            if remaining <= 0:
-                break
-            if str(lot.get('ticker', '')).upper() != str(ticker).upper():
-                continue
-            if str(lot.get('side', '')).upper() != str(close_side).upper():
-                continue
-            if str(lot.get('status', '')).upper() != 'OPEN':
-                continue
-            lot_qty = int(lot.get('remaining_qty', 0) or 0)
-            if lot_qty <= 0:
-                continue
-            take = min(lot_qty, remaining)
-            entry = float(lot.get('avg_cost', 0) or 0.0)
-            pnl = (float(price) - entry) * take if close_side == 'LONG' else (entry - float(price)) * take
-            lot['remaining_qty'] = lot_qty - take
-            lot['close_qty'] = int(lot.get('close_qty', 0) or 0) + take
-            lot['realized_pnl'] = round(float(lot.get('realized_pnl', 0) or 0) + pnl, 4)
-            lot['close_price'] = float(price or 0.0)
-            lot['close_time'] = _rbs_lot_now()
-            lot['exit_order_id'] = str(order_row.get('broker_order_id') or order_row.get('client_order_id') or '')
-            if lot['remaining_qty'] <= 0:
-                lot['status'] = 'CLOSED'
-            self._lot_close_history.append({'lot_id': lot.get('lot_id'), 'ticker': ticker, 'side': close_side, 'closed_qty': take, 'realized_pnl': round(pnl, 4), 'exit_order_id': lot.get('exit_order_id'), 'closed_at': _rbs_lot_now()})
-            remaining -= take
-
-    def _rbs_apply_lot_fill(self, order_row: dict, fill_qty: int, fill_price: float) -> None:
-        side = str(order_row.get('side', '')).upper()
-        ticker = str(order_row.get('ticker', '')).upper()
-        if side == 'BUY':
-            _rbs_open_lot(self, ticker, 'LONG', int(fill_qty), float(fill_price), order_row)
-        elif side == 'SHORT':
-            _rbs_open_lot(self, ticker, 'SHORT', int(fill_qty), float(fill_price), order_row)
-        elif side == 'SELL':
-            _rbs_close_lots_fifo(self, ticker, 'LONG', int(fill_qty), float(fill_price), order_row)
-        elif side in {'COVER', 'BUY_TO_COVER'}:
-            _rbs_close_lots_fifo(self, ticker, 'SHORT', int(fill_qty), float(fill_price), order_row)
-
-    def _rbs_patched_apply_fill(self, order_row: dict[str, Any], fill_qty: int, fill_price: float) -> None:
-        _RBS_ORIG_APPLY_FILL(self, order_row, fill_qty, fill_price)
-        try:
-            _rbs_apply_lot_fill(self, order_row, fill_qty, fill_price)
-        except Exception as exc:
-            record_diagnostic('broker_adapter', 'apply_lot_fill_failed', exc, severity='warning', fail_closed=False)
-            if not hasattr(self, '_lot_errors'):
-                self._lot_errors = []
-            self._lot_errors.append({'time': _rbs_lot_now(), 'error': repr(exc)})
-
-    def _rbs_patched_record_callback(self, event: dict[str, Any]) -> None:
-        _RBS_ORIG_RECORD_CALLBACK(self, event)
-        _rbs_init_lot_book(self)
-        for handler in list(getattr(self, '_callback_handlers', []) or []):
-            try:
-                handler(dict(event))
-            except Exception as exc:
-                record_diagnostic('broker_adapter', 'callback_handler_failed', exc, severity='warning', fail_closed=False)
-
-    def _rbs_register_callback_handler(self, handler) -> dict[str, Any]:
-        _rbs_init_lot_book(self)
-        if callable(handler):
-            self._callback_handlers.append(handler)
-            return {'ok': True, 'status': 'callback_handler_registered', 'handler_count': len(self._callback_handlers)}
-        return {'ok': False, 'status': 'handler_not_callable'}
-
-    def _rbs_drain_new_callbacks(self) -> list[dict[str, Any]]:
-        _rbs_init_lot_book(self)
-        events = list(self._callbacks[self._callback_cursor:])
-        self._callback_cursor = len(self._callbacks)
-        return events
-
-    def _rbs_get_position_lots(self, include_closed: bool = False) -> list[dict[str, Any]]:
-        _rbs_init_lot_book(self)
-        rows = []
-        for lot in self._position_lots:
-            if include_closed or str(lot.get('status', '')).upper() == 'OPEN':
-                row = dict(lot)
-                px = float(self._last_prices.get(row.get('ticker', ''), row.get('avg_cost', 0)) or 0.0)
-                qty = int(row.get('remaining_qty', 0) or 0)
-                avg = float(row.get('avg_cost', 0) or 0.0)
-                row['market_price'] = px
-                row['market_value'] = abs(qty) * px
-                row['unrealized_pnl'] = round((px - avg) * qty if row.get('side') == 'LONG' else (avg - px) * qty, 4)
-                rows.append(row)
-        return rows
-
-    def _rbs_reconcile_lots_to_positions(self) -> dict[str, Any]:
-        lots = _rbs_get_position_lots(self, include_closed=False)
-        lot_pos: dict[str, int] = {}
-        for lot in lots:
-            sym = str(lot.get('ticker', '')).upper()
-            rem = int(lot.get('remaining_qty', 0) or 0)
-            lot_pos[sym] = lot_pos.get(sym, 0) + (rem if lot.get('side') == 'LONG' else -rem)
-        diffs = []
-        symbols = set(lot_pos) | set(getattr(self, '_positions', {}).keys())
-        for sym in sorted(symbols):
-            p = self._positions.get(sym)
-            agg = int(getattr(p, 'qty', 0) or 0) if p is not None else 0
-            lot_qty = int(lot_pos.get(sym, 0) or 0)
-            if agg != lot_qty:
-                diffs.append({'ticker': sym, 'aggregate_qty': agg, 'lot_qty': lot_qty, 'diff_qty': agg - lot_qty})
-        return {'ok': len(diffs) == 0, 'diffs': diffs, 'lot_count': len(lots)}
-
-    def _rbs_export_runtime_snapshot(self) -> dict[str, Any]:
-        snap = RealBrokerStub._orig_export_runtime_snapshot(self) if hasattr(RealBrokerStub, '_orig_export_runtime_snapshot') else {}
-        snap['position_lots'] = _rbs_get_position_lots(self, include_closed=True)
-        snap['lot_reconciliation'] = _rbs_reconcile_lots_to_positions(self)
-        snap['callbacks'] = list(getattr(self, '_callbacks', [])[-50:])
-        return snap
-
-    RealBrokerStub.__init__ = _rbs_patched_init
-    RealBrokerStub._apply_fill = _rbs_patched_apply_fill
-    RealBrokerStub._record_callback = _rbs_patched_record_callback
-    RealBrokerStub.register_callback_handler = _rbs_register_callback_handler
-    RealBrokerStub.drain_new_callbacks = _rbs_drain_new_callbacks
-    RealBrokerStub.get_position_lots = _rbs_get_position_lots
-    RealBrokerStub.reconcile_lots_to_positions = _rbs_reconcile_lots_to_positions
-    if not hasattr(RealBrokerStub, '_orig_export_runtime_snapshot'):
-        RealBrokerStub._orig_export_runtime_snapshot = RealBrokerStub.export_runtime_snapshot
-    RealBrokerStub.export_runtime_snapshot = _rbs_export_runtime_snapshot
-
+    from fts_config import CONFIG as _RBS_CFG
 except Exception as exc:
-    record_diagnostic('broker_adapter', 'broker_stub_extension_patch_failed', exc, severity='error', fail_closed=True)
+    record_diagnostic('broker_adapter', 'load_rbs_config', exc, severity='warning', fail_closed=False)
+    _RBS_CFG = None
 
-
-# =============================================================================
-# vNext institutional lot lifecycle extension for mock real broker
-# =============================================================================
-try:
-    import json as _json_rbs
-    from datetime import datetime
-    try:
-        from fts_config import CONFIG as _RBS_CFG
-    except Exception as exc:
-        record_diagnostic('broker_adapter', 'load_rbs_config', exc, severity='warning', fail_closed=False)
-        _RBS_CFG = None
-
-    _RBS_V2_ORIG_INIT = globals().get('_RBS_ORIG_INIT', RealBrokerStub.__init__)
-    _RBS_V2_ORIG_APPLY_FILL = globals().get('_RBS_ORIG_APPLY_FILL', RealBrokerStub._apply_fill)
-    _RBS_V2_ORIG_UPSERT_STOP = RealBrokerStub.upsert_protective_stop
-    _RBS_V2_ORIG_REPLACE = RealBrokerStub.replace_order
-    _RBS_V2_ORIG_PROCESS_STOPS = globals().get('_RBS_ORIG_PROCESS_STOPS', RealBrokerStub.process_protective_stops)
-
-    def _rbs_cfg(name, default=None): return getattr(_RBS_CFG, name, default) if _RBS_CFG is not None else default
-    def _rbs_cost_method(): return str(_rbs_cfg('lot_accounting_method', 'FIFO') or 'FIFO').upper()
-    def _rbs_now(): return datetime.now().isoformat(timespec='seconds')
-    def _rbs_parse_list(raw):
-        if isinstance(raw, str):
-            try: return _json_rbs.loads(raw)
-            except Exception as exc:
-                record_diagnostic('broker_adapter', 'parse_rbs_json_list', exc, severity='warning', fail_closed=False)
-                return []
-        return list(raw) if isinstance(raw, (list, tuple)) else []
-    def _rbs_append_json(raw, val):
-        arr=_rbs_parse_list(raw); arr.append(val); return _json_rbs.dumps(arr, ensure_ascii=False)
-    def _rbs_init_v2(self):
-        self._position_lots=[] if not isinstance(getattr(self,'_position_lots',None), list) else self._position_lots
-        self._lot_seq=int(getattr(self,'_lot_seq',0) or 0)
-        self._lot_fill_history=[] if not isinstance(getattr(self,'_lot_fill_history',None), list) else self._lot_fill_history
-        self._lot_stop_link_events=[] if not isinstance(getattr(self,'_lot_stop_link_events',None), list) else self._lot_stop_link_events
-        self._lot_close_history=[] if not isinstance(getattr(self,'_lot_close_history',None), list) else self._lot_close_history
-        self._lot_errors=[] if not isinstance(getattr(self,'_lot_errors',None), list) else self._lot_errors
-    def _rbs_position_key(symbol, side, strategy_name='', signal_id=''):
-        parts=[str(symbol).upper(), str(side).upper()]
-        if bool(_rbs_cfg('lot_partition_by_strategy', True)): parts.append(str(strategy_name or ''))
-        if bool(_rbs_cfg('lot_partition_by_signal', True)): parts.append(str(signal_id or ''))
-        return '|'.join(parts)
-    def _rbs_next_lot_id_v2(self, ticker:str)->str:
-        _rbs_init_v2(self); self._lot_seq += 1; return f"RLOT2-{str(ticker).replace('.', '')}-{self._lot_seq:07d}"
-    def _rbs_open_lot_v2(self, ticker:str, side:str, qty:int, price:float, order_row:dict, fill_id:str=''):
-        _rbs_init_v2(self); qty=int(qty or 0)
-        if qty<=0: return
-        strategy_name=str(order_row.get('strategy_name') or '')
-        signal_id=str(order_row.get('signal_id') or '')
-        client_order_id=str(order_row.get('client_order_id') or '')
-        self._position_lots.append({'lot_id': _rbs_next_lot_id_v2(self,ticker), 'ticker': str(ticker), 'symbol': str(ticker), 'side': str(side).upper(), 'direction_bucket': str(side).upper(), 'position_key': _rbs_position_key(ticker, side, strategy_name, signal_id), 'strategy_name': strategy_name, 'strategy_bucket': strategy_name, 'signal_id': signal_id, 'client_order_id': client_order_id, 'open_qty': qty, 'remaining_qty': qty, 'avg_cost': float(price or 0.0), 'entry_price': float(price or 0.0), 'entry_time': _rbs_now(), 'entry_order_id': str(order_row.get('broker_order_id') or order_row.get('client_order_id') or ''), 'cost_basis_method': _rbs_cost_method(), 'entry_fill_qty': qty, 'close_fill_qty': 0, 'entry_fill_count': 1, 'close_fill_count': 0, 'entry_fill_ids_json': _json_rbs.dumps([fill_id] if fill_id else []), 'exit_fill_ids_json': _json_rbs.dumps([]), 'open_commission': float(order_row.get('commission',0) or 0.0), 'open_tax': float(order_row.get('tax',0) or 0.0), 'close_commission': 0.0, 'close_tax': 0.0, 'status': 'OPEN', 'lifecycle_status': 'OPEN', 'realized_pnl': 0.0, 'close_qty': 0, 'close_price': 0.0, 'close_time': '', 'stop_order_id': '', 'stop_price': 0.0, 'stop_status': '', 'linked_stop_qty': 0, 'last_fill_time': _rbs_now()})
-    def _rbs_iter_lots(self, ticker:str, close_side:str, strategy_name:str='', signal_id:str=''):
-        out=[]
-        for lot in self._position_lots:
-            if str(lot.get('ticker','')).upper()!=str(ticker).upper(): continue
-            if str(lot.get('side','')).upper()!=str(close_side).upper(): continue
-            if int(lot.get('remaining_qty',0) or 0)<=0: continue
-            if bool(_rbs_cfg('lot_partition_by_strategy', True)) and strategy_name and str(lot.get('strategy_name',''))!=strategy_name: continue
-            if bool(_rbs_cfg('lot_partition_by_signal', True)) and signal_id and str(lot.get('signal_id',''))!=signal_id: continue
-            out.append(lot)
-        if not out and bool(_rbs_cfg('lot_allow_cross_strategy_close', False)):
-            out=[lot for lot in self._position_lots if str(lot.get('ticker','')).upper()==str(ticker).upper() and str(lot.get('side','')).upper()==str(close_side).upper() and int(lot.get('remaining_qty',0) or 0)>0]
-        out.sort(key=lambda r:(str(r.get('entry_time','')), str(r.get('lot_id','')))); return out
-    def _rbs_close_lots_v2(self, ticker:str, close_side:str, qty:int, price:float, order_row:dict, fill_id:str=''):
-        remaining=int(qty or 0)
-        if remaining<=0: return
-        strategy_name=str(order_row.get('strategy_name') or '')
-        signal_id=str(order_row.get('signal_id') or '')
-        eligible=_rbs_iter_lots(self, ticker, close_side, strategy_name=strategy_name, signal_id=signal_id)
-        avg_basis=None
-        if _rbs_cost_method()=='AVERAGE' and eligible:
-            tq=sum(int(l.get('remaining_qty',0) or 0) for l in eligible); tc=sum(int(l.get('remaining_qty',0) or 0)*float(l.get('avg_cost',0) or 0.0) for l in eligible); avg_basis=(tc/tq) if tq else None
-        for lot in eligible:
-            if remaining<=0: break
-            lot_qty=int(lot.get('remaining_qty',0) or 0)
-            if lot_qty<=0: continue
-            take=min(lot_qty, remaining)
-            basis=float(avg_basis if avg_basis is not None else (lot.get('avg_cost',0) or 0.0))
-            pnl=(float(price)-basis)*take if close_side=='LONG' else (basis-float(price))*take
-            lot['remaining_qty']=lot_qty-take; lot['close_qty']=int(lot.get('close_qty',0) or 0)+take; lot['close_fill_qty']=int(lot.get('close_fill_qty',0) or 0)+take; lot['close_fill_count']=int(lot.get('close_fill_count',0) or 0)+1
-            if fill_id: lot['exit_fill_ids_json']=_rbs_append_json(lot.get('exit_fill_ids_json'), fill_id)
-            lot['realized_pnl']=round(float(lot.get('realized_pnl',0) or 0.0)+pnl-float(order_row.get('commission',0) or 0.0)-float(order_row.get('tax',0) or 0.0),4)
-            lot['close_commission']=round(float(lot.get('close_commission',0) or 0.0)+float(order_row.get('commission',0) or 0.0),4); lot['close_tax']=round(float(lot.get('close_tax',0) or 0.0)+float(order_row.get('tax',0) or 0.0),4)
-            lot['close_price']=float(price or 0.0); lot['close_time']=_rbs_now(); lot['exit_order_id']=str(order_row.get('broker_order_id') or order_row.get('client_order_id') or ''); lot['last_fill_time']=_rbs_now(); lot['close_cost_basis_method']=_rbs_cost_method(); lot['close_cost_basis_price']=round(basis,4)
-            lot['status']='CLOSED' if lot['remaining_qty']<=0 else 'PARTIAL_EXIT'; lot['lifecycle_status']=lot['status']
-            self._lot_close_history.append({'lot_id': lot.get('lot_id'), 'ticker': ticker, 'side': close_side, 'closed_qty': take, 'realized_pnl': round(pnl,4), 'fill_id': fill_id, 'exit_order_id': lot.get('exit_order_id'), 'closed_at': _rbs_now(), 'position_key': lot.get('position_key')})
-            self._lot_fill_history.append({'fill_id': fill_id or '', 'lot_id': lot.get('lot_id'), 'symbol': ticker, 'event': 'CLOSE', 'qty': take, 'price': float(price or 0.0), 'time': _rbs_now()})
-            remaining-=take
-    def _rbs_apply_fill_v2(self, order_row:dict, fill_qty:int, fill_price:float):
-        side=str(order_row.get('side','')).upper(); ticker=str(order_row.get('ticker','')).upper(); fill_id=f"RFILL-{str(order_row.get('broker_order_id') or order_row.get('client_order_id') or 'NA')}-{len(getattr(self,'_fills',[]) or []):06d}"
-        before=len(getattr(self,'_position_lots',[]) or [])
-        if side=='BUY': _rbs_open_lot_v2(self,ticker,'LONG',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
-        elif side=='SHORT': _rbs_open_lot_v2(self,ticker,'SHORT',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
-        elif side=='SELL': _rbs_close_lots_v2(self,ticker,'LONG',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
-        elif side in {'COVER','BUY_TO_COVER'}: _rbs_close_lots_v2(self,ticker,'SHORT',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
-        try:
-            recent_lots=(getattr(self,'_position_lots',[]) or [])[before:]
-            if getattr(self,'_callbacks',None):
-                cb=self._callbacks[-1]
-                lot_ids=[str(l.get('lot_id')) for l in recent_lots] or [str(l.get('lot_id')) for l in (getattr(self,'_position_lots',[]) or []) if str(l.get('exit_order_id',''))==str(order_row.get('broker_order_id') or order_row.get('client_order_id') or '')][-5:]
-                if lot_ids:
-                    cb['lot_id']=lot_ids[0]
-                    cb['lot_ids']=lot_ids
-                    cb['position_key']=str(recent_lots[0].get('position_key')) if recent_lots else ''
-                    cb['strategy_name']=str(order_row.get('strategy_name') or '')
-                    cb['signal_id']=str(order_row.get('signal_id') or '')
-        except Exception as exc:
-            record_diagnostic('broker_adapter', 'rbs_callback_enrichment_failed', exc, severity='warning', fail_closed=False)
-    def _rbs_init_wrapper_v2(self,*a,**kw): _RBS_V2_ORIG_INIT(self,*a,**kw); _rbs_init_v2(self)
-    def _rbs_apply_fill_wrapper_v2(self, order_row, fill_qty, fill_price): _RBS_V2_ORIG_APPLY_FILL(self, order_row, fill_qty, fill_price); _rbs_apply_fill_v2(self, order_row, fill_qty, fill_price)
-    def _rbs_link_stop(self, rec:dict):
-        ticker=str(rec.get('symbol','') or '').upper(); stop_side=str(rec.get('side','SELL') or 'SELL').upper(); close_side='LONG' if stop_side=='SELL' else 'SHORT'; qty_need=int(rec.get('quantity',0) or 0); strategy_name=str(rec.get('strategy_name','') or ''); signal_id=str(rec.get('signal_id','') or '')
-        linked=[]; remaining=qty_need
-        for lot in _rbs_iter_lots(self, ticker, close_side, strategy_name=strategy_name if bool(_rbs_cfg('lot_stop_linkage_match_strategy', True)) else '', signal_id=signal_id if bool(_rbs_cfg('lot_stop_linkage_match_signal', False)) else ''):
-            if remaining<=0: break
-            take=min(int(lot.get('remaining_qty',0) or 0), remaining); lot['stop_order_id']=str(rec.get('broker_order_id') or rec.get('order_id') or ''); lot['stop_price']=float(rec.get('stop_price',0) or 0.0); lot['stop_status']=str(rec.get('status','WORKING') or ''); lot['linked_stop_qty']=take; linked.append(str(lot.get('lot_id'))); remaining-=take
-        rec['linked_lot_ids']=linked
-        self._lot_stop_link_events.append({'time': _rbs_now(), 'broker_order_id': rec.get('broker_order_id') or rec.get('order_id'), 'linked_lot_ids': list(linked), 'linked_qty': qty_need-remaining})
-    def _rbs_upsert_stop_wrapper_v2(self, symbol:str, quantity:int, stop_price:float, side:str='SELL', client_order_id:str='', note:str='', strategy_name:str='', signal_id:str='', position_key:str=''):
-        resp=_RBS_V2_ORIG_UPSERT_STOP(self,symbol,quantity,stop_price,side=side,client_order_id=client_order_id,note=note)
-        rec=resp.get('record') or {}
-        if strategy_name: rec['strategy_name']=strategy_name
-        if signal_id: rec['signal_id']=signal_id
-        if position_key: rec['position_key']=position_key
-        self._protective_stops[str(rec.get('broker_order_id') or rec.get('order_id'))]=rec; _rbs_link_stop(self, rec); resp['record']=dict(rec); return resp
-    def _rbs_replace_wrapper_v2(self, broker_order_id:str, payload:dict):
-        resp=_RBS_V2_ORIG_REPLACE(self, broker_order_id, payload); rec=self._protective_stops.get(str(broker_order_id))
-        if rec is not None:
-            if 'strategy_name' in payload: rec['strategy_name']=payload.get('strategy_name') or rec.get('strategy_name','')
-            if 'signal_id' in payload: rec['signal_id']=payload.get('signal_id') or rec.get('signal_id','')
-            if 'position_key' in payload: rec['position_key']=payload.get('position_key') or rec.get('position_key','')
-            _rbs_link_stop(self, rec); resp['record']=dict(rec)
-        return resp
-    def _rbs_process_stops_wrapper_v2(self, price_map=None):
-        before=len(getattr(self,'_callbacks',[]) or []); events=_RBS_V2_ORIG_PROCESS_STOPS(self, price_map); new=list((getattr(self,'_callbacks',[]) or [])[before:])
-        for ev in new:
-            if str(ev.get('event_type','')).upper()!='STOP_TRIGGERED': continue
-            oid=str(ev.get('broker_order_id') or ev.get('order_id') or ''); rec=self._protective_stops.get(oid,{})
-            for lot in self._position_lots:
-                if str(lot.get('stop_order_id',''))==oid or lot.get('lot_id') in list(rec.get('linked_lot_ids') or []): lot['stop_status']='TRIGGERED_FILLED'
-        return events
-    def _rbs_get_position_lots_v2(self, include_closed: bool = False):
-        rows=[]
-        for lot in self._position_lots:
-            if include_closed or int(lot.get('remaining_qty',0) or 0)>0 or str(lot.get('status','')).upper()=='PARTIAL_EXIT':
-                row=dict(lot); px=float(self._last_prices.get(row.get('ticker',''), row.get('avg_cost',0)) or 0.0); qty=int(row.get('remaining_qty',0) or 0); avg=float(row.get('avg_cost',0) or 0.0); row['market_price']=px; row['market_value']=abs(qty)*px; row['cost_value']=abs(qty)*avg; row['unrealized_pnl']=round((px-avg)*qty if row.get('side')=='LONG' else (avg-px)*qty,4); row['realized_unrealized_total']=round(float(row.get('realized_pnl',0) or 0.0)+float(row.get('unrealized_pnl',0) or 0.0),4); rows.append(row)
-        return rows
-    def _rbs_reconcile_lots_v2(self):
-        lots=_rbs_get_position_lots_v2(self, include_closed=False); lot_pos={}
-        for lot in lots:
-            sym=str(lot.get('ticker','')).upper(); rem=int(lot.get('remaining_qty',0) or 0); lot_pos[sym]=lot_pos.get(sym,0)+(rem if lot.get('side')=='LONG' else -rem)
-        diffs=[]
-        for sym in sorted(set(lot_pos)|set(getattr(self,'_positions',{}).keys())):
-            p=self._positions.get(sym); agg=int(getattr(p,'qty',0) or 0) if p is not None else 0; lot_qty=int(lot_pos.get(sym,0) or 0)
-            if agg!=lot_qty: diffs.append({'ticker':sym,'aggregate_qty':agg,'lot_qty':lot_qty,'diff_qty':agg-lot_qty})
-        return {'ok': len(diffs)==0, 'diffs': diffs, 'lot_count': len(lots), 'cost_basis_method': _rbs_cost_method()}
-    RealBrokerStub.__init__ = _rbs_init_wrapper_v2
-    RealBrokerStub._apply_fill = _rbs_apply_fill_wrapper_v2
-    RealBrokerStub.upsert_protective_stop = _rbs_upsert_stop_wrapper_v2
-    RealBrokerStub.replace_order = _rbs_replace_wrapper_v2
-    RealBrokerStub.process_protective_stops = _rbs_process_stops_wrapper_v2
-    RealBrokerStub.get_position_lots = _rbs_get_position_lots_v2
-    RealBrokerStub.reconcile_lots_to_positions = _rbs_reconcile_lots_v2
-    if not hasattr(RealBrokerStub,'_orig_export_runtime_snapshot'): RealBrokerStub._orig_export_runtime_snapshot = RealBrokerStub.export_runtime_snapshot
-    def _rbs_export_v2(self):
-        snap=RealBrokerStub._orig_export_runtime_snapshot(self) if hasattr(RealBrokerStub,'_orig_export_runtime_snapshot') else {}; snap['position_lots']=self.get_position_lots(include_closed=True); snap['lot_reconciliation']=self.reconcile_lots_to_positions(); snap['callbacks']=list(getattr(self,'_callbacks',[])[-100:]); snap['lot_fill_history']=list(getattr(self,'_lot_fill_history',[])[-200:]); snap['lot_stop_link_events']=list(getattr(self,'_lot_stop_link_events',[])[-100:]); return snap
-    RealBrokerStub.export_runtime_snapshot = _rbs_export_v2
-except Exception as exc:
-    record_diagnostic('broker_adapter', 'broker_stub_extension_patch_failed', exc, severity='error', fail_closed=True)
-
-# =============================================================================
-# vNext tax-lot jurisdiction / wash-sale / report overlay for mock real broker
-# =============================================================================
 try:
     from fts_tax_lot_accounting import (
         decorate_open_lot as _rbstax_decorate_open_lot,
@@ -1014,140 +667,289 @@ try:
         money as _rbstax_money,
         qty_int as _rbstax_qty,
     )
-    _RBS_TAX_ORIG_APPLY_FILL = RealBrokerStub._apply_fill
-    _RBS_TAX_ORIG_PROCESS_STOPS = RealBrokerStub.process_protective_stops
-    _RBS_TAX_ORIG_GET_LOTS = RealBrokerStub.get_position_lots
-    _RBS_TAX_ORIG_EXPORT = RealBrokerStub.export_runtime_snapshot
-
-    def _rbs_tax_init(self):
-        if not hasattr(self, '_tax_lot_closures') or not isinstance(getattr(self, '_tax_lot_closures', None), list):
-            self._tax_lot_closures = []
-        if not hasattr(self, '_tax_report_exports') or not isinstance(getattr(self, '_tax_report_exports', None), dict):
-            self._tax_report_exports = {}
-
-    def _rbs_tax_decorate_all(self):
-        _rbs_tax_init(self)
-        rows=[]
-        for lot in list(getattr(self, '_position_lots', []) or []):
-            try:
-                rows.append(_rbstax_decorate_open_lot(lot))
-            except Exception as exc:
-                record_diagnostic(
-                    'broker_adapter',
-                    'rbs_tax_decorate_open_lot_failed',
-                    exc,
-                    severity='warning',
-                    fail_closed=False,
-                    context={'lot_id': str(lot.get('lot_id', '')) if isinstance(lot, dict) else ''},
-                )
-                rows.append(lot)
-        self._position_lots = rows
-
-    def _rbs_tax_sync_new_closures(self, before_count: int, order_row=None, fill_qty: int = 0, fill_price: float = 0.0, note: str = ''):
-        _rbs_tax_init(self); _rbs_tax_decorate_all(self)
-        new_events = list((getattr(self, '_lot_close_history', []) or [])[before_count:])
-        total_closed = sum(_rbstax_qty(ev.get('closed_qty') or ev.get('qty')) for ev in new_events) or _rbstax_qty(fill_qty) or 1
-        for ev in new_events:
-            try:
-                lot = None
-                for row in getattr(self, '_position_lots', []) or []:
-                    if str(row.get('lot_id')) == str(ev.get('lot_id')):
-                        lot = row; break
-                if lot is None:
-                    lot = {'lot_id': ev.get('lot_id'), 'ticker_symbol': ev.get('ticker') or ev.get('symbol'), 'side': ev.get('side'), 'entry_price': ev.get('entry_price'), 'remaining_qty': ev.get('closed_qty') or ev.get('qty'), 'open_qty': ev.get('closed_qty') or ev.get('qty')}
-                q = _rbstax_qty(ev.get('closed_qty') or ev.get('qty'))
-                ratio = q / total_closed if total_closed else 1.0
-                commission = float((order_row or {}).get('commission', 0) or 0) * ratio if isinstance(order_row, dict) else 0.0
-                tax = float((order_row or {}).get('tax', 0) or 0) * ratio if isinstance(order_row, dict) else 0.0
-                event = _rbstax_closure_event(lot=lot, qty=q, close_price=float(ev.get('close_price') or fill_price or 0.0), exit_order_id=str((order_row or {}).get('broker_order_id') or (order_row or {}).get('client_order_id') or ev.get('exit_order_id') or ''), fill_id=str(ev.get('fill_id','')), commission=commission, tax=tax, note=note or ev.get('note',''))
-                self._tax_lot_closures.append(event)
-            except Exception as exc:
-                record_diagnostic('broker_adapter', 'rbs_tax_closure_failed', exc, severity='warning', fail_closed=False)
-        try:
-            adjusted, lots = _rbstax_apply_wash_sale(list(self._tax_lot_closures), list(getattr(self, '_position_lots', []) or []))
-            self._tax_lot_closures = adjusted
-            self._position_lots = lots
-        except Exception as exc:
-            record_diagnostic('broker_adapter', 'rbs_tax_wash_sale_failed', exc, severity='warning', fail_closed=False)
-
-    def _rbs_tax_apply_fill(self, order_row, fill_qty, fill_price):
-        _rbs_tax_init(self)
-        before = len(getattr(self, '_lot_close_history', []) or [])
-        _RBS_TAX_ORIG_APPLY_FILL(self, order_row, fill_qty, fill_price)
-        _rbs_tax_decorate_all(self)
-        _rbs_tax_sync_new_closures(self, before, order_row=order_row, fill_qty=fill_qty, fill_price=fill_price, note='real_stub_fill_tax_lot')
-
-    def _rbs_tax_process_stops(self, price_map=None):
-        _rbs_tax_init(self)
-        before = len(getattr(self, '_lot_close_history', []) or [])
-        events = _RBS_TAX_ORIG_PROCESS_STOPS(self, price_map)
-        _rbs_tax_sync_new_closures(self, before, order_row=None, fill_qty=0, fill_price=0.0, note='real_stub_stop_tax_lot')
-        return events
-
-    def _rbs_tax_get_lots(self, include_closed: bool = False):
-        _rbs_tax_decorate_all(self)
-        rows = _RBS_TAX_ORIG_GET_LOTS(self, include_closed=include_closed)
-        out=[]
-        for row in rows:
-            try:
-                px = getattr(self, '_last_prices', {}).get(row.get('ticker') or row.get('symbol') or row.get('ticker_symbol'))
-                out.append(_rbstax_enrich_open_lot(row, market_price=px))
-            except Exception as exc:
-                record_diagnostic(
-                    'broker_adapter',
-                    'rbs_tax_enrich_open_lot_failed',
-                    exc,
-                    severity='warning',
-                    fail_closed=False,
-                    context={'lot_id': str(row.get('lot_id', '')) if isinstance(row, dict) else ''},
-                )
-                out.append(row)
-        return out
-
-    def _rbs_tax_export(self):
-        snap = _RBS_TAX_ORIG_EXPORT(self)
-        lots = _rbs_tax_get_lots(self, include_closed=True)
-        closures = list(getattr(self, '_tax_lot_closures', []) or [])
-        try:
-            closures, lots = _rbstax_apply_wash_sale(closures, lots)
-            self._tax_lot_closures = closures
-            self._position_lots = lots
-        except Exception as exc:
-            record_diagnostic('broker_adapter', 'rbs_tax_export_wash_sale_failed', exc, severity='warning', fail_closed=False)
-        snap['tax_lot_closures'] = closures
-        snap['tax_lot_summary'] = _rbstax_summarize_lots(closures, lots)
-        snap['tax_lot_accounting'] = {'engine': 'fts_tax_lot_accounting', 'broker': 'real_stub'}
-        try:
-            self._tax_report_exports = _rbstax_export_reports(closures, lots)
-            snap['tax_report_exports'] = self._tax_report_exports
-        except Exception as exc:
-            record_diagnostic('broker_adapter', 'rbs_tax_report_export_failed', exc, severity='warning', fail_closed=False)
-            snap['tax_report_export_error'] = repr(exc)
-        return snap
-
-    RealBrokerStub._apply_fill = _rbs_tax_apply_fill
-    RealBrokerStub.process_protective_stops = _rbs_tax_process_stops
-    RealBrokerStub.get_position_lots = _rbs_tax_get_lots
-    RealBrokerStub.export_runtime_snapshot = _rbs_tax_export
 except Exception as exc:
-    record_diagnostic('broker_adapter', 'broker_stub_tax_lot_patch_failed', exc, severity='warning', fail_closed=False)
+    record_diagnostic('broker_adapter', 'load_tax_lot_accounting', exc, severity='warning', fail_closed=False)
+    _rbstax_decorate_open_lot = None
+    _rbstax_enrich_open_lot = None
+    _rbstax_closure_event = None
+    _rbstax_apply_wash_sale = None
+    _rbstax_summarize_lots = None
+    _rbstax_export_reports = None
+    _rbstax_money = None
+    _rbstax_qty = None
 
+def _rbs_lot_now() -> str:
+    return now_str()
 
-# =============================================================================
-# Formal class facade
-# =============================================================================
-# Patch blocks above are retained for backward compatibility with historical update
-# packs.  New code should import RealBrokerStub after this point; the public class
-# is now a formal subclass rather than a monkey-patched base symbol.
-_PatchedRealBrokerStubBase = RealBrokerStub
-class FormalRealBrokerStub(_PatchedRealBrokerStubBase):
-    FORMAL_CLASS_LAYER = True
-    CALLBACK_MAPPING_LAYER = "fts_broker_callback_mapping.BrokerCallbackMapper"
+def _rbs_init_lot_book(self) -> None:
+    if not hasattr(self, '_position_lots') or self._position_lots is None:
+        self._position_lots = []
+    if not hasattr(self, '_lot_seq'):
+        self._lot_seq = 0
+    if not hasattr(self, '_callback_handlers') or self._callback_handlers is None:
+        self._callback_handlers = []
+    if not hasattr(self, '_callback_cursor'):
+        self._callback_cursor = 0
+    if not hasattr(self, '_lot_close_history'):
+        self._lot_close_history = []
 
-RealBrokerStub = FormalRealBrokerStub
+def _rbs_next_lot_id(self, ticker: str) -> str:
+    _rbs_init_lot_book(self)
+    self._lot_seq += 1
+    return f"RLOT-{str(ticker).replace('.', '')}-{self._lot_seq:06d}"
 
+def _rbs_open_lot(self, ticker: str, side: str, qty: int, price: float, order_row: dict) -> None:
+    _rbs_init_lot_book(self)
+    qty = int(qty or 0)
+    if qty <= 0:
+        return
+    self._position_lots.append({
+        'lot_id': _rbs_next_lot_id(self, ticker),
+        'ticker': str(ticker),
+        'symbol': str(ticker),
+        'side': str(side).upper(),
+        'direction_bucket': str(side).upper(),
+        'open_qty': qty,
+        'remaining_qty': qty,
+        'avg_cost': float(price or 0.0),
+        'entry_price': float(price or 0.0),
+        'entry_time': _rbs_lot_now(),
+        'entry_order_id': str(order_row.get('broker_order_id') or order_row.get('client_order_id') or ''),
+        'client_order_id': str(order_row.get('client_order_id') or ''),
+        'strategy_name': str(order_row.get('strategy_name') or ''),
+        'status': 'OPEN',
+        'realized_pnl': 0.0,
+        'close_qty': 0,
+        'close_price': 0.0,
+        'close_time': '',
+    })
 
-# ---- v84 live-closure helper patch ----
+def _rbs_close_lots_fifo(self, ticker: str, close_side: str, qty: int, price: float, order_row: dict) -> None:
+    _rbs_init_lot_book(self)
+    remaining = int(qty or 0)
+    if remaining <= 0:
+        return
+    for lot in self._position_lots:
+        if remaining <= 0:
+            break
+        if str(lot.get('ticker', '')).upper() != str(ticker).upper():
+            continue
+        if str(lot.get('side', '')).upper() != str(close_side).upper():
+            continue
+        if str(lot.get('status', '')).upper() != 'OPEN':
+            continue
+        lot_qty = int(lot.get('remaining_qty', 0) or 0)
+        if lot_qty <= 0:
+            continue
+        take = min(lot_qty, remaining)
+        entry = float(lot.get('avg_cost', 0) or 0.0)
+        pnl = (float(price) - entry) * take if close_side == 'LONG' else (entry - float(price)) * take
+        lot['remaining_qty'] = lot_qty - take
+        lot['close_qty'] = int(lot.get('close_qty', 0) or 0) + take
+        lot['realized_pnl'] = round(float(lot.get('realized_pnl', 0) or 0) + pnl, 4)
+        lot['close_price'] = float(price or 0.0)
+        lot['close_time'] = _rbs_lot_now()
+        lot['exit_order_id'] = str(order_row.get('broker_order_id') or order_row.get('client_order_id') or '')
+        if lot['remaining_qty'] <= 0:
+            lot['status'] = 'CLOSED'
+        self._lot_close_history.append({'lot_id': lot.get('lot_id'), 'ticker': ticker, 'side': close_side, 'closed_qty': take, 'realized_pnl': round(pnl, 4), 'exit_order_id': lot.get('exit_order_id'), 'closed_at': _rbs_lot_now()})
+        remaining -= take
+
+def _rbs_apply_lot_fill(self, order_row: dict, fill_qty: int, fill_price: float) -> None:
+    side = str(order_row.get('side', '')).upper()
+    ticker = str(order_row.get('ticker', '')).upper()
+    if side == 'BUY':
+        _rbs_open_lot(self, ticker, 'LONG', int(fill_qty), float(fill_price), order_row)
+    elif side == 'SHORT':
+        _rbs_open_lot(self, ticker, 'SHORT', int(fill_qty), float(fill_price), order_row)
+    elif side == 'SELL':
+        _rbs_close_lots_fifo(self, ticker, 'LONG', int(fill_qty), float(fill_price), order_row)
+    elif side in {'COVER', 'BUY_TO_COVER'}:
+        _rbs_close_lots_fifo(self, ticker, 'SHORT', int(fill_qty), float(fill_price), order_row)
+
+def _rbs_cfg(name, default=None): return getattr(_RBS_CFG, name, default) if _RBS_CFG is not None else default
+
+def _rbs_cost_method(): return str(_rbs_cfg('lot_accounting_method', 'FIFO') or 'FIFO').upper()
+
+def _rbs_now(): return datetime.now().isoformat(timespec='seconds')
+
+def _rbs_parse_list(raw):
+    if isinstance(raw, str):
+        try: return _json_rbs.loads(raw)
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'parse_rbs_json_list', exc, severity='warning', fail_closed=False)
+            return []
+    return list(raw) if isinstance(raw, (list, tuple)) else []
+
+def _rbs_append_json(raw, val):
+    arr=_rbs_parse_list(raw); arr.append(val); return _json_rbs.dumps(arr, ensure_ascii=False)
+
+def _rbs_init_v2(self):
+    self._position_lots=[] if not isinstance(getattr(self,'_position_lots',None), list) else self._position_lots
+    self._lot_seq=int(getattr(self,'_lot_seq',0) or 0)
+    self._lot_fill_history=[] if not isinstance(getattr(self,'_lot_fill_history',None), list) else self._lot_fill_history
+    self._lot_stop_link_events=[] if not isinstance(getattr(self,'_lot_stop_link_events',None), list) else self._lot_stop_link_events
+    self._lot_close_history=[] if not isinstance(getattr(self,'_lot_close_history',None), list) else self._lot_close_history
+    self._lot_errors=[] if not isinstance(getattr(self,'_lot_errors',None), list) else self._lot_errors
+
+def _rbs_position_key(symbol, side, strategy_name='', signal_id=''):
+    parts=[str(symbol).upper(), str(side).upper()]
+    if bool(_rbs_cfg('lot_partition_by_strategy', True)): parts.append(str(strategy_name or ''))
+    if bool(_rbs_cfg('lot_partition_by_signal', True)): parts.append(str(signal_id or ''))
+    return '|'.join(parts)
+
+def _rbs_next_lot_id_v2(self, ticker:str)->str:
+    _rbs_init_v2(self); self._lot_seq += 1; return f"RLOT2-{str(ticker).replace('.', '')}-{self._lot_seq:07d}"
+
+def _rbs_open_lot_v2(self, ticker:str, side:str, qty:int, price:float, order_row:dict, fill_id:str=''):
+    _rbs_init_v2(self); qty=int(qty or 0)
+    if qty<=0: return
+    strategy_name=str(order_row.get('strategy_name') or '')
+    signal_id=str(order_row.get('signal_id') or '')
+    client_order_id=str(order_row.get('client_order_id') or '')
+    self._position_lots.append({'lot_id': _rbs_next_lot_id_v2(self,ticker), 'ticker': str(ticker), 'symbol': str(ticker), 'side': str(side).upper(), 'direction_bucket': str(side).upper(), 'position_key': _rbs_position_key(ticker, side, strategy_name, signal_id), 'strategy_name': strategy_name, 'strategy_bucket': strategy_name, 'signal_id': signal_id, 'client_order_id': client_order_id, 'open_qty': qty, 'remaining_qty': qty, 'avg_cost': float(price or 0.0), 'entry_price': float(price or 0.0), 'entry_time': _rbs_now(), 'entry_order_id': str(order_row.get('broker_order_id') or order_row.get('client_order_id') or ''), 'cost_basis_method': _rbs_cost_method(), 'entry_fill_qty': qty, 'close_fill_qty': 0, 'entry_fill_count': 1, 'close_fill_count': 0, 'entry_fill_ids_json': _json_rbs.dumps([fill_id] if fill_id else []), 'exit_fill_ids_json': _json_rbs.dumps([]), 'open_commission': float(order_row.get('commission',0) or 0.0), 'open_tax': float(order_row.get('tax',0) or 0.0), 'close_commission': 0.0, 'close_tax': 0.0, 'status': 'OPEN', 'lifecycle_status': 'OPEN', 'realized_pnl': 0.0, 'close_qty': 0, 'close_price': 0.0, 'close_time': '', 'stop_order_id': '', 'stop_price': 0.0, 'stop_status': '', 'linked_stop_qty': 0, 'last_fill_time': _rbs_now()})
+
+def _rbs_iter_lots(self, ticker:str, close_side:str, strategy_name:str='', signal_id:str=''):
+    out=[]
+    for lot in self._position_lots:
+        if str(lot.get('ticker','')).upper()!=str(ticker).upper(): continue
+        if str(lot.get('side','')).upper()!=str(close_side).upper(): continue
+        if int(lot.get('remaining_qty',0) or 0)<=0: continue
+        if bool(_rbs_cfg('lot_partition_by_strategy', True)) and strategy_name and str(lot.get('strategy_name',''))!=strategy_name: continue
+        if bool(_rbs_cfg('lot_partition_by_signal', True)) and signal_id and str(lot.get('signal_id',''))!=signal_id: continue
+        out.append(lot)
+    if not out and bool(_rbs_cfg('lot_allow_cross_strategy_close', False)):
+        out=[lot for lot in self._position_lots if str(lot.get('ticker','')).upper()==str(ticker).upper() and str(lot.get('side','')).upper()==str(close_side).upper() and int(lot.get('remaining_qty',0) or 0)>0]
+    out.sort(key=lambda r:(str(r.get('entry_time','')), str(r.get('lot_id','')))); return out
+
+def _rbs_close_lots_v2(self, ticker:str, close_side:str, qty:int, price:float, order_row:dict, fill_id:str=''):
+    remaining=int(qty or 0)
+    if remaining<=0: return
+    strategy_name=str(order_row.get('strategy_name') or '')
+    signal_id=str(order_row.get('signal_id') or '')
+    eligible=_rbs_iter_lots(self, ticker, close_side, strategy_name=strategy_name, signal_id=signal_id)
+    avg_basis=None
+    if _rbs_cost_method()=='AVERAGE' and eligible:
+        tq=sum(int(l.get('remaining_qty',0) or 0) for l in eligible); tc=sum(int(l.get('remaining_qty',0) or 0)*float(l.get('avg_cost',0) or 0.0) for l in eligible); avg_basis=(tc/tq) if tq else None
+    for lot in eligible:
+        if remaining<=0: break
+        lot_qty=int(lot.get('remaining_qty',0) or 0)
+        if lot_qty<=0: continue
+        take=min(lot_qty, remaining)
+        basis=float(avg_basis if avg_basis is not None else (lot.get('avg_cost',0) or 0.0))
+        pnl=(float(price)-basis)*take if close_side=='LONG' else (basis-float(price))*take
+        lot['remaining_qty']=lot_qty-take; lot['close_qty']=int(lot.get('close_qty',0) or 0)+take; lot['close_fill_qty']=int(lot.get('close_fill_qty',0) or 0)+take; lot['close_fill_count']=int(lot.get('close_fill_count',0) or 0)+1
+        if fill_id: lot['exit_fill_ids_json']=_rbs_append_json(lot.get('exit_fill_ids_json'), fill_id)
+        lot['realized_pnl']=round(float(lot.get('realized_pnl',0) or 0.0)+pnl-float(order_row.get('commission',0) or 0.0)-float(order_row.get('tax',0) or 0.0),4)
+        lot['close_commission']=round(float(lot.get('close_commission',0) or 0.0)+float(order_row.get('commission',0) or 0.0),4); lot['close_tax']=round(float(lot.get('close_tax',0) or 0.0)+float(order_row.get('tax',0) or 0.0),4)
+        lot['close_price']=float(price or 0.0); lot['close_time']=_rbs_now(); lot['exit_order_id']=str(order_row.get('broker_order_id') or order_row.get('client_order_id') or ''); lot['last_fill_time']=_rbs_now(); lot['close_cost_basis_method']=_rbs_cost_method(); lot['close_cost_basis_price']=round(basis,4)
+        lot['status']='CLOSED' if lot['remaining_qty']<=0 else 'PARTIAL_EXIT'; lot['lifecycle_status']=lot['status']
+        self._lot_close_history.append({'lot_id': lot.get('lot_id'), 'ticker': ticker, 'side': close_side, 'closed_qty': take, 'realized_pnl': round(pnl,4), 'fill_id': fill_id, 'exit_order_id': lot.get('exit_order_id'), 'closed_at': _rbs_now(), 'position_key': lot.get('position_key')})
+        self._lot_fill_history.append({'fill_id': fill_id or '', 'lot_id': lot.get('lot_id'), 'symbol': ticker, 'event': 'CLOSE', 'qty': take, 'price': float(price or 0.0), 'time': _rbs_now()})
+        remaining-=take
+
+def _rbs_apply_fill_v2(self, order_row:dict, fill_qty:int, fill_price:float):
+    side=str(order_row.get('side','')).upper(); ticker=str(order_row.get('ticker','')).upper(); fill_id=f"RFILL-{str(order_row.get('broker_order_id') or order_row.get('client_order_id') or 'NA')}-{len(getattr(self,'_fills',[]) or []):06d}"
+    before=len(getattr(self,'_position_lots',[]) or [])
+    if side=='BUY': _rbs_open_lot_v2(self,ticker,'LONG',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
+    elif side=='SHORT': _rbs_open_lot_v2(self,ticker,'SHORT',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
+    elif side=='SELL': _rbs_close_lots_v2(self,ticker,'LONG',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
+    elif side in {'COVER','BUY_TO_COVER'}: _rbs_close_lots_v2(self,ticker,'SHORT',int(fill_qty),float(fill_price),order_row,fill_id=fill_id)
+    try:
+        recent_lots=(getattr(self,'_position_lots',[]) or [])[before:]
+        if getattr(self,'_callbacks',None):
+            cb=self._callbacks[-1]
+            lot_ids=[str(l.get('lot_id')) for l in recent_lots] or [str(l.get('lot_id')) for l in (getattr(self,'_position_lots',[]) or []) if str(l.get('exit_order_id',''))==str(order_row.get('broker_order_id') or order_row.get('client_order_id') or '')][-5:]
+            if lot_ids:
+                cb['lot_id']=lot_ids[0]
+                cb['lot_ids']=lot_ids
+                cb['position_key']=str(recent_lots[0].get('position_key')) if recent_lots else ''
+                cb['strategy_name']=str(order_row.get('strategy_name') or '')
+                cb['signal_id']=str(order_row.get('signal_id') or '')
+    except Exception as exc:
+        record_diagnostic('broker_adapter', 'rbs_callback_enrichment_failed', exc, severity='warning', fail_closed=False)
+
+def _rbs_link_stop(self, rec:dict):
+    ticker=str(rec.get('symbol','') or '').upper(); stop_side=str(rec.get('side','SELL') or 'SELL').upper(); close_side='LONG' if stop_side=='SELL' else 'SHORT'; qty_need=int(rec.get('quantity',0) or 0); strategy_name=str(rec.get('strategy_name','') or ''); signal_id=str(rec.get('signal_id','') or '')
+    linked=[]; remaining=qty_need
+    for lot in _rbs_iter_lots(self, ticker, close_side, strategy_name=strategy_name if bool(_rbs_cfg('lot_stop_linkage_match_strategy', True)) else '', signal_id=signal_id if bool(_rbs_cfg('lot_stop_linkage_match_signal', False)) else ''):
+        if remaining<=0: break
+        take=min(int(lot.get('remaining_qty',0) or 0), remaining); lot['stop_order_id']=str(rec.get('broker_order_id') or rec.get('order_id') or ''); lot['stop_price']=float(rec.get('stop_price',0) or 0.0); lot['stop_status']=str(rec.get('status','WORKING') or ''); lot['linked_stop_qty']=take; linked.append(str(lot.get('lot_id'))); remaining-=take
+    rec['linked_lot_ids']=linked
+    self._lot_stop_link_events.append({'time': _rbs_now(), 'broker_order_id': rec.get('broker_order_id') or rec.get('order_id'), 'linked_lot_ids': list(linked), 'linked_qty': qty_need-remaining})
+
+def _rbs_get_position_lots_v2(self, include_closed: bool = False):
+    rows=[]
+    for lot in self._position_lots:
+        if include_closed or int(lot.get('remaining_qty',0) or 0)>0 or str(lot.get('status','')).upper()=='PARTIAL_EXIT':
+            row=dict(lot); px=float(self._last_prices.get(row.get('ticker',''), row.get('avg_cost',0)) or 0.0); qty=int(row.get('remaining_qty',0) or 0); avg=float(row.get('avg_cost',0) or 0.0); row['market_price']=px; row['market_value']=abs(qty)*px; row['cost_value']=abs(qty)*avg; row['unrealized_pnl']=round((px-avg)*qty if row.get('side')=='LONG' else (avg-px)*qty,4); row['realized_unrealized_total']=round(float(row.get('realized_pnl',0) or 0.0)+float(row.get('unrealized_pnl',0) or 0.0),4); rows.append(row)
+    return rows
+
+def _rbs_reconcile_lots_v2(self):
+    lots=_rbs_get_position_lots_v2(self, include_closed=False); lot_pos={}
+    for lot in lots:
+        sym=str(lot.get('ticker','')).upper(); rem=int(lot.get('remaining_qty',0) or 0); lot_pos[sym]=lot_pos.get(sym,0)+(rem if lot.get('side')=='LONG' else -rem)
+    diffs=[]
+    for sym in sorted(set(lot_pos)|set(getattr(self,'_positions',{}).keys())):
+        p=self._positions.get(sym); agg=int(getattr(p,'qty',0) or 0) if p is not None else 0; lot_qty=int(lot_pos.get(sym,0) or 0)
+        if agg!=lot_qty: diffs.append({'ticker':sym,'aggregate_qty':agg,'lot_qty':lot_qty,'diff_qty':agg-lot_qty})
+    return {'ok': len(diffs)==0, 'diffs': diffs, 'lot_count': len(lots), 'cost_basis_method': _rbs_cost_method()}
+
+def _rbs_tax_init(self):
+    if not hasattr(self, '_tax_lot_closures') or not isinstance(getattr(self, '_tax_lot_closures', None), list):
+        self._tax_lot_closures = []
+    if not hasattr(self, '_tax_report_exports') or not isinstance(getattr(self, '_tax_report_exports', None), dict):
+        self._tax_report_exports = {}
+
+def _rbs_tax_decorate_all(self):
+    _rbs_tax_init(self)
+    if not callable(_rbstax_decorate_open_lot):
+        return
+    rows=[]
+    for lot in list(getattr(self, '_position_lots', []) or []):
+        try:
+            rows.append(_rbstax_decorate_open_lot(lot))
+        except Exception as exc:
+            record_diagnostic(
+                'broker_adapter',
+                'rbs_tax_decorate_open_lot_failed',
+                exc,
+                severity='warning',
+                fail_closed=False,
+                context={'lot_id': str(lot.get('lot_id', '')) if isinstance(lot, dict) else ''},
+            )
+            rows.append(lot)
+    self._position_lots = rows
+
+def _rbs_tax_sync_new_closures(self, before_count: int, order_row=None, fill_qty: int = 0, fill_price: float = 0.0, note: str = ''):
+    _rbs_tax_init(self); _rbs_tax_decorate_all(self)
+    if not (callable(_rbstax_qty) and callable(_rbstax_closure_event)):
+        return
+    new_events = list((getattr(self, '_lot_close_history', []) or [])[before_count:])
+    total_closed = sum(_rbstax_qty(ev.get('closed_qty') or ev.get('qty')) for ev in new_events) or _rbstax_qty(fill_qty) or 1
+    for ev in new_events:
+        try:
+            lot = None
+            for row in getattr(self, '_position_lots', []) or []:
+                if str(row.get('lot_id')) == str(ev.get('lot_id')):
+                    lot = row; break
+            if lot is None:
+                lot = {'lot_id': ev.get('lot_id'), 'ticker_symbol': ev.get('ticker') or ev.get('symbol'), 'side': ev.get('side'), 'entry_price': ev.get('entry_price'), 'remaining_qty': ev.get('closed_qty') or ev.get('qty'), 'open_qty': ev.get('closed_qty') or ev.get('qty')}
+            q = _rbstax_qty(ev.get('closed_qty') or ev.get('qty'))
+            ratio = q / total_closed if total_closed else 1.0
+            commission = float((order_row or {}).get('commission', 0) or 0) * ratio if isinstance(order_row, dict) else 0.0
+            tax = float((order_row or {}).get('tax', 0) or 0) * ratio if isinstance(order_row, dict) else 0.0
+            event = _rbstax_closure_event(lot=lot, qty=q, close_price=float(ev.get('close_price') or fill_price or 0.0), exit_order_id=str((order_row or {}).get('broker_order_id') or (order_row or {}).get('client_order_id') or ev.get('exit_order_id') or ''), fill_id=str(ev.get('fill_id','')), commission=commission, tax=tax, note=note or ev.get('note',''))
+            self._tax_lot_closures.append(event)
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'rbs_tax_closure_failed', exc, severity='warning', fail_closed=False)
+    try:
+        adjusted, lots = _rbstax_apply_wash_sale(list(self._tax_lot_closures), list(getattr(self, '_position_lots', []) or []))
+        self._tax_lot_closures = adjusted
+        self._position_lots = lots
+    except Exception as exc:
+        record_diagnostic('broker_adapter', 'rbs_tax_wash_sale_failed', exc, severity='warning', fail_closed=False)
+
 def _rbs_get_open_orders(self):
     getter = getattr(self, 'get_open_orders_dicts', None)
     if callable(getter):
@@ -1157,7 +959,6 @@ def _rbs_get_open_orders(self):
         if str(row.get('status', '')).upper() in {'SUBMITTED', 'PARTIALLY_FILLED', 'NEW', 'PENDING_SUBMIT'}:
             rows.append(dict(row))
     return rows
-
 
 def _rbs_export_broker_snapshot(self):
     try:
@@ -1175,11 +976,190 @@ def _rbs_export_broker_snapshot(self):
     }
 
 
-try:
-    RealBrokerStub.get_open_orders = _rbs_get_open_orders
-    RealBrokerStub.export_broker_snapshot = _rbs_export_broker_snapshot
-    if 'FormalRealBrokerStub' in globals():
-        FormalRealBrokerStub.get_open_orders = _rbs_get_open_orders
-        FormalRealBrokerStub.export_broker_snapshot = _rbs_export_broker_snapshot
-except Exception as exc:
-    record_diagnostic('broker_adapter', 'broker_stub_live_closure_patch_failed', exc, severity='warning', fail_closed=False)
+class _CallbackLotMixin:
+    """Lot book + callback handler support without monkey patching."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _rbs_init_lot_book(self)
+
+    def _record_callback(self, event: dict[str, Any]) -> None:
+        super()._record_callback(event)
+        _rbs_init_lot_book(self)
+        for handler in list(getattr(self, '_callback_handlers', []) or []):
+            try:
+                handler(dict(event))
+            except Exception as exc:
+                record_diagnostic('broker_adapter', 'callback_handler_failed', exc, severity='warning', fail_closed=False)
+
+    def register_callback_handler(self, handler: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
+        _rbs_init_lot_book(self)
+        if callable(handler):
+            self._callback_handlers.append(handler)
+            return {'ok': True, 'status': 'callback_handler_registered', 'handler_count': len(self._callback_handlers)}
+        return {'ok': False, 'status': 'handler_not_callable'}
+
+    def drain_new_callbacks(self) -> list[dict[str, Any]]:
+        _rbs_init_lot_book(self)
+        events = list(self._callbacks[self._callback_cursor:])
+        self._callback_cursor = len(self._callbacks)
+        return events
+
+
+class _InstitutionalLotLifecycleMixin:
+    """Structured lot lifecycle / stop-link / reconciliation layer."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _rbs_init_v2(self)
+
+    def _apply_fill(self, order_row: dict[str, Any], fill_qty: int, fill_price: float) -> None:
+        super()._apply_fill(order_row, fill_qty, fill_price)
+        try:
+            _rbs_apply_fill_v2(self, order_row, fill_qty, fill_price)
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'rbs_apply_fill_v2_failed', exc, severity='warning', fail_closed=False)
+            self._lot_errors.append({'time': _rbs_now(), 'error': repr(exc), 'stage': 'apply_fill_v2'})
+
+    def upsert_protective_stop(self, symbol: str, quantity: int, stop_price: float, side: str = 'SELL', client_order_id: str = '', note: str = '', strategy_name: str = '', signal_id: str = '', position_key: str = ''):
+        resp = super().upsert_protective_stop(symbol, quantity, stop_price, side=side, client_order_id=client_order_id, note=note)
+        rec = resp.get('record') or {}
+        if strategy_name:
+            rec['strategy_name'] = strategy_name
+        if signal_id:
+            rec['signal_id'] = signal_id
+        if position_key:
+            rec['position_key'] = position_key
+        self._protective_stops[str(rec.get('broker_order_id') or rec.get('order_id'))] = rec
+        _rbs_link_stop(self, rec)
+        resp['record'] = dict(rec)
+        return resp
+
+    def replace_order(self, broker_order_id: str, payload: dict):
+        resp = super().replace_order(broker_order_id, payload)
+        rec = self._protective_stops.get(str(broker_order_id))
+        if rec is not None:
+            if 'strategy_name' in payload:
+                rec['strategy_name'] = payload.get('strategy_name') or rec.get('strategy_name', '')
+            if 'signal_id' in payload:
+                rec['signal_id'] = payload.get('signal_id') or rec.get('signal_id', '')
+            if 'position_key' in payload:
+                rec['position_key'] = payload.get('position_key') or rec.get('position_key', '')
+            _rbs_link_stop(self, rec)
+            resp['record'] = dict(rec)
+        return resp
+
+    def process_protective_stops(self, price_map=None):
+        events = super().process_protective_stops(price_map)
+        new = list((getattr(self, '_callbacks', []) or []))
+        for ev in new[-20:]:
+            if str(ev.get('event_type', '')).upper() != 'STOP_TRIGGERED':
+                continue
+            oid = str(ev.get('broker_order_id') or ev.get('order_id') or '')
+            rec = self._protective_stops.get(oid, {})
+            for lot in self._position_lots:
+                if str(lot.get('stop_order_id', '')) == oid or lot.get('lot_id') in list(rec.get('linked_lot_ids') or []):
+                    lot['stop_status'] = 'TRIGGERED_FILLED'
+        return events
+
+    def get_position_lots(self, include_closed: bool = False):
+        return _rbs_get_position_lots_v2(self, include_closed=include_closed)
+
+    def reconcile_lots_to_positions(self):
+        return _rbs_reconcile_lots_v2(self)
+
+    def export_runtime_snapshot(self) -> dict[str, Any]:
+        snap = super().export_runtime_snapshot()
+        snap['position_lots'] = self.get_position_lots(include_closed=True)
+        snap['lot_reconciliation'] = self.reconcile_lots_to_positions()
+        snap['callbacks'] = list(getattr(self, '_callbacks', [])[-100:])
+        snap['lot_fill_history'] = list(getattr(self, '_lot_fill_history', [])[-200:])
+        snap['lot_stop_link_events'] = list(getattr(self, '_lot_stop_link_events', [])[-100:])
+        return snap
+
+
+class _TaxLotAccountingMixin:
+    """Tax-lot reporting layer; uses helper functions instead of monkey patching."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _rbs_tax_init(self)
+
+    def _apply_fill(self, order_row, fill_qty, fill_price):
+        _rbs_tax_init(self)
+        before = len(getattr(self, '_lot_close_history', []) or [])
+        super()._apply_fill(order_row, fill_qty, fill_price)
+        if callable(_rbstax_qty) and callable(_rbstax_closure_event):
+            _rbs_tax_decorate_all(self)
+            _rbs_tax_sync_new_closures(self, before, order_row=order_row, fill_qty=fill_qty, fill_price=fill_price, note='real_stub_fill_tax_lot')
+
+    def process_protective_stops(self, price_map=None):
+        _rbs_tax_init(self)
+        before = len(getattr(self, '_lot_close_history', []) or [])
+        events = super().process_protective_stops(price_map)
+        if callable(_rbstax_qty) and callable(_rbstax_closure_event):
+            _rbs_tax_sync_new_closures(self, before, order_row=None, fill_qty=0, fill_price=0.0, note='real_stub_stop_tax_lot')
+        return events
+
+    def get_position_lots(self, include_closed: bool = False):
+        _rbs_tax_decorate_all(self)
+        rows = super().get_position_lots(include_closed=include_closed)
+        out = []
+        for row in rows:
+            try:
+                if callable(_rbstax_enrich_open_lot):
+                    px = getattr(self, '_last_prices', {}).get(row.get('ticker') or row.get('symbol') or row.get('ticker_symbol'))
+                    out.append(_rbstax_enrich_open_lot(row, market_price=px))
+                else:
+                    out.append(row)
+            except Exception as exc:
+                record_diagnostic('broker_adapter', 'rbs_tax_enrich_open_lot_failed', exc, severity='warning', fail_closed=False, context={'lot_id': str(row.get('lot_id', '')) if isinstance(row, dict) else ''})
+                out.append(row)
+        return out
+
+    def export_runtime_snapshot(self):
+        snap = super().export_runtime_snapshot()
+        lots = self.get_position_lots(include_closed=True)
+        closures = list(getattr(self, '_tax_lot_closures', []) or [])
+        if callable(_rbstax_apply_wash_sale):
+            try:
+                closures, lots = _rbstax_apply_wash_sale(closures, lots)
+                self._tax_lot_closures = closures
+                self._position_lots = lots
+            except Exception as exc:
+                record_diagnostic('broker_adapter', 'rbs_tax_export_wash_sale_failed', exc, severity='warning', fail_closed=False)
+        snap['tax_lot_closures'] = closures
+        if callable(_rbstax_summarize_lots):
+            snap['tax_lot_summary'] = _rbstax_summarize_lots(closures, lots)
+        else:
+            snap['tax_lot_summary'] = {'status': 'tax_lot_accounting_unavailable'}
+        snap['tax_lot_accounting'] = {'engine': 'fts_tax_lot_accounting', 'broker': 'real_stub'}
+        try:
+            if callable(_rbstax_export_reports):
+                self._tax_report_exports = _rbstax_export_reports(closures, lots)
+                snap['tax_report_exports'] = self._tax_report_exports
+        except Exception as exc:
+            record_diagnostic('broker_adapter', 'rbs_tax_report_export_failed', exc, severity='warning', fail_closed=False)
+            snap['tax_report_export_error'] = repr(exc)
+        return snap
+
+
+class _BrokerSnapshotMixin:
+    def get_open_orders(self):
+        return _rbs_get_open_orders(self)
+
+    def export_broker_snapshot(self):
+        return _rbs_export_broker_snapshot(self)
+
+
+class RealBrokerStub(_BrokerSnapshotMixin, _TaxLotAccountingMixin, _InstitutionalLotLifecycleMixin, _CallbackLotMixin, _CoreRealBrokerStub):
+    """Formal mock broker implementation without monkey patch blocks."""
+
+    MODULE_VERSION = 'v82_mock_real_broker_clean_mixins'
+    FORMAL_CLASS_LAYER = True
+    CALLBACK_MAPPING_LAYER = 'fts_broker_callback_mapping.BrokerCallbackMapper'
+
+
+FormalRealBrokerStub = RealBrokerStub
+OFFICIAL_REAL_BROKER_STUB_CLASS = RealBrokerStub
+LegacyPatchedRealBrokerStub = _CoreRealBrokerStub

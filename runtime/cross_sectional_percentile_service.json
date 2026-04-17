@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-04-15 13:33:15",
+  "generated_at": "2026-04-16 13:08:01",
   "module_version": "v83_cross_sectional_percentile_full",
   "snapshot_path": "C:\\test\\test-2026-3-22OK\\data\\feature_cross_section_snapshot.csv",
-  "ticker_count": 1071,
+  "ticker_count": 1072,
   "sector_count": 34,
   "official_percentile_mode": true,
   "status": "cross_sectional_snapshot_ready"

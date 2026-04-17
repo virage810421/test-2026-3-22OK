@@ -1,22 +1,25 @@
 {
-  "generated_at": "2026-04-15 20:48:55",
-  "module_version": "v86_feature_service_live_vetted_directional",
+  "generated_at": "2026-04-16 14:36:17",
+  "module_version": "v102_feature_service_structural_bias_and_diagnostics",
   "selected_features": [
     "MACD_Hist",
     "Score_Gap",
     "Volume_Z20",
     "Regime_TrendStrength_X_ScoreGap",
-    "ADV20_Proxy",
-    "Turnover_Proxy",
-    "DollarVol20_Proxy",
-    "ATR14",
-    "Return_Z20",
-    "Intraday_Return",
-    "Return_Z20_X_MACD_Hist",
+    "Sell_Score_Slope_5d",
     "Gap_Pct",
-    "ATR_Pct",
-    "ADX",
-    "RSI"
+    "Overnight_Return",
+    "Range_Confidence_Delta",
+    "RealizedVol_60",
+    "Return_Z20",
+    "RSI_Reclaim_Speed",
+    "Proba_Delta_3d",
+    "MACD_Hist_X_Gap_Pct",
+    "MACD_Hist_X_Overnight_Return",
+    "Gap_Pct_X_Score_Gap",
+    "ADX_Delta_3d",
+    "ATR_Pctl_252",
+    "Range_Mean_Reversion_Score"
   ],
   "shared_selected_features": [
     "MACD_Hist",
@@ -26,39 +29,40 @@
   ],
   "directional_selected_features_by_scope": {
     "LONG": [
-      "ADV20_Proxy",
-      "Turnover_Proxy",
-      "DollarVol20_Proxy",
-      "ATR14",
+      "Sell_Score_Slope_5d",
+      "Gap_Pct",
+      "Overnight_Return",
+      "Range_Confidence_Delta",
       "Volume_Z20",
-      "Return_Z20",
-      "Intraday_Return",
       "MACD_Hist",
-      "Return_Z20_X_MACD_Hist"
+      "RealizedVol_60",
+      "Regime_TrendStrength_X_ScoreGap"
     ],
     "SHORT": [
+      "Return_Z20",
+      "MACD_Hist",
+      "Gap_Pct",
+      "Overnight_Return",
       "Regime_TrendStrength_X_ScoreGap",
       "Score_Gap",
-      "MACD_Hist",
-      "Volume_Z20",
-      "Gap_Pct",
-      "ATR_Pct",
-      "Return_Z20",
-      "Intraday_Return"
+      "RSI_Reclaim_Speed",
+      "Proba_Delta_3d",
+      "MACD_Hist_X_Gap_Pct",
+      "MACD_Hist_X_Overnight_Return",
+      "Gap_Pct_X_Score_Gap"
     ],
     "RANGE": [
-      "Volume_Z20",
-      "Regime_TrendStrength_X_ScoreGap",
-      "Score_Gap",
-      "ADX",
-      "RSI",
-      "Return_Z20",
-      "Intraday_Return",
       "MACD_Hist",
-      "Return_Z20_X_MACD_Hist"
+      "RSI_Reclaim_Speed",
+      "ADX_Delta_3d",
+      "Range_Confidence_Delta",
+      "Gap_Pct",
+      "Volume_Z20",
+      "ATR_Pctl_252",
+      "Range_Mean_Reversion_Score"
     ]
   },
-  "selected_feature_count": 15,
+  "selected_feature_count": 18,
   "dataset_columns": [
     "Ticker SYMBOL",
     "Ticker",
@@ -252,10 +256,15 @@
   "dataset_column_count": 188,
   "strict_feature_parity": true,
   "selected_features_required_for_live": true,
-  "directional_features_used_in_training": false,
-  "directional_features_required_in_live": false,
-  "directional_selected_features": [],
-  "approved_live_directional_features": [],
+  "directional_features_used_in_training": true,
+  "directional_features_required_in_live": true,
+  "directional_selected_features": [
+    "Range_Confidence_Delta",
+    "Range_Mean_Reversion_Score"
+  ],
+  "approved_live_directional_features": [
+    "Range_Mean_Reversion_Score"
+  ],
   "live_feature_policy": "shared_plus_vetted_directional",
   "required_runtime_artifacts": [
     "event_calendar_service.json",

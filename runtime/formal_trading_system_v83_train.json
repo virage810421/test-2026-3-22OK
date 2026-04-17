@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 20:49:24",
+  "generated_at": "2026-04-16 14:37:04",
   "mode": "train",
   "module_version": "v87_clean_old_doors_mainline_train",
   "outputs": {
@@ -20,29 +20,27 @@
         "stage": "maturity_upgrade_suite",
         "status": "ok",
         "path": "C:\\test\\test-2026-3-22OK\\runtime\\maturity_upgrade_suite.json",
-        "payload_status": "maturity_upgrade_ready",
+        "payload_status": "maturity_upgrade_partial",
         "entrypoint": "fts_maturity_upgrade_suite.MaturityUpgradeSuite.build"
       },
       {
         "stage": "trainer_backend",
-        "status": "ok",
-        "path": "runtime\\trainer_backend_report.json",
-        "payload_status": "trained",
+        "status": "error",
+        "error": "NameError(\"name '_write_selected_feature_authority' is not defined\")",
         "entrypoint": "fts_trainer_backend.train_models"
       },
       {
         "stage": "maturity_upgrade_suite_after_train",
         "status": "ok",
         "path": "C:\\test\\test-2026-3-22OK\\runtime\\maturity_upgrade_suite.json",
-        "payload_status": "maturity_upgrade_ready",
+        "payload_status": "maturity_upgrade_partial",
         "blocked_items": [
           {
             "label": "true_broker_readiness_gate",
             "payload_status": "blocked_for_real_broker",
             "hard_blocks": [
               "api",
-              "callback",
-              "ledger"
+              "callback"
             ]
           }
         ],
@@ -71,7 +69,7 @@
     "tri_lane_orchestration": {
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\tri_lane_orchestrator.json",
       "payload": {
-        "generated_at": "2026-04-15 20:49:24",
+        "generated_at": "2026-04-16 14:37:04",
         "status": "tri_lane_orchestration_ready",
         "lanes": {
           "LONG": {
@@ -106,7 +104,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 54
+              "event_count": 61
             },
             "reconciliation": {
               "status": "ready",
@@ -243,7 +241,7 @@
             "ledger": {
               "status": "ready",
               "path": "C:\\test\\test-2026-3-22OK\\runtime\\execution_ledger_summary.json",
-              "event_count": 54
+              "event_count": 61
             },
             "reconciliation": {
               "status": "ready",
@@ -365,5 +363,5 @@
       }
     }
   },
-  "status": "train_ready"
+  "status": "train_partial"
 }

@@ -25,7 +25,7 @@ from fts_utils import now_str
 try:
     from sklearn.gaussian_process import GaussianProcessRegressor
     from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     GaussianProcessRegressor = None
     Matern = WhiteKernel = ConstantKernel = None
 
@@ -52,7 +52,9 @@ def _vectorize(params: dict[str, Any], space: dict[str, list[Any]]) -> list[floa
         v = params.get(key, vals[0])
         try:
             idx = vals.index(v)
-        except Exception:
+        except ValueError:
+            idx = 0
+        except TypeError:
             idx = 0
         denom = max(len(vals) - 1, 1)
         vec.append(idx / denom)
@@ -70,7 +72,9 @@ def _mutate_near(best: dict[str, Any], space: dict[str, list[Any]]) -> dict[str,
         vals = space[key]
         try:
             idx = vals.index(out.get(key, vals[0]))
-        except Exception:
+        except ValueError:
+            idx = 0
+        except TypeError:
             idx = 0
         shift = random.choice([-1, 1])
         idx = max(0, min(len(vals) - 1, idx + shift))

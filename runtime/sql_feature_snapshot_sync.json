@@ -1,9 +1,9 @@
 {
   "status": "sql_feature_snapshot_sync_ready",
   "synced_rows": {
-    "feature_cross_section_snapshot": 1071,
+    "feature_cross_section_snapshot": 1072,
     "feature_event_calendar": 3207,
-    "live_feature_mount": 1
+    "live_feature_mount": 15
   },
   "notes": {}
 }

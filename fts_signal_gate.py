@@ -21,6 +21,32 @@ def _infer_direction(row: dict[str, Any]) -> str:
     return 'LONG'
 
 
+ENGINEERING_BLOCKER_PREFIXES = (
+    'decision_desk_unusable', 'execution_not_eligible', 'fallback_build_unusable',
+    'manual_review_required', 'desk_unusable', 'execution_ineligible',
+    'target_qty_missing_or_zero', 'reference_price_missing_or_zero',
+    'market_rule_blocked', 'entry_stage_missing', 'exit_without_active_position',
+)
+
+def _split_block_domain(blockers: list[str], warnings: list[str]) -> tuple[list[str], list[str], str]:
+    engineering=[]
+    strategy=[]
+    for item in [str(x) for x in blockers if str(x)]:
+        if item.startswith(ENGINEERING_BLOCKER_PREFIXES):
+            engineering.append(item)
+        else:
+            strategy.append(item)
+    primary='clean'
+    if engineering and strategy:
+        primary='mixed'
+    elif engineering:
+        primary='engineering'
+    elif strategy:
+        primary='strategy'
+    elif warnings:
+        primary='warning_only'
+    return strategy, engineering, primary
+
 def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dict[str, Any]:
     direction = _infer_direction(row)
     canonical = _canonical_signal_gate(row, model_decision=None, params=PARAMS)
@@ -109,6 +135,7 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
     warnings = list(dict.fromkeys([str(x) for x in warnings if str(x)]))
     diagnostics = list(dict.fromkeys([str(x) for x in diagnostics if str(x)]))
     passed = len(blockers) == 0
+    strategy_blockers, engineering_blockers, primary_block_domain = _split_block_domain(blockers, warnings)
 
     note_parts = []
     if blockers:
@@ -127,6 +154,9 @@ def evaluate_signal_gate(row: dict[str, Any], trigger_score: float = 2.0) -> dic
         'note': ' | '.join(note_parts) if note_parts else '通過訊號閘門',
         'core_driver': 'fts_execution_layer.signal_gate',
         'heuristic_role': 'diagnostic_only',
+        'strategy_blockers': strategy_blockers,
+        'engineering_blockers': engineering_blockers,
+        'primary_block_domain': primary_block_domain,
     }
 
 

@@ -135,13 +135,14 @@ class AutoPriceSnapshotBuilder:
             'generated_at': now_str(),
             'module_version': self.MODULE_VERSION,
             'required_ticker_count': len(required),
+            'required_tickers_preview': required[:50],
             'resolved_ticker_count': int(len(out)),
             'missing_ticker_count': int(len(missing)),
             'missing_tickers_preview': missing[:50],
             'used_existing_snapshot_rows': int(len(existing)),
             'online_built_count': int(online_built),
             'output_path': str(self.output_path),
-            'status': 'price_snapshot_ready' if rows else 'price_snapshot_missing',
+            'status': ('price_snapshot_ready' if rows and not missing else ('price_snapshot_partial' if rows else ('waiting_for_price_sources' if required else 'price_snapshot_missing'))),
         }
         self.runtime_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         if rows:

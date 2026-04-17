@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-04-15 20:48:55",
-  "module_version": "v86_feature_service_live_vetted_directional",
-  "selected_feature_count": 15,
-  "registry_row_count": 189,
+  "generated_at": "2026-04-16 14:36:17",
+  "module_version": "v102_feature_service_structural_bias_and_diagnostics",
+  "selected_feature_count": 18,
+  "registry_row_count": 191,
   "selected_features_present": true,
   "status": "training_feature_registry_ready",
   "feature_manifest_path": "C:\\test\\test-2026-3-22OK\\runtime\\training_feature_manifest.json"

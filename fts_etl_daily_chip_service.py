@@ -27,7 +27,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 DB_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=localhost;"
-    r"DATABASE=股票online;"
+    r"DATABASE=股票Online;"
     r"Trusted_Connection=yes;"
 )
 

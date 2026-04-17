@@ -3,9 +3,9 @@
   "selected_feature_count": 4,
   "selected_features_ready": false,
   "effective_directional_feature_counts": {
-    "LONG": 9,
-    "SHORT": 8,
-    "RANGE": 9
+    "LONG": 8,
+    "SHORT": 11,
+    "RANGE": 8
   },
   "selected_features_min_required": 6,
   "loaded_regimes": [
@@ -23,12 +23,120 @@
   "directional_require_independent_lane_models": true,
   "allow_shared_fallback_per_lane": false,
   "directional_feature_counts": {
-    "LONG": 9,
-    "SHORT": 8,
-    "RANGE": 9
+    "LONG": 8,
+    "SHORT": 11,
+    "RANGE": 8
   },
   "status": "model_layer_degraded",
   "allow_heuristic_model_fallback": false,
+  "artifact_root": "C:\\test\\test-2026-3-22OK\\models",
+  "promoted_model_guard": {
+    "generated_at": "2026-04-16 02:58:21",
+    "module_version": "v95_promoted_model_guard",
+    "live_context": false,
+    "live_only_use_promoted_model": true,
+    "block_live_on_unpromoted": true,
+    "allow_live_signal": false,
+    "promotion_ready": false,
+    "promoted_best_status_seen": false,
+    "best_version": "trained_20260411_003519",
+    "current_version": "pretrain_20260415_204857",
+    "active_deployment": null,
+    "best_entry": {
+      "version": "trained_20260411_003519",
+      "timestamp": "2026-04-11 00:35:19",
+      "files": [
+        "selected_features.pkl",
+        "model_趨勢多頭.pkl",
+        "model_區間盤整.pkl",
+        "model_趨勢空頭.pkl"
+      ],
+      "artifacts": [
+        {
+          "name": "selected_features.pkl",
+          "exists": true,
+          "size_bytes": 87,
+          "sha256": "dda3306aaadc375791b70f049df598382b7be31aefe2f658c7df407dec11bb1f"
+        },
+        {
+          "name": "model_趨勢多頭.pkl",
+          "exists": true,
+          "size_bytes": 2177417,
+          "sha256": "b01b4d40d796f03e5cdad7332cf8d9a9441f461759687600ccf5e0a8d9c4fb7f"
+        },
+        {
+          "name": "model_區間盤整.pkl",
+          "exists": true,
+          "size_bytes": 1293737,
+          "sha256": "d57b0ad9beb2f3de0c5d522fd237e1c211210affacaded65df8cd4823dea05aa"
+        },
+        {
+          "name": "model_趨勢空頭.pkl",
+          "exists": true,
+          "size_bytes": 1641577,
+          "sha256": "75f55363d1d3893b41e86cef85029e54c7baf5393d45dc1c72266b33c6d09d7d"
+        }
+      ],
+      "metrics": {
+        "overall_score": -27.5985,
+        "out_of_time": {
+          "hit_rate": 0.20862676056338028,
+          "avg_return": -0.3039169894366197,
+          "pred_accuracy": 0.4762323943661972,
+          "profit_factor": 0.7069591594503442,
+          "coverage": 0.5096830985915493
+        },
+        "walk_forward": {
+          "ret_mean": -0.06411746367239106,
+          "hit_rate_mean": 0.20026420079260238,
+          "pf_mean": 0.9692084997902753,
+          "coverage_mean": 0.4520475561426684,
+          "effective_splits": 5,
+          "score": -5.442537867448831
+        },
+        "feature_count": 4
+      },
+      "note": "防過擬合版訓練完成快照",
+      "status": "snapshot"
+    },
+    "best_dir": "C:\\test\\test-2026-3-22OK\\models\\best",
+    "best_dir_artifacts": [
+      {
+        "name": "selected_features.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\best\\selected_features.pkl",
+        "exists": true,
+        "size_bytes": 87
+      },
+      {
+        "name": "model_趨勢多頭.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\best\\model_趨勢多頭.pkl",
+        "exists": true,
+        "size_bytes": 2177417
+      },
+      {
+        "name": "model_區間盤整.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\best\\model_區間盤整.pkl",
+        "exists": true,
+        "size_bytes": 1293737
+      },
+      {
+        "name": "model_趨勢空頭.pkl",
+        "path": "C:\\test\\test-2026-3-22OK\\models\\best\\model_趨勢空頭.pkl",
+        "exists": true,
+        "size_bytes": 1641577
+      }
+    ],
+    "best_dir_ready": true,
+    "desired_artifact_root": "C:\\test\\test-2026-3-22OK\\models",
+    "can_bind_live_promoted_model": false,
+    "live_release_allow_live": false,
+    "live_readiness_live_ready": false,
+    "reasons": [
+      "model_live_signal_gate_blocked",
+      "promotion_ready_false"
+    ],
+    "status": "promoted_model_blocked"
+  },
   "exit_model_workflow_enabled": true,
   "exit_model_primary": true,
   "exit_model_fallback_to_hazard": false,

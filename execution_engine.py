@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+from dataclasses import asdict, is_dataclass
 from datetime import datetime
+from enum import Enum
 from typing import Optional, Any
 
 import pandas as pd
@@ -34,6 +36,26 @@ STOP_REPLACE_BLOTTER_PATH = os.path.join(LOG_DIR, "stop_replace_blotter.csv")
 STOP_TRIGGER_BLOTTER_PATH = os.path.join(LOG_DIR, "stop_trigger_blotter.csv")
 STATE_PATH = os.path.join(LOG_DIR, "execution_state.json")
 LEVEL3_RUNTIME_PATH = os.path.join('runtime', 'level3_execution_runtime.json')
+
+
+def _serialize_contract_value(value: Any) -> Any:
+    if isinstance(value, Enum):
+        return value.value
+    if is_dataclass(value):
+        return {k: _serialize_contract_value(v) for k, v in asdict(value).items()}
+    return value
+
+
+def _serialize_record_like(record: Any) -> dict[str, Any]:
+    if is_dataclass(record):
+        return {k: _serialize_contract_value(v) for k, v in asdict(record).items()}
+    if isinstance(record, dict):
+        return {str(k): _serialize_contract_value(v) for k, v in record.items()}
+    return {
+        name: _serialize_contract_value(getattr(record, name))
+        for name in dir(record)
+        if not name.startswith('_') and not callable(getattr(record, name, None))
+    }
 
 
 class ExecutionEngine:
@@ -602,56 +624,53 @@ class ExecutionEngine:
 
     @staticmethod
     def _order_record_to_row(record) -> dict:
-        if isinstance(record, dict):
-            side = record.get('side', '')
-            order_type = record.get('order_type', record.get('type', ''))
-            status = record.get('status', '')
-            return {
-                'order_id': record.get('order_id', record.get('client_order_id', record.get('broker_order_id', ''))),
-                'symbol': record.get('symbol', record.get('ticker', '')),
-                'side': getattr(side, 'value', side),
-                'quantity': int(record.get('quantity', record.get('qty', 0)) or 0),
-                'qty': int(record.get('qty', record.get('quantity', 0)) or 0),
-                'filled_qty': int(record.get('filled_qty', 0) or 0),
-                'remaining_qty': int(record.get('remaining_qty', 0) or 0),
-                'avg_fill_price': float(record.get('avg_fill_price', 0) or 0),
-                'order_type': getattr(order_type, 'value', order_type),
-                'limit_price': record.get('limit_price', record.get('submitted_price')),
-                'status': getattr(status, 'value', status),
-                'create_time': record.get('create_time', record.get('created_at', '')),
-                'update_time': record.get('update_time', record.get('updated_at', '')),
-                'updated_at': record.get('updated_at', record.get('update_time', '')),
-                'reject_reason': record.get('reject_reason', ''),
-                'strategy_name': record.get('strategy_name', ''),
-                'signal_id': record.get('signal_id', record.get('client_order_id', '')),
-                'client_order_id': record.get('client_order_id', ''),
-                'note': record.get('note', ''),
-            }
-        return {"order_id": record.order_id, "symbol": record.symbol, "side": record.side.value, "quantity": record.quantity, "qty": record.quantity, "filled_qty": record.filled_qty, "remaining_qty": record.remaining_qty, "avg_fill_price": record.avg_fill_price, "order_type": record.order_type.value, "limit_price": record.limit_price, "status": record.status.value, "create_time": record.create_time, "update_time": record.update_time, "updated_at": record.update_time, "reject_reason": record.reject_reason, "strategy_name": record.strategy_name, "signal_id": record.signal_id, "client_order_id": record.client_order_id, "note": record.note}
+        raw = _serialize_record_like(record)
+        side = raw.get('side', '')
+        order_type = raw.get('order_type', raw.get('type', ''))
+        status = raw.get('status', '')
+        return {
+            'order_id': raw.get('order_id', raw.get('client_order_id', raw.get('broker_order_id', ''))),
+            'symbol': raw.get('symbol', raw.get('ticker', '')),
+            'side': side,
+            'quantity': int(raw.get('quantity', raw.get('qty', 0)) or 0),
+            'qty': int(raw.get('qty', raw.get('quantity', 0)) or 0),
+            'filled_qty': int(raw.get('filled_qty', 0) or 0),
+            'remaining_qty': int(raw.get('remaining_qty', 0) or 0),
+            'avg_fill_price': float(raw.get('avg_fill_price', 0) or 0),
+            'order_type': order_type,
+            'limit_price': raw.get('limit_price', raw.get('submitted_price')),
+            'status': status,
+            'create_time': raw.get('create_time', raw.get('created_at', '')),
+            'update_time': raw.get('update_time', raw.get('updated_at', '')),
+            'updated_at': raw.get('updated_at', raw.get('update_time', '')),
+            'reject_reason': raw.get('reject_reason', ''),
+            'strategy_name': raw.get('strategy_name', ''),
+            'signal_id': raw.get('signal_id', raw.get('client_order_id', '')),
+            'client_order_id': raw.get('client_order_id', ''),
+            'note': raw.get('note', ''),
+        }
 
     @staticmethod
     def _fill_event_to_row(fill) -> dict:
-        if isinstance(fill, dict):
-            side = fill.get('side', '')
-            order_id = fill.get('order_id', fill.get('client_order_id', fill.get('broker_order_id', '')))
-            fill_time = fill.get('fill_time', fill.get('updated_at', datetime.now().isoformat(timespec='seconds')))
-            return {
-                'fill_id': fill.get('fill_id', f'{order_id}-{fill_time}'),
-                'order_id': order_id,
-                'symbol': fill.get('symbol', fill.get('ticker', '')),
-                'side': getattr(side, 'value', side),
-                'fill_qty': int(fill.get('fill_qty', fill.get('qty', 0)) or 0),
-                'fill_price': float(fill.get('fill_price', 0) or 0),
-                'fill_time': fill_time,
-                'updated_at': fill_time,
-                'commission': float(fill.get('commission', 0) or 0),
-                'tax': float(fill.get('tax', 0) or 0),
-                'slippage': float(fill.get('slippage', 0) or 0),
-                'strategy_name': fill.get('strategy_name', ''),
-                'signal_id': fill.get('signal_id', fill.get('client_order_id', '')),
-                'note': fill.get('note', ''),
-            }
-        return {"fill_id": f"{fill.order_id}-{fill.fill_time}", "order_id": fill.order_id, "symbol": fill.symbol, "side": fill.side.value, "fill_qty": fill.fill_qty, "fill_price": fill.fill_price, "fill_time": fill.fill_time, "updated_at": fill.fill_time, "commission": fill.commission, "tax": fill.tax, "slippage": fill.slippage, "strategy_name": fill.strategy_name, "signal_id": fill.signal_id, "note": fill.note}
+        raw = _serialize_record_like(fill)
+        order_id = raw.get('order_id', raw.get('client_order_id', raw.get('broker_order_id', '')))
+        fill_time = raw.get('fill_time', raw.get('updated_at', datetime.now().isoformat(timespec='seconds')))
+        return {
+            'fill_id': raw.get('fill_id', f'{order_id}-{fill_time}'),
+            'order_id': order_id,
+            'symbol': raw.get('symbol', raw.get('ticker', '')),
+            'side': raw.get('side', ''),
+            'fill_qty': int(raw.get('fill_qty', raw.get('qty', 0)) or 0),
+            'fill_price': float(raw.get('fill_price', 0) or 0),
+            'fill_time': fill_time,
+            'updated_at': fill_time,
+            'commission': float(raw.get('commission', 0) or 0),
+            'tax': float(raw.get('tax', 0) or 0),
+            'slippage': float(raw.get('slippage', 0) or 0),
+            'strategy_name': raw.get('strategy_name', ''),
+            'signal_id': raw.get('signal_id', raw.get('client_order_id', '')),
+            'note': raw.get('note', ''),
+        }
 
     @staticmethod
     def _safe_float(x, default: float = 0.0) -> float:

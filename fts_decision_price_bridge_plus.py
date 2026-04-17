@@ -56,7 +56,7 @@ class DecisionPriceBridgePlus:
         payload = {
             'generated_at': now_str(),
             'system_name': CONFIG.system_name,
-            'status': 'bridge_ready' if after_ok > 0 else 'waiting_for_price_sources',
+            'status': ('bridge_ready' if after_ok >= len(df) and len(df) > 0 else ('bridge_partial' if after_ok > 0 else 'waiting_for_price_sources')), 
             'price_snapshot_source': str(snapshot_path),
             'auto_price_status': snapshot_payload.get('status'),
             'rows_total': int(len(df)),

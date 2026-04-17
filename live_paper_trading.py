@@ -31,6 +31,7 @@ except Exception as exc:
     SQLServerExecutionLogger = None
 from fts_watchlist_service import LiveWatchlistLoader
 from fts_promoted_model_guard import PromotedModelGuard
+from fts_market_data_service import MarketDataService
 try:
     from fts_level_runtime import build_level3_services
     _LEVEL3_SERVICES, _LEVEL3_META = build_level3_services()
@@ -50,7 +51,7 @@ LINE_USER_ID = PARAMS.get("ALERT_LINE_USER_ID", "")
 DB_CONN_STR = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
     r"SERVER=localhost;"
-    r"DATABASE=股票online;"
+    r"DATABASE=股票Online;"
     r"Trusted_Connection=yes;"
 )
 
@@ -366,6 +367,12 @@ def _load_position_lifecycle_action_plan() -> dict[str, dict]:
 
 
 def _download_last_close(ticker: str) -> float:
+    try:
+        price, _source = MarketDataService().get_latest_reference_price(ticker, allow_online=True, period='10d')
+        if _safe_float(price, 0.0) > 0:
+            return _safe_float(price, 0.0)
+    except Exception as exc:
+        _diag('download_last_close_market_data_service', exc, severity='warning', fail_closed=False, context={'ticker_symbol': ticker})
     try:
         df = smart_download(ticker, period='10d')
         if df is not None and not df.empty and 'Close' in df.columns:
@@ -1077,6 +1084,8 @@ def _record_directional_execution_event(event_type: str, payload: dict):
 
 def _augment_directional_decisions(decisions: pd.DataFrame, allow_map: dict[str, set[str]]) -> pd.DataFrame:
     if not bool(PARAMS.get("DIRECTIONAL_DECISION_AUGMENT", True)):
+        return decisions
+    if _as_bool(PARAMS.get('EXECUTION_REQUIRE_CONTROL_TOWER_APPROVED_ORDERS', True)):
         return decisions
     try:
         _, payload = LiveWatchlistLoader().resolve_live_watchlist()

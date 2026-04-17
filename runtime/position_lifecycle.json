@@ -1,9 +1,11 @@
 {
-  "generated_at": "2026-04-15 20:49:22",
+  "generated_at": "2026-04-16 14:37:01",
   "module_version": "v92_position_lifecycle_closed_loop",
   "status": "no_active_positions",
   "message": "尚無 active_positions.csv；生命週期服務已就緒，等有持倉後會開始逐日記錄。",
   "action_plan_json": "C:\\test\\test-2026-3-22OK\\runtime\\position_lifecycle_action_plan.json",
+  "stop_replace_payload_csv": "C:\\test\\test-2026-3-22OK\\data\\stop_replace_payloads.csv",
+  "stop_replace_payload_runtime_csv": "C:\\test\\test-2026-3-22OK\\runtime\\stop_replace_payloads.csv",
   "positions": {},
   "wrong_exit_statistics": {
     "status": "no_history_yet",

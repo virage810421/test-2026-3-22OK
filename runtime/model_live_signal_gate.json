@@ -1,14 +1,13 @@
 {
-  "generated_at": "2026-04-15 20:49:23",
-  "module_version": "v96_model_live_signal_gate_with_remediation",
+  "generated_at": "2026-04-16 14:36:59",
   "allow_live_signal": false,
   "promotion_ready": false,
   "promoted_current_candidate": false,
   "block_live_on_unpromoted": true,
-  "reason": "promotion_floor_not_met",
+  "reason": "promotion_not_cleared",
   "promotion": {
     "status": "restored_pretrain",
-    "version": "pretrain_20260415_204857",
+    "version": "pretrain_20260416_143621",
     "reason": "promotion_floor_not_met",
     "failures": [
       "oot_profit_factor_below_floor",
@@ -17,26 +16,26 @@
     ]
   },
   "out_of_time": {
-    "hit_rate": 0.17252931323283083,
-    "avg_return": -0.0006918777219430485,
-    "pred_accuracy": 0.5678391959798995,
-    "profit_factor": 0.9019173852171419,
-    "coverage": 0.36515912897822445
+    "hit_rate": 0.18760469011725292,
+    "avg_return": -0.0004436499162479062,
+    "pred_accuracy": 0.5644891122278057,
+    "profit_factor": 0.9370463288572818,
+    "coverage": 0.3953098827470687
   },
   "walk_forward_summary": {
-    "ret_mean": -0.0020586633165829145,
-    "hit_rate_mean": 0.16532663316582913,
-    "pf_mean": 0.7808267770682483,
-    "coverage_mean": 0.37386934673366834,
+    "ret_mean": -0.001757732663316583,
+    "hit_rate_mean": 0.17035175879396985,
+    "pf_mean": 0.8615697887604096,
+    "coverage_mean": 0.39095477386934674,
     "effective_splits": 5,
-    "score": 0.5749604454099568
+    "score": 0.6857965224287512
   },
-  "overall_score": 2.5580227453511455,
+  "overall_score": 2.7687282384050205,
+  "status": "live_signal_blocked",
+  "module_version": "v94_model_live_signal_gate_builder",
   "remediation": [
-    "先重建乾淨訓練集，再提升樣本外 profit factor。",
-    "檢查 label / target-return 定義與特徵口徑，提升樣本外命中率。",
-    "縮小訓練池並重做 walk-forward，先確認平均報酬轉正。",
-    "目前候選模型未達 promotion floor；不要直接放寬 live gate。"
-  ],
-  "status": "live_signal_blocked"
+    "先重建乾淨訓練集，再提升 OOT profit factor。",
+    "優先改善樣本外 hit rate，再考慮放行。",
+    "先降低過擬合，改善 walk-forward 平均報酬。"
+  ]
 }

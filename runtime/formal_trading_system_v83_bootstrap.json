@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-04-15 13:34:26",
+  "generated_at": "2026-04-16 13:09:10",
   "mode": "bootstrap",
-  "module_version": "v20260414_prebroker95_closure_bootstrap_cli",
+  "module_version": "v20260416_bootstrap_full_repair",
   "steps": [
     {
       "status": "ok",
@@ -10,133 +10,146 @@
       "payload_status": "kill_switch_state_ready"
     },
     {
-      "status": "ok",
       "script": "fts_db_migrations.py",
-      "returncode": 0,
       "args": [
         "upgrade"
       ],
-      "stdout_tail": "    \"fundamentals_clean:synced_view:基本面清洗資料_中文欄位\",\n    \"integration_run_registry:synced_view:整合執行註冊表_中文欄位\",\n    \"live_feature_mount:synced_view:即時特徵掛載_中文欄位\",\n    \"monthly_revenue_simple:synced_view:月營收資料_中文欄位\",\n    \"price_liquidity_daily:synced_view:價格流動性日資料_中文欄位\",\n    \"revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位\",\n    \"risk_gateway_log:synced_view:風控閘門紀錄_中文欄位\",\n    \"schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位\",\n    \"stock_master:synced_view:股票主檔_中文欄位\",\n    \"system_guard_log:synced_view:系統防護紀錄_中文欄位\",\n    \"task_completion_registry:synced_view:任務完成註冊表_中文欄位\",\n    \"trade_history:synced_view:交易紀錄_中文欄位\",\n    \"training_feature_registry:synced_view:訓練特徵註冊表_中文欄位\",\n    \"training_universe_daily:synced_view:每日訓練股票池_中文欄位\",\n    \"基本面清洗:synced_view:基本面清洗_中文欄位\",\n    \"summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_db_migrations.py",
+      "stdout_tail": "單_中文欄位:dropped_before_sync\",\n    \"view:執行對帳報告_中文欄位:dropped_before_sync\",\n    \"view:執行帳戶快照_中文欄位:dropped_before_sync\",\n    \"view:執行成交明細_中文欄位:dropped_before_sync\",\n    \"view:執行持倉快照_中文欄位:dropped_before_sync\",\n    \"view:執行持倉批次_中文欄位:dropped_before_sync\",\n    \"view:基本面清洗資料_中文欄位:dropped_before_sync\",\n    \"view:帳戶資訊_中文欄位:dropped_before_sync\",\n    \"view:整合執行註冊表_中文欄位:dropped_before_sync\",\n    \"view:月營收資料_中文欄位:dropped_before_sync\",\n    \"view:每日訓練股票池_中文欄位:dropped_before_sync\",\n    \"view:法人籌碼日資料_中文欄位:dropped_before_sync\",\n    \"view:營收動能快照_中文欄位:dropped_before_sync\",\n    \"view:目前持倉_中文欄位:dropped_before_sync\",\n    \"view:稅務批次平倉明細_中文欄位:dropped_before_sync\",\n    \"view:稅務批次年度彙總_中文欄位:dropped_before_sync\",\n    \"view:籌碼因子日資料_中文欄位:dropped_before_sync\",\n    \"view:系統防護紀錄_中文欄位:dropped_before_sync\",\n    \"view:股票主檔_中文欄位:dropped_before_sync\",\n    \"view:訓練特徵註冊表_中文欄位:dropped_before_sync\",\n    \"view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync\",\n    \"view:風控閘門紀錄_中文欄位:dropped_before_sync\",\n    \"account_info:synced_view:帳戶資訊_中文欄位\",\n    \"active_positions:synced_view:目前持倉_中文欄位\",\n    \"daily_chip_data:synced_view:法人籌碼日資料_中文欄位\",\n    \"execution_account_snapshot:synced_view:執行帳戶快照_中文欄位\",\n    \"execution_broker_callbacks:synced_view:券商回報事件_中文欄位\",\n    \"execution_fills:synced_view:執行成交明細_中文欄位\",\n    \"execution_orders:synced_view:執行委託單_中文欄位\",\n    \"execution_position_lots:synced_view:執行持倉批次_中文欄位\",\n    \"execution_positions_snapshot:synced_view:執行持倉快照_中文欄位\",\n    \"execution_reconciliation_report:synced_view:執行對帳報告_中文欄位\",\n    \"execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位\",\n    \"execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位\",\n    \"fundamentals_clean:synced_view:基本面清洗資料_中文欄位\",\n    \"monthly_revenue_simple:synced_view:月營收資料_中文欄位\",\n    \"schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位\",\n    \"trade_history:synced_view:交易紀錄_中文欄位\",\n    \"summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "db_setup.py",
-      "returncode": 0,
       "args": [
         "--mode",
         "upgrade"
       ],
-      "stdout_tail": "    \"fundamentals_clean:synced_view:基本面清洗資料_中文欄位\",\n    \"integration_run_registry:synced_view:整合執行註冊表_中文欄位\",\n    \"live_feature_mount:synced_view:即時特徵掛載_中文欄位\",\n    \"monthly_revenue_simple:synced_view:月營收資料_中文欄位\",\n    \"price_liquidity_daily:synced_view:價格流動性日資料_中文欄位\",\n    \"revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位\",\n    \"risk_gateway_log:synced_view:風控閘門紀錄_中文欄位\",\n    \"schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位\",\n    \"stock_master:synced_view:股票主檔_中文欄位\",\n    \"system_guard_log:synced_view:系統防護紀錄_中文欄位\",\n    \"task_completion_registry:synced_view:任務完成註冊表_中文欄位\",\n    \"trade_history:synced_view:交易紀錄_中文欄位\",\n    \"training_feature_registry:synced_view:訓練特徵註冊表_中文欄位\",\n    \"training_universe_daily:synced_view:每日訓練股票池_中文欄位\",\n    \"基本面清洗:synced_view:基本面清洗_中文欄位\",\n    \"summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\db_setup.py",
+      "stdout_tail": "單_中文欄位:dropped_before_sync\",\n    \"view:執行對帳報告_中文欄位:dropped_before_sync\",\n    \"view:執行帳戶快照_中文欄位:dropped_before_sync\",\n    \"view:執行成交明細_中文欄位:dropped_before_sync\",\n    \"view:執行持倉快照_中文欄位:dropped_before_sync\",\n    \"view:執行持倉批次_中文欄位:dropped_before_sync\",\n    \"view:基本面清洗資料_中文欄位:dropped_before_sync\",\n    \"view:帳戶資訊_中文欄位:dropped_before_sync\",\n    \"view:整合執行註冊表_中文欄位:dropped_before_sync\",\n    \"view:月營收資料_中文欄位:dropped_before_sync\",\n    \"view:每日訓練股票池_中文欄位:dropped_before_sync\",\n    \"view:法人籌碼日資料_中文欄位:dropped_before_sync\",\n    \"view:營收動能快照_中文欄位:dropped_before_sync\",\n    \"view:目前持倉_中文欄位:dropped_before_sync\",\n    \"view:稅務批次平倉明細_中文欄位:dropped_before_sync\",\n    \"view:稅務批次年度彙總_中文欄位:dropped_before_sync\",\n    \"view:籌碼因子日資料_中文欄位:dropped_before_sync\",\n    \"view:系統防護紀錄_中文欄位:dropped_before_sync\",\n    \"view:股票主檔_中文欄位:dropped_before_sync\",\n    \"view:訓練特徵註冊表_中文欄位:dropped_before_sync\",\n    \"view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync\",\n    \"view:風控閘門紀錄_中文欄位:dropped_before_sync\",\n    \"account_info:synced_view:帳戶資訊_中文欄位\",\n    \"active_positions:synced_view:目前持倉_中文欄位\",\n    \"daily_chip_data:synced_view:法人籌碼日資料_中文欄位\",\n    \"execution_account_snapshot:synced_view:執行帳戶快照_中文欄位\",\n    \"execution_broker_callbacks:synced_view:券商回報事件_中文欄位\",\n    \"execution_fills:synced_view:執行成交明細_中文欄位\",\n    \"execution_orders:synced_view:執行委託單_中文欄位\",\n    \"execution_position_lots:synced_view:執行持倉批次_中文欄位\",\n    \"execution_positions_snapshot:synced_view:執行持倉快照_中文欄位\",\n    \"execution_reconciliation_report:synced_view:執行對帳報告_中文欄位\",\n    \"execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位\",\n    \"execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位\",\n    \"fundamentals_clean:synced_view:基本面清洗資料_中文欄位\",\n    \"monthly_revenue_simple:synced_view:月營收資料_中文欄位\",\n    \"schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位\",\n    \"trade_history:synced_view:交易紀錄_中文欄位\",\n    \"summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync\"\n  ],\n  \"sql_chinese_column_strategy\": \"non_destructive_views_keep_canonical_tables\",\n  \"status\": \"db_upgrade_ready\"\n}",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "db_setup_research_plus.py",
-      "returncode": 0,
       "args": [],
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\db_setup_research_plus.py",
       "stdout_tail": "✅ research plus tables ready",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "fts_admin_cli.py",
-      "returncode": 0,
       "args": [
         "full-market-percentile"
       ],
-      "stdout_tail": "[13:33:15] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
+      "stdout_tail": "[13:08:01] 📊 cross-sectional snapshot ready: C:\\test\\test-2026-3-22OK\\runtime\\cross_sectional_percentile_service.json",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "fts_admin_cli.py",
-      "returncode": 0,
       "args": [
         "event-calendar-build"
       ],
-      "stdout_tail": "[13:33:16] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
-      "stderr_tail": "C:\\test\\test-2026-3-22OK\\fts_event_calendar_service.py:142: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.\n  df = pd.concat([self._revenue_events(), self._earnings_events(), self._dividend_events()], ignore_index=True)"
-    },
-    {
       "status": "ok",
-      "script": "fts_admin_cli.py",
       "returncode": 0,
-      "args": [
-        "sync-feature-snapshots"
-      ],
-      "stdout_tail": "✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 1}, 'notes': {}}",
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
+      "stdout_tail": "[13:08:02] 🗓️ event calendar ready: C:\\test\\test-2026-3-22OK\\runtime\\event_calendar_service.json",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "fts_admin_cli.py",
+      "args": [
+        "sync-feature-snapshots"
+      ],
+      "status": "ok",
       "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
+      "stdout_tail": "✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1072, 'feature_event_calendar': 3207, 'live_feature_mount': 15}, 'notes': {}}",
+      "stderr_tail": ""
+    },
+    {
+      "script": "fts_admin_cli.py",
       "args": [
         "broker-contract-audit"
       ],
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
       "stdout_tail": "{\n  \"status\": \"paper_prelive_contract_smoke_ok\",\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\broker_contract_readiness.json\"\n}",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "fts_admin_cli.py",
-      "returncode": 0,
       "args": [
         "callback-ingest"
       ],
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
       "stdout_tail": "{\n  \"status\": \"callback_ingestion_ready\",\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\broker_callback_ingestion_summary.json\",\n  \"ingested_count\": 0\n}",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "fts_admin_cli.py",
-      "returncode": 0,
       "args": [
         "reconciliation-runtime"
       ],
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
       "stdout_tail": "{\n  \"status\": \"reconciliation_clean\",\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\prelive_reconciliation_runtime.json\",\n  \"issue_count\": 0\n}",
       "stderr_tail": ""
     },
     {
-      "status": "ok",
       "script": "fts_admin_cli.py",
-      "returncode": 0,
       "args": [
         "restart-recovery"
       ],
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
       "stdout_tail": "{\n  \"status\": \"restart_recovery_ready\",\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\restart_recovery_plan.json\",\n  \"blockers\": []\n}",
       "stderr_tail": ""
     },
     {
-      "status": "error",
       "script": "fts_admin_cli.py",
-      "returncode": 1,
       "args": [
         "prebroker-95-audit"
       ],
-      "stdout_tail": "{\n  \"status\": \"prebroker_95_not_ready\",\n  \"score\": 77.5,\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\prebroker_95_audit.json\",\n  \"blockers\": [\n    \"exit_ai_artifacts:exit_ai_model_unavailable\",\n    \"portfolio_backtest:portfolio_backtest_no_trades\"\n  ]\n}",
+      "status": "error",
+      "returncode": 1,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
+      "stdout_tail": "{\n  \"status\": \"prebroker_95_not_ready\",\n  \"score\": 89.2,\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\prebroker_95_audit.json\",\n  \"blockers\": [\n    \"portfolio_backtest:portfolio_backtest_no_trades\"\n  ]\n}",
       "stderr_tail": ""
     },
     {
-      "status": "error",
       "script": "fts_admin_cli.py",
-      "returncode": 2,
       "args": [
         "maturity-upgrade"
       ],
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
       "stdout_tail": "",
-      "stderr_tail": "usage: fts_admin_cli.py [-h]\n                        {backfill-resilience-audit,broker-contract-audit,callback-ingest,clean-old-doors,completion-audit,drop-readiness,event-calendar-build,exit-artifact-bootstrap,full-market-percentile,healthcheck,portfolio-backtest,prebroker-95-audit,reconciliation-runtime,restart-recovery,second-merge-cleanup,sync-feature-snapshots,training-stress-audit}\nfts_admin_cli.py: error: argument command: invalid choice: 'maturity-upgrade' (choose from backfill-resilience-audit, broker-contract-audit, callback-ingest, clean-old-doors, completion-audit, drop-readiness, event-calendar-build, exit-artifact-bootstrap, full-market-percentile, healthcheck, portfolio-backtest, prebroker-95-audit, reconciliation-runtime, restart-recovery, second-merge-cleanup, sync-feature-snapshots, training-stress-audit)"
+      "stderr_tail": ""
     },
     {
-      "status": "error",
       "script": "fts_admin_cli.py",
-      "returncode": 2,
       "args": [
         "patch-retirement-report"
       ],
-      "stdout_tail": "",
-      "stderr_tail": "usage: fts_admin_cli.py [-h]\n                        {backfill-resilience-audit,broker-contract-audit,callback-ingest,clean-old-doors,completion-audit,drop-readiness,event-calendar-build,exit-artifact-bootstrap,full-market-percentile,healthcheck,portfolio-backtest,prebroker-95-audit,reconciliation-runtime,restart-recovery,second-merge-cleanup,sync-feature-snapshots,training-stress-audit}\nfts_admin_cli.py: error: argument command: invalid choice: 'patch-retirement-report' (choose from backfill-resilience-audit, broker-contract-audit, callback-ingest, clean-old-doors, completion-audit, drop-readiness, event-calendar-build, exit-artifact-bootstrap, full-market-percentile, healthcheck, portfolio-backtest, prebroker-95-audit, reconciliation-runtime, restart-recovery, second-merge-cleanup, sync-feature-snapshots, training-stress-audit)"
+      "status": "ok",
+      "returncode": 0,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
+      "stdout_tail": "🧹 patch retirement report：runtime\\patch_retirement_report.json",
+      "stderr_tail": ""
     }
   ],
   "daily_status": "control_tower_ready",
@@ -146,5 +159,21 @@
     "real_broker_five_lights_green_count": 1,
     "executable_score": 4
   },
-  "status": "bootstrap_ready"
+  "hard_failed_count": 1,
+  "unsupported_step_count": 0,
+  "hard_failed_steps": [
+    {
+      "script": "fts_admin_cli.py",
+      "args": [
+        "prebroker-95-audit"
+      ],
+      "status": "error",
+      "returncode": 1,
+      "path": "C:\\test\\test-2026-3-22OK\\fts_admin_cli.py",
+      "stdout_tail": "{\n  \"status\": \"prebroker_95_not_ready\",\n  \"score\": 89.2,\n  \"path\": \"C:\\\\test\\\\test-2026-3-22OK\\\\runtime\\\\prebroker_95_audit.json\",\n  \"blockers\": [\n    \"portfolio_backtest:portfolio_backtest_no_trades\"\n  ]\n}",
+      "stderr_tail": ""
+    }
+  ],
+  "unsupported_steps": [],
+  "status": "bootstrap_partial"
 }

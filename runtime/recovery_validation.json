@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-04-15 16:24:03",
+  "generated_at": "2026-04-16 13:39:36",
   "system_name": "正式交易主控版_v83_official_main",
+  "snapshot_source": "restart_recovery_snapshot",
   "checks": [
     {
       "check": "state_file_exists",
@@ -9,8 +10,8 @@
     },
     {
       "check": "state_has_cash",
-      "value": 3000000.0,
-      "status": "ok"
+      "value": null,
+      "status": "fail"
     },
     {
       "check": "state_has_positions",
@@ -23,6 +24,11 @@
       "status": "ok"
     },
     {
+      "check": "broker_snapshot_available",
+      "value": false,
+      "status": "warn"
+    },
+    {
       "check": "retry_queue_total",
       "value": 0,
       "status": "ok"
@@ -33,7 +39,9 @@
       "status": "ok"
     }
   ],
-  "all_green": true,
-  "ready_for_resume": true,
-  "status": "validation_ready"
+  "blockers": [],
+  "all_green": false,
+  "ready_for_resume": false,
+  "ready_for_resume_new_orders": false,
+  "status": "validation_blocked"
 }

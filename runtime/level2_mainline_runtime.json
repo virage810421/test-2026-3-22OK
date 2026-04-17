@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-15 16:23:53",
+  "generated_at": "2026-04-16 13:39:31",
   "module_version": "v87_level2_service_detached",
   "status": "mainline_ready",
   "legacy_mode": "detached_from_level2",
@@ -20,7 +20,7 @@
       "mode": "inprocess",
       "returncode": null,
       "error": "",
-      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 16:23。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
+      "stdout_tail": "⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1059 筆 -> [dbo].[monthly_revenue_simple]\n🎉 月營收本地 CSV 已補進 SQL。\n========================================================\n🧩 開機先執行：季財報 CSV → SQL 本地補資料\n========================================================\n📂 季財報本地 CSV 已找到：C:\\test\\test-2026-3-22OK\\data\\market_financials_backup_fullspeed.csv\n🎉 季財報本地 CSV 已補進 SQL。共 2143 筆\n\n⚪ [日更雷達] 法人籌碼上網補抓：尚未到可抓取時間 17:30，目前 13:39。\n\n⚪ [月更雷達] 月營收上網補抓：日期條件未達成。\n\n⚪ [季更雷達] 季財報上網補抓：日期條件未達成。\n\n==========================================================\n🏁 全產線自動化排程檢測完畢！\n==========================================================",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -32,7 +32,7 @@
       "mode": "inprocess",
       "returncode": null,
       "error": "",
-      "stdout_tail": "==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-03\n✅ 月營收筆數：1052\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1052 筆\n⏳ 已寫入 200 筆...\n⏳ 已寫入 400 筆...\n⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1052 筆 -> [dbo].[monthly_revenue_simple]\n✅ 全部完成",
+      "stdout_tail": "==========================================================\n📥 啟動：股票主檔 + 產業名稱 + 最新月營收年增率 + 單表 SQL 寫入\n==========================================================\n✅ 先讀本地快取成功：stock_list_cache_listed.csv | 1075 筆\n⏳ 讀取官方 OpenAPI 月營收資料...\n✅ 最新可用月份：2026-03\n✅ 月營收筆數：1059\n💾 CSV 已輸出：monthly_revenue_simple.csv\n✅ 有效資料：1059 筆\n⏳ 已寫入 200 筆...\n⏳ 已寫入 400 筆...\n⏳ 已寫入 600 筆...\n⏳ 已寫入 800 筆...\n⏳ 已寫入 1000 筆...\n🎉 SQL 寫入完成：1059 筆 -> [dbo].[monthly_revenue_simple]\n✅ 全部完成",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false
@@ -44,7 +44,7 @@
       "mode": "inprocess",
       "returncode": null,
       "error": "",
-      "stdout_tail": "[16:23:53] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
+      "stdout_tail": "[13:39:31] 📚 fundamentals ETL 主線完成：C:\\test\\test-2026-3-22OK\\runtime\\fundamentals_etl_mainline.json",
       "stderr_tail": "",
       "seconds": 0.0,
       "skipped": false

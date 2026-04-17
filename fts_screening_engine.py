@@ -182,10 +182,13 @@ class ScreeningEngine:
         legacy_long = legacy_long_raw * legacy_influence
         legacy_short = legacy_short_raw * legacy_influence
         legacy_range = legacy_range_raw * legacy_influence
+        structural_long = self._clip01(_series('Structural_Long_Bias', 0.0))
+        structural_short = self._clip01(_series('Structural_Short_Bias', 0.0))
+        structural_range = self._clip01(_series('Structural_Range_Bias', 0.0))
 
-        long_pre = self._clip01(0.28 * bull_emerge + 0.18 * entry_readiness + 0.14 * ((score_gap_slope.clip(lower=0.0)) / 2.0) + 0.10 * ((volume_delta.clip(lower=0.0)) / 1.0) + 0.10 * ((foreign_delta.clip(lower=0.0) + total_delta.clip(lower=0.0)) / 2.0) + 0.10 * breakout_readiness + 0.10 * rs_mkt.clip(lower=0.0))
-        short_pre = self._clip01(0.28 * bear_emerge + 0.18 * entry_readiness + 0.14 * (((-score_gap_slope).clip(lower=0.0)) / 2.0) + 0.10 * (((-volume_delta).clip(lower=0.0)) / 1.0) + 0.10 * (((-foreign_delta).clip(lower=0.0) + (-total_delta).clip(lower=0.0)) / 2.0) + 0.10 * breakout_readiness + 0.10 * (1.0 - rs_mkt))
-        range_pre = self._clip01(0.30 * range_compression + 0.22 * range_conf + 0.15 * legacy_range + 0.10 * (1.0 - breakout_risk) + 0.08 * (1.0 - reversal_risk) + 0.08 * self._clip01(_series('Range_Bounce_Quality', 0.0)) + 0.07 * self._clip01(_series('Range_Fade_Quality', 0.0)))
+        long_pre = self._clip01(0.24 * bull_emerge + 0.16 * entry_readiness + 0.12 * ((score_gap_slope.clip(lower=0.0)) / 2.0) + 0.08 * ((volume_delta.clip(lower=0.0)) / 1.0) + 0.08 * ((foreign_delta.clip(lower=0.0) + total_delta.clip(lower=0.0)) / 2.0) + 0.08 * breakout_readiness + 0.08 * rs_mkt.clip(lower=0.0) + 0.16 * structural_long)
+        short_pre = self._clip01(0.24 * bear_emerge + 0.16 * entry_readiness + 0.12 * (((-score_gap_slope).clip(lower=0.0)) / 2.0) + 0.08 * (((-volume_delta).clip(lower=0.0)) / 1.0) + 0.08 * (((-foreign_delta).clip(lower=0.0) + (-total_delta).clip(lower=0.0)) / 2.0) + 0.08 * breakout_readiness + 0.08 * (1.0 - rs_mkt) + 0.16 * structural_short)
+        range_pre = self._clip01(0.25 * range_compression + 0.18 * range_conf + 0.12 * legacy_range + 0.09 * (1.0 - breakout_risk) + 0.06 * (1.0 - reversal_risk) + 0.07 * self._clip01(_series('Range_Bounce_Quality', 0.0)) + 0.07 * self._clip01(_series('Range_Fade_Quality', 0.0)) + 0.16 * structural_range)
 
         long_confirm = self._clip01(0.30 * long_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_long)
         short_confirm = self._clip01(0.30 * short_pre + 0.22 * trend_conf + 0.18 * ai_proba_legacy + 0.10 * (1.0 - breakout_risk) + 0.10 * (1.0 - reversal_risk) + 0.10 * legacy_short)

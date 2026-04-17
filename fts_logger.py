@@ -47,7 +47,7 @@ class SQLLogger:
         try:
             self._logger = SQLServerExecutionLogger(
                 server=getattr(self.db_config, 'server', 'localhost'),
-                database=getattr(self.db_config, 'database', '股票online'),
+                database=getattr(self.db_config, 'database', '股票Online'),
                 driver=getattr(self.db_config, 'driver', 'ODBC Driver 17 for SQL Server'),
                 trusted_connection=getattr(self.db_config, 'trusted_connection', 'yes'),
                 enabled=True,

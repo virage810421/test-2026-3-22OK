@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-04-15 20:49:23",
+  "generated_at": "2026-04-16 14:37:02",
   "module_version": "v92_execution_journal_closed_loop",
   "status": "execution_journal_ready",
   "source": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output_enriched.csv",
   "journal_jsonl": "C:\\test\\test-2026-3-22OK\\runtime\\execution_journal.jsonl",
-  "total_event_count_estimate": 3,
+  "total_event_count_estimate": 6,
   "new_event_count": 0,
   "new_order_candidate_count": 0,
   "new_blocked_count": 0,

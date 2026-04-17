@@ -16,12 +16,39 @@ from fts_prelive_runtime import PATHS, now_str, normalize_key, write_json
 from fts_repair_workflow_engine import RepairWorkflowEngine
 
 
+_STATUS_ALIASES = {
+    'NEW': 'NEW', 'CREATED': 'NEW', 'ACK': 'SUBMITTED', 'SUBMITTED': 'SUBMITTED',
+    'ACCEPTED': 'SUBMITTED', 'WORKING': 'SUBMITTED', 'PENDING_SUBMIT': 'PENDING_SUBMIT',
+    'PARTIAL': 'PARTIALLY_FILLED', 'PARTIALLY_FILLED': 'PARTIALLY_FILLED', 'PARTIALLYFILLED': 'PARTIALLY_FILLED',
+    'FILLED': 'FILLED', 'DONE': 'FILLED', 'CANCELLED': 'CANCELLED', 'CANCELED': 'CANCELLED',
+    'PENDING_CANCEL': 'PENDING_CANCEL', 'REJECTED': 'REJECTED', 'ERROR': 'REJECTED',
+}
+
+
 def _lane(row: dict[str, Any]) -> str:
     return normalize_key(row.get('direction_bucket') or row.get('approved_pool_type') or row.get('lane') or 'UNKNOWN') or 'UNKNOWN'
 
 
 def _key(row: dict[str, Any]) -> str:
     return str(row.get('order_id') or row.get('client_order_id') or row.get('broker_order_id') or '').strip()
+
+
+def _fill_key(row: dict[str, Any]) -> str:
+    return str(row.get('fill_id') or row.get('execution_id') or row.get('trade_id') or _key(row) or '').strip()
+
+
+def _status(row: dict[str, Any]) -> str:
+    raw = normalize_key(row.get('status') or row.get('order_status') or '')
+    return _STATUS_ALIASES.get(raw, raw or 'UNKNOWN')
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value in (None, ''):
+            return default
+        return float(value)
+    except Exception:
+        return default
 
 
 class ReconciliationEngine:
@@ -44,13 +71,62 @@ class ReconciliationEngine:
                 continue
         return 0
 
+    @staticmethod
+    def _filled_qty(row: dict[str, Any]) -> float:
+        for key in ('cum_filled_qty', 'filled_qty', 'quantity_filled', 'executed_qty', 'qty'):
+            value = row.get(key)
+            if value in (None, ''):
+                continue
+            try:
+                return float(value)
+            except Exception:
+                continue
+        return 0.0
+
+    def _aggregate_orders(self, rows: list[dict[str, Any]] | None) -> dict[str, dict[str, Any]]:
+        out: dict[str, dict[str, Any]] = {}
+        for row in rows or []:
+            if not isinstance(row, dict):
+                continue
+            key = _key(row)
+            if not key:
+                continue
+            base = out.get(key, {})
+            status = _status(row)
+            prev_status = _status(base)
+            if not base or status != prev_status:
+                base = {**base, **row, 'status': status}
+            else:
+                base = {**base, **row}
+            out[key] = base
+        return out
+
+    def _aggregate_fills(self, rows: list[dict[str, Any]] | None) -> tuple[dict[str, dict[str, Any]], dict[str, float]]:
+        by_fill: dict[str, dict[str, Any]] = {}
+        qty_by_order: dict[str, float] = defaultdict(float)
+        for row in rows or []:
+            if not isinstance(row, dict):
+                continue
+            fill_key = _fill_key(row)
+            order_key = _key(row)
+            if fill_key:
+                by_fill[fill_key] = {**by_fill.get(fill_key, {}), **row}
+            if order_key:
+                qty = self._filled_qty(row)
+                # cum-filled rows should not be double-counted; take max instead of sum when it looks cumulative.
+                if any(k in row for k in ('cum_filled_qty', 'executed_qty', 'quantity_filled')):
+                    qty_by_order[order_key] = max(qty_by_order.get(order_key, 0.0), qty)
+                else:
+                    qty_by_order[order_key] += qty
+        return by_fill, qty_by_order
+
     def reconcile(self, local_orders, broker_orders, local_fills, broker_fills, local_positions, broker_positions, local_cash, broker_cash):
-        local_map = {_key(r): r for r in (local_orders or []) if _key(r)}
-        broker_map = {_key(r): r for r in (broker_orders or []) if _key(r)}
-        local_fill_map = {_key(r): r for r in (local_fills or []) if _key(r)}
-        broker_fill_map = {_key(r): r for r in (broker_fills or []) if _key(r)}
-        local_pos_map = {self._position_key(r): r for r in (local_positions or []) if self._position_key(r)}
-        broker_pos_map = {self._position_key(r): r for r in (broker_positions or []) if self._position_key(r)}
+        local_map = self._aggregate_orders(local_orders)
+        broker_map = self._aggregate_orders(broker_orders)
+        local_fill_map, local_fill_qty = self._aggregate_fills(local_fills)
+        broker_fill_map, broker_fill_qty = self._aggregate_fills(broker_fills)
+        local_pos_map = {self._position_key(r): r for r in (local_positions or []) if isinstance(r, dict) and self._position_key(r)}
+        broker_pos_map = {self._position_key(r): r for r in (broker_positions or []) if isinstance(r, dict) and self._position_key(r)}
         issues = []
         lane_issue_breakdown = defaultdict(int)
 
@@ -70,18 +146,22 @@ class ReconciliationEngine:
                 add_issue('missing_at_broker', row)
                 continue
             broker_row = broker_map[oid]
-            if normalize_key(str(row.get('status', ''))) != normalize_key(str(broker_row.get('status', ''))):
-                add_issue('status_mismatch', row, local_status=row.get('status'), broker_status=broker_row.get('status'))
+            if _status(row) != _status(broker_row):
+                add_issue('status_mismatch', row, local_status=_status(row), broker_status=_status(broker_row))
+            local_qty = round(local_fill_qty.get(oid, 0.0), 6)
+            broker_qty = round(broker_fill_qty.get(oid, 0.0), 6)
+            if abs(local_qty - broker_qty) > 1e-6:
+                add_issue('fill_qty_mismatch', row, local_filled_qty=local_qty, broker_filled_qty=broker_qty)
 
         for oid, row in broker_map.items():
             if oid not in local_map:
                 add_issue('orphan_broker_order', row)
 
-        for oid, row in local_fill_map.items():
-            if oid not in broker_fill_map:
+        for fid, row in local_fill_map.items():
+            if fid not in broker_fill_map:
                 add_issue('missing_fill_at_broker', row)
-        for oid, row in broker_fill_map.items():
-            if oid not in local_fill_map:
+        for fid, row in broker_fill_map.items():
+            if fid not in local_fill_map:
                 add_issue('orphan_broker_fill', row)
 
         position_issues = []
@@ -100,15 +180,43 @@ class ReconciliationEngine:
                 position_issues.append({'ticker': key, 'type': 'orphan_broker_position', 'local_shares': 0, 'broker_shares': self._shares(row)})
                 add_issue('orphan_broker_position', row, ticker=key, local_shares=0, broker_shares=self._shares(row))
 
-        cash_diff = float((broker_cash or 0) - (local_cash or 0))
-        cash_ok = abs(cash_diff) <= 1e-6
+        local_cash_f = _safe_float(local_cash, 0.0)
+        broker_cash_f = _safe_float(broker_cash, 0.0)
+        cash_diff = float(broker_cash_f - local_cash_f)
+        cash_tolerance = 1.0
+        cash_ok = abs(cash_diff) <= cash_tolerance
+        if not cash_ok and (local_cash not in (None, '') or broker_cash not in (None, '')):
+            add_issue('cash_mismatch', None, local_cash=local_cash_f, broker_cash=broker_cash_f, cash_diff=cash_diff)
+
+        input_counts = {
+            'local_orders': len(local_map), 'broker_orders': len(broker_map),
+            'local_fills': len(local_fill_map), 'broker_fills': len(broker_fill_map),
+            'local_positions': len(local_pos_map), 'broker_positions': len(broker_pos_map),
+        }
+        local_side_complete = bool(local_map or local_fill_map or local_pos_map or local_cash not in (None, ''))
+        broker_side_complete = bool(broker_map or broker_fill_map or broker_pos_map or broker_cash not in (None, ''))
+        input_sufficiency = {
+            'local_side_complete': local_side_complete,
+            'broker_side_complete': broker_side_complete,
+            'has_order_views_both_sides': bool(local_map and broker_map),
+            'has_fill_views_both_sides': bool(local_fill_map and broker_fill_map),
+            'has_position_views_both_sides': bool(local_pos_map and broker_pos_map),
+            'has_cash_views_both_sides': local_cash not in (None, '') and broker_cash not in (None, ''),
+        }
+
         order_ok = not any(x['type'] in {'missing_at_broker', 'status_mismatch', 'orphan_broker_order'} for x in issues)
-        fill_ok = not any(x['type'] in {'missing_fill_at_broker', 'orphan_broker_fill'} for x in issues)
+        fill_ok = not any(x['type'] in {'missing_fill_at_broker', 'orphan_broker_fill', 'fill_qty_mismatch'} for x in issues)
         position_ok = len(position_issues) == 0
-        all_green = bool(order_ok and fill_ok and position_ok and cash_ok)
-        status = 'reconciled' if all_green else ('reconciliation_partial' if (local_map or broker_map or local_pos_map or broker_pos_map or local_fill_map or broker_fill_map) else 'reconciliation_waiting_for_inputs')
+        all_green = bool(order_ok and fill_ok and position_ok and cash_ok and local_side_complete and broker_side_complete)
+
+        if not local_side_complete or not broker_side_complete:
+            status = 'reconciliation_waiting_for_inputs'
+        else:
+            status = 'reconciled' if all_green else 'reconciliation_partial'
+
         payload = {
             'generated_at': now_str(),
+            'module_version': 'v20260416_reconciliation_local_side_closed_loop',
             'status': status,
             'all_green': all_green,
             'summary': {
@@ -118,25 +226,30 @@ class ReconciliationEngine:
                 'position_ok': position_ok,
                 'cash_ok': cash_ok,
             },
+            'input_counts': input_counts,
+            'input_sufficiency': input_sufficiency,
             'order_issue_count': sum(1 for x in issues if x['type'] in {'missing_at_broker', 'status_mismatch', 'orphan_broker_order'}),
-            'fill_issue_count': sum(1 for x in issues if x['type'] in {'missing_fill_at_broker', 'orphan_broker_fill'}),
+            'fill_issue_count': sum(1 for x in issues if x['type'] in {'missing_fill_at_broker', 'orphan_broker_fill', 'fill_qty_mismatch'}),
             'position_issue_count': len(position_issues),
             'issue_count': len(issues),
             'issues': issues,
             'position_issues': position_issues,
             'lane_issue_breakdown': dict(lane_issue_breakdown),
-            'cash_local': float(local_cash or 0),
-            'cash_broker': float(broker_cash or 0),
+            'cash_local': local_cash_f,
+            'cash_broker': broker_cash_f,
             'cash_diff': cash_diff,
+            'cash_tolerance': cash_tolerance,
             'directional_order_mix': dict((lane, c) for lane, c in lane_issue_breakdown.items()),
             'directional_fill_mix': {},
         }
-        repair_path, repair_payload = RepairWorkflowEngine().execute(payload)
+        if status != 'reconciliation_waiting_for_inputs':
+            repair_path, repair_payload = RepairWorkflowEngine().execute(payload)
+        else:
+            repair_path, repair_payload = str(PATHS.runtime_dir / 'repair_workflow_plan.json'), {'status': 'repair_skipped_waiting_for_inputs', 'executed_actions': []}
         payload['repair_workflow'] = {'path': repair_path, 'payload': repair_payload}
         payload['directional_repair_actions'] = repair_payload.get('executed_actions', [])
         write_json(self.path, payload)
         return str(self.path), payload
-
 
 # ==============================================================================
 # Merged from: fts_recovery_engine.py

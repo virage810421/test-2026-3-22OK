@@ -4,3 +4,2313 @@
 [19:48:19] ========================================================================
 [20:49:24] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
 [20:49:24] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[02:58:33] ========================================================================
+[02:58:33] 🚀 啟動 正式交易主控版_v83_official_main
+[02:58:33] 🧭 模式：BOOTSTRAP
+[02:58:33] ========================================================================
+[03:02:48] ========================================================================
+[03:02:48] 🚀 啟動 正式交易主控版_v83_official_main
+[03:02:48] 🧭 模式：BOOTSTRAP
+[03:02:48] ========================================================================
+[03:02:52] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[03:02:52] [03:02:52] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 03:02:52",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "chip_factors_daily:synced_view:籌碼因子日資料_中文欄位",
+    "company_quality_snapshot:synced_view:公司品質快照_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "feature_cross_section_snapshot:synced_view:全市場百分位快照_中文欄位",
+    "feature_event_calendar:synced_view:事件日曆_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "integration_run_registry:synced_view:整合執行註冊表_中文欄位",
+    "live_feature_mount:synced_view:即時特徵掛載_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "price_liquidity_daily:synced_view:價格流動性日資料_中文欄位",
+    "revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位",
+    "risk_gateway_log:synced_view:風控閘門紀錄_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "stock_master:synced_view:股票主檔_中文欄位",
+    "system_guard_log:synced_view:系統防護紀錄_中文欄位",
+    "task_completion_registry:synced_view:任務完成註冊表_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "training_feature_registry:synced_view:訓練特徵註冊表_中文欄位",
+    "training_universe_daily:synced_view:每日訓練股票池_中文欄位",
+    "基本面清洗:synced_view:基本面清洗_中文欄位",
+    "summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[03:02:53] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[03:02:53] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[03:02:53] [03:02:53] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[03:02:53] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 03:02:53",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "chip_factors_daily:synced_view:籌碼因子日資料_中文欄位",
+    "company_quality_snapshot:synced_view:公司品質快照_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "feature_cross_section_snapshot:synced_view:全市場百分位快照_中文欄位",
+    "feature_event_calendar:synced_view:事件日曆_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "integration_run_registry:synced_view:整合執行註冊表_中文欄位",
+    "live_feature_mount:synced_view:即時特徵掛載_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "price_liquidity_daily:synced_view:價格流動性日資料_中文欄位",
+    "revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位",
+    "risk_gateway_log:synced_view:風控閘門紀錄_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "stock_master:synced_view:股票主檔_中文欄位",
+    "system_guard_log:synced_view:系統防護紀錄_中文欄位",
+    "task_completion_registry:synced_view:任務完成註冊表_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "training_feature_registry:synced_view:訓練特徵註冊表_中文欄位",
+    "training_universe_daily:synced_view:每日訓練股票池_中文欄位",
+    "基本面清洗:synced_view:基本面清洗_中文欄位",
+    "summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[03:02:53] ✅ research plus tables ready
+[03:02:58] Traceback (most recent call last):
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 207, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 203, in main
+    return int(_COMMANDS[command](passthrough) or 0)
+               ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 85, in run_full_market_percentile
+    CrossSectionalPercentileService().build_snapshot()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\test\test-2026-3-22OK\fts_cross_sectional_percentile_service.py", line 115, in build_snapshot
+    enriched = fs.enrich_from_history(hist)
+  File "C:\test\test-2026-3-22OK\fts_feature_service.py", line 674, in enrich_from_history
+    out = self._compute_structural_bias_frame(out)
+  File "C:\test\test-2026-3-22OK\fts_feature_service.py", line 222, in _compute_structural_bias_frame
+    adx14 = pd.to_numeric(out.get('ADX14', out.get('ADX', 0.0)), errors='coerce').fillna(0.0)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'float' object has no attribute 'fillna'
+[03:02:59] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[03:02:59] [03:02:59] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[03:03:05] ✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 15}, 'notes': {}}
+[03:03:05] {
+  "status": "paper_prelive_contract_smoke_ok",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_contract_readiness.json"
+}
+[03:03:06] {
+  "status": "callback_ingestion_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_callback_ingestion_summary.json",
+  "ingested_count": 0
+}
+[03:03:06] {
+  "status": "reconciliation_clean",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prelive_reconciliation_runtime.json",
+  "issue_count": 0
+}
+[03:03:07] {
+  "status": "restart_recovery_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+  "blockers": []
+}
+[03:03:07] {
+  "status": "prebroker_95_not_ready",
+  "score": 89.2,
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prebroker_95_audit.json",
+  "blockers": [
+    "portfolio_backtest:portfolio_backtest_no_trades"
+  ]
+}
+[03:03:08] usage: fts_admin_cli.py [-h]
+                        {backfill-resilience-audit,broker-contract-audit,callback-ingest,clean-old-doors,completion-audit,drop-readiness,event-calendar-build,exit-artifact-bootstrap,full-market-percentile,healthcheck,portfolio-backtest,prebroker-95-audit,reconciliation-runtime,restart-recovery,second-merge-cleanup,sync-feature-snapshots,training-stress-audit}
+fts_admin_cli.py: error: argument command: invalid choice: 'maturity-upgrade' (choose from backfill-resilience-audit, broker-contract-audit, callback-ingest, clean-old-doors, completion-audit, drop-readiness, event-calendar-build, exit-artifact-bootstrap, full-market-percentile, healthcheck, portfolio-backtest, prebroker-95-audit, reconciliation-runtime, restart-recovery, second-merge-cleanup, sync-feature-snapshots, training-stress-audit)
+[03:03:08] usage: fts_admin_cli.py [-h]
+                        {backfill-resilience-audit,broker-contract-audit,callback-ingest,clean-old-doors,completion-audit,drop-readiness,event-calendar-build,exit-artifact-bootstrap,full-market-percentile,healthcheck,portfolio-backtest,prebroker-95-audit,reconciliation-runtime,restart-recovery,second-merge-cleanup,sync-feature-snapshots,training-stress-audit}
+fts_admin_cli.py: error: argument command: invalid choice: 'patch-retirement-report' (choose from backfill-resilience-audit, broker-contract-audit, callback-ingest, clean-old-doors, completion-audit, drop-readiness, event-calendar-build, exit-artifact-bootstrap, full-market-percentile, healthcheck, portfolio-backtest, prebroker-95-audit, reconciliation-runtime, restart-recovery, second-merge-cleanup, sync-feature-snapshots, training-stress-audit)
+[03:03:08] ========================================================================
+[03:03:08] 🚀 啟動 正式交易主控版_v83_official_main
+[03:03:08] 🧭 模式：DAILY
+[03:03:08] ========================================================================
+[03:03:52] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[03:03:54] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[03:04:03] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[03:04:03] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[03:04:03] ❌ control tower failure: name '_run_maturity_upgrade_suite' is not defined
+[10:09:19] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[10:09:36] ========================================================================
+[10:09:36] 🚀 啟動 正式交易主控版_v83_official_main
+[10:09:36] 🧭 模式：BOOTSTRAP
+[10:09:36] ========================================================================
+[10:09:41] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[10:09:41] [10:09:41] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 10:09:41",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[10:09:41] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[10:09:42] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[10:09:42] [10:09:41] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[10:09:42] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 10:09:42",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[10:09:42] ✅ research plus tables ready
+[10:09:42] ❌ control tower failure: name '_call_admin_command' is not defined
+[10:43:44] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[10:43:47] ========================================================================
+[10:43:47] 🚀 啟動 正式交易主控版_v83_official_main
+[10:43:47] 🧭 模式：BOOTSTRAP
+[10:43:47] ========================================================================
+[10:43:49] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[10:43:49] [10:43:49] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 10:43:49",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[10:43:49] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[10:43:49] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[10:43:50] [10:43:49] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[10:43:49] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 10:43:49",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[10:43:50] ✅ research plus tables ready
+[10:43:50] ❌ control tower failure: name '_call_admin_command' is not defined
+[11:05:41] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:05:43] ========================================================================
+[11:05:43] 🚀 啟動 正式交易主控版_v83_official_main
+[11:05:43] 🧭 模式：BOOTSTRAP
+[11:05:43] ========================================================================
+[11:05:46] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:05:46] [11:05:46] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:05:46",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:05:47] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:05:47] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:05:47] [11:05:47] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:05:47] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:05:47",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:05:47] ✅ research plus tables ready
+[11:05:47] ❌ control tower failure: Unsupported admin command: full-market-percentile
+[11:13:30] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:13:32] ========================================================================
+[11:13:32] 🚀 啟動 正式交易主控版_v83_official_main
+[11:13:32] 🧭 模式：BOOTSTRAP
+[11:13:32] ========================================================================
+[11:13:34] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:13:34] [11:13:34] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:13:34",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:13:35] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:13:35] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:13:35] [11:13:35] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:13:35] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:13:35",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:13:35] ✅ research plus tables ready
+[11:13:36] Traceback (most recent call last):
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 240, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 236, in main
+    return int(_COMMANDS[command](passthrough) or 0)
+               ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 85, in run_full_market_percentile
+    CrossSectionalPercentileService().build_snapshot()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\test\test-2026-3-22OK\fts_cross_sectional_percentile_service.py", line 115, in build_snapshot
+    enriched = fs.enrich_from_history(hist)
+               ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'FeatureService' object has no attribute 'enrich_from_history'
+[11:13:37] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:13:37] [11:13:37] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:13:41] ✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 15}, 'notes': {}}
+[11:13:41] {
+  "status": "paper_prelive_contract_smoke_ok",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_contract_readiness.json"
+}
+[11:13:42] {
+  "status": "callback_ingestion_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_callback_ingestion_summary.json",
+  "ingested_count": 0
+}
+[11:13:43] {
+  "status": "reconciliation_clean",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prelive_reconciliation_runtime.json",
+  "issue_count": 0
+}
+[11:13:43] {
+  "status": "restart_recovery_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+  "blockers": []
+}
+[11:13:44] {
+  "status": "prebroker_95_not_ready",
+  "score": 89.2,
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prebroker_95_audit.json",
+  "blockers": [
+    "portfolio_backtest:portfolio_backtest_no_trades"
+  ]
+}
+[11:13:46] 🧹 patch retirement report：runtime\patch_retirement_report.json
+[11:13:46] ========================================================================
+[11:13:46] 🚀 啟動 正式交易主控版_v83_official_main
+[11:13:46] 🧭 模式：DAILY
+[11:13:46] ========================================================================
+[11:14:25] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[11:14:29] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[11:14:38] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[11:14:38] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[11:14:38] ❌ control tower failure: name '_run_maturity_upgrade_suite' is not defined
+[11:16:02] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:16:04] ========================================================================
+[11:16:04] 🚀 啟動 正式交易主控版_v83_official_main
+[11:16:04] 🧭 模式：BOOTSTRAP
+[11:16:04] ========================================================================
+[11:16:06] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:16:06] [11:16:06] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:16:06",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:16:06] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:16:07] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:16:07] [11:16:06] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:16:07] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:16:07",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:16:07] ✅ research plus tables ready
+[11:16:08] Traceback (most recent call last):
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 240, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 236, in main
+    return int(_COMMANDS[command](passthrough) or 0)
+               ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\test\test-2026-3-22OK\fts_admin_cli.py", line 85, in run_full_market_percentile
+    CrossSectionalPercentileService().build_snapshot()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\test\test-2026-3-22OK\fts_cross_sectional_percentile_service.py", line 115, in build_snapshot
+    enriched = fs.enrich_from_history(hist)
+               ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'FeatureService' object has no attribute 'enrich_from_history'
+[11:16:08] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:16:08] [11:16:08] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:16:13] ✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1071, 'feature_event_calendar': 3207, 'live_feature_mount': 15}, 'notes': {}}
+[11:16:13] {
+  "status": "paper_prelive_contract_smoke_ok",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_contract_readiness.json"
+}
+[11:16:14] {
+  "status": "callback_ingestion_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_callback_ingestion_summary.json",
+  "ingested_count": 0
+}
+[11:16:14] {
+  "status": "reconciliation_clean",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prelive_reconciliation_runtime.json",
+  "issue_count": 0
+}
+[11:16:15] {
+  "status": "restart_recovery_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+  "blockers": []
+}
+[11:16:15] {
+  "status": "prebroker_95_not_ready",
+  "score": 89.2,
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prebroker_95_audit.json",
+  "blockers": [
+    "portfolio_backtest:portfolio_backtest_no_trades"
+  ]
+}
+[11:16:17] 🧹 patch retirement report：runtime\patch_retirement_report.json
+[11:16:17] ========================================================================
+[11:16:17] 🚀 啟動 正式交易主控版_v83_official_main
+[11:16:17] 🧭 模式：DAILY
+[11:16:17] ========================================================================
+[11:16:57] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[11:16:59] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[11:17:08] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[11:17:08] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[11:17:08] ❌ control tower failure: name '_run_maturity_upgrade_suite' is not defined
+[11:24:47] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:24:49] ========================================================================
+[11:24:49] 🚀 啟動 正式交易主控版_v83_official_main
+[11:24:49] 🧭 模式：BOOTSTRAP
+[11:24:49] ========================================================================
+[11:24:51] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:24:51] [11:24:51] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:24:51",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "chip_factors_daily:synced_view:籌碼因子日資料_中文欄位",
+    "company_quality_snapshot:synced_view:公司品質快照_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "feature_cross_section_snapshot:synced_view:全市場百分位快照_中文欄位",
+    "feature_event_calendar:synced_view:事件日曆_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "integration_run_registry:synced_view:整合執行註冊表_中文欄位",
+    "live_feature_mount:synced_view:即時特徵掛載_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "price_liquidity_daily:synced_view:價格流動性日資料_中文欄位",
+    "revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位",
+    "risk_gateway_log:synced_view:風控閘門紀錄_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "stock_master:synced_view:股票主檔_中文欄位",
+    "system_guard_log:synced_view:系統防護紀錄_中文欄位",
+    "task_completion_registry:synced_view:任務完成註冊表_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "training_feature_registry:synced_view:訓練特徵註冊表_中文欄位",
+    "training_universe_daily:synced_view:每日訓練股票池_中文欄位",
+    "基本面清洗:synced_view:基本面清洗_中文欄位",
+    "summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:24:52] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:24:54] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[11:24:54] [11:24:52] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[11:24:54] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 11:24:54",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "chip_factors_daily:synced_view:籌碼因子日資料_中文欄位",
+    "company_quality_snapshot:synced_view:公司品質快照_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "feature_cross_section_snapshot:synced_view:全市場百分位快照_中文欄位",
+    "feature_event_calendar:synced_view:事件日曆_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "integration_run_registry:synced_view:整合執行註冊表_中文欄位",
+    "live_feature_mount:synced_view:即時特徵掛載_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "price_liquidity_daily:synced_view:價格流動性日資料_中文欄位",
+    "revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位",
+    "risk_gateway_log:synced_view:風控閘門紀錄_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "stock_master:synced_view:股票主檔_中文欄位",
+    "system_guard_log:synced_view:系統防護紀錄_中文欄位",
+    "task_completion_registry:synced_view:任務完成註冊表_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "training_feature_registry:synced_view:訓練特徵註冊表_中文欄位",
+    "training_universe_daily:synced_view:每日訓練股票池_中文欄位",
+    "基本面清洗:synced_view:基本面清洗_中文欄位",
+    "summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[11:24:54] ✅ research plus tables ready
+[11:48:32] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[11:48:32] [11:48:32] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[11:48:33] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:48:33] [11:48:33] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[11:48:38] ✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1072, 'feature_event_calendar': 3207, 'live_feature_mount': 15}, 'notes': {}}
+[11:48:38] {
+  "status": "paper_prelive_contract_smoke_ok",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_contract_readiness.json"
+}
+[11:48:39] {
+  "status": "callback_ingestion_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_callback_ingestion_summary.json",
+  "ingested_count": 0
+}
+[11:48:39] {
+  "status": "reconciliation_clean",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prelive_reconciliation_runtime.json",
+  "issue_count": 0
+}
+[11:48:40] {
+  "status": "restart_recovery_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+  "blockers": []
+}
+[11:48:41] {
+  "status": "prebroker_95_not_ready",
+  "score": 89.2,
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prebroker_95_audit.json",
+  "blockers": [
+    "portfolio_backtest:portfolio_backtest_no_trades"
+  ]
+}
+[11:48:43] 🧹 patch retirement report：runtime\patch_retirement_report.json
+[11:48:43] ========================================================================
+[11:48:43] 🚀 啟動 正式交易主控版_v83_official_main
+[11:48:43] 🧭 模式：DAILY
+[11:48:43] ========================================================================
+[11:49:32] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[11:49:35] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[11:49:44] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[11:49:44] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[11:49:49] 🧭 decision desk builder ready: C:\test\test-2026-3-22OK\runtime\decision_desk_builder.json
+[11:49:49] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[11:49:50] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[11:49:50] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[11:49:50] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[11:49:50] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[11:49:50] ❌ control tower failure: name '_collect_reconciliation_inputs' is not defined
+[12:03:18] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[12:03:20] ========================================================================
+[12:03:20] 🚀 啟動 正式交易主控版_v83_official_main
+[12:03:20] 🧭 模式：BOOTSTRAP
+[12:03:20] ========================================================================
+[12:03:23] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[12:03:23] [12:03:23] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 12:03:23",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "chip_factors_daily:synced_view:籌碼因子日資料_中文欄位",
+    "company_quality_snapshot:synced_view:公司品質快照_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "feature_cross_section_snapshot:synced_view:全市場百分位快照_中文欄位",
+    "feature_event_calendar:synced_view:事件日曆_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "integration_run_registry:synced_view:整合執行註冊表_中文欄位",
+    "live_feature_mount:synced_view:即時特徵掛載_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "price_liquidity_daily:synced_view:價格流動性日資料_中文欄位",
+    "revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位",
+    "risk_gateway_log:synced_view:風控閘門紀錄_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "stock_master:synced_view:股票主檔_中文欄位",
+    "system_guard_log:synced_view:系統防護紀錄_中文欄位",
+    "task_completion_registry:synced_view:任務完成註冊表_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "training_feature_registry:synced_view:訓練特徵註冊表_中文欄位",
+    "training_universe_daily:synced_view:每日訓練股票池_中文欄位",
+    "基本面清洗:synced_view:基本面清洗_中文欄位",
+    "summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[12:03:23] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[12:03:24] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[12:03:24] [12:03:23] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[12:03:24] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 12:03:24",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "chip_factors_daily:synced_view:籌碼因子日資料_中文欄位",
+    "company_quality_snapshot:synced_view:公司品質快照_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "feature_cross_section_snapshot:synced_view:全市場百分位快照_中文欄位",
+    "feature_event_calendar:synced_view:事件日曆_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "integration_run_registry:synced_view:整合執行註冊表_中文欄位",
+    "live_feature_mount:synced_view:即時特徵掛載_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "price_liquidity_daily:synced_view:價格流動性日資料_中文欄位",
+    "revenue_momentum_snapshot:synced_view:營收動能快照_中文欄位",
+    "risk_gateway_log:synced_view:風控閘門紀錄_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "stock_master:synced_view:股票主檔_中文欄位",
+    "system_guard_log:synced_view:系統防護紀錄_中文欄位",
+    "task_completion_registry:synced_view:任務完成註冊表_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "training_feature_registry:synced_view:訓練特徵註冊表_中文欄位",
+    "training_universe_daily:synced_view:每日訓練股票池_中文欄位",
+    "基本面清洗:synced_view:基本面清洗_中文欄位",
+    "summary:tables=31:views_synced=31:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[12:03:24] ✅ research plus tables ready
+[12:26:19] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[12:26:19] [12:26:19] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[12:26:20] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:26:20] [12:26:20] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[12:26:25] ✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1072, 'feature_event_calendar': 3207, 'live_feature_mount': 15}, 'notes': {}}
+[12:26:26] {
+  "status": "paper_prelive_contract_smoke_ok",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_contract_readiness.json"
+}
+[12:26:26] {
+  "status": "callback_ingestion_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_callback_ingestion_summary.json",
+  "ingested_count": 0
+}
+[12:26:27] {
+  "status": "reconciliation_clean",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prelive_reconciliation_runtime.json",
+  "issue_count": 0
+}
+[12:26:27] {
+  "status": "restart_recovery_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+  "blockers": []
+}
+[12:26:28] {
+  "status": "prebroker_95_not_ready",
+  "score": 89.2,
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prebroker_95_audit.json",
+  "blockers": [
+    "portfolio_backtest:portfolio_backtest_no_trades"
+  ]
+}
+[12:26:30] 🧹 patch retirement report：runtime\patch_retirement_report.json
+[12:26:30] ========================================================================
+[12:26:30] 🚀 啟動 正式交易主控版_v83_official_main
+[12:26:30] 🧭 模式：DAILY
+[12:26:30] ========================================================================
+[12:27:19] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[12:27:21] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[12:27:29] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[12:27:29] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[12:27:33] 🧭 decision desk builder ready: C:\test\test-2026-3-22OK\runtime\decision_desk_builder.json
+[12:27:34] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[12:27:34] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[12:27:34] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[12:27:34] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[12:27:34] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[12:27:34] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[12:52:23] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[12:52:26] ========================================================================
+[12:52:26] 🚀 啟動 正式交易主控版_v83_official_main
+[12:52:26] 🧭 模式：BOOTSTRAP
+[12:52:26] ========================================================================
+[12:52:28] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[12:52:28] [12:52:28] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 12:52:28",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[12:52:28] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[12:52:28] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+[12:52:29] [12:52:28] 🧱 db_setup wrapper：委派 fts_db_migrations.py upgrade
+[12:52:28] 🗃️ db migration status：C:\test\test-2026-3-22OK\runtime\db_migration_status.json
+{
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\db_migration_status.json",
+  "generated_at": "2026-04-16 12:52:28",
+  "module_version": "v20260415_v5_autosync_canonical_fundamentals_views",
+  "schema_version": "20260414_schema_single_source_execution_ticker_symbol_v4_chinese_column_views",
+  "schema_source_of_truth": "fts_db_schema.py",
+  "migration_entrypoint": "fts_db_migrations.py",
+  "execution_ticker_column": "ticker_symbol",
+  "created_tables": [],
+  "altered_columns": [],
+  "normalized_columns": [
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready",
+    "execution_orders:ticker_symbol_ready",
+    "execution_fills:ticker_symbol_ready",
+    "execution_positions_snapshot:ticker_symbol_ready",
+    "execution_position_lots:ticker_symbol_ready",
+    "execution_broker_callbacks:ticker_symbol_ready"
+  ],
+  "legacy_symbol_alias_columns": [
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "active_positions:backfilled_ticker_symbol_from_Ticker_SYMBOL",
+    "trade_history:backfilled_ticker_symbol_from_Ticker_SYMBOL"
+  ],
+  "legacy_tables_keep_Ticker_SYMBOL": [
+    "active_positions",
+    "trade_history"
+  ],
+  "canonical_table_consolidation": [
+    {
+      "canonical_table": "fundamentals_clean",
+      "action": "canonical_ready_no_alias_found"
+    }
+  ],
+  "canonical_fundamentals_table": "fundamentals_clean",
+  "legacy_fundamentals_alias_tables": [
+    "damendals_clean",
+    "damental_clean",
+    "fundamental_clean",
+    "fundamental_data",
+    "fundamentals_data"
+  ],
+  "chinese_column_views": [
+    "view:事件日曆_中文欄位:dropped_before_sync",
+    "view:交易紀錄_中文欄位:dropped_before_sync",
+    "view:任務完成註冊表_中文欄位:dropped_before_sync",
+    "view:價格流動性日資料_中文欄位:dropped_before_sync",
+    "view:全市場百分位快照_中文欄位:dropped_before_sync",
+    "view:公司品質快照_中文欄位:dropped_before_sync",
+    "view:券商回報事件_中文欄位:dropped_before_sync",
+    "view:即時特徵掛載_中文欄位:dropped_before_sync",
+    "view:執行委託單_中文欄位:dropped_before_sync",
+    "view:執行對帳報告_中文欄位:dropped_before_sync",
+    "view:執行帳戶快照_中文欄位:dropped_before_sync",
+    "view:執行成交明細_中文欄位:dropped_before_sync",
+    "view:執行持倉快照_中文欄位:dropped_before_sync",
+    "view:執行持倉批次_中文欄位:dropped_before_sync",
+    "view:基本面清洗資料_中文欄位:dropped_before_sync",
+    "view:帳戶資訊_中文欄位:dropped_before_sync",
+    "view:整合執行註冊表_中文欄位:dropped_before_sync",
+    "view:月營收資料_中文欄位:dropped_before_sync",
+    "view:每日訓練股票池_中文欄位:dropped_before_sync",
+    "view:法人籌碼日資料_中文欄位:dropped_before_sync",
+    "view:營收動能快照_中文欄位:dropped_before_sync",
+    "view:目前持倉_中文欄位:dropped_before_sync",
+    "view:稅務批次平倉明細_中文欄位:dropped_before_sync",
+    "view:稅務批次年度彙總_中文欄位:dropped_before_sync",
+    "view:籌碼因子日資料_中文欄位:dropped_before_sync",
+    "view:系統防護紀錄_中文欄位:dropped_before_sync",
+    "view:股票主檔_中文欄位:dropped_before_sync",
+    "view:訓練特徵註冊表_中文欄位:dropped_before_sync",
+    "view:資料庫版本遷移紀錄_中文欄位:dropped_before_sync",
+    "view:風控閘門紀錄_中文欄位:dropped_before_sync",
+    "account_info:synced_view:帳戶資訊_中文欄位",
+    "active_positions:synced_view:目前持倉_中文欄位",
+    "daily_chip_data:synced_view:法人籌碼日資料_中文欄位",
+    "execution_account_snapshot:synced_view:執行帳戶快照_中文欄位",
+    "execution_broker_callbacks:synced_view:券商回報事件_中文欄位",
+    "execution_fills:synced_view:執行成交明細_中文欄位",
+    "execution_orders:synced_view:執行委託單_中文欄位",
+    "execution_position_lots:synced_view:執行持倉批次_中文欄位",
+    "execution_positions_snapshot:synced_view:執行持倉快照_中文欄位",
+    "execution_reconciliation_report:synced_view:執行對帳報告_中文欄位",
+    "execution_tax_lot_closures:synced_view:稅務批次平倉明細_中文欄位",
+    "execution_tax_lot_summary:synced_view:稅務批次年度彙總_中文欄位",
+    "fundamentals_clean:synced_view:基本面清洗資料_中文欄位",
+    "monthly_revenue_simple:synced_view:月營收資料_中文欄位",
+    "schema_migrations:synced_view:資料庫版本遷移紀錄_中文欄位",
+    "trade_history:synced_view:交易紀錄_中文欄位",
+    "summary:tables=16:views_synced=16:strategy=all_dbo_user_tables_dynamic_sync"
+  ],
+  "sql_chinese_column_strategy": "non_destructive_views_keep_canonical_tables",
+  "status": "db_upgrade_ready"
+}
+[12:52:29] ✅ research plus tables ready
+[13:08:01] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[13:08:01] [13:08:01] 📊 cross-sectional snapshot ready: C:\test\test-2026-3-22OK\runtime\cross_sectional_percentile_service.json
+[13:08:02] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[13:08:02] [13:08:02] 🗓️ event calendar ready: C:\test\test-2026-3-22OK\runtime\event_calendar_service.json
+[13:08:06] ✅ sql feature snapshots synced {'status': 'sql_feature_snapshot_sync_ready', 'synced_rows': {'feature_cross_section_snapshot': 1072, 'feature_event_calendar': 3207, 'live_feature_mount': 15}, 'notes': {}}
+[13:08:07] {
+  "status": "paper_prelive_contract_smoke_ok",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_contract_readiness.json"
+}
+[13:08:07] {
+  "status": "callback_ingestion_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\broker_callback_ingestion_summary.json",
+  "ingested_count": 0
+}
+[13:08:08] {
+  "status": "reconciliation_clean",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prelive_reconciliation_runtime.json",
+  "issue_count": 0
+}
+[13:08:09] {
+  "status": "restart_recovery_ready",
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\restart_recovery_plan.json",
+  "blockers": []
+}
+[13:08:09] {
+  "status": "prebroker_95_not_ready",
+  "score": 89.2,
+  "path": "C:\\test\\test-2026-3-22OK\\runtime\\prebroker_95_audit.json",
+  "blockers": [
+    "portfolio_backtest:portfolio_backtest_no_trades"
+  ]
+}
+[13:08:12] 🧹 patch retirement report：runtime\patch_retirement_report.json
+[13:08:12] ========================================================================
+[13:08:12] 🚀 啟動 正式交易主控版_v83_official_main
+[13:08:12] 🧭 模式：DAILY
+[13:08:12] ========================================================================
+[13:08:57] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[13:08:59] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[13:09:08] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:09:08] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[13:09:09] 🧭 decision desk builder ready: C:\test\test-2026-3-22OK\runtime\decision_desk_builder.json
+[13:09:09] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:09:09] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:09:09] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[13:09:09] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[13:09:09] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:09:09] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[13:38:38] ========================================================================
+[13:38:38] 🚀 啟動 正式交易主控版_v83_official_main
+[13:38:38] 🧭 模式：DAILY
+[13:38:38] ========================================================================
+[13:39:20] 🔁 mainline stage | fts_etl_daily_chip_service.main_scheduler | ok=True | skipped=False
+[13:39:22] 🔁 mainline stage | fts_etl_monthly_revenue_service.main | ok=True | skipped=False
+[13:39:31] 📚 fundamentals ETL 主線完成：C:\test\test-2026-3-22OK\runtime\fundamentals_etl_mainline.json
+[13:39:31] 🔁 mainline stage | fts_fundamentals_etl_mainline.main | ok=True | skipped=False
+[13:39:35] 🧭 decision desk builder ready: C:\test\test-2026-3-22OK\runtime\decision_desk_builder.json
+[13:39:36] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[13:39:36] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json
+[13:39:36] 🚦 Launch Gate | go_for_execution=False | failures=1 | warnings=1
+[13:39:36] 🧾 Broker Approval Gate | go_for_broker_submission=False | requires_explicit_approval=False | failures=2 | warnings=0
+[13:39:36] 📦 Submission Contract Gate | go_for_submission_contract=True | failures=0 | warnings=1
+[13:39:36] 🛰️ 已輸出 real api readiness：C:\test\test-2026-3-22OK\runtime\real_api_readiness.json
+[14:31:21] ========================================================================
+[14:31:21] 🚀 啟動 正式交易主控版_v83_official_main
+[14:31:21] 🧭 模式：TRAIN
+[14:31:21] ========================================================================
+[14:37:03] 🧠 已輸出 training orchestrator：C:\test\test-2026-3-22OK\runtime\training_orchestrator.json
+[14:37:04] 🧠 training governance 主線盤點完成：C:\test\test-2026-3-22OK\runtime\training_governance_mainline.json

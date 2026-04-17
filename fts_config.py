@@ -135,7 +135,7 @@ class SystemConfig:
 
     db_driver: str = 'ODBC Driver 17 for SQL Server'
     db_server: str = 'localhost'
-    db_database: str = '股票online'
+    db_database: str = '股票Online'
 
     # ---- 補齊 execution config 欄位 ----
     trailing_stop_pct: float = 0.05
@@ -217,7 +217,7 @@ class SystemConfig:
 class DBConfig:
     driver: str = 'ODBC Driver 17 for SQL Server'
     server: str = 'localhost'
-    database: str = '股票online'
+    database: str = '股票Online'
     trusted_connection: str = 'yes'
 
 

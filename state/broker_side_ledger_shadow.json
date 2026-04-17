@@ -18,7 +18,7 @@
         "last_fill_symbol": "2330.TW",
         "last_mutation_type": "callback_fill",
         "last_mutation_reason": "callback_fill",
-        "updated_at": "2026-04-15 16:23:34"
+        "updated_at": "2026-04-16 13:39:06"
       }
     },
     "SHORT": {},
@@ -488,6 +488,83 @@
     },
     {
       "at": "2026-04-15 16:23:34",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-16 03:03:36",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-16 11:14:14",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-16 11:16:45",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-16 11:49:14",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-16 12:27:04",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-16 13:08:46",
+      "lane": "LONG",
+      "order_id": "HC1",
+      "mutation_type": "callback_fill",
+      "reason": "callback_fill",
+      "patch": {
+        "status": "FILLED",
+        "last_fill_symbol": "2330.TW"
+      }
+    },
+    {
+      "at": "2026-04-16 13:39:06",
       "lane": "LONG",
       "order_id": "HC1",
       "mutation_type": "callback_fill",

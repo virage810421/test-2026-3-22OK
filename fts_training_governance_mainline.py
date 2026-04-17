@@ -3,18 +3,19 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from fts_exception_policy import record_diagnostic
 from typing import Any
 
+from fts_exception_policy import record_diagnostic
 from fts_config import PATHS, CONFIG
 from fts_utils import now_str, log
 from fts_training_orchestrator import TrainingOrchestrator
 from fts_trainer_backend import train_models
 from model_governance import ModelGovernanceManager, create_version_tag, get_best_version_entry
+from fts_trainer_promotion_policy import TrainerPromotionPolicyBuilder
 
 
 class TrainingGovernanceMainline:
-    MODULE_VERSION = 'v20260414_training_governance_truthful_live_metrics'
+    MODULE_VERSION = 'v20260416_training_governance_shadow_runtime_truthful'
 
     def __init__(self):
         self.runtime_path = PATHS.runtime_dir / 'training_governance_mainline.json'
@@ -66,6 +67,14 @@ class TrainingGovernanceMainline:
     @staticmethod
     def _status_value(row: dict[str, Any]) -> str:
         return str(row.get('status') or row.get('order_status') or row.get('event_type') or '').upper()
+
+    def _load_shadow_runtime_evidence(self) -> dict[str, Any]:
+        try:
+            _path, payload = TrainerPromotionPolicyBuilder()._build_shadow_runtime_evidence()
+            return payload if isinstance(payload, dict) else {}
+        except Exception as exc:
+            record_diagnostic('training_governance', 'load_shadow_runtime_evidence', exc, severity='warning', fail_closed=False)
+            return {}
 
     def _load_live_metrics(self) -> dict[str, Any]:
         """
@@ -134,8 +143,7 @@ class TrainingGovernanceMainline:
                 continue
             try:
                 slip_values.append(abs(float(val)))
-            except Exception as exc:
-                record_diagnostic('training_governance', 'read_runtime_json_candidate', exc, severity='warning', fail_closed=False, context={'path': str(path)})
+            except Exception:
                 continue
         avg_slippage_bps = (sum(slip_values) / len(slip_values)) if slip_values else None
 
@@ -166,7 +174,6 @@ class TrainingGovernanceMainline:
                 'reason': '沒有真實 execution runtime / fills / orders；已禁止使用硬編 live_metrics。',
                 'metrics': metrics,
             }
-        # ModelGovernanceManager 多半期待數值，沒有資料的欄位給保守值，但保留 raw metrics 讓報告透明。
         eval_metrics = {
             'win_rate': float(metrics['win_rate']) if metrics.get('win_rate') is not None else 0.0,
             'consecutive_losses': int(metrics['consecutive_losses']) if metrics.get('consecutive_losses') is not None else 999,
@@ -208,6 +215,7 @@ class TrainingGovernanceMainline:
 
         live_metrics = self._load_live_metrics()
         live_health = self._evaluate_live_health_truthful(manager, live_metrics)
+        shadow_runtime = self._load_shadow_runtime_evidence()
 
         best_entry = get_best_version_entry() or {}
         candidate_eval = manager.evaluate_candidate(
@@ -217,7 +225,11 @@ class TrainingGovernanceMainline:
                 'max_drawdown_pct': 0.08,
             },
             walk_forward={'score': float(report.get('walk_forward_summary', {}).get('score', 0.0) or 0.0)},
-            shadow_result={'return_drift_pct': float(report.get('overfit_gap', 0.0) or 0.0)},
+            shadow_result={
+                'return_drift_pct': float((shadow_runtime.get('shadow_return_drift_pct') if shadow_runtime.get('shadow_return_drift_pct') is not None else report.get('overfit_gap', 0.0)) or 0.0),
+                'runtime_observed': bool(shadow_runtime.get('runtime_observed', False)),
+                'source': 'shadow_runtime_evidence' if shadow_runtime.get('runtime_observed', False) else 'offline_overfit_fallback',
+            },
             rollback_version=(best_entry.get('version') or create_version_tag('no_approved_version')),
         )
 
@@ -235,6 +247,8 @@ class TrainingGovernanceMainline:
             blocked_reasons.append('live_metrics_unavailable')
         if int(orchestrator.get('training_readiness_pct') or 0) < 100:
             blocked_reasons.append('training_readiness_incomplete')
+        if not bool(shadow_runtime.get('runtime_observed', False)):
+            blocked_reasons.append('shadow_runtime_evidence_missing')
         overall_status = 'training_governance_mainline_ready' if not blocked_reasons else 'training_governance_mainline_blocked'
 
         payload = {
@@ -247,6 +261,7 @@ class TrainingGovernanceMainline:
             'training_integrity': training_integrity,
             'candidate_evaluation': candidate_eval,
             'live_health': live_health,
+            'shadow_runtime_evidence': shadow_runtime,
             'directional_services': {
                 'regime_service': directional_regime,
                 'alpha_miner': directional_alpha,

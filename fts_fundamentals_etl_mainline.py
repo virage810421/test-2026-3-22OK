@@ -306,7 +306,7 @@ class FundamentalsETLMainline:
         conn_str = (
             rf'DRIVER={{{getattr(CONFIG, "db_driver", "ODBC Driver 17 for SQL Server")}}};'
             rf'SERVER={getattr(CONFIG, "db_server", "localhost")};'
-            rf'DATABASE={getattr(CONFIG, "db_database", "股票online")};'
+            rf'DATABASE={getattr(CONFIG, "db_database", "股票Online")};'
             r'Trusted_Connection=yes;'
         )
         count = 0

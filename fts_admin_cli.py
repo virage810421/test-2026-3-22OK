@@ -151,6 +151,34 @@ def run_prebroker_95_audit(argv: Sequence[str] | None = None) -> int:
     return _call_main_with_argv(main, argv)
 
 
+
+
+
+def run_maturity_upgrade(argv: Sequence[str] | None = None) -> int:
+    from fts_maturity_upgrade_suite import MaturityUpgradeSuite
+    MaturityUpgradeSuite().build()
+    return 0
+
+
+def run_patch_retirement_report(argv: Sequence[str] | None = None) -> int:
+    from datetime import datetime
+    from pathlib import Path
+    import json
+
+    runtime_dir = Path('runtime')
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    patch_files = sorted(str(p.name) for p in Path('.').glob('_patch_manifest*.py'))
+    payload = {
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'status': 'patch_retirement_report_ready',
+        'patch_manifest_count': len(patch_files),
+        'patch_manifests': patch_files[:200],
+        'notes': 'Generated from local _patch_manifest*.py files. Review before destructive cleanup.',
+    }
+    path = runtime_dir / 'patch_retirement_report.json'
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    print(f'🧹 patch retirement report：{path}')
+    return 0
 _COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     'healthcheck': run_healthcheck,
     'completion-audit': run_completion_audit,
@@ -169,6 +197,8 @@ _COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     'exit-artifact-bootstrap': run_exit_artifact_bootstrap,
     'portfolio-backtest': run_portfolio_backtest,
     'prebroker-95-audit': run_prebroker_95_audit,
+    'maturity-upgrade': run_maturity_upgrade,
+    'patch-retirement-report': run_patch_retirement_report,
 }
 
 
@@ -186,7 +216,10 @@ _ALIASES = {
     'exit-bootstrap': 'exit-artifact-bootstrap',
     'portfolio-bt': 'portfolio-backtest',
     'prelive-95': 'prebroker-95-audit',
+    'maturity': 'maturity-upgrade',
+    'retirement-report': 'patch-retirement-report',
 }
+
 
 
 def main(argv: Sequence[str] | None = None) -> int:

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Dict, Any, Mapping
+from typing import Optional, List, Dict, Any, Mapping, Sequence
 
 
 class OrderSide(str, Enum):
@@ -30,6 +30,10 @@ class OrderStatus(str, Enum):
     REJECTED = "REJECTED"
 
 
+def _enum_value(value: Any) -> Any:
+    return getattr(value, 'value', value)
+
+
 @dataclass
 class OrderRequest:
     symbol: str
@@ -46,10 +50,10 @@ class OrderRequest:
         return {
             "ticker": self.symbol,
             "symbol": self.symbol,
-            "side": self.side.value if hasattr(self.side, "value") else str(self.side),
+            "side": _enum_value(self.side),
             "qty": int(self.quantity),
             "quantity": int(self.quantity),
-            "order_type": self.order_type.value if hasattr(self.order_type, "value") else str(self.order_type),
+            "order_type": _enum_value(self.order_type),
             "price": self.limit_price,
             "limit_price": self.limit_price,
             "strategy_name": self.strategy_name,
@@ -106,121 +110,120 @@ class BrokerBase(ABC):
     """
     單一正式 broker contract。
 
-    這個檔案是唯一 BrokerBase 來源；fts_broker_interface.py 只做相容 re-export。
-    Contract 同時支援：
-    - paper broker 的 OrderRequest / OrderRecord 物件流
-    - pre-live / real broker 的 dict payload、callback、ledger、reconcile 流
-
-    實盤前必須由 capability_report() 證明 API / callback / ledger / reconcile / kill-switch 五項都為 True。
+    正式 contract 使用固定方法簽名；歷史相容邏輯集中在 compat helper，
+    避免在每個正式介面內散落 hasattr/getattr 分支。
     """
 
-    CONTRACT_VERSION = "v87_unified_broker_contract"
+    CONTRACT_VERSION = "v94_unified_broker_contract_hardened"
 
-    # ---- required minimum order operations ----
     @abstractmethod
-    def place_order(self, order: Any) -> Any:
+    def place_order(self, order: OrderRequest | Mapping[str, Any]) -> OrderRecord | dict[str, Any]:
         raise NotImplementedError
 
     @abstractmethod
-    def cancel_order(self, order: Any) -> Any:
+    def cancel_order(self, order_id: str | Mapping[str, Any]) -> dict[str, Any]:
         raise NotImplementedError
 
-    # ---- strongly expected query operations; default fail-closed where needed ----
-    def get_order_status(self, order_id: str) -> Any:
-        return {"ok": False, "status": "get_order_status_not_implemented", "broker_order_id": order_id}
-
-    def replace_order(self, order_id: str, payload: Mapping[str, Any]) -> dict[str, Any]:
-        return {"ok": False, "status": "replace_order_not_implemented", "broker_order_id": order_id}
-
-    def get_open_orders(self) -> list[Any]:
-        if hasattr(self, "query_open_orders"):
+    def _compat_list_call(self, method_names: Sequence[str]) -> list[Any]:
+        for method_name in method_names:
+            method = getattr(self, method_name, None)
+            if not callable(method):
+                continue
             try:
-                return list(getattr(self, "query_open_orders")())
+                rows = method()
             except Exception:
                 return []
-        if hasattr(self, "snapshot_orders"):
+            if rows is None:
+                return []
             try:
-                rows = list(getattr(self, "snapshot_orders")())
-                return [x for x in rows if str((x or {}).get("status", "")).upper() in {"NEW", "PENDING_SUBMIT", "SUBMITTED", "PARTIALLY_FILLED", "WORKING"}]
-            except Exception:
+                return list(rows)
+            except TypeError:
                 return []
         return []
 
-    def query_open_orders(self) -> list[Any]:
+    def _compat_attr_dict_update(self, attr_name: str, payload: Mapping[str, Any]) -> None:
+        target = getattr(self, attr_name, None)
+        if isinstance(target, dict):
+            target.update(dict(payload))
+
+    def get_order_status(self, order_id: str) -> dict[str, Any]:
+        return {"ok": False, "status": "get_order_status_not_implemented", "broker_order_id": order_id}
+
+    def replace_order(self, order_id: str, payload: Mapping[str, Any]) -> dict[str, Any]:
+        return {"ok": False, "status": "replace_order_not_implemented", "broker_order_id": order_id, "payload": dict(payload or {})}
+
+    def get_open_orders(self) -> list[OrderRecord | dict[str, Any]]:
+        compat_rows = self._compat_list_call(("query_open_orders", "snapshot_orders"))
+        if compat_rows:
+            normalized: list[OrderRecord | dict[str, Any]] = []
+            for row in compat_rows:
+                if isinstance(row, Mapping):
+                    status = str(row.get("status", "")).upper()
+                    if status in {"NEW", "PENDING_SUBMIT", "SUBMITTED", "PARTIALLY_FILLED", "WORKING"}:
+                        normalized.append(dict(row))
+                else:
+                    normalized.append(row)
+            return normalized
+        return []
+
+    def query_open_orders(self) -> list[OrderRecord | dict[str, Any]]:
         return self.get_open_orders()
 
-    def get_positions(self) -> Any:
+    def get_positions(self) -> dict[str, Any] | list[dict[str, Any]]:
         return {}
 
     def query_positions(self) -> list[dict[str, Any]]:
-        if hasattr(self, "get_positions_rows"):
-            try:
-                return list(getattr(self, "get_positions_rows")())
-            except Exception:
-                return []
+        compat_rows = self._compat_list_call(("get_positions_rows",))
+        if compat_rows:
+            return [dict(x) for x in compat_rows if isinstance(x, Mapping)]
         pos = self.get_positions()
         if isinstance(pos, dict):
             return [{"ticker": k, "qty": v} for k, v in pos.items()]
-        return list(pos or [])
+        return [dict(x) for x in list(pos or []) if isinstance(x, Mapping)]
 
-    def get_cash(self) -> Any:
+    def get_cash(self) -> dict[str, Any]:
         return {"cash_available": 0.0, "equity": 0.0, "market_value": 0.0}
 
     def query_cash(self) -> dict[str, Any]:
         snap = self.get_cash()
         if isinstance(snap, dict):
             return dict(snap)
-        return {"cash_available": float(snap or 0.0), "cash": float(snap or 0.0)}
+        cash = float(snap or 0.0)
+        return {"cash_available": cash, "cash": cash}
 
-    def get_account_snapshot(self) -> Any:
+    def get_account_snapshot(self) -> dict[str, Any]:
         return self.query_cash()
 
-    def poll_fills(self) -> list[Any]:
-        if hasattr(self, "get_fills"):
-            try:
-                return list(getattr(self, "get_fills")())
-            except Exception:
-                return []
+    def poll_fills(self) -> list[FillEvent | dict[str, Any]]:
+        return self._compat_list_call(("get_fills",))
+
+    def get_fills(self, trading_date: str | None = None) -> list[FillEvent | dict[str, Any]]:
         return []
 
-    def get_fills(self, trading_date: str | None = None) -> list[Any]:
-        return []
-
-    # ---- market state / restore helpers ----
     def update_market_price(self, ticker: str, price: float) -> None:
-        # Avoid recursive default calls. If a subclass implements plural update, use it;
-        # otherwise update a conventional last_prices dict when present.
         if type(self).update_market_prices is not BrokerBase.update_market_prices:
             type(self).update_market_prices(self, {ticker: price})
             return
-        if hasattr(self, "last_prices") and isinstance(getattr(self, "last_prices"), dict):
-            try:
-                getattr(self, "last_prices")[str(ticker)] = float(price or 0.0)
-            except Exception:
-                pass
+        self._compat_attr_dict_update('last_prices', {str(ticker): float(price or 0.0)})
 
     def update_market_prices(self, price_map: Mapping[str, float]) -> None:
+        if self._compat_attr_is_dict('last_prices'):
+            self._compat_attr_dict_update('last_prices', {str(t): float(p or 0.0) for t, p in dict(price_map or {}).items()})
+            return
         for ticker, price in dict(price_map or {}).items():
-            if hasattr(self, "last_prices") and isinstance(getattr(self, "last_prices"), dict):
-                try:
-                    getattr(self, "last_prices")[str(ticker)] = float(price or 0.0)
-                except Exception:
-                    pass
-            else:
-                self.update_market_price(str(ticker), float(price or 0.0))
+            self.update_market_price(str(ticker), float(price or 0.0))
 
     def restore_state(self, cash: Any, positions: Any, last_prices: Mapping[str, float] | None = None) -> None:
-        if hasattr(self, "cash"):
+        if hasattr(self, 'cash'):
             try:
-                setattr(self, "cash", float(cash or 0.0))
-            except Exception:
+                setattr(self, 'cash', float(cash or 0.0))
+            except (TypeError, ValueError):
                 pass
-        if hasattr(self, "positions") and isinstance(positions, dict):
-            setattr(self, "positions", dict(positions))
-        if last_prices is not None and hasattr(self, "last_prices"):
-            setattr(self, "last_prices", dict(last_prices))
+        if hasattr(self, 'positions') and isinstance(positions, dict):
+            setattr(self, 'positions', dict(positions))
+        if last_prices is not None and hasattr(self, 'last_prices'):
+            setattr(self, 'last_prices', dict(last_prices))
 
-    # ---- real broker lifecycle / callback / reconciliation contract ----
     def connect(self) -> dict[str, Any]:
         return {"ok": False, "status": "broker_connect_not_implemented"}
 

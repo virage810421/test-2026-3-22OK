@@ -1,14 +1,28 @@
 {
-  "generated_at": "2026-04-09 14:44:17",
-  "module_version": "v83_decision_desk_builder",
+  "generated_at": "2026-04-16 13:39:35",
+  "module_version": "v102_decision_desk_builder_structural_bias_and_block_domain",
   "output_path": "C:\\test\\test-2026-3-22OK\\data\\normalized_decision_output.csv",
-  "row_count": 3,
+  "row_count": 1,
+  "fallback_row_count": 0,
+  "usable_row_count": 1,
+  "signal_gate_passed_count": 1,
+  "near_miss_count": 0,
+  "strategy_blocked_count": 0,
+  "engineering_blocked_count": 0,
+  "structural_bias_counts": {},
   "market_climate": {
-    "regime": "區間盤整",
-    "risk_mode": "balanced",
+    "regime": "未知",
+    "risk_mode": "neutral",
     "avg_ai_proba": 0.5,
     "avg_score_gap": 0.0,
     "avg_ev": 0.0
   },
-  "status": "wave3_decision_desk_rules_ready"
+  "status": "decision_desk_ready",
+  "fallback_policy": {
+    "kelly_default": 0.0,
+    "health_default": "FALLBACK_BUILD",
+    "auto_submit_allowed": false,
+    "execution_eligible_default": false,
+    "desk_usable_default": true
+  }
 }

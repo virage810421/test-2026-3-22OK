@@ -1,10 +1,9 @@
 {
-  "generated_at": "2026-04-15 13:33:24",
+  "generated_at": "2026-04-16 13:08:09",
   "status": "prebroker_95_not_ready",
-  "score": 77.5,
+  "score": 89.2,
   "target_score": 95,
   "blockers": [
-    "exit_ai_artifacts:exit_ai_model_unavailable",
     "portfolio_backtest:portfolio_backtest_no_trades"
   ],
   "pillars": {
@@ -33,10 +32,10 @@
       "blocking": false
     },
     "exit_ai_artifacts": {
-      "status": "exit_ai_model_unavailable",
+      "status": "exit_ai_model",
       "path": "C:\\test\\test-2026-3-22OK\\runtime\\exit_model_status.json",
-      "score_ratio": 0.35,
-      "blocking": true
+      "score_ratio": 1.0,
+      "blocking": false
     },
     "portfolio_backtest": {
       "status": "portfolio_backtest_no_trades",
